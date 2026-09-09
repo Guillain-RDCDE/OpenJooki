@@ -1,0 +1,7 @@
+{
+  "version": "0.1.0",
+  "file": "openjooki-firmware-0.1.0.img.gz",
+  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "date": "2026-09-09",
+  "notes": "Example manifest. Generate with scripts/make-release.sh."
+}

@@ -1,0 +1,24 @@
+# Backups and disk images: NEVER in git (too large / personal data)
+backups/
+*.img
+*.img.gz
+*.tar.gz
+*.zip
+# Secrets / keys
+*.pem
+id_*
+*.key
+secrets/
+.env
+# System
+.DS_Store
+
+# Transient run artifacts (logs, device pulls)
+run/_out_*.log
+run/_device_pull/
+run/_to_delete/
+
+# Session driver scripts (local machine) — not for the public repo
+run/
+__pycache__/
+*.pyc

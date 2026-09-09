@@ -1,0 +1,6 @@
+#!/bin/bash
+# OpenJooki Installer launcher: starts the local web interface (reliable browser rendering).
+HERE="$(cd "$(dirname "$0")/../../.." && pwd)"
+PYBIN=/usr/bin/python3
+command -v "$PYBIN" >/dev/null 2>&1 || PYBIN=python3
+exec "$PYBIN" "$HERE/installer_web.py" "$@"

@@ -66,7 +66,7 @@ the previous version. Nothing can brick it.
 **From your phone**: `python3 installer_web.py --lan` prints an address
 `http://<mac-ip>:PORT/` to open on the phone (same Wi-Fi) — you drive everything
 from the phone. (The "no PC at all" path is in progress, see
-`docs/14-installateur-multiplateforme.md`.)
+`docs/14-cross-platform-installer.md`.)
 
 Command line (advanced): `python3 installer.py <firmware>`
 (`--no-switch` to write+verify without activating, `--selftest` for a safe test).

@@ -12,7 +12,7 @@
 - **On-device self-install core**: `device/openjooki-selfupdate.sh` (validated with
   `ash -n`) — for the upcoming "phone, no PC" path via the Jooki's internal web
   server (web_ctrl/Mongoose, doc root `/jooki/app/www/public/`).
-- Docs: `docs/14-installateur-multiplateforme.md` (status, feasibility, Bluetooth
+- Docs: `docs/14-cross-platform-installer.md` (status, feasibility, Bluetooth
   verdict: not suitable for firmware).
 
 ## v0.2.0 (2026-09-09) — "zero-effort" graphical installer

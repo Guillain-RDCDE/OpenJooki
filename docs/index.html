@@ -3,35 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OpenJooki Installer</title>
+<title>OpenJooki</title>
 <style>
-  :root{--bg:#fffbf6;--fg:#222;--muted:#777;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a}
-  @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333}}
+  :root{--bg:#fffbf6;--fg:#222;--muted:#777;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a;--okbg:#e8f6ec}
+  @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333;--okbg:#12301c}}
   *{box-sizing:border-box}
   body{margin:0;font:16px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:0 18px 60px}
   main{max-width:560px;margin:0 auto}
   h1{color:var(--accent);font-size:1.7em;margin:.7em 0 .1em}
-  .sub{color:var(--muted);margin:0 0 1.4em}
+  .sub{color:var(--muted);margin:0 0 1.2em}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+  h3{margin:0 0 .3em}
   label{font-weight:600;display:block;margin-bottom:6px}
   input{width:100%;padding:12px;font-size:1.1em;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
   .hint{color:var(--muted);font-size:.85em;margin-top:6px}
-  a.btn{display:block;text-decoration:none;text-align:center;background:var(--accent);color:#fff;
-        padding:14px;border-radius:10px;font-weight:700;margin:8px 0}
+  a.btn{display:block;text-decoration:none;text-align:center;background:var(--accent);color:#fff;padding:15px;border-radius:10px;font-weight:700;margin:10px 0 4px;font-size:1.05em}
   a.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
-  a.btn[aria-disabled="true"]{opacity:.4;pointer-events:none}
-  ol{padding-left:1.2em}ol li{margin:.35em 0}
-  .warn{background:rgba(242,107,33,.12);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:.92em}
-  details{margin-top:10px}summary{cursor:pointer;color:var(--accent);font-weight:600}
+  a.btn[aria-disabled="true"]{opacity:.35;pointer-events:none}
+  ul{padding-left:1.2em}li{margin:.3em 0}
+  .warn{background:rgba(242,107,33,.12);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:.9em;margin-top:8px}
+  details{margin:10px 0}summary{cursor:pointer;color:var(--accent);font-weight:600}
+  details.card>summary{font-size:1.05em}
   code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:.85em}
-  .step{color:var(--muted);font-weight:700;margin-right:6px}
+  #status{background:var(--okbg);border:1px solid var(--ok);color:var(--fg);border-radius:12px;padding:16px;margin:14px 0;font-size:1.02em}
+  #status b{color:var(--ok)}
   footer{color:var(--muted);font-size:.82em;text-align:center;margin-top:30px}
 </style>
 </head>
 <body>
 <main>
-  <h1>OpenJooki Installer</h1>
-  <p class="sub">Bring your <b>Jooki v2</b> back to life &mdash; from your phone, no computer needed.</p>
+  <h1>OpenJooki</h1>
+  <p class="sub">Update or install OpenJooki on your <b>Jooki v2</b> &mdash; from your phone, no computer.</p>
 
   <div class="card">
     <label for="ip">Your Jooki's IP address</label>
@@ -42,48 +44,45 @@
       <ul>
         <li><b>Easiest &mdash; the Jooki app:</b> open it, pick your Jooki, go to its <i>Device / Settings</i> screen; the IP is shown there.</li>
         <li><b>Your Wi-Fi router:</b> open its page (often <code>192.168.1.1</code>) &rarr; <i>Connected devices</i> &rarr; look for a name starting with <code>jooki</code>.</li>
-        <li>It looks like <code>192.168.1.42</code> or <code>192.168.0.42</code> &mdash; four numbers.</li>
+        <li>It looks like <code>192.168.1.42</code> &mdash; four numbers.</li>
       </ul>
-      <p class="hint">A web page isn't allowed to scan your network for the Jooki (your phone blocks that for security), so it needs the address once &mdash; then it's saved.</p>
+      <p class="hint">A web page isn't allowed to scan your network (your phone blocks that for security), so it needs the address once &mdash; then it's saved.</p>
     </details>
   </div>
 
-  <div class="card">
-    <h3 style="margin-top:0">Install OpenJooki (first time)</h3>
-    <p>Tap these <b>in order</b>. Each opens a tab, runs one step, then you come back for the next.</p>
-    <a class="btn ghost" id="b1" aria-disabled="true" target="_blank" rel="noopener"><span class="step">1</span>Prepare</a>
-    <a class="btn ghost" id="b2" aria-disabled="true" target="_blank" rel="noopener"><span class="step">2</span>Add source</a>
-    <a class="btn ghost" id="b3" aria-disabled="true" target="_blank" rel="noopener"><span class="step">3</span>Add path</a>
-    <a class="btn ghost" id="b4" aria-disabled="true" target="_blank" rel="noopener"><span class="step">4</span>Add name</a>
-    <a class="btn" id="b5" aria-disabled="true" target="_blank" rel="noopener"><span class="step">5</span>Download &amp; install</a>
-    <div class="warn">After step 5, your Jooki downloads and installs OpenJooki, then <b>restarts on its own</b> (about 10 minutes). Keep it plugged in. It <b>cannot be bricked</b> &mdash; if anything fails it returns to your current firmware automatically. Only Jooki v2 is accepted; a v1 is refused.</div>
-  </div>
+  <div id="status" hidden></div>
 
   <div class="card">
-    <h3 style="margin-top:0">Already on OpenJooki? Update it</h3>
-    <p>One tap. It checks GitHub and installs the newest version if there is one.</p>
-    <a class="btn" id="bu" aria-disabled="true" target="_blank" rel="noopener">Check &amp; update</a>
+    <h3>Update my Jooki</h3>
+    <p style="margin:.2em 0 .4em">For a Jooki that <b>already runs OpenJooki</b>. One tap &mdash; it fetches the newest version from GitHub and installs it (about 2 minutes).</p>
+    <a class="btn" id="bu" aria-disabled="true" target="_blank" rel="noopener">Update now</a>
   </div>
+
+  <details class="card">
+    <summary>First time? Switch a <b>factory</b> Jooki to OpenJooki</summary>
+    <p style="margin:.5em 0">Only for a Jooki that has <b>never</b> had OpenJooki. If yours already runs OpenJooki, use <b>Update</b> above instead.</p>
+    <a class="btn ghost" id="bi" aria-disabled="true" target="_blank" rel="noopener">Install OpenJooki (one tap)</a>
+    <div class="warn">Your Jooki downloads OpenJooki, installs it, and <b>restarts on its own</b> (about 10 minutes). Keep it plugged in. It <b>cannot be bricked</b> &mdash; it returns to your current firmware if anything fails. Only a Jooki <b>v2</b> is accepted.</div>
+  </details>
 
   <details>
     <summary>How it works &amp; safety</summary>
-    <p>Your Jooki fetches the firmware straight from this project's GitHub release, checks it byte-for-byte (sha256), and installs it to the spare half of its storage. The bootloader only switches over if the new system is intact, and rolls back on its own if it fails to start. Nothing overwrites your running system until the copy is verified. Your music, playlists and Wi-Fi live on a separate area and are kept.</p>
-    <p>The buttons above just open <code>http://&lt;your-jooki&gt;/ll?…</code> links &mdash; the Jooki's own local control endpoint on your Wi-Fi. Nothing is sent anywhere else.</p>
+    <p>Your Jooki fetches the firmware straight from this project's GitHub release, checks it byte-for-byte (sha256), and installs it to the spare half of its storage. The bootloader only switches over if the new system is intact, and rolls back on its own if it fails to start. Your music, playlists and Wi-Fi are kept.</p>
+    <p>The buttons open <code>http://&lt;your-jooki&gt;/…</code> links &mdash; the Jooki's own local control on your Wi-Fi. A tiny page that just says <code>ok</code> appears each time: that means the Jooki received the command. Nothing is sent anywhere else.</p>
   </details>
 
   <footer>OpenJooki &middot; community-maintained firmware for the Jooki v2 &middot; not affiliated with the original maker</footer>
 </main>
 <script>
   var C={
-    b1:"printf 'curl -fsSLo /tmp/b ' > /tmp/g",
-    b2:"printf 'https://github.com/Guillain-RDCDE/' >> /tmp/g",
-    b3:"printf 'OpenJooki/releases/latest/download/' >> /tmp/g",
-    b4:"printf 'openjooki-bootstrap.sh' >> /tmp/g",
-    b5:"sh /tmp/g;sh /tmp/b&",
-    bu:"sh /data/openjooki/ota.sh&"
+    bu:"sh /data/openjooki/ota.sh&",
+    bi:"curl -fsSLo /tmp/b https://guillain-rdcde.github.io/OpenJooki/b.sh;sh /tmp/b&"
+  };
+  var MSG={
+    bu:"<b>Update sent to your Jooki.</b> A small page saying <code>ok</code> will appear — that's normal, it means your Jooki got the command. It's now checking GitHub and installing any newer version (about 2 minutes). You can close the <code>ok</code> tab.",
+    bi:"<b>Install started.</b> A small page saying <code>ok</code> will appear — that's normal. Your Jooki is now downloading OpenJooki and will <b>restart on its own in about 10 minutes</b>. Keep it plugged in. You can close the <code>ok</code> tab."
   };
   var ip=document.getElementById('ip');
-  // Accept dots OR commas/spaces (iOS French numeric keypad only offers a comma).
   function normIP(s){return (s||'').trim().replace(/[,\s]+/g,'.').replace(/\.+/g,'.').replace(/^\.|\.$/g,'');}
   try{
     var q=new URLSearchParams(location.search).get('ip');
@@ -101,6 +100,15 @@
     }
   }
   ip.addEventListener('input',upd); upd();
+  ['bu','bi'].forEach(function(id){
+    document.getElementById(id).addEventListener('click',function(){
+      if(this.getAttribute('aria-disabled')==='true'){return;}
+      var st=document.getElementById('status');
+      st.innerHTML=MSG[id];
+      st.hidden=false;
+      try{st.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+    });
+  });
 </script>
 </body>
 </html>

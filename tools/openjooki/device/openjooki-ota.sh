@@ -22,15 +22,15 @@ curl -fsSL --max-time 30 "$BASE/version.json" -o "$WORK/version.json" \
   || { log "no network or no release"; exit 1; }
 
 # Tiny JSON parser in sed (no jq on the device).
-VER=$(sed -n 's/.*"version"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -1)
-FILE=$(sed -n 's/.*"file"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -1)
-SHA=$(sed -n 's/.*"sha256"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -1)
+VER=$(sed -n 's/.*"version"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -n 1)
+FILE=$(sed -n 's/.*"file"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -n 1)
+SHA=$(sed -n 's/.*"sha256"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -n 1)
 [ -n "$VER" ] && [ -n "$FILE" ] && [ -n "$SHA" ] || { log "invalid manifest"; exit 1; }
 
 # Hardware-model safety gate: compare our device model to the manifest's.
 DEVDT=$(cat /data/mender/device_type 2>/dev/null || cat /var/lib/mender/device_type 2>/dev/null || cat /etc/mender/device_type 2>/dev/null)
 DEVDT=${DEVDT##*=}
-MANDT=$(sed -n 's/.*"device_type"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -1)
+MANDT=$(sed -n 's/.*"device_type"[^"]*"\([^"]*\)".*/\1/p' "$WORK/version.json" | head -n 1)
 if [ -n "$MANDT" ]; then
   [ -n "$DEVDT" ] || { log "SAFETY: cannot read device model — aborting"; exit 1; }
   [ "$DEVDT" = "$MANDT" ] || { log "SAFETY: this release targets '$MANDT' but device is '$DEVDT' — wrong model, aborting"; exit 1; }

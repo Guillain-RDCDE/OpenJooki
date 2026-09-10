@@ -12,12 +12,11 @@ STATUS="$WEB/openjooki-status.txt"
 mkdir -p "$WORK"
 : > "$STATUS" 2>/dev/null
 st(){ echo "[openjooki-update] $*"; echo "[openjooki] $*" >> "$STATUS" 2>/dev/null; }
+dl(){ _u="$1"; _o="$2"; _i=0; while :; do curl -fsSL --max-time 300 "$_u" -o "$_o" && return 0; _i=$((_i+1)); [ $_i -ge 5 ] && return 1; st "network hiccup, retry $_i/5…"; sleep 5; done; }
 
 st "checking for updates…"
-curl -fsSL --max-time 90 "$BASE/openjooki-ota.sh" -o "$WORK/ota.sh" \
-  || { st "ERROR: cannot reach GitHub — nothing changed"; exit 1; }
-curl -fsSL --max-time 90 "$BASE/openjooki-selfupdate.sh" -o "$WORK/selfupdate.sh" \
-  || { st "ERROR: download failed — nothing changed"; exit 1; }
+dl "$BASE/openjooki-ota.sh" "$WORK/ota.sh" || { st "ERROR: cannot reach GitHub — nothing changed"; exit 1; }
+dl "$BASE/openjooki-selfupdate.sh" "$WORK/selfupdate.sh" || { st "ERROR: download failed — nothing changed"; exit 1; }
 chmod +x "$WORK/ota.sh" "$WORK/selfupdate.sh"
 
 sh "$WORK/ota.sh" >> "$STATUS" 2>&1

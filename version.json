@@ -1,8 +1,8 @@
 {
-  "version": "0.1.0",
-  "file": "openjooki-firmware-0.1.0.img.gz",
-  "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "version": "1.0.0",
+  "file": "openjooki-firmware-1.0.0.img.gz",
+  "sha256": "7598e24756c410f38720e0f93d6a255ae7259956fcdf8e283d46ed3dcc44586a",
   "device_type": "ml-j2000",
-  "date": "2026-09-09",
-  "notes": "Example manifest. Generate with scripts/make-release.sh."
+  "date": "2026-09-10",
+  "notes": "First public OpenJooki release: hardened stock Jooki v2 rootfs, device-identity stripped, safe A/B install. Jooki v2 only (device_type ml-j2000)."
 }

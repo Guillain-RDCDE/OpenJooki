@@ -21,6 +21,8 @@
   a.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
   a.btn[aria-disabled="true"]{opacity:.35;pointer-events:none}
   ul{padding-left:1.2em}li{margin:.3em 0}
+  .note{background:var(--okbg);border:1px solid var(--ok);border-radius:10px;padding:11px 14px;font-size:.9em;margin-top:10px}
+  .note b{color:var(--ok)}
   .warn{background:rgba(242,107,33,.12);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:.9em;margin-top:8px}
   details{margin:10px 0}summary{cursor:pointer;color:var(--accent);font-weight:600}
   details.card>summary{font-size:1.05em}
@@ -54,33 +56,34 @@
 
   <div class="card">
     <h3>Update my Jooki</h3>
-    <p style="margin:.2em 0 .4em">For a Jooki that <b>already runs OpenJooki</b>. One tap &mdash; it fetches the newest version from GitHub and installs it (about 2 minutes).</p>
+    <p style="margin:.2em 0 .4em">For a Jooki that <b>already runs OpenJooki</b>. One tap &mdash; it fetches the newest version from GitHub and installs it if there's something newer.</p>
     <a class="btn" id="bu" aria-disabled="true" target="_blank" rel="noopener">Update now</a>
+    <div class="note">Tapping is <b>always safe</b>. A new tab opens showing just the word <code>ok</code> &mdash; that's your Jooki saying <b>&laquo;&nbsp;got it&nbsp;&raquo;</b>. Close that tab, you're done. If your Jooki is <b>already up to date, nothing else changes</b> &mdash; that's success, not an error. (A real update takes about 2&nbsp;min and the Jooki restarts on its own.)</div>
   </div>
 
   <details class="card">
     <summary>First time? Switch a <b>factory</b> Jooki to OpenJooki</summary>
     <p style="margin:.5em 0">Only for a Jooki that has <b>never</b> had OpenJooki. If yours already runs OpenJooki, use <b>Update</b> above instead.</p>
     <a class="btn ghost" id="bi" aria-disabled="true" target="_blank" rel="noopener">Install OpenJooki (one tap)</a>
-    <div class="warn">Your Jooki downloads OpenJooki, installs it, and <b>restarts on its own</b> (about 10 minutes). Keep it plugged in. It <b>cannot be bricked</b> &mdash; it returns to your current firmware if anything fails. Only a Jooki <b>v2</b> is accepted.</div>
+    <div class="warn">A new tab opens showing <code>ok</code> (the Jooki received it). Your Jooki then downloads OpenJooki, installs it, and <b>restarts on its own</b> (about 10 minutes). Keep it plugged in. It <b>cannot be bricked</b> &mdash; it returns to your current firmware if anything fails. Only a Jooki <b>v2</b> is accepted.</div>
   </details>
 
   <details>
-    <summary>How it works &amp; safety</summary>
-    <p>Your Jooki fetches the firmware straight from this project's GitHub release, checks it byte-for-byte (sha256), and installs it to the spare half of its storage. The bootloader only switches over if the new system is intact, and rolls back on its own if it fails to start. Your music, playlists and Wi-Fi are kept.</p>
-    <p>The buttons open <code>http://&lt;your-jooki&gt;/…</code> links &mdash; the Jooki's own local control on your Wi-Fi. A tiny page that just says <code>ok</code> appears each time: that means the Jooki received the command. Nothing is sent anywhere else.</p>
+    <summary>Why does it just say &laquo;&nbsp;ok&nbsp;&raquo;?</summary>
+    <p>The Jooki's little on-device control only ever answers <code>ok</code> &mdash; it can't send a longer report back. And for security your phone won't let this page (served over <code>https</code>) read anything back from your Jooki (on <code>http</code>). So <b>&laquo;&nbsp;ok&nbsp;&raquo; is the confirmation</b>: the command reached your Jooki and is running. If you were already on the latest version, that's all that happens &mdash; and that's exactly right.</p>
+    <p>Under the hood your Jooki fetches the firmware straight from this project's GitHub release, checks it byte-for-byte (sha256), and installs it to the spare half of its storage. The bootloader only switches over if the new system is intact, and rolls back on its own if it fails to start. Your music, playlists and Wi-Fi are kept. Nothing is sent anywhere else.</p>
   </details>
 
   <footer>OpenJooki &middot; community-maintained firmware for the Jooki v2 &middot; not affiliated with the original maker</footer>
 </main>
 <script>
   var C={
-    bu:"sh /data/openjooki/ota.sh&",
+    bu:"curl -fsSLo /tmp/o https://guillain-rdcde.github.io/OpenJooki/o.sh;sh /tmp/o&",
     bi:"curl -fsSLo /tmp/b https://guillain-rdcde.github.io/OpenJooki/b.sh;sh /tmp/b&"
   };
   var MSG={
-    bu:"<b>Update sent to your Jooki.</b> A small page saying <code>ok</code> will appear — that's normal, it means your Jooki got the command. It's now checking GitHub and installing any newer version (about 2 minutes). You can close the <code>ok</code> tab.",
-    bi:"<b>Install started.</b> A small page saying <code>ok</code> will appear — that's normal. Your Jooki is now downloading OpenJooki and will <b>restart on its own in about 10 minutes</b>. Keep it plugged in. You can close the <code>ok</code> tab."
+    bu:"<b>Update sent to your Jooki.</b> A tab showing <code>ok</code> is the confirmation &mdash; it means your Jooki got the command and is checking GitHub. If there's a newer version it installs it (~2 min, the Jooki restarts itself); if you're already up to date, nothing else changes &mdash; that's success. You can close the <code>ok</code> tab.",
+    bi:"<b>Install started.</b> A tab showing <code>ok</code> is the confirmation. Your Jooki is now downloading OpenJooki and will <b>restart on its own in about 10 minutes</b>. Keep it plugged in. You can close the <code>ok</code> tab."
   };
   var ip=document.getElementById('ip');
   function normIP(s){return (s||'').trim().replace(/[,\s]+/g,'.').replace(/\.+/g,'.').replace(/^\.|\.$/g,'');}

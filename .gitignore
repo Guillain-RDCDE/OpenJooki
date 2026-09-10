@@ -22,3 +22,6 @@ run/_to_delete/
 run/
 __pycache__/
 *.pyc
+
+# Release build artifacts (assets uploaded to GitHub Releases, not committed)
+release-*/

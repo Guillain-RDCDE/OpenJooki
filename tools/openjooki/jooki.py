@@ -19,6 +19,9 @@ BKP  = os.path.join(HOME, "backups")
 DEFAULT_HOST = os.environ.get("JOOKI_HOST", "192.168.1.61")
 PATCH_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "patches")
 SERVICES_DIR = "/jooki/app/services"
+# Hardware models OpenJooki currently supports (Jooki v2 = Ingenic X1000).
+# A firmware is refused on any other model (e.g. a v1) BEFORE any write.
+SUPPORTED_DEVICE_TYPES = ("ml-j2000",)
 MQTT_PORT = 1883
 
 SSH_OPTS = [
@@ -265,6 +268,18 @@ def cmd_music(args):
 
 
 # ---------------- A/B patch (proven mechanism: clone + switch + revert) ----------------
+def _device_type(host):
+    """Return the Mender device_type identifying the hardware model (e.g. 'ml-j2000'
+    for a Jooki v2). This is the canonical model id used to refuse a firmware meant
+    for another model. Empty string if it cannot be read."""
+    for path in ("/etc/mender/device_type", "/data/mender/device_type",
+                 "/var/lib/mender/device_type"):
+        out = ssh(host, "cat %s 2>/dev/null" % path).stdout.strip()
+        if out:
+            return out.split("=")[-1].strip()
+    return ""
+
+
 def _boot_part(host):
     r=ssh(host,"fw_printenv mender_boot_part 2>/dev/null | sed 's/.*=//'")
     return (r.stdout or "").strip()

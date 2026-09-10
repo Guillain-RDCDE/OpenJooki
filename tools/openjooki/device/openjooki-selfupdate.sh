@@ -16,6 +16,17 @@ grep -q "root=/dev/mmcblk0p$A" /proc/cmdline || { log "SAFETY: active != $A, abo
 # p2/p3 sizes identical (safeguard)
 P2=$(cat /sys/class/block/mmcblk0p2/size); P3=$(cat /sys/class/block/mmcblk0p3/size)
 [ "$P2" = "$P3" ] || { log "SAFETY: p2/p3 sizes differ, aborting"; exit 2; }
+
+# Hardware-model safety gate: this firmware is for the Jooki v2 ("ml-j2000").
+# Refuse on any other model (e.g. a v1) BEFORE writing, to avoid bricking it.
+# --force-model skips the check (expert use only).
+DT=$(cat /data/mender/device_type 2>/dev/null || cat /var/lib/mender/device_type 2>/dev/null || cat /etc/mender/device_type 2>/dev/null)
+DT=${DT##*=}
+if [ "$MODE" != "--force-model" ] && [ "$2" != "--force-model" ] && [ "$3" != "--force-model" ]; then
+  [ -n "$DT" ] || { log "SAFETY: cannot read device model (device_type) — aborting"; exit 2; }
+  [ "$DT" = "ml-j2000" ] || { log "SAFETY: device model is '$DT', firmware is for 'ml-j2000' — aborting (wrong model)"; exit 2; }
+  log "device model OK: $DT"
+fi
 umount /mnt/spchk /mnt/p2patch 2>/dev/null
 
 log "reference fingerprint (source)…"

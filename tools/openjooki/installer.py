@@ -106,6 +106,19 @@ def install_firmware(host, image_path, on_step=None, on_progress=None, do_switch
         raise InstallError("Jooki not found on the network.")
     if not jooki.ensure_ssh(host):
         raise InstallError("Secure access impossible.")
+
+    # Hardware-model safety gate: this firmware is built for the Jooki v2
+    # (Mender device_type "ml-j2000"). Installing it on another model (e.g. a
+    # Jooki v1) could brick the device, so we refuse BEFORE touching anything.
+    step("Checking the device model…")
+    dt = jooki._device_type(host)
+    if not dt:
+        raise InstallError("Cannot read this device's model (Mender device_type). "
+                           "Refusing to install to avoid bricking an unknown device.")
+    if dt not in jooki.SUPPORTED_DEVICE_TYPES:
+        raise InstallError("This device is a %r, but this firmware only supports %s. "
+                           "Refusing to install (wrong hardware model)."
+                           % (dt, ", ".join(jooki.SUPPORTED_DEVICE_TYPES)))
     a = jooki._boot_part(host)
     if a not in ("2", "3"):
         raise InstallError("Unexpected partition state (%r)." % a)

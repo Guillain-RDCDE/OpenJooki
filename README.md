@@ -15,12 +15,20 @@ From a phone (or any device) on the **same Wi‑Fi** as the Jooki:
 
 1. Open the installer page: **https://guillain-rdcde.github.io/OpenJooki/**
 2. Type your Jooki's **IP address** (find it in your router's device list, or
-   the Jooki app).
-3. Tap the steps **in order**. The Jooki downloads OpenJooki from GitHub,
-   installs it, and **restarts on its own** (about 10 minutes). Keep it plugged
-   in — that's it, no computer and no cables.
+   the Jooki app). The page remembers it for next time.
+3. Tap **Install OpenJooki** (first time) or **Update** (already on OpenJooki).
+   A short confirmation explains what will happen — confirm, then **just wait**.
 
-Already on OpenJooki? The same page has a **one‑tap update** button.
+The page then shows a **spinner and a countdown** while the Jooki downloads
+OpenJooki, installs it, and **restarts on its own** — about **10–15 minutes** for
+a first install, **~2 minutes** for an update. Nothing else appears on screen,
+and that's normal. Your **music and Wi‑Fi are kept**. Keep it plugged in.
+
+> A tiny throwaway `ok` tab may flash up when the command is sent. It's harmless,
+> and the page closes it for you where the browser allows. Because the page is
+> served over HTTPS and the Jooki answers over plain HTTP, the browser won't let
+> the command fire completely invisibly — but the Jooki receives it either way,
+> so closing or ignoring that tab changes nothing.
 
 **It cannot brick your Jooki**, and only a Jooki **v2** is accepted (a v1 is
 refused before anything is written). See *Why it's safe* below.
@@ -62,6 +70,9 @@ Everything is open and readable. Start here:
   See [tools/openjooki/README.md](tools/openjooki/README.md).
 - **Updates from GitHub** — how a Jooki can fetch a release from this repo and
   install it by itself: [docs/15-ota-github.md](docs/15-ota-github.md).
+- **Phone-first install & the installer page** — how the page talks to the Jooki,
+  the browser constraints, the waiting UX, and going back to factory:
+  [docs/16-phone-install.md](docs/16-phone-install.md).
 - **Full technical write‑up** — how the Jooki works and how it was taken apart:
   - [docs/04-architecture.md](docs/04-architecture.md) — hardware & data model
   - [docs/06-root-access.md](docs/06-root-access.md) — getting root over SSH

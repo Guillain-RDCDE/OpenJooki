@@ -14,13 +14,29 @@ OTA updates via **Mender** (Muuselabs servers dead).
 ## SD card — partitions (mmcblk0)
 | Part | Mount point | FS | Role |
 |---|---|---|---|
-| factory | - | ext4 | base Linux |
-| rootfs A | / | ext4 | system (active or B) |
-| rootfs B | / | ext4 | redundant system (rollback) |
-| swap | - | swap | virtual memory |
-| p5 | /data | ext4 | Spotify, Mender, flags `/data/mode/` |
+| p1 | - (factory) | ext4 | **factory image** — the original Muuselabs system, kept for recovery |
+| p2 | / | ext4 | rootfs **A** (system, active or standby) |
+| p3 | / | ext4 | rootfs **B** (system, active or standby) |
+| p4 | - | swap | virtual memory |
+| p5 | /data | ext4 | Spotify, Mender, **OpenJooki scripts** (`/data/openjooki/`), flags `/data/mode/` |
 | p6 | /mnt/config | FAT | logs, `jooki.conf` |
-| p7 | /jooki/external | ext4 | **data: playlists, tokens, uploads** |
+| p7 | /jooki/external | ext4 | **content: playlists, tokens, uploads** |
+
+The system runs on **one** of the two A/B rootfs (p2/p3). An update writes the
+**other** slot and switches to it (with armed rollback); the **factory** image
+(p1) and the bootloader are never written. `mender_boot_part` (U-Boot env) says
+which slot boots.
+
+### Going back to factory (Muuselabs) — reversible
+The original Muuselabs firmware stays present: on the **factory** partition (p1),
+and on whichever A/B slot OpenJooki hasn't overwritten yet. Two ways back, both
+leaving `/data` (music) intact:
+- **Switch the A/B slot** to the one that still holds Muuselabs —
+  `fw_setenv mender_boot_part 3` (or `2`) + matching `mender_boot_part_hex`, then
+  reboot. Fully reversible: switch back the same way. OpenJooki stays on its slot.
+- **Boot the factory image** — `fw_setenv factory_reset 1` + reboot (U-Boot then
+  boots `mender_factory_part`, here p1). Use with care: a factory reset may clear
+  user data.
 
 ## Data (content partition, /jooki/)
 - `playlists.json` — playlists

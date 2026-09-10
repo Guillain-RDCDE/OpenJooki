@@ -1,5 +1,28 @@
 # OpenJooki — Changelog
 
+## v0.3.0 (2026-09-10) — phone-first install, proven end-to-end
+The "factory Jooki → OpenJooki from a phone, no computer" path is now real and
+**verified on a live device**: a factory Muuselabs Jooki v2, one tap on the
+installer page, self-download → sha256 verify → A/B write → self-reboot →
+OpenJooki 1.0.0 running, music and Wi-Fi intact.
+- **Robust downloads**: every `curl` in the on-device scripts retries up to 5×
+  (re-resolving DNS). Fixes a real failure — a **transient DNS drop** on the
+  release CDN aborted the 39 MB firmware download; the retry recovers from it.
+- **Simpler distribution**: the updater scripts (`o.sh`, `b.sh`,
+  `openjooki-ota.sh`, `openjooki-selfupdate.sh`) are now served from **GitHub
+  Pages**, so a fix ships with a plain `git push` — no release upload, no `gh`
+  login. The firmware image + `version.json` stay as Release assets.
+- **Installer page, rebuilt for non-technical users** (`docs/index.html`):
+  much less text; a **confirmation** that sets expectations ("nothing shows on
+  screen for ~10–15 min, that's normal, it restarts itself, don't unplug"); then
+  a full-screen **spinner + countdown**; auto-closes the throwaway `ok` tab where
+  the browser allows; accepts comma-or-dot IPs (iOS keypad) and remembers the IP.
+- **Documented** the hard browser constraint (HTTPS page ↔ HTTP device =
+  mixed-content: the command can only be fired via a visible tab, and status
+  can't be read back), the SD partition map with real numbers, and the
+  **reversible factory-revert** procedure — see `docs/16-phone-install.md` and
+  `docs/04-architecture.md`.
+
 ## v0.2.1 (2026-09-09) — cross-platform (web) installer + "phone" groundwork
 - **Local web installer** (`installer_web.py`) replacing the Tk GUI (macOS Tk does
   not render): page served locally, firmware **drag-and-drop**, progress bar,

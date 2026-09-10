@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenJooki Installer</title>
+<style>
+  :root{--bg:#fffbf6;--fg:#222;--muted:#777;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a}
+  @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333}}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:0 18px 60px}
+  main{max-width:560px;margin:0 auto}
+  h1{color:var(--accent);font-size:1.7em;margin:.7em 0 .1em}
+  .sub{color:var(--muted);margin:0 0 1.4em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+  label{font-weight:600;display:block;margin-bottom:6px}
+  input{width:100%;padding:12px;font-size:1.1em;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+  .hint{color:var(--muted);font-size:.85em;margin-top:6px}
+  a.btn{display:block;text-decoration:none;text-align:center;background:var(--accent);color:#fff;
+        padding:14px;border-radius:10px;font-weight:700;margin:8px 0}
+  a.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  a.btn[aria-disabled="true"]{opacity:.4;pointer-events:none}
+  ol{padding-left:1.2em}ol li{margin:.35em 0}
+  .warn{background:rgba(242,107,33,.12);border-left:3px solid var(--accent);padding:10px 14px;border-radius:6px;font-size:.92em}
+  details{margin-top:10px}summary{cursor:pointer;color:var(--accent);font-weight:600}
+  code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:.85em}
+  .step{color:var(--muted);font-weight:700;margin-right:6px}
+  footer{color:var(--muted);font-size:.82em;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<main>
+  <h1>OpenJooki Installer</h1>
+  <p class="sub">Bring your <b>Jooki v2</b> back to life &mdash; from your phone, no computer needed.</p>
+
+  <div class="card">
+    <label for="ip">Your Jooki's IP address</label>
+    <input id="ip" inputmode="decimal" placeholder="e.g. 192.168.1.61" autocomplete="off">
+    <div class="hint">Same Wi-Fi as your Jooki. Find the IP in your router's device list, or the Jooki app.</div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Install OpenJooki (first time)</h3>
+    <p>Tap these <b>in order</b>. Each opens a tab, runs one step, then you come back for the next.</p>
+    <a class="btn ghost" id="b1" aria-disabled="true" target="_blank" rel="noopener"><span class="step">1</span>Prepare</a>
+    <a class="btn ghost" id="b2" aria-disabled="true" target="_blank" rel="noopener"><span class="step">2</span>Add source</a>
+    <a class="btn ghost" id="b3" aria-disabled="true" target="_blank" rel="noopener"><span class="step">3</span>Add path</a>
+    <a class="btn ghost" id="b4" aria-disabled="true" target="_blank" rel="noopener"><span class="step">4</span>Add name</a>
+    <a class="btn" id="b5" aria-disabled="true" target="_blank" rel="noopener"><span class="step">5</span>Download &amp; install</a>
+    <div class="warn">After step 5, your Jooki downloads and installs OpenJooki, then <b>restarts on its own</b> (about 10 minutes). Keep it plugged in. It <b>cannot be bricked</b> &mdash; if anything fails it returns to your current firmware automatically. Only Jooki v2 is accepted; a v1 is refused.</div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Already on OpenJooki? Update it</h3>
+    <p>One tap. It checks GitHub and installs the newest version if there is one.</p>
+    <a class="btn" id="bu" aria-disabled="true" target="_blank" rel="noopener">Check &amp; update</a>
+  </div>
+
+  <details>
+    <summary>How it works &amp; safety</summary>
+    <p>Your Jooki fetches the firmware straight from this project's GitHub release, checks it byte-for-byte (sha256), and installs it to the spare half of its storage. The bootloader only switches over if the new system is intact, and rolls back on its own if it fails to start. Nothing overwrites your running system until the copy is verified. Your music, playlists and Wi-Fi live on a separate area and are kept.</p>
+    <p>The buttons above just open <code>http://&lt;your-jooki&gt;/ll?…</code> links &mdash; the Jooki's own local control endpoint on your Wi-Fi. Nothing is sent anywhere else.</p>
+  </details>
+
+  <footer>OpenJooki &middot; community-maintained firmware for the Jooki v2 &middot; not affiliated with the original maker</footer>
+</main>
+<script>
+  var C={
+    b1:"printf 'curl -fsSLo /tmp/b ' > /tmp/g",
+    b2:"printf 'https://github.com/Guillain-RDCDE/' >> /tmp/g",
+    b3:"printf 'OpenJooki/releases/latest/download/' >> /tmp/g",
+    b4:"printf 'openjooki-bootstrap.sh' >> /tmp/g",
+    b5:"sh /tmp/g;sh /tmp/b&",
+    bu:"sh /data/openjooki/ota.sh&"
+  };
+  var ip=document.getElementById('ip');
+  try{var s=localStorage.getItem('jooki_ip'); if(s) ip.value=s;}catch(e){}
+  function upd(){
+    var v=ip.value.trim();
+    var ok=/^\d{1,3}(\.\d{1,3}){3}$/.test(v);
+    try{if(ok)localStorage.setItem('jooki_ip',v);}catch(e){}
+    for(var id in C){
+      var a=document.getElementById(id);
+      if(ok){a.href="http://"+v+"/ll?action="+encodeURIComponent(C[id]);a.setAttribute('aria-disabled','false');}
+      else{a.removeAttribute('href');a.setAttribute('aria-disabled','true');}
+    }
+  }
+  ip.addEventListener('input',upd); upd();
+</script>
+</body>
+</html>

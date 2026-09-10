@@ -56,11 +56,30 @@ fi
 [ "$GOT" = "$WANT" ] || { log "VERIFY FAILED ($GOT != $WANT) — nothing activated, Jooki intact"; exit 3; }
 log "transfer bit-perfect identical OK"
 
-log "bootable system check…"
+log "bootable system check + install commit-on-boot hook…"
 mkdir -p /mnt/spchk
-mount -o ro "$SDEV" /mnt/spchk 2>/dev/null || { log "image not mountable — nothing activated"; exit 3; }
+mount "$SDEV" /mnt/spchk 2>/dev/null || { log "image not mountable — nothing activated"; exit 3; }
 if [ ! -f /mnt/spchk/boot/uImage ]; then umount /mnt/spchk; log "no kernel — nothing activated"; exit 3; fi
+# Commit-on-boot: once the NEW system boots healthy it disarms the rollback.
+# Without this, U-Boot would roll back on a later reboot. Installed INTO the
+# target partition so every OpenJooki install becomes permanent once it boots.
+mkdir -p /mnt/spchk/etc/rcS.d
+cat > /mnt/spchk/etc/rcS.d/S99_openjooki_commit.sh <<'CMT'
+#!/bin/ash
+# OpenJooki: commit the A/B update on a healthy boot (idempotent, runs late).
+( sleep 30
+  UA=$(fw_printenv upgrade_available 2>/dev/null | sed 's/.*=//')
+  if [ "$UA" = "1" ]; then
+    fw_setenv upgrade_available 0
+    fw_setenv bootcount 0
+    echo -n 0 > /sys/kernel/htdrv/bootcount 2>/dev/null
+    logger -s "openjooki: A/B update committed (rollback disarmed)"
+  fi ) &
+CMT
+chmod +x /mnt/spchk/etc/rcS.d/S99_openjooki_commit.sh
+sync
 umount /mnt/spchk
+log "commit-on-boot hook installed on p$S"
 
 if [ "$MODE" = "--dry" ]; then
   log "OK (--dry mode): firmware written and verified on p$S, NOT activated."; exit 0
@@ -74,4 +93,5 @@ fw_setenv mender_boot_part "$S"
 fw_setenv mender_boot_part_hex "$S"
 sync
 log "REBOOT_NOW: the Jooki reboots onto p$S. If it doesn't start, U-Boot returns on its own to p$A."
-reboot
+sync
+/sbin/reboot 2>/dev/null || /bin/reboot 2>/dev/null || busybox reboot 2>/dev/null || reboot

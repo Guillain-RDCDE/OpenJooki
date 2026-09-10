@@ -1,0 +1,97 @@
+#!/bin/ash
+# OpenJooki — SAFE A/B self-install, run ON the Jooki (phone path / no-PC path).
+# Usage: openjooki-selfupdate.sh <image> [--dry]
+#   <image>: firmware already present on the Jooki (raw .img or .img.gz).
+#   --dry  : writes + verifies on the spare partition, WITHOUT activating (no reboot).
+# Guarantees: NEVER writes to the active partition nor to boot/factory;
+# verifies bit for bit (sha256); arms the U-Boot rollback (auto return if it doesn't start).
+IMG="$1"; MODE="$2"
+log(){ echo "[openjooki] $*"; }
+[ -f "$IMG" ] || { log "IMAGE NOT FOUND: $IMG"; exit 2; }
+
+A=$(fw_printenv mender_boot_part 2>/dev/null | sed 's/.*=//')
+case "$A" in 2) S=3;; 3) S=2;; *) log "UNEXPECTED ACTIVE PARTITION: $A"; exit 2;; esac
+SDEV="/dev/mmcblk0p$S"
+grep -q "root=/dev/mmcblk0p$A" /proc/cmdline || { log "SAFETY: active != $A, aborting"; exit 2; }
+# p2/p3 sizes identical (safeguard)
+P2=$(cat /sys/class/block/mmcblk0p2/size); P3=$(cat /sys/class/block/mmcblk0p3/size)
+[ "$P2" = "$P3" ] || { log "SAFETY: p2/p3 sizes differ, aborting"; exit 2; }
+
+# Hardware-model safety gate: this firmware is for the Jooki v2 ("ml-j2000").
+# Refuse on any other model (e.g. a v1) BEFORE writing, to avoid bricking it.
+# --force-model skips the check (expert use only).
+DT=$(cat /data/mender/device_type 2>/dev/null || cat /var/lib/mender/device_type 2>/dev/null || cat /etc/mender/device_type 2>/dev/null)
+DT=${DT##*=}
+if [ "$MODE" != "--force-model" ] && [ "$2" != "--force-model" ] && [ "$3" != "--force-model" ]; then
+  [ -n "$DT" ] || { log "SAFETY: cannot read device model (device_type) — aborting"; exit 2; }
+  [ "$DT" = "ml-j2000" ] || { log "SAFETY: device model is '$DT', firmware is for 'ml-j2000' — aborting (wrong model)"; exit 2; }
+  log "device model OK: $DT"
+fi
+umount /mnt/spchk /mnt/p2patch 2>/dev/null
+
+log "reference fingerprint (source)…"
+case "$IMG" in
+  *.gz) WANT=$(gzip -dc "$IMG" | sha256sum | cut -d' ' -f1)
+        TOTAL=$(gzip -dc "$IMG" | wc -c);;
+  *)    WANT=$(sha256sum "$IMG" | cut -d' ' -f1)
+        TOTAL=$(wc -c < "$IMG");;
+esac
+PBYTES=$((P2*512))
+[ "$TOTAL" -le "$PBYTES" ] || { log "SAFETY: image too large ($TOTAL > $PBYTES)"; exit 2; }
+
+log "writing to spare partition p$S (do not unplug)…"
+case "$IMG" in
+  *.gz) gzip -dc "$IMG" | dd of="$SDEV" bs=1M 2>/dev/null;;
+  *)    dd if="$IMG" of="$SDEV" bs=1M 2>/dev/null;;
+esac
+sync
+
+log "bit-for-bit verification…"
+B=$((TOTAL/512)); R=$((TOTAL%512))
+if [ "$R" -gt 0 ]; then
+  GOT=$({ dd if="$SDEV" bs=512 count="$B" 2>/dev/null; dd if="$SDEV" bs=1 skip=$((B*512)) count="$R" 2>/dev/null; } | sha256sum | cut -d' ' -f1)
+else
+  GOT=$(dd if="$SDEV" bs=512 count="$B" 2>/dev/null | sha256sum | cut -d' ' -f1)
+fi
+[ "$GOT" = "$WANT" ] || { log "VERIFY FAILED ($GOT != $WANT) — nothing activated, Jooki intact"; exit 3; }
+log "transfer bit-perfect identical OK"
+
+log "bootable system check + install commit-on-boot hook…"
+mkdir -p /mnt/spchk
+mount "$SDEV" /mnt/spchk 2>/dev/null || { log "image not mountable — nothing activated"; exit 3; }
+if [ ! -f /mnt/spchk/boot/uImage ]; then umount /mnt/spchk; log "no kernel — nothing activated"; exit 3; fi
+# Commit-on-boot: once the NEW system boots healthy it disarms the rollback.
+# Without this, U-Boot would roll back on a later reboot. Installed INTO the
+# target partition so every OpenJooki install becomes permanent once it boots.
+mkdir -p /mnt/spchk/etc/rcS.d
+cat > /mnt/spchk/etc/rcS.d/S99_openjooki_commit.sh <<'CMT'
+#!/bin/ash
+# OpenJooki: commit the A/B update on a healthy boot (idempotent, runs late).
+( sleep 30
+  UA=$(fw_printenv upgrade_available 2>/dev/null | sed 's/.*=//')
+  if [ "$UA" = "1" ]; then
+    fw_setenv upgrade_available 0
+    fw_setenv bootcount 0
+    echo -n 0 > /sys/kernel/htdrv/bootcount 2>/dev/null
+    logger -s "openjooki: A/B update committed (rollback disarmed)"
+  fi ) &
+CMT
+chmod +x /mnt/spchk/etc/rcS.d/S99_openjooki_commit.sh
+sync
+umount /mnt/spchk
+log "commit-on-boot hook installed on p$S"
+
+if [ "$MODE" = "--dry" ]; then
+  log "OK (--dry mode): firmware written and verified on p$S, NOT activated."; exit 0
+fi
+
+log "arming U-Boot rollback + activating p$S…"
+echo -n 0 > /sys/kernel/htdrv/bootcount 2>/dev/null
+fw_setenv bootcount 0
+fw_setenv upgrade_available 1
+fw_setenv mender_boot_part "$S"
+fw_setenv mender_boot_part_hex "$S"
+sync
+log "REBOOT_NOW: the Jooki reboots onto p$S. If it doesn't start, U-Boot returns on its own to p$A."
+sync
+/sbin/reboot 2>/dev/null || /bin/reboot 2>/dev/null || busybox reboot 2>/dev/null || reboot

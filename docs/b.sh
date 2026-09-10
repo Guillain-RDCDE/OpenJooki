@@ -9,6 +9,7 @@
 #   http://<jooki-ip>/openjooki-status.txt
 REPO="Guillain-RDCDE/OpenJooki"
 BASE="https://github.com/$REPO/releases/latest/download"
+PAGES="https://guillain-rdcde.github.io/OpenJooki"
 WORK="/data/openjooki"
 WEB="/jooki/app/www/public"
 STATUS="$WEB/openjooki-status.txt"
@@ -28,8 +29,8 @@ st "device OK: Jooki v2 ($DT)"
 
 # --- Fetch the OpenJooki updater scripts (from the GitHub release) ---
 st "downloading the OpenJooki updater…"
-dl "$BASE/openjooki-ota.sh" "$WORK/ota.sh" || { st "ERROR: no internet / cannot reach GitHub — aborting (nothing changed)"; exit 1; }
-dl "$BASE/openjooki-selfupdate.sh" "$WORK/selfupdate.sh" || { st "ERROR: download failed — aborting (nothing changed)"; exit 1; }
+dl "$PAGES/openjooki-ota.sh" "$WORK/ota.sh" || { st "ERROR: no internet / cannot reach GitHub — aborting (nothing changed)"; exit 1; }
+dl "$PAGES/openjooki-selfupdate.sh" "$WORK/selfupdate.sh" || { st "ERROR: download failed — aborting (nothing changed)"; exit 1; }
 chmod +x "$WORK/ota.sh" "$WORK/selfupdate.sh"
 st "updater ready"
 

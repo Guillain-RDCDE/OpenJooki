@@ -36,7 +36,7 @@
   <div class="card">
     <label for="ip">Your Jooki's IP address</label>
     <input id="ip" inputmode="decimal" placeholder="e.g. 192.168.1.61" autocomplete="off">
-    <div class="hint">Same Wi-Fi as your Jooki. Find the IP in your router's device list, or the Jooki app.</div>
+    <div class="hint">Same Wi-Fi as your Jooki. Find the IP in your router's device list, or the Jooki app. You can type dots or commas.</div>
   </div>
 
   <div class="card">
@@ -74,9 +74,15 @@
     bu:"sh /data/openjooki/ota.sh&"
   };
   var ip=document.getElementById('ip');
-  try{var s=localStorage.getItem('jooki_ip'); if(s) ip.value=s;}catch(e){}
+  // Accept dots OR commas/spaces (iOS French numeric keypad only offers a comma).
+  function normIP(s){return (s||'').trim().replace(/[,\s]+/g,'.').replace(/\.+/g,'.').replace(/^\.|\.$/g,'');}
+  try{
+    var q=new URLSearchParams(location.search).get('ip');
+    var s=q||localStorage.getItem('jooki_ip');
+    if(s){ip.value=normIP(s);}
+  }catch(e){}
   function upd(){
-    var v=ip.value.trim();
+    var v=normIP(ip.value);
     var ok=/^\d{1,3}(\.\d{1,3}){3}$/.test(v);
     try{if(ok)localStorage.setItem('jooki_ip',v);}catch(e){}
     for(var id in C){

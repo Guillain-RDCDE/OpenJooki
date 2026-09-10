@@ -36,7 +36,16 @@
   <div class="card">
     <label for="ip">Your Jooki's IP address</label>
     <input id="ip" inputmode="decimal" placeholder="e.g. 192.168.1.61" autocomplete="off">
-    <div class="hint">Same Wi-Fi as your Jooki. Find the IP in your router's device list, or the Jooki app. You can type dots or commas.</div>
+    <div class="hint">Phone on the <b>same Wi-Fi</b> as the Jooki. Dots or commas both work &mdash; and this page <b>remembers it</b> next time.</div>
+    <details>
+      <summary>How do I find my Jooki's IP?</summary>
+      <ul>
+        <li><b>Easiest &mdash; the Jooki app:</b> open it, pick your Jooki, go to its <i>Device / Settings</i> screen; the IP is shown there.</li>
+        <li><b>Your Wi-Fi router:</b> open its page (often <code>192.168.1.1</code>) &rarr; <i>Connected devices</i> &rarr; look for a name starting with <code>jooki</code>.</li>
+        <li>It looks like <code>192.168.1.42</code> or <code>192.168.0.42</code> &mdash; four numbers.</li>
+      </ul>
+      <p class="hint">A web page isn't allowed to scan your network for the Jooki (your phone blocks that for security), so it needs the address once &mdash; then it's saved.</p>
+    </details>
   </div>
 
   <div class="card">

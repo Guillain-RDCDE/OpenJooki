@@ -53,6 +53,10 @@ if [ "$GOT" != "$SHA" ]; then
 fi
 log "image intact (sha256 OK)."
 
+if [ ! -x "$SELF" ]; then
+  log "fetching updater (selfupdate.sh)…"
+  curl -fsSL --max-time 90 "$BASE/openjooki-selfupdate.sh" -o "$SELF" 2>/dev/null && chmod +x "$SELF"
+fi
 [ -x "$SELF" ] || { log "selfupdate.sh not found"; exit 4; }
 log "A/B install (spare partition, armed rollback)…"
 sh "$SELF" "$WORK/$FILE"

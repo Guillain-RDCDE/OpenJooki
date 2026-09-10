@@ -8,26 +8,35 @@ Jooki**.
 
 ---
 
-## Just want to update your Jooki?
+## Install / update from your phone — no computer
 
-You only need a computer on the **same Wi‑Fi** as the Jooki, and Python 3
-(already on macOS and Linux; on Windows install it from python.org).
+Your **Jooki v2** installs OpenJooki **by itself**, straight from this project.
+From a phone (or any device) on the **same Wi‑Fi** as the Jooki:
+
+1. Open the installer page: **https://guillain-rdcde.github.io/OpenJooki/**
+2. Type your Jooki's **IP address** (find it in your router's device list, or
+   the Jooki app).
+3. Tap the steps **in order**. The Jooki downloads OpenJooki from GitHub,
+   installs it, and **restarts on its own** (about 10 minutes). Keep it plugged
+   in — that's it, no computer and no cables.
+
+Already on OpenJooki? The same page has a **one‑tap update** button.
+
+**It cannot brick your Jooki**, and only a Jooki **v2** is accepted (a v1 is
+refused before anything is written). See *Why it's safe* below.
+
+### Prefer a computer?
+
+On a machine on the **same Wi‑Fi**, with Python 3 (already on macOS/Linux; on
+Windows install it from python.org):
 
 1. Download this project (green **Code** button → **Download ZIP**, then unzip).
-2. Open a terminal in the folder and run:
+2. In a terminal in the folder, run:
    ```sh
    python3 tools/openjooki/installer_web.py
    ```
-3. Your browser opens. **Drag your firmware file onto the page**, click
-   **Install safely**, and wait. That's it.
-
-A progress bar does everything: it writes to the spare copy of the system,
-checks it **bit‑for‑bit**, switches over, and tests it. **If anything is wrong,
-the Jooki goes back to the version it had before, on its own.** You cannot brick
-it.
-
-> On a phone? Run `python3 tools/openjooki/installer_web.py --lan` and open the
-> address it prints, from your phone on the same Wi‑Fi.
+3. Your browser opens. **Drag the firmware onto the page**, click **Install
+   safely**, and wait. The same safe A/B install, with a progress bar.
 
 ---
 

@@ -25,3 +25,9 @@ __pycache__/
 
 # Release build artifacts (assets uploaded to GitHub Releases, not committed)
 release-*/
+
+# Test bench: decoded Jooki program (Muuselabs code, never published) and generated media
+tools/openjooki/tests/player*.lua
+tools/openjooki/tests/player.lib
+tools/openjooki/tests/media/
+tools/openjooki/tests/shots/

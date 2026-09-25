@@ -9,8 +9,8 @@ This file: read/backup + CONTENT management (music/playlists/tokens).
 Content management writes ONLY to /jooki/external — bricking is impossible.
 Python 3, standard library only.
 """
-__version__ = "0.2.1"
-import argparse, os, socket, struct, subprocess, sys, time, json, random, mimetypes, base64, glob
+__version__ = "0.4.0"
+import argparse, os, socket, struct, subprocess, sys, time, json, random, mimetypes, base64, glob, hashlib
 import urllib.parse, urllib.request, concurrent.futures, datetime
 
 HOME = os.path.expanduser("~/.openjooki")
@@ -446,6 +446,151 @@ def ab_harden(host):
         log("HARDEN OK — Jooki on p%s, %d fixes verified. Rollback: jooki patch switch %s"%(s,len(patches),a)); return 0
     log("verify KO -> back to p%s"%a); ab_switch(host,a); return 2
 
+
+# ---------------- "webui" patch: new web page + application fixes via A/B ----------------
+WEBUI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui")
+WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
+WEBUI_STALE = ("config.js",)   # shadowed by web_ctrl's "/config" prefix route: never ship it
+WWW_PUBLIC = "/jooki/app/www/public"
+WWW_ORIG = "/jooki/app/www/public-openjooki-orig"   # old 2018 web app, kept (not served)
+OLD_WWW = ("index.html", "asset-manifest.json", "service-worker.js", "deezer_channel.html", "static/js", "static/css")
+PLAYER_LIB = "/jooki/lib/player.lib"
+
+def ssh_bytes(host, remote_cmd, data=None, timeout=120):
+    """ssh with binary stdin/stdout (busybox has no base64: we stream the bytes)."""
+    cmd = ["ssh","-p",SSH_PORT,"-i",KEY]+SSH_OPTS+["root@"+host, remote_cmd]
+    return subprocess.run(cmd, input=data, capture_output=True, timeout=timeout)
+
+def _md5(b): return hashlib.md5(b).hexdigest()
+
+def mqtt_get_state(host, timeout=8):
+    """Ask the Jooki app for its state (proves the patched application runs)."""
+    cid = ("openjooki%d" % random.randint(0, 99999)).encode()
+    vh = struct.pack("!H",4)+b"MQTT"+bytes([4,2])+struct.pack("!H",30)
+    pl = struct.pack("!H",len(cid))+cid
+    s = socket.create_connection((host, MQTT_PORT), timeout=timeout)
+    try:
+        s.sendall(bytes([0x10])+_mqtt_remlen(len(vh)+len(pl))+vh+pl)
+        if s.recv(4)[:1] != b"\x20": return None
+        t = b"/j/web/output/state"
+        body = struct.pack("!H",1)+struct.pack("!H",len(t))+t+b"\x00"
+        s.sendall(bytes([0x82])+_mqtt_remlen(len(body))+body)
+        tp = b"/j/web/input/GET_STATE"; msg = b"{}"
+        body = struct.pack("!H",len(tp))+tp+msg
+        s.sendall(bytes([0x30])+_mqtt_remlen(len(body))+body)
+        buf = b""; end = time.time()+timeout
+        while time.time() < end:
+            try: chunk = s.recv(65536)
+            except socket.timeout: break
+            if not chunk: break
+            buf += chunk
+            while len(buf) >= 2:
+                mult, ln, i, done = 1, 0, 1, False
+                while i < len(buf) and i <= 4:
+                    b = buf[i]; i += 1; ln += (b & 127)*mult; mult *= 128
+                    if not b & 128: done = True; break
+                if not done or len(buf) < i+ln: break
+                head, pk, buf = buf[0], buf[i:i+ln], buf[i+ln:]
+                if head >> 4 == 3:
+                    tl = struct.unpack("!H", pk[:2])[0]
+                    try:
+                        d = json.loads(pk[2+tl:].decode("utf-8"))
+                        if isinstance(d, dict) and "db" in d: return d
+                    except Exception: pass
+        return None
+    finally:
+        try: s.sendall(bytes([0xE0,0x00]))
+        except Exception: pass
+        s.close()
+
+def _webui_build(host):
+    """Build the patched player.lib (from the ORIGINAL one) + the web files."""
+    import lua_patches as L
+    r = ssh_bytes(host, "cat %s.openjooki-orig 2>/dev/null || cat %s" % (PLAYER_LIB, PLAYER_LIB))
+    if r.returncode != 0 or len(r.stdout) < 1000: raise RuntimeError("cannot read player.lib")
+    src = L.decode(r.stdout)
+    if L.is_patched(src): raise RuntimeError("the base player.lib is already patched (original missing)")
+    lib = L.encode(L.apply(src))
+    files = {}
+    for f in WEBUI_FILES:
+        with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[f] = fh.read()
+    return r.stdout, lib, files
+
+def _webui_expected(lib, files, root=""):
+    exp = {root+PLAYER_LIB: _md5(lib)}
+    for f, b in files.items(): exp[root+WWW_PUBLIC+"/"+f] = _md5(b)
+    return exp
+
+def _md5_match(host, exp, prefix=""):
+    out = ssh(host, prefix+"md5sum "+" ".join(sorted(exp))+" 2>/dev/null").stdout
+    got = {}
+    for l in out.splitlines():
+        p = l.split()
+        if len(p) == 2: got[p[1]] = p[0]
+    return all(got.get(k) == v for k, v in exp.items())
+
+def webui_active_ok(host, lib, files):
+    return _md5_match(host, _webui_expected(lib, files))
+
+def ab_webui(host, dry_run=False):
+    """Install the new web page + application fixes via A/B (clone, write on the spare,
+       switch with armed rollback, verify; back to the previous partition if anything is off)."""
+    a = _boot_part(host)
+    if a not in ("2","3"): log("unexpected boot_part: %r" % a); return 1
+    s = _spare(a); sdev = "/dev/mmcblk0p"+s; MP = "/mnt/p2patch"
+    try: orig, lib, files = _webui_build(host)
+    except Exception as e: log("build failed: %s" % e); return 1
+    log("player.lib: %d -> %d bytes (patched); web files: %s" % (len(orig), len(lib), ", ".join(WEBUI_FILES)))
+    if webui_active_ok(host, lib, files):
+        log("Web UI and fixes already installed (active partition). Nothing to do."); return 0
+    if dry_run: log("[dry-run] build OK, nothing written"); return 0
+    log("[1] backup"); quick_backup(host)
+    log("[2] clone p%s -> p%s" % (a, s))
+    if ab_clone(host) != 0: log("clone failed -> aborting (boot unchanged)"); return 1
+    log("[3] writing on the spare partition")
+    mnt = "set -e; mkdir -p %s; mount %s %s; trap 'umount %s 2>/dev/null' EXIT; " % (MP, sdev, MP, MP)
+    # keep the originals once (never overwritten afterwards)
+    prep = mnt + ("R=%s; test -f $R%s.openjooki-orig || cp -a $R%s $R%s.openjooki-orig; mkdir -p $R%s; "
+                  % (MP, PLAYER_LIB, PLAYER_LIB, PLAYER_LIB, WWW_ORIG))
+    for o in OLD_WWW:
+        d = os.path.dirname(o)
+        prep += ("if [ -e $R%s/%s ] && [ ! -e $R%s/%s ]; then mkdir -p $R%s/%s; mv $R%s/%s $R%s/%s; fi; "
+                 % (WWW_PUBLIC, o, WWW_ORIG, o, WWW_ORIG, d, WWW_PUBLIC, o, WWW_ORIG, o))
+    for o in WEBUI_STALE:
+        prep += "rm -f $R%s/%s; " % (WWW_PUBLIC, o)
+    prep += "sync; echo PREP_OK"
+    r = ssh(host, prep, timeout=60)
+    if "PREP_OK" not in r.stdout: log("prepare failed -> aborting (boot unchanged): %s" % (r.stdout+r.stderr)[-300:]); return 1
+    targets = [(PLAYER_LIB, lib)] + [(WWW_PUBLIC+"/"+f, b) for f, b in files.items()]
+    for path, data in targets:
+        r = ssh_bytes(host, mnt+"cat > %s%s.new && mv %s%s.new %s%s && chmod 644 %s%s && sync && echo PUT_OK"
+                      % (MP, path, MP, path, MP, path, MP, path), data=data, timeout=60)
+        if b"PUT_OK" not in r.stdout: log("write failed (%s) -> aborting (boot unchanged)" % path); return 1
+    exp = _webui_expected(lib, files, root=MP)
+    if not _md5_match(host, exp, prefix=mnt.replace("set -e; ", "")+" "):
+        log("verification on the spare partition failed -> aborting (boot unchanged)"); return 1
+    log("    spare partition verified (md5 of %d files)" % len(exp))
+    log("[4] switch to p%s (patched)" % s)
+    if ab_switch(host, s) != 0: log("switch KO -> back to p%s" % a); ab_switch(host, a); return 2
+    log("[5] verification on the running Jooki")
+    ok_files = webui_active_ok(host, lib, files)
+    st = None
+    for _ in range(20):
+        try: st = mqtt_get_state(host)
+        except Exception: st = None
+        if st: break
+        time.sleep(3)
+    code, body = http_get(host, "/")
+    ok_http = code == 200 and b"/app.js" in (body or b"")
+    ok_app = bool(st) and isinstance(st.get("db"), dict)
+    log("    files=%s  application=%s  web page=%s" % (ok_files, ok_app, ok_http))
+    if ok_files and ok_app and ok_http:
+        pls = st["db"].get("playlists") or {}
+        n = len([k for k in pls if k != "TRASH"]) if isinstance(pls, dict) else 0
+        log("WEBUI OK — Jooki on p%s, %d playlists, page http://%s/ . Rollback: jooki patch switch %s" % (s, n, host, a))
+        return 0
+    log("verify KO -> back to p%s" % a); ab_switch(host, a); return 2
+
 def cmd_patch(args):
     host=args.host
     if not is_jooki(host): log("Jooki unreachable"); return 2
@@ -453,6 +598,7 @@ def cmd_patch(args):
     if args.action=="status": ab_status(host); return 0
     if args.action=="cut-cloud": return ab_cut_cloud(host)
     if args.action=="harden":    return ab_harden(host)
+    if args.action=="webui":     return ab_webui(host, dry_run=getattr(args,"dry_run",False))
     if args.action=="clone":  return ab_clone(host)
     if args.action=="switch":
         if not args.part: log("specify the partition: patch switch 2|3"); return 1
@@ -476,7 +622,8 @@ def main():
     pm.add_argument("--create", action="store_true", help="create the playlist if missing")
     pm.add_argument("--dry-run", action="store_true")
     pa=sub.add_parser("patch", help="A/B firmware patch (clone/switch, anti-brick)")
-    pa.add_argument("action", choices=["status","clone","switch","cut-cloud","harden"])
+    pa.add_argument("action", choices=["status","clone","switch","cut-cloud","harden","webui"])
+    pa.add_argument("--dry-run", action="store_true", help="webui: build and check only")
     pa.add_argument("part", nargs="?", choices=["2","3"], help="for switch: target partition")
     args=ap.parse_args()
     return {"discover":cmd_discover,"info":cmd_info,"backup":cmd_backup,

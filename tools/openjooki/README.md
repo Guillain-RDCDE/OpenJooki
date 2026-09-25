@@ -35,6 +35,7 @@ python3 jooki.py --host 192.168.1.61 patch status     # active / spare partition
 python3 jooki.py --host 192.168.1.61 patch cut-cloud  # cut the cloud heartbeat
 python3 jooki.py --host 192.168.1.61 patch harden     # apply the security/robustness audit
 python3 jooki.py --host 192.168.1.61 patch switch 2   # roll back to the other partition
+python3 jooki.py --host 192.168.1.61 patch webui      # new web page + application fixes (docs/18-web-ui.md)
 ```
 A patch first clones the **active** partition to the **spare** partition, writes to
 it, **arms the U-Boot rollback**, **switches**, then **verifies** and **commits**
@@ -77,7 +78,7 @@ Command line (advanced): `python3 installer.py <firmware>`
 ## Status
 - [x] `discover`, `info`, `backup` (+`--quick`) — **tested 100% on a real Jooki (J2000)**.
 - [x] `playlist list/new`, `music add` — **tested 100%** (upload + MQTT, backup-before-write).
-- [ ] `token` (name/associate a token) — same mechanism, to be wired.
+- [x] `patch webui` — **new web page + fixes of the application (`player.lib`)**, A/B, tested on a bench running the real application and on a real Jooki (J2000). Tokens are named/linked from the page.
 - [x] `patch status/clone/switch` — **A/B tested 100%** (verified clone + proven p3↔p2 switch on the device).
 - [x] **Automatic rollback locked in** — `switch` arms U-Boot (`upgrade_available`/bootcount) then commits; armed cycle p3→p2→p3 verified 100%.
 - [x] `patch cut-cloud` — **cuts the cloud heartbeat, tested 100%** (A/B patch applied on the device, cloud neutralized, rollback available).

@@ -48,6 +48,19 @@ Windows install it from python.org):
 
 ---
 
+## Manage your Jooki from any browser
+
+Once `patch webui` is installed (see below), open **`http://<your-jooki-ip>/`**
+on a phone or a computer on the same Wi‑Fi: playlists, tokens, uploads from the
+phone, player, settings. Nothing leaves your home network. Details and the list
+of fixes: [docs/18-web-ui.md](docs/18-web-ui.md).
+
+```sh
+python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui
+```
+
+---
+
 ## Why it's safe
 
 Every change goes through the Jooki's own A/B update system:
@@ -80,6 +93,7 @@ Everything is open and readable. Start here:
   - [docs/09-internals-deep-dive.md](docs/09-internals-deep-dive.md) — firmware internals
   - [docs/10-patch-tool-design.md](docs/10-patch-tool-design.md) — the anti‑brick A/B patch design
   - [docs/12-firmware-audit.md](docs/12-firmware-audit.md) — security audit & fixes
+  - [docs/18-web-ui.md](docs/18-web-ui.md) — the new web page and the application fixes
   - [docs/14-cross-platform-installer.md](docs/14-cross-platform-installer.md) — Mac/PC/phone installer
   - …and the rest of `docs/` (community survey, maintenance plan, content API, roadmap).
 

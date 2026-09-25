@@ -1,5 +1,24 @@
 # OpenJooki — Changelog
 
+## v0.4.0 (2026-09-25) — a new web page, and the Jooki's own bugs fixed
+New `jooki.py patch webui` (A/B, rollback armed, verified on a live device):
+- **New local web page** at `http://<jooki-ip>/`: playlists, tokens, library,
+  player and settings; **upload from a phone** (file picker) or a computer
+  (drag and drop); reorder by touch or mouse; French/English; light/dark; no
+  tracker, no external request, no dead-cloud link. Replaces the 2018 app
+  (kept on the device, not served).
+- **One rule for tokens**: every token of the same character starts the same
+  playlist; a name is only a label. Old per-token links are migrated at boot.
+- **Application fixes** in `player.lib` (patched in place, original kept):
+  no more "No update required"; "Unused tracks" protected and always up to date;
+  removing a song from it can no longer delete a file used elsewhere; failed
+  uploads never delete existing files; a bad message can no longer crash the
+  player; safer database writes; web radio validation; stale resume position,
+  empty playlists, "previous" while paused, repeat/shuffle saving… See
+  `docs/18-web-ui.md`.
+- Tested on a bench running the real application (38 backend + 26 page checks)
+  and on a real Jooki v2 (install + 12 non-destructive checks).
+
 ## v0.3.0 (2026-09-10) — phone-first install, proven end-to-end
 The "factory Jooki → OpenJooki from a phone, no computer" path is now real and
 **verified on a live device**: a factory Muuselabs Jooki v2, one tap on the

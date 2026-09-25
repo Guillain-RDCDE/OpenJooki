@@ -1,5 +1,15 @@
 # OpenJooki — Changelog
 
+## Firmware 1.1.0 (2026-09-25) — everything from the phone
+- The **firmware now includes the new web page and the application fixes** of
+  v0.4.0: a parent installs or updates from the phone installer page and gets
+  the page, nothing else to do. Built from 1.0.0 by
+  `scripts/add-webui-to-image.py` (edits the ext4 image with `debugfs`, checks
+  it with `e2fsck`, reads every file back).
+- Installer page: the end screen links to the Jooki's own page; realistic update
+  time (a full image, up to 10 minutes); simpler "where is the IP" help.
+- README: a simple guide for parents first, technical details below.
+
 ## v0.4.0 (2026-09-25) — a new web page, and the Jooki's own bugs fixed
 New `jooki.py patch webui` (A/B, rollback armed, verified on a live device):
 - **New local web page** at `http://<jooki-ip>/`: playlists, tokens, library,

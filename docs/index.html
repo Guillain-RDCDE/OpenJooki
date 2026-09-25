@@ -54,17 +54,17 @@
     </div>
 
     <button class="btn" id="bu" type="button" disabled>Update</button>
-    <p class="tiny">Already on OpenJooki. Safe anytime.</p>
+    <p class="tiny">Already on OpenJooki. Safe anytime. Adds the new playlist &amp; token page.</p>
 
     <details>
       <summary>First install (factory Jooki)</summary>
       <button class="btn ghost" id="bi" type="button" disabled>Install OpenJooki</button>
-      <p class="tiny">Keeps your music. Can't be bricked. Jooki&nbsp;v2 only.</p>
+      <p class="tiny">Keeps your music. Can't be bricked. Jooki&nbsp;v2 only. Includes the playlist &amp; token page.</p>
     </details>
 
     <details>
       <summary>Where do I find the IP?</summary>
-      <p>Open the Jooki app &rarr; your Jooki &rarr; its settings screen; or your Wi-Fi router's list of connected devices. It looks like <code>192.168.1.42</code>.</p>
+      <p>In your internet box's page or app, look at the list of connected devices: the one whose name starts with <b>jooki</b>. It looks like <code>192.168.1.42</code>.</p>
     </details>
   </div>
 
@@ -74,6 +74,7 @@
     <p id="wtitle">Installing OpenJooki…</p>
     <p id="wclock">15:00</p>
     <p id="wsub">Please wait &mdash; your Jooki is working now and will <b>restart on its own</b>.<br>Nothing else appears here, and that's completely normal.</p>
+    <a class="btn" id="wopen" href="#" hidden>Open my Jooki's page</a>
     <p class="wnote">If a small <code>ok</code> tab popped up, ignore it &mdash; it's harmless and closes by itself.</p>
     <span class="wwarn" id="wwarn">⚡ Keep it plugged in &mdash; don't unplug</span>
   </div>
@@ -86,10 +87,10 @@
     bi:"curl -fsSLo /tmp/b https://guillain-rdcde.github.io/OpenJooki/b.sh;sh /tmp/b&"
   };
   var CONF={
-    bu:"<b>Update your Jooki now?</b><br><br>For about <b>2&nbsp;minutes, nothing happens on screen &mdash; that is normal</b>. Your Jooki checks for a newer version by itself and restarts if it finds one. A tiny <code>ok</code> tab may flash up &mdash; <b>ignore it, it's harmless</b>. <b>Keep it plugged in.</b>",
+    bu:"<b>Update your Jooki now?</b><br><br>For up to <b>10&nbsp;minutes, nothing happens on screen &mdash; that is normal</b>. Your Jooki checks for a newer version by itself and restarts if it finds one. A tiny <code>ok</code> tab may flash up &mdash; <b>ignore it, it's harmless</b>. <b>Keep it plugged in.</b>",
     bi:"<b>Install OpenJooki now?</b><br><br>For about <b>10&ndash;15 minutes, nothing happens on screen &mdash; that is completely normal</b>. Your Jooki does everything by itself and <b>restarts on its own</b> at the end. A tiny <code>ok</code> tab may flash up &mdash; <b>ignore it, it's harmless and closes by itself</b>. This screen is the one that matters.<br><br><b>Do not unplug it.</b> Your music is kept; it can't be bricked."
   };
-  var SECS={bu:150, bi:900};
+  var SECS={bu:600, bi:900};
   var WT={bu:"Updating your Jooki…", bi:"Installing OpenJooki…"};
 
   var ip=document.getElementById('ip'), cur=null, timer=null;
@@ -141,7 +142,8 @@
         wspin.style.display='none'; wdone.style.display='block'; wwarn.style.display='none';
         wtitle.textContent='All done — your Jooki should be back';
         wclock.style.display='none';
-        wsub.innerHTML='Your Jooki has restarted on OpenJooki. If it’s still finishing, give it another minute.';
+        wsub.innerHTML='Your Jooki has restarted on OpenJooki. If it’s still finishing, give it another minute.<br><br>Manage its playlists, tokens and music from its own page:';
+        var wo=document.getElementById('wopen'); wo.href='http://'+normIP(ip.value)+'/'; wo.hidden=false;
         return;
       }
       wclock.textContent=Math.floor(left/60)+':'+two(left%60);

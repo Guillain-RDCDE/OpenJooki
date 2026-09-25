@@ -35,7 +35,12 @@ Because the install runs silently for ~10–15 min, the page:
 2. then switches to a full-screen **spinner + countdown** (time-based estimate,
    not real device progress) ending on a ✅ "should be back now";
 3. accepts the IP with **commas or dots** (iOS numeric keypad has no dot),
-   prefills from `?ip=` or `localStorage`, and remembers it.
+   prefills from `?ip=` or `localStorage`, and remembers it;
+4. at the end, offers a button to the Jooki's own page (`http://<ip>/`, the
+   OpenJooki web page shipped in the firmware since 1.1.0).
+
+Timings: first install ~10–15 min; an update downloads and writes a full image
+too (~42 MB, gzip), so allow up to ~10 min.
 
 ## Going back to factory to test the full install
 The original Muuselabs firmware is still on the device (factory partition p1, and

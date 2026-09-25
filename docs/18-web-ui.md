@@ -1,5 +1,10 @@
 # New web page + application fixes (`patch webui`)
 
+> **Since firmware 1.1.0 this is included in OpenJooki**: installing or updating
+> from the phone installer page is enough. `patch webui` remains for a Jooki you
+> manage from a computer, and `scripts/add-webui-to-image.py` applies the same
+> changes to a firmware image.
+
 The Jooki serves its own management page at `http://<jooki-ip>/`. The original
 page (a 2018 React app by Muuselabs) still worked locally, but it had many bugs,
 dead cloud features and trackers. The logic behind it (the Lua program inside

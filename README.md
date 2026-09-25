@@ -31,8 +31,10 @@ No technical knowledge needed. Follow the steps in order.
 3. Tap **Install OpenJooki** (first time) or **Update**, confirm, then **wait**.
 
 The Jooki does everything by itself and restarts on its own: about
-**10–15 minutes** the first time, **2 minutes** for an update. Nothing happens on
-screen during that time, **that's normal**. Don't unplug it.
+**10–15 minutes** the first time, **up to 10 minutes** for an update. Nothing
+happens on screen during that time, **that's normal**. Don't unplug it.
+
+Already installed OpenJooki before? Tap **Update**: it brings the new page below.
 
 ### 2. Manage your music (from your phone)
 
@@ -46,34 +48,12 @@ On your phone, open **`http://` + your Jooki's address**, for example
   character does the same thing: all the dragons, all the whales…);
 - play, pause, change the volume, turn the Jooki off.
 
-> **For now, this new page is installed with a computer**, once (5 minutes):
-> see [With a computer](#with-a-computer) just below. It will come to the phone
-> install later.
-
-### With a computer
-
-On a Mac or PC connected to the same Wi‑Fi:
-
-1. On this page, click the green **Code** button, then **Download ZIP**, and
-   open the downloaded file (it becomes a folder).
-2. Open a terminal *in that folder*:
-   - **Mac**: open the **Terminal** app, type `cd ` (with a space), drag the
-     folder into the Terminal window, press Enter;
-   - **Windows**: install Python from [python.org](https://www.python.org/)
-     first, then open the folder, click the address bar, type `cmd`, press Enter
-     (on Windows, type `python` instead of `python3` below).
-3. Copy this line, replace the address with yours, press Enter, and wait until
-   it says **WEBUI OK** (about 5 minutes; the Jooki restarts once):
-
-   ```sh
-   python3 tools/openjooki/jooki.py --host 192.168.1.19 patch webui
-   ```
+The page is part of OpenJooki: nothing else to install.
 
 ### Questions
 
 - **Will I lose my music or my tokens?** No. They live on a separate part of the
-  Jooki that updates never touch (and the computer tool also makes a backup
-  first).
+  Jooki that updates never touch.
 - **Something went wrong / it doesn't restart?** Unplug it, plug it back in: it
   automatically goes back to the previous version.
 - **Can someone outside my home see my Jooki?** No. Everything stays on your home
@@ -107,7 +87,11 @@ over HTTPS and the Jooki answers over plain HTTP, so the browser won't let the
 command fire completely invisibly, but the Jooki receives it either way. Details:
 [docs/16-phone-install.md](docs/16-phone-install.md).
 
-## Install a firmware from a computer
+## The same install from a computer
+
+Everything a parent does from the phone can also be done from a computer.
+
+### Install a firmware
 
 With Python 3 on a machine on the same Wi‑Fi:
 
@@ -119,7 +103,10 @@ Your browser opens: drag the firmware onto the page, click **Install safely**.
 The same safe A/B install, with a progress bar. See
 [docs/14-cross-platform-installer.md](docs/14-cross-platform-installer.md).
 
-## The web page and the application fixes (`patch webui`)
+### The web page and the application fixes (`patch webui`)
+
+Included in the firmware since 1.1.0. On a Jooki you manage from a computer, it
+can also be applied on its own:
 
 ```sh
 python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui            # install (A/B, rollback armed)
@@ -131,7 +118,8 @@ A new local page (no framework, no external request) replaces the 2018 app, and
 the Jooki's own program (`player.lib`, Lua) is fixed in place: token links by
 character, protected "Unused tracks", no file loss on failed uploads, no crash on
 bad messages, safer database writes… Full list, protocol and test bench:
-[docs/18-web-ui.md](docs/18-web-ui.md).
+[docs/18-web-ui.md](docs/18-web-ui.md). Firmware images get the same changes with
+`scripts/add-webui-to-image.py`.
 
 ## The command-line tool
 

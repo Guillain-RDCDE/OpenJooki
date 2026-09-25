@@ -16,7 +16,8 @@ for album, titles in ALBUMS.items():
     for i, title in enumerate(titles):
         tid = hashlib.md5((album + title).encode()).hexdigest()[:16]
         shutil.copy(os.path.join(HERE, "media/song1.mp3"), "%s/uploads/%s" % (DB, tid))
-        tracks[tid] = {"title": title, "album": album, "artist": "Démo", "duration": 120 + i * 7,
+        artist = {"Le carnaval des animaux": "Saint-Saëns", "Pierre et le Loup": "Prokofiev"}.get(album, "Traditionnel")
+        tracks[tid] = {"title": title, "album": album, "artist": artist, "duration": 95 + (i * 37) % 140,
                        "filename": "%s/uploads/%s" % (DB, tid), "userFilename": "%02d - %s.mp3" % (i + 1, title), "size": 24556}
         by.setdefault(album, []).append(tid)
 tid = hashlib.md5(b"tone").hexdigest()[:16]

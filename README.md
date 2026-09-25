@@ -50,6 +50,8 @@ Windows install it from python.org):
 
 ## Manage your Jooki from any browser
 
+![The OpenJooki web page on a phone: playlists, now playing, tokens](docs/img/openjooki-web.png)
+
 Once `patch webui` is installed (see below), open **`http://<your-jooki-ip>/`**
 on a phone or a computer on the same Wi‑Fi: playlists, tokens, uploads from the
 phone, player, settings. Nothing leaves your home network. Details and the list

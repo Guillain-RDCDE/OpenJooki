@@ -35,6 +35,8 @@ The Jooki does everything by itself and restarts on its own: about
 happens on screen during that time, **that's normal**. Don't unplug it.
 
 Already installed OpenJooki before? Tap **Update**: it brings the new page below.
+From version 1.2.0 on, you can also update **from the Jooki's own page**: when a
+new version exists, a message tells you so, and one tap on **Update now** does it.
 
 ### 2. Manage your music (from your phone)
 
@@ -46,7 +48,8 @@ On your phone, open **`http://` + your Jooki's address**, for example
 - create playlists and **add songs straight from your phone**;
 - choose **which character** starts which playlist (every token of the same
   character does the same thing: all the dragons, all the whales…);
-- play, pause, change the volume, turn the Jooki off.
+- play, pause, change the volume, turn the Jooki off;
+- see your OpenJooki version and **update it in one tap** when a new one is out.
 
 The page is part of OpenJooki: nothing else to install.
 

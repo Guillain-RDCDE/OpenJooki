@@ -32,7 +32,7 @@ Fixes (see docs/18-web-ui.md):
 import zlib
 
 MARK_OLD = "_G._MINIFIED=true\n"
-MARK_NEW = "_G._MINIFIED=true\n_G._OPENJOOKI_LUA='3'\n"
+MARK_NEW = "_G._MINIFIED=true\n_G._OPENJOOKI_LUA='4'\n"
 MAX_SIZE = 204800          # player binary decompresses into a 200 KiB buffer
 
 def decode(blob):
@@ -671,6 +671,28 @@ if a and a>0 then""")
 patch("MESSAGE_DISMISS tolerant error", """return false,s('invalid msg id %s',a)""", """return false,s('invalid msg id %s',tostring(a))""")
 patch("SET_VOL tolerant error", """s('missing or invalid vol %s',e.vol)""", """s('missing or invalid vol %s',tostring(e.vol))""")
 patch("dead cloud calls time out", "'curl --silent", "'curl --max-time 10 --silent", count=3)
+
+# ---------------------------------------------------------------- OpenJooki updates from the web page
+patch("installed OpenJooki version in the state",
+"""firmware=os.getenv('firmware'),""",
+"""firmware=os.getenv('firmware'),
+openjooki=(function()local f=io.open('/etc/openjooki-version')if not f then return nil end local v=f:read('*l')f:close()return v end)(),""")
+patch("check / start an OpenJooki update from the web page (handlers)",
+"""function e.on.get_state()""",
+"""function e.oj_update_check()
+os.execute("P=/tmp/web_ctrl_dirs/public; echo '{\\"pending\\":true}' > $P/oj-latest.json; (curl -fsSL --max-time 30 https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json -o $P/oj-latest.tmp && mv $P/oj-latest.tmp $P/oj-latest.json || echo '{\\"error\\":\\"offline\\"}' > $P/oj-latest.json) >/dev/null 2>&1 &")
+return true
+end
+function e.oj_update_start()
+os.execute("S=/jooki/app/www/public/openjooki-status.txt; P=/tmp/web_ctrl_dirs/public; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updating; : > $S; ln -sf $S $P/oj-status.txt; (if curl -fsSL --max-time 60 https://guillain-rdcde.github.io/OpenJooki/o.sh -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> $S; fi; rm -f /tmp/oj-updating) >/dev/null 2>&1 &")
+return true
+end
+function e.on.get_state()""")
+patch("check / start an OpenJooki update from the web page (topics)",
+"""["/j/web/input/GET_STATE"]=e.on.get_state,""",
+"""["/j/web/input/GET_STATE"]=e.on.get_state,
+["/j/web/input/OJ_UPDATE_CHECK"]=a(e.oj_update_check,nil,true),
+["/j/web/input/OJ_UPDATE_START"]=a(e.oj_update_start,nil,true),""")
 
 def apply(src):
     """Return patched source. Raises ValueError (nothing applied) on any mismatch."""

@@ -1,5 +1,15 @@
 # OpenJooki — Changelog
 
+## Firmware 1.2.0 (2026-09-25) — update from the Jooki's own page
+- **Settings** shows the installed OpenJooki version and checks GitHub for a
+  newer release. When there is one, a banner appears on the home page and
+  **Update now** installs it from the page itself (same safe A/B install as the
+  phone installer, progress shown, the page reconnects by itself and confirms
+  the new version). No need to go back to the installer page.
+- Application: the state now carries the OpenJooki version (`device.openjooki`);
+  two new messages `OJ_UPDATE_CHECK` / `OJ_UPDATE_START` (see `docs/18-web-ui.md`).
+- Bench: 38 backend + 30 page checks.
+
 ## Firmware 1.1.0 (2026-09-25) — everything from the phone
 - The **firmware now includes the new web page and the application fixes** of
   v0.4.0: a parent installs or updates from the phone installer page and gets

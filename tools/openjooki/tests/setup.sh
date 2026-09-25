@@ -18,4 +18,6 @@ for f in playlists tracks tokens; do echo '{"_":{"version":1}}' > /jooki/app/sys
 echo '{"_":{"version":1}}' > /jooki/app/system/playlists.json
 # user db
 for f in playlists tracks tokens; do echo '{"_":{"version":1}}' > /jooki/external/jooki/$f.json; done
+echo 1.0.0 > /etc/openjooki-version   # installed OpenJooki version (the page offers the GitHub latest)
+rm -f /tmp/oj-updating
 echo ok

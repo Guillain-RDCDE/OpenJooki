@@ -1,8 +1,7 @@
 {
-  "version": "1.1.0",
-  "file": "openjooki-firmware-1.1.0.img.gz",
-  "sha256": "c1e5eadbdbdce9bc04074e1b6946de8398dc5ccc22c4aa053832541f3c145c75",
+  "version": "1.2.0",
+  "file": "openjooki-firmware-1.2.0.img.gz",
+  "sha256": "cff5b4cc682455438fd687c4b3c64a94993a52d20cfc50772ff94772c50306de",
   "device_type": "ml-j2000",
-  "date": "2026-09-25",
-  "notes": "OpenJooki 1.1.0: 1.0.0 + the new local web page (playlists, tokens, uploads from the phone) and the fixes of the Jooki application (player.lib). Jooki v2 only (device_type ml-j2000)."
+  "date": "2026-09-25"
 }

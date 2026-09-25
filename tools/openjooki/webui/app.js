@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '1.0.1';
+  var VERSION = '1.2.0';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -76,7 +76,16 @@
       duration_total: function (s) { return s; },
       mute_unsupported: '',
       files_hint: 'MP3, M4A, OGG, FLAC, WAV…',
-      open_player: 'Ouvrir le lecteur'
+      open_player: 'Ouvrir le lecteur',
+      web_page: 'page', upd_check: 'Rechercher une mise à jour', upd_checking: 'Recherche…',
+      upd_uptodate: 'Ton Jooki est à jour.', upd_offline: 'Impossible de joindre GitHub (le Jooki a-t-il Internet ?).',
+      upd_available: function (v) { return 'Nouvelle version ' + v + ' disponible'; }, upd_now: 'Mettre à jour maintenant',
+      upd_q: function (v) { return 'Mettre à jour vers OpenJooki ' + v + ' ?'; },
+      upd_text: 'Le Jooki télécharge la nouvelle version et redémarre tout seul : jusqu\'à 10 minutes. Garde-le branché. Ta musique et tes jetons sont conservés, et il revient tout seul à l\'ancienne version si quelque chose se passe mal.',
+      upd_running: 'Mise à jour en cours…', upd_keep: 'Garde le Jooki branché. Cette page se reconnecte toute seule.',
+      upd_rebooting: 'Le Jooki redémarre sur la nouvelle version…', upd_done: function (v) { return 'Jooki mis à jour : OpenJooki ' + v; },
+      upd_failed: 'La mise à jour n\'a pas pu se faire. Ton Jooki n\'a pas changé.', upd_banner: function (v) { return 'Mise à jour ' + v + ' disponible'; },
+      upd_see: 'Voir'
     },
     en: {
       playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
@@ -145,7 +154,16 @@
       duration_total: function (s) { return s; },
       mute_unsupported: '',
       files_hint: 'MP3, M4A, OGG, FLAC, WAV…',
-      open_player: 'Open the player'
+      open_player: 'Open the player',
+      web_page: 'page', upd_check: 'Check for updates', upd_checking: 'Checking…',
+      upd_uptodate: 'Your Jooki is up to date.', upd_offline: 'Cannot reach GitHub (is the Jooki online?).',
+      upd_available: function (v) { return 'New version ' + v + ' available'; }, upd_now: 'Update now',
+      upd_q: function (v) { return 'Update to OpenJooki ' + v + '?'; },
+      upd_text: 'The Jooki downloads the new version and restarts on its own: up to 10 minutes. Keep it plugged in. Your music and tokens are kept, and it goes back to the previous version by itself if anything goes wrong.',
+      upd_running: 'Updating…', upd_keep: 'Keep the Jooki plugged in. This page reconnects by itself.',
+      upd_rebooting: 'The Jooki is restarting on the new version…', upd_done: function (v) { return 'Jooki updated: OpenJooki ' + v; },
+      upd_failed: 'The update could not be done. Your Jooki has not changed.', upd_banner: function (v) { return 'Update ' + v + ' available'; },
+      upd_see: 'Show'
     }
   };
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -367,7 +385,7 @@
     if (!client || !online) { toast(t('offline'), 'error'); return false; }
     return client.publish('/j/web/input/' + type, JSON.stringify(payload || {}));
   }
-  var waiters = [];
+  var waiters = [], autoChecked = false;
   function onMessage(topic, text) {
     var data;
     try { data = JSON.parse(text); } catch (e) { return; }
@@ -377,6 +395,7 @@
       mergeState(data);
       if (posOnly) return;
       waiters = waiters.filter(function (w) { return !w(data); });
+      if (!autoChecked && S.device.openjooki) { autoChecked = true; setTimeout(checkUpdate, 1500); }
       handleUserMessages();
       scheduleRender();
     } else if (topic === '/j/web/output/error') {
@@ -614,6 +633,8 @@
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
     return [
+      updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),
+        h('a', { href: '#/settings' }, t('upd_see'))) : null,
       un ? h('div', { class: 'banner row' }, h('span', { class: 'grow' }, t('unused_banner', un)),
         h('a', { href: '#/library/unused' }, t('see'))) : null,
       list.length ? null : h('div', { class: 'empty' }, h('div', { class: 'big' }, '🎵'), t('no_playlists')),
@@ -986,6 +1007,100 @@
     ];
   }
 
+  /* ---------------- OpenJooki updates (the Jooki itself talks to GitHub) */
+  var upd = { state: 'idle', latest: null, lines: '', startedFrom: null };
+  function vparts(v) { return String(v || '0').split(/[.-]/).map(function (x) { return parseInt(x, 10) || 0; }); }
+  function newer(a, b) {
+    var x = vparts(a), y = vparts(b);
+    for (var i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); }
+    return false;
+  }
+  function installed() { return S.device.openjooki || null; }
+  function updateAvailable() { return upd.latest && installed() && newer(upd.latest, installed()); }
+  function getText(path, cb) {
+    var x = new XMLHttpRequest();
+    x.open('GET', path + (path.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now());
+    x.timeout = 5000;
+    x.onload = function () { cb(x.status === 200 ? x.responseText : null, x.getResponseHeader('Last-Modified')); };
+    x.onerror = x.ontimeout = function () { cb(null, null); };
+    x.send();
+  }
+  function checkUpdate() {
+    if (upd.state === 'running' || upd.state === 'rebooting' || !installed()) return;
+    upd.state = 'checking'; render();
+    var t0 = Date.now();
+    // the Jooki writes {"pending":true} right away, then the answer from GitHub
+    send('OJ_UPDATE_CHECK', {});
+    setTimeout(function poll() {
+      getText('/oj-latest.json', function (txt) {
+        var d = null;
+        try { d = JSON.parse(txt); } catch (e) {}
+        if (d && !d.pending) {
+          if (d.error || !d.version) { upd.state = 'offline'; }
+          else { upd.latest = String(d.version); upd.state = 'checked'; }
+          render(); return;
+        }
+        if (Date.now() - t0 > 40000) { upd.state = 'offline'; render(); return; }
+        setTimeout(poll, 1500);
+      });
+    }, 1500);
+  }
+  function startUpdate() {
+    confirmBox(t('upd_q', upd.latest), t('upd_text'), t('upd_now'), false).then(function (ok) {
+      if (!ok) return;
+      upd.state = 'running'; upd.lines = ''; upd.startedFrom = installed();
+      send('OJ_UPDATE_START', {});
+      render();
+      setTimeout(function poll() {
+        if (upd.state !== 'running') return;
+        getText('/oj-status.txt', function (txt) {
+          if (txt) {
+            upd.lines = txt;
+            if (/already up to date/i.test(txt)) { upd.state = 'checked'; toast(t('upd_uptodate')); render(); return; }
+            if (/ERROR|SAFETY|INVALID|not performed|did not complete|download failed|no network|invalid manifest/i.test(txt) && !/retry/i.test(txt.split('\n').filter(Boolean).pop() || '')) {
+              upd.state = 'failed'; render(); return;
+            }
+          }
+          render();
+          setTimeout(poll, 3000);
+        });
+      }, 1500);
+    });
+  }
+  function updateCard() {
+    var cur = installed();
+    var status = null, action = null;
+    if (upd.state === 'checking') status = t('upd_checking');
+    else if (upd.state === 'offline') status = t('upd_offline');
+    else if (upd.state === 'failed') status = t('upd_failed');
+    else if (upd.state === 'checked') status = updateAvailable() ? t('upd_available', upd.latest) : t('upd_uptodate');
+    if (upd.state === 'running' || upd.state === 'rebooting') {
+      var last = (upd.lines || '').split('\n').filter(Boolean).pop() || '';
+      return h('div', { class: 'card', style: 'padding:16px', 'data-k': 'updcard' },
+        h('div', { class: 'row' }, h('div', { class: 'spinner', style: 'width:28px;height:28px;border-width:3px;margin:0' }),
+          h('b', { class: 'grow' }, upd.state === 'rebooting' ? t('upd_rebooting') : t('upd_running'))),
+        h('p', { class: 'small muted' }, t('upd_keep')),
+        last ? h('p', { class: 'small', style: 'font-family:ui-monospace,monospace;word-break:break-word' }, last.replace(/^\[[^\]]*\]\s*/, '')) : null);
+    }
+    if (upd.state === 'checked' && updateAvailable()) action = h('button', { class: 'btn primary block', 'data-k': 'updnow', onclick: startUpdate }, icon('upload'), t('upd_now'));
+    else action = h('button', { class: 'btn block', 'data-k': 'updcheck', disabled: upd.state === 'checking' || !cur, onclick: checkUpdate }, t('upd_check'));
+    return h('div', { class: 'card', style: 'padding:14px 16px' },
+      status ? h('p', { class: 'small', style: 'margin:0 0 10px' + (updateAvailable() ? ';color:var(--accent);font-weight:700' : '') }, status) : null, action);
+  }
+  var lastOnline = true, backAt = 0;
+  function watchUpdateReconnect() {
+    if (upd.state === 'running' && !online && lastOnline) upd.state = 'rebooting';
+    if (upd.state === 'rebooting' && online && gotState && installed()) {
+      if (installed() !== upd.startedFrom) {
+        upd.state = 'checked'; toast(t('upd_done', installed())); upd.latest = installed(); backAt = 0;
+      } else if (!backAt) {
+        backAt = Date.now();
+        setTimeout(function () { if (upd.state === 'rebooting' && installed() === upd.startedFrom) { upd.state = 'failed'; render(); } }, 90000);
+      }
+    }
+    lastOnline = online;
+  }
+
   function viewSettings() {
     var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config;
     var lvl = pw.level && typeof pw.level === 'object' ? Number(pw.level.p) : NaN;
@@ -1002,7 +1117,9 @@
         h('div', { class: 'kv' }, h('span', null, t('ip')), h('b', null, d.ip || location.hostname)),
         h('div', { class: 'kv' }, h('span', null, t('storage')), h('b', null, total ? fmtBytes(free) + ' ' + t('free') + ' / ' + fmtBytes(total) : '—')),
         total ? h('div', { class: 'meter' }, h('i', { style: 'width:' + Math.min(100, Math.round(used / total * 100)) + '%' })) : null,
-        h('div', { class: 'kv' }, h('span', null, t('version')), h('b', null, 'OpenJooki ' + VERSION + (d.firmware ? ' · ' + d.firmware : '')))),
+        h('div', { class: 'kv' }, h('span', null, t('version')), h('b', null, 'OpenJooki ' + (d.openjooki || '—'),
+          h('div', { class: 'small muted', style: 'font-weight:400' }, t('web_page') + ' ' + VERSION + (d.firmware ? ' · ' + d.firmware : ''))))),
+      updateCard(),
       h('div', { class: 'section-title' }, t('playback')),
       h('div', { class: 'card' },
         h('label', { class: 'switch' }, h('span', null, t('toy_safe')), h('input', { type: 'checkbox', role: 'switch', checked: !!d.toy_safe, 'data-k': 'toysafe',
@@ -1123,6 +1240,7 @@
   }
   function render() {
     if (!root) return;
+    watchUpdateReconnect();
     if (ui.dragging) return;
     var ae = document.activeElement;
     if (ae && ae.tagName === 'SELECT' && root.contains(ae)) { pendingRender = true; return; }

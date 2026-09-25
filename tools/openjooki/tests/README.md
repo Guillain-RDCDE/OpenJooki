@@ -15,7 +15,7 @@ python3 prepare.py player.lib          # -> player.lua + player.patched.lua (nev
 ./make_media.sh                        # small test audio files
 ./up.sh                                # mosquitto (1883 + ws 8000), web_ctrl emulation (:8080), fake audio
 python3 test_backend.py                # 38 checks of the application fixes
-python3 e2e.py                         # 26 checks of the web page (Playwright)
+python3 e2e.py                         # 30 checks of the web page (Playwright)
 ```
 
 `python3 test_backend.py player.lua` runs the same checks against the original

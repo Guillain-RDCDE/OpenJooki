@@ -86,17 +86,36 @@ dead `jooki.rocks` domain). French or English (automatic, switchable).
   shuffle/repeat.
 - **Settings**: battery, Wi-Fi, IP, storage, versions, limited volume (kids
   mode), language, turn off (with confirmation).
+- **Updates** (since 1.2.0): Settings shows the installed OpenJooki version and
+  checks GitHub for a newer release (also once when the page opens). If there
+  is one, a banner appears on the home page and **Update now** installs it from
+  the page, with progress; the page reconnects after the restart and confirms
+  the new version.
 - Works on phones (bottom tabs) and computers (sidebar), light and dark mode,
   automatic reconnection, keyboard accessible.
 
 The old page is kept on the device in `/jooki/app/www/public-openjooki-orig/`
 (not served). A `service-worker.js` that unregisters itself replaces the old one.
 
+## Updating from the page
+
+Two messages added to the application (each answers at once and does the work in
+the background, so the player never waits on the network):
+
+| Message | What the Jooki does | What the page reads |
+|---|---|---|
+| `/j/web/input/OJ_UPDATE_CHECK` | writes `{"pending":true}`, then downloads `version.json` of the latest GitHub release (`{"error":"offline"}` if it can't) | `/oj-latest.json` |
+| `/j/web/input/OJ_UPDATE_START` | runs the same `o.sh` as the phone installer (once at a time) | `/oj-status.txt` (the installer's log) |
+
+The installed version comes from `/etc/openjooki-version` and is sent in the
+state as `device.openjooki`. The install itself is unchanged: spare partition,
+sha256 check, rollback armed.
+
 ## Tests
 
 - **Bench** (off-device): the real decoded Lua program runs under Lua 5.1 with
   stubs for the 4 C functions, a real mosquitto, an emulation of `web_ctrl`, a
-  fake audio engine, and Chromium (Playwright). 38 backend checks + 26
+  fake audio engine, and Chromium (Playwright). 38 backend checks + 30
   end-to-end page checks, all green.
 - **On the device** after install: file checksums, application answering over
   MQTT, page served, then non-destructive checks (migration, token rename,

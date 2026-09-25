@@ -42,14 +42,28 @@ log "available version: $VER   (installed: $CUR)"
 if [ "$VER" = "$CUR" ]; then log "already up to date."; exit 0; fi
 if [ "$1" = "--check" ]; then log "UPDATE AVAILABLE: $VER"; exit 10; fi
 
+# Make room: /data is small (120 MB) and old images are never needed again
+# (the running system is on its own partition). Then pick where to download:
+# /data if there is room, otherwise the big music partition.
+free_kb(){ df -k "$1" 2>/dev/null | awk 'NR==2{print $4}'; }
+for f in "$WORK"/*.img "$WORK"/*.img.gz /jooki/external/.openjooki/*.img.gz; do
+  [ -e "$f" ] && rm -f "$f"
+done
+IMGDIR="$WORK"
+if [ "$(free_kb "$WORK")" -lt 81920 ] 2>/dev/null && [ -d /jooki/external ]; then
+  IMGDIR=/jooki/external/.openjooki; mkdir -p "$IMGDIR"
+fi
+[ "$(free_kb "$IMGDIR")" -ge 81920 ] 2>/dev/null || { log "ERROR: not enough free space to download the update — nothing changed"; exit 1; }
+IMG="$IMGDIR/$FILE"
+
 log "downloading $FILE…"
-dl "$BASE/$FILE" "$WORK/$FILE" || { log "download failed"; exit 1; }
+dl "$BASE/$FILE" "$IMG" || { rm -f "$IMG"; log "download failed"; exit 1; }
 
 log "verifying sha256…"
-GOT=$(sha256sum "$WORK/$FILE" | cut -d' ' -f1)
+GOT=$(sha256sum "$IMG" | cut -d' ' -f1)
 if [ "$GOT" != "$SHA" ]; then
   log "INVALID SHA256 ($GOT != $SHA) — image rejected, nothing installed."
-  rm -f "$WORK/$FILE"; exit 3
+  rm -f "$IMG"; exit 3
 fi
 log "image intact (sha256 OK)."
 
@@ -59,6 +73,6 @@ if [ ! -x "$SELF" ]; then
 fi
 [ -x "$SELF" ] || { log "selfupdate.sh not found"; exit 4; }
 log "A/B install (spare partition, armed rollback)…"
-sh "$SELF" "$WORK/$FILE"
+sh "$SELF" "$IMG"
 log "install not performed (see messages above)."
 exit 5

@@ -1,67 +1,89 @@
+![OpenJooki](docs/img/openjooki-social.png)
+
 # OpenJooki
 
-Bring your **Jooki v2** back to life after Muuselabs shut down its servers — and
-keep it yours. Safe backups, security fixes, and updates that **cannot brick your
+**Your child's Jooki v2 keeps working, even though the Jooki servers are gone.**
+Your music stays, your tokens keep working, and you get a simple page to manage
+everything from your phone. Nothing leaves your home, and it **cannot break your
 Jooki**.
 
 > Independent community project, not affiliated with Muuselabs / Jooki.
 
 ---
 
-## Install / update from your phone — no computer
+# For parents: the simple version
 
-Your **Jooki v2** installs OpenJooki **by itself**, straight from this project.
-From a phone (or any device) on the **same Wi‑Fi** as the Jooki:
+No technical knowledge needed. Follow the steps in order.
 
-1. Open the installer page: **https://guillain-rdcde.github.io/OpenJooki/**
-2. Type your Jooki's **IP address** (find it in your router's device list, or
-   the Jooki app). The page remembers it for next time.
-3. Tap **Install OpenJooki** (first time) or **Update** (already on OpenJooki).
-   A short confirmation explains what will happen — confirm, then **just wait**.
+### What you need
 
-The page then shows a **spinner and a countdown** while the Jooki downloads
-OpenJooki, installs it, and **restarts on its own** — about **10–15 minutes** for
-a first install, **~2 minutes** for an update. Nothing else appears on screen,
-and that's normal. Your **music and Wi‑Fi are kept**. Keep it plugged in.
+- Your **Jooki v2**, switched on and **plugged in**, on your home Wi‑Fi.
+  (Not sure it's a v2? No risk: a v1 is recognised and refused, nothing happens.)
+- A **phone** on the **same Wi‑Fi**.
+- Your Jooki's **address**, four numbers like `192.168.1.19`. To find it, open
+  your internet box's page or app, look at the list of connected devices, and
+  find the one whose name starts with **jooki**.
 
-> A tiny throwaway `ok` tab may flash up when the command is sent. It's harmless,
-> and the page closes it for you where the browser allows. Because the page is
-> served over HTTPS and the Jooki answers over plain HTTP, the browser won't let
-> the command fire completely invisibly — but the Jooki receives it either way,
-> so closing or ignoring that tab changes nothing.
+### 1. Install or update OpenJooki (from your phone)
 
-**It cannot brick your Jooki**, and only a Jooki **v2** is accepted (a v1 is
-refused before anything is written). See *Why it's safe* below.
+1. On your phone, open **https://guillain-rdcde.github.io/OpenJooki/**
+2. Type your Jooki's address. The page remembers it for next time.
+3. Tap **Install OpenJooki** (first time) or **Update**, confirm, then **wait**.
 
-### Prefer a computer?
+The Jooki does everything by itself and restarts on its own: about
+**10–15 minutes** the first time, **2 minutes** for an update. Nothing happens on
+screen during that time, **that's normal**. Don't unplug it.
 
-On a machine on the **same Wi‑Fi**, with Python 3 (already on macOS/Linux; on
-Windows install it from python.org):
+### 2. Manage your music (from your phone)
 
-1. Download this project (green **Code** button → **Download ZIP**, then unzip).
-2. In a terminal in the folder, run:
+![The OpenJooki page on a phone: playlists, now playing, tokens](docs/img/openjooki-web.png)
+
+On your phone, open **`http://` + your Jooki's address**, for example
+`http://192.168.1.19`. You can:
+
+- create playlists and **add songs straight from your phone**;
+- choose **which character** starts which playlist (every token of the same
+  character does the same thing: all the dragons, all the whales…);
+- play, pause, change the volume, turn the Jooki off.
+
+> **For now, this new page is installed with a computer**, once (5 minutes):
+> see [With a computer](#with-a-computer) just below. It will come to the phone
+> install later.
+
+### With a computer
+
+On a Mac or PC connected to the same Wi‑Fi:
+
+1. On this page, click the green **Code** button, then **Download ZIP**, and
+   open the downloaded file (it becomes a folder).
+2. Open a terminal *in that folder*:
+   - **Mac**: open the **Terminal** app, type `cd ` (with a space), drag the
+     folder into the Terminal window, press Enter;
+   - **Windows**: install Python from [python.org](https://www.python.org/)
+     first, then open the folder, click the address bar, type `cmd`, press Enter
+     (on Windows, type `python` instead of `python3` below).
+3. Copy this line, replace the address with yours, press Enter, and wait until
+   it says **WEBUI OK** (about 5 minutes; the Jooki restarts once):
+
    ```sh
-   python3 tools/openjooki/installer_web.py
+   python3 tools/openjooki/jooki.py --host 192.168.1.19 patch webui
    ```
-3. Your browser opens. **Drag the firmware onto the page**, click **Install
-   safely**, and wait. The same safe A/B install, with a progress bar.
+
+### Questions
+
+- **Will I lose my music or my tokens?** No. They live on a separate part of the
+  Jooki that updates never touch (and the computer tool also makes a backup
+  first).
+- **Something went wrong / it doesn't restart?** Unplug it, plug it back in: it
+  automatically goes back to the previous version.
+- **Can someone outside my home see my Jooki?** No. Everything stays on your home
+  network: no account, no cloud, no tracking.
 
 ---
 
-## Manage your Jooki from any browser
+# For the technically curious
 
-![The OpenJooki web page on a phone: playlists, now playing, tokens](docs/img/openjooki-web.png)
-
-Once `patch webui` is installed (see below), open **`http://<your-jooki-ip>/`**
-on a phone or a computer on the same Wi‑Fi: playlists, tokens, uploads from the
-phone, player, settings. Nothing leaves your home network. Details and the list
-of fixes: [docs/18-web-ui.md](docs/18-web-ui.md).
-
-```sh
-python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui
-```
-
----
+Everything is open and readable.
 
 ## Why it's safe
 
@@ -69,42 +91,72 @@ Every change goes through the Jooki's own A/B update system:
 
 - it writes to the **spare** partition, never the one currently running;
 - the transfer is **verified bit‑for‑bit** (sha256);
-- switching over **arms an automatic rollback** — if the new version doesn't
+- switching over **arms an automatic rollback**: if the new version doesn't
   start, the Jooki returns to the previous one at the next power‑up.
 
-The bootloader and the factory partition are **never** touched.
+The bootloader and the factory partition are **never** touched. Only a Jooki
+**v2** (`ml-j2000`) is accepted; a v1 is refused before anything is written.
 
----
+## Phone installer: how it works
 
-## Want to go further?
+The installer page sends the install command to the Jooki, which downloads the
+release from this repository, verifies it, writes it to the spare partition and
+reboots. A tiny throwaway `ok` tab may flash up when the command is sent. It's
+harmless, and the page closes it where the browser allows: the page is served
+over HTTPS and the Jooki answers over plain HTTP, so the browser won't let the
+command fire completely invisibly, but the Jooki receives it either way. Details:
+[docs/16-phone-install.md](docs/16-phone-install.md).
 
-Everything is open and readable. Start here:
+## Install a firmware from a computer
 
-- **The tool** — `tools/openjooki/` : a small Python CLI (`jooki.py`) to discover,
-  back up, re‑add music, and apply firmware patches over your local network.
-  See [tools/openjooki/README.md](tools/openjooki/README.md).
-- **Updates from GitHub** — how a Jooki can fetch a release from this repo and
-  install it by itself: [docs/15-ota-github.md](docs/15-ota-github.md).
-- **Phone-first install & the installer page** — how the page talks to the Jooki,
-  the browser constraints, the waiting UX, and going back to factory:
-  [docs/16-phone-install.md](docs/16-phone-install.md).
-- **Full technical write‑up** — how the Jooki works and how it was taken apart:
-  - [docs/04-architecture.md](docs/04-architecture.md) — hardware & data model
-  - [docs/06-root-access.md](docs/06-root-access.md) — getting root over SSH
-  - [docs/08-system-mqtt-map.md](docs/08-system-mqtt-map.md) — the internal MQTT bus
-  - [docs/09-internals-deep-dive.md](docs/09-internals-deep-dive.md) — firmware internals
-  - [docs/10-patch-tool-design.md](docs/10-patch-tool-design.md) — the anti‑brick A/B patch design
-  - [docs/12-firmware-audit.md](docs/12-firmware-audit.md) — security audit & fixes
-  - [docs/18-web-ui.md](docs/18-web-ui.md) — the new web page and the application fixes
-  - [docs/14-cross-platform-installer.md](docs/14-cross-platform-installer.md) — Mac/PC/phone installer
-  - …and the rest of `docs/` (community survey, maintenance plan, content API, roadmap).
+With Python 3 on a machine on the same Wi‑Fi:
 
----
+```sh
+python3 tools/openjooki/installer_web.py
+```
+
+Your browser opens: drag the firmware onto the page, click **Install safely**.
+The same safe A/B install, with a progress bar. See
+[docs/14-cross-platform-installer.md](docs/14-cross-platform-installer.md).
+
+## The web page and the application fixes (`patch webui`)
+
+```sh
+python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui            # install (A/B, rollback armed)
+python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui --dry-run  # build and check only
+python3 tools/openjooki/jooki.py --host <jooki-ip> patch switch <2|3>     # go back
+```
+
+A new local page (no framework, no external request) replaces the 2018 app, and
+the Jooki's own program (`player.lib`, Lua) is fixed in place: token links by
+character, protected "Unused tracks", no file loss on failed uploads, no crash on
+bad messages, safer database writes… Full list, protocol and test bench:
+[docs/18-web-ui.md](docs/18-web-ui.md).
+
+## The command-line tool
+
+`tools/openjooki/jooki.py`: a small Python CLI (standard library only) to
+discover, back up, re‑add music and apply firmware patches over your local
+network. See [tools/openjooki/README.md](tools/openjooki/README.md).
+
+## Documentation
+
+- [docs/15-ota-github.md](docs/15-ota-github.md) — how a Jooki fetches a release from this repo and installs it by itself
+- [docs/04-architecture.md](docs/04-architecture.md) — hardware & data model
+- [docs/06-root-access.md](docs/06-root-access.md) — getting root over SSH
+- [docs/08-system-mqtt-map.md](docs/08-system-mqtt-map.md) — the internal MQTT bus
+- [docs/09-internals-deep-dive.md](docs/09-internals-deep-dive.md) — firmware internals
+- [docs/10-patch-tool-design.md](docs/10-patch-tool-design.md) — the anti‑brick A/B patch design
+- [docs/12-firmware-audit.md](docs/12-firmware-audit.md) — security audit & fixes
+- [docs/18-web-ui.md](docs/18-web-ui.md) — the new web page and the application fixes
+- …and the rest of `docs/` (community survey, maintenance plan, content API, roadmap).
 
 ## Layout
 
 ```
 tools/openjooki/          the tool, the web installer, the auditable fixes
+tools/openjooki/webui/    the local web page served by the Jooki
+tools/openjooki/tests/    off-device test bench (real application + browser)
 tools/openjooki/device/   scripts that run on the Jooki (self-install, OTA)
 docs/                     technical analysis, architecture, runbooks, audit
 scripts/                  utilities (prepare a release)

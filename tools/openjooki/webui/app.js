@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '1.0.0';
+  var VERSION = '1.0.1';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -1135,7 +1135,7 @@
         h('div', null, online || !everOnline ? t('connecting') : t('offline')),
         !online && retryDelay > 1600 ? h('p', { class: 'small muted' }, t('offline_long')) : null,
         !online && retryDelay > 1600 ? h('button', { class: 'btn', onclick: function () { retryDelay = 1000; connect(); } }, t('retry')) : null);
-      title = 'Jooki';
+      title = lang === 'fr' ? 'Mon Jooki' : 'My Jooki';
     } else if (r.name === 'p') {
       var p = pls()[r.arg];
       title = p ? (p.title || '—') : t('playlists');
@@ -1145,15 +1145,18 @@
     else if (r.name === 'library') { title = t('library'); body = viewLibrary(r.arg); }
     else if (r.name === 'settings') { title = t('settings'); body = viewSettings(); }
     else { title = t('playlists'); body = viewPlaylists(); }
-    document.title = title === 'Jooki' ? 'Mon Jooki' : title + ' — Jooki';
+    document.title = gotState ? title + ' — OpenJooki' : 'OpenJooki';
     var conn = h('div', { class: 'conn ' + (online ? 'on' : 'off'), role: 'status', 'aria-live': 'polite' }, h('i'), online ? t('connected') : t('offline'));
     var shell = h('div', { class: 'shell' },
       h('header', { class: 'topbar' },
         back ? h('a', { class: 'icon-btn', href: back, 'aria-label': t('back') }, icon('back')) : h('div', { class: 'brand' }, h('div', { class: 'dot' }, 'J')),
-        h('h1', null, title), conn),
+        h('div', { class: 'titles' },
+          h('a', { class: 'wordmark', href: '#/', 'aria-label': 'OpenJooki' }, 'Open', h('span', null, 'Jooki')),
+          h('h1', null, title)), conn),
       !online && gotState ? h('div', { class: 'banner danger', style: 'margin:12px 16px 0' }, t('offline_long')) : null,
       h('main', { id: 'main' }, body),
       h('nav', { class: 'nav', 'aria-label': 'Navigation' },
+        h('a', { class: 'nav-brand', href: '#/', 'aria-hidden': 'true', tabindex: '-1' }, h('span', { class: 'dot' }, 'J'), h('span', null, 'Open', h('b', null, 'Jooki'))),
         navLink('#/', 'playlists', 'list', t('playlists')),
         navLink('#/tokens', 'tokens', 'token', t('tokens')),
         navLink('#/library', 'library', 'lib', t('library')),

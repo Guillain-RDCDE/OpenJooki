@@ -289,3 +289,18 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
 .selbar .btn { flex: 1 1 auto; }
 .actions .btn, .actions label.btn { flex: 0 1 auto; }
 @media (max-width: 420px) { .actions .btn, .actions label.btn { flex: 1 1 auto; } }
+
+/* OpenJooki wordmark */
+.titles { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.15; }
+.titles h1 { flex: none; }
+.wordmark { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.wordmark span { color: var(--accent); }
+.nav-brand { display: none !important; }
+@media (min-width: 900px) {
+  .nav { padding-top: 16px; }
+  .nav-brand { display: flex !important; align-items: center; gap: 10px; padding: 8px 12px 24px !important; font-size: 20px !important; color: var(--text) !important; font-weight: 600; }
+  .nav-brand b { color: var(--accent); }
+  .nav-brand .dot { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 16px; font-weight: 800; }
+  .topbar .brand { display: none; }
+  .topbar .wordmark { display: none; }
+}

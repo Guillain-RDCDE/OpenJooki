@@ -15,7 +15,8 @@ what `jooki.py patch webui` applies on a live Jooki, and writes a new image:
 No mount and no root needed: it edits the ext4 image with `debugfs` (e2fsprogs),
 then checks it with `e2fsck -fn` and reads every written file back.
 
-Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version>
+Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version> [--core build/player.lib]
+       --core: install the 2.0 core (tools/build/bundle.py) instead of the patched program
 Then:  scripts/make-release.sh <out.img> <version>
 """
 import gzip, hashlib, os, shutil, subprocess, sys, tempfile
@@ -24,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 import lua_patches as L  # noqa: E402
-from jooki import SYSTEM_DIR, SYSTEM_FILES  # noqa: E402
+from jooki import SYSTEM_DIR, SYSTEM_FILES, load_core  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
 WEB_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
@@ -74,9 +75,13 @@ def put(img, local, path, mode="0100644"):
 
 
 def main():
-    if len(sys.argv) != 4:
+    argv = sys.argv[1:]
+    core = None
+    if "--core" in argv:
+        i = argv.index("--core"); core = argv[i + 1]; del argv[i:i + 2]
+    if len(argv) != 3:
         print(__doc__); sys.exit(1)
-    src, out, version = sys.argv[1:]
+    src, out, version = argv
     work = tempfile.mkdtemp(prefix="ojimg-")
     print("copying image…")
     if src.endswith(".gz"):
@@ -90,13 +95,13 @@ def main():
     source = L.decode(base)
     if L.is_patched(source):
         raise SystemExit("the image's player.lib is already patched and has no original copy")
-    lib = L.encode(L.apply(source))
+    lib = load_core(core) if core else L.encode(L.apply(source))
     open(os.path.join(work, "orig.lib"), "wb").write(base)
     open(os.path.join(work, "player.lib"), "wb").write(lib)
     if not exists(out, LIB + ".openjooki-orig"):
         put(out, os.path.join(work, "orig.lib"), LIB + ".openjooki-orig")
     put(out, os.path.join(work, "player.lib"), LIB)
-    print("player.lib patched (%d fixes)" % len(L.P))
+    print("player.lib: 2.0 core %s (%d B)" % (core, len(lib)) if core else "player.lib patched (%d fixes)" % len(L.P))
 
     # --- keep the 2018 web app, out of the served folder ---
     mk = []

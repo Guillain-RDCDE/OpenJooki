@@ -506,14 +506,26 @@ def mqtt_get_state(host, timeout=8):
         except Exception: pass
         s.close()
 
-def _webui_build(host):
-    """Build the patched player.lib (from the ORIGINAL one) + the web files."""
+def load_core(path):
+    """A 2.0 core built by tools/build/bundle.py (build/player.lib): same container as the
+       original program (XOR + zlib), checked here before anything is written."""
+    import lua_patches as L
+    lib = open(path, "rb").read()
+    try: src = L.decode(lib)
+    except Exception as e: raise RuntimeError("not a player.lib: %s" % e)
+    if "_OPENJOOKI_CORE=" not in src[:300]: raise RuntimeError("%s is not an OpenJooki 2.0 core" % path)
+    if len(src) >= 200 * 1024: raise RuntimeError("core too large for the host (%d B)" % len(src))
+    return lib
+
+def _webui_build(host, core=None):
+    """Build the patched player.lib (from the ORIGINAL one) + the web files.
+       With `core`: the 2.0 core replaces the patched program (the original is still kept)."""
     import lua_patches as L
     r = ssh_bytes(host, "cat %s.openjooki-orig 2>/dev/null || cat %s" % (PLAYER_LIB, PLAYER_LIB))
     if r.returncode != 0 or len(r.stdout) < 1000: raise RuntimeError("cannot read player.lib")
     src = L.decode(r.stdout)
     if L.is_patched(src): raise RuntimeError("the base player.lib is already patched (original missing)")
-    lib = L.encode(L.apply(src))
+    lib = load_core(core) if core else L.encode(L.apply(src))
     files = {}
     for f in WEBUI_FILES:
         with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[WWW_PUBLIC+"/"+f] = fh.read()
@@ -537,16 +549,18 @@ def _md5_match(host, exp, prefix=""):
 def webui_active_ok(host, lib, files):
     return _md5_match(host, _webui_expected(lib, files))
 
-def ab_webui(host, dry_run=False):
+def ab_webui(host, dry_run=False, core=None):
     """Install the new web page + application fixes via A/B (clone, write on the spare,
-       switch with armed rollback, verify; back to the previous partition if anything is off)."""
+       switch with armed rollback, verify; back to the previous partition if anything is off).
+       `core`: path of a 2.0 core (build/player.lib) installed instead of the patched program."""
     a = _boot_part(host)
     if a not in ("2","3"): log("unexpected boot_part: %r" % a); return 1
     s = _spare(a); sdev = "/dev/mmcblk0p"+s; MP = "/mnt/p2patch"
-    try: orig, lib, files = _webui_build(host)
+    try: orig, lib, files = _webui_build(host, core)
     except Exception as e: log("build failed: %s" % e); return 1
-    log("player.lib: %d -> %d bytes (patched); web files: %s; system files: %s"
-        % (len(orig), len(lib), ", ".join(WEBUI_FILES), ", ".join(sorted(SYSTEM_FILES))))
+    log("player.lib: %d -> %d bytes (%s); web files: %s; system files: %s"
+        % (len(orig), len(lib), "2.0 core " + os.path.basename(core) if core else "patched",
+           ", ".join(WEBUI_FILES), ", ".join(sorted(SYSTEM_FILES))))
     if webui_active_ok(host, lib, files):
         log("Web UI and fixes already installed (active partition). Nothing to do."); return 0
     if dry_run: log("[dry-run] build OK, nothing written"); return 0
@@ -606,7 +620,7 @@ def cmd_patch(args):
     if args.action=="status": ab_status(host); return 0
     if args.action=="cut-cloud": return ab_cut_cloud(host)
     if args.action=="harden":    return ab_harden(host)
-    if args.action=="webui":     return ab_webui(host, dry_run=getattr(args,"dry_run",False))
+    if args.action=="webui":     return ab_webui(host, dry_run=getattr(args,"dry_run",False), core=getattr(args,"core",None))
     if args.action=="clone":  return ab_clone(host)
     if args.action=="switch":
         if not args.part: log("specify the partition: patch switch 2|3"); return 1
@@ -632,6 +646,7 @@ def main():
     pa=sub.add_parser("patch", help="A/B firmware patch (clone/switch, anti-brick)")
     pa.add_argument("action", choices=["status","clone","switch","cut-cloud","harden","webui"])
     pa.add_argument("--dry-run", action="store_true", help="webui: build and check only")
+    pa.add_argument("--core", metavar="PLAYER_LIB", help="webui: install this 2.0 core (build/player.lib) instead of the patched program")
     pa.add_argument("part", nargs="?", choices=["2","3"], help="for switch: target partition")
     args=ap.parse_args()
     return {"discover":cmd_discover,"info":cmd_info,"backup":cmd_backup,

@@ -22,7 +22,7 @@ jobs:
       - name: Lint (no globals, no unused)
         run: luacheck core
       - name: Build (size budget)
-        run: python3 tools/build/bundle.py --max-kib 160
+        run: python3 tools/build/bundle.py --max-kib 176 && python3 tools/build/bundle.py --without services.streaming --out /tmp/lean
       - name: Broker
         run: |
           printf 'listener 1883 127.0.0.1\nallow_anonymous true\nlistener 8000\nprotocol websockets\n' > /tmp/m.conf

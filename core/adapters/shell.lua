@@ -27,8 +27,34 @@ shell.ACTIONS = {
   factory_reset  = { argv = function() return { "/jooki/app/services/factory_reset.sh" } end },
   poweroff       = { argv = function() return { "/sbin/poweroff" } end },
   reboot         = { argv = function() return { "/sbin/reboot" } end },
-  update_start   = { argv = function(a) if not is_path(a.script) then return nil, "bad path" end return { "sh", a.script } end, background = true },
+  -- OpenJooki updates (docs/18): the Jooki itself fetches version.json / the installer from GitHub, in the background
+  update_check   = { argv = function(a) if not is_path(a.out) then return nil, "bad path" end
+                             return { "sh", "-c", [[
+O="$1"; echo '{"pending":true}' > "$O"
+if curl -fsSL --max-time 30 https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json -o "$O.tmp"; then mv "$O.tmp" "$O"; else echo '{"error":"offline"}' > "$O"; fi]], "update_check", a.out } end, background = true },
+  update_start   = { argv = function(a) if not (is_path(a.status) and is_path(a.link)) then return nil, "bad path" end
+                             return { "sh", "-c", [[
+S="$1"; L="$2"; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updating; : > "$S"; ln -sf "$S" "$L"
+if curl -fsSL --max-time 60 https://guillain-rdcde.github.io/OpenJooki/o.sh -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> "$S"; fi
+rm -f /tmp/oj-updating]], "update_start", a.status, a.link } end, background = true },
   df             = { argv = function(a) if not is_path(a.dir) then return nil, "bad path" end return { "df", "-k", a.dir } end },
+  -- the logs the original system piled up (docs/20): the Papertrail queue and the never-rotated file, once at boot
+  log_cleanup    = { argv = function() return { "sh", "-c", [[
+cd /jooki/external/logs/syslog-ng 2>/dev/null || exit 0
+rm -f syslog-ng-0*.qf
+if [ -f syslog-ng.log ]; then tail -n 3000 syslog-ng.log > syslog-ng.old.log; rm -f syslog-ng.log; fi
+exit 0]] } end, background = true },
+  -- what web_ctrl serves: /tmp/web_ctrl_dirs/{public,uploads,wifi_setup,deezer} rebuilt once at boot (1.x setupWebServer)
+  setup_web_dirs = { argv = function(a) if not is_path(a.data) then return nil, "bad path" end
+                             return { "sh", "-c", [[
+D="$1"; W=/tmp/web_ctrl_dirs
+rm -f "$D"/uploads/upload_* 2>/dev/null
+rm -rf "$W" && mkdir -p "$W/public" "$W/wifi_setup/setup" "$W/deezer" "$D/uploads" "$D/artwork" || exit 1
+ln -s "$D/uploads" "$W/uploads" && ln -s "$D/artwork" "$W/public/artwork" || exit 1
+for f in /jooki/app/www/public/*; do [ -e "$f" ] && ln -s "$f" "$W/public/"; done
+for f in /jooki/app/www/wifi_setup/public/*; do [ -e "$f" ] && ln -s "$f" "$W/wifi_setup/setup/"; done
+for f in /jooki/app/www/deezer/*; do [ -e "$f" ] && ln -s "$f" "$W/deezer/"; done
+exit 0]], "setup_web_dirs", a.data } end },
   md5            = { argv = function(a) if not is_path(a.file) then return nil, "bad path" end return { "md5sum", a.file } end },
 }
 

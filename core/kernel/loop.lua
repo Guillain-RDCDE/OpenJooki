@@ -15,6 +15,7 @@ local loop = {}
 local A                      -- adapters { bus, files, clock, host, shell }
 local translate              -- function(topic, payload) -> event | nil  (the api sets it)
 local publisher              -- function(doc, dirty_keys) -> commands   (the api sets it)
+local each_turn              -- optional function(doc) run once per turn (adapters that need polling)
 local pending = {}           -- events queued for the next turn
 local last_publish = -1
 local dirty_pending = {}
@@ -26,6 +27,7 @@ function loop.init(adapters, opts)
   opts = opts or {}
   translate = opts.translate or function() return nil end
   publisher = opts.publisher or function() return {} end
+  each_turn = opts.each_turn
   pending, dirty_pending, stopped, turns, last_publish = {}, {}, nil, 0, -1
 end
 
@@ -82,6 +84,10 @@ function loop.step(wait)
     if e then events[#events + 1] = e end
   end
   if A.host.terminating() and not stopped then events[#events + 1] = { type = "host.terminating", now = now } end
+  if each_turn then
+    local ok, err = pcall(each_turn, state.doc())
+    if not ok then log.warn("loop.each_turn_failed", { err = tostring(err) }) end
+  end
 
   for _, e in ipairs(events) do
     e.now = e.now or now

@@ -34,7 +34,16 @@ The bench distribution needs: `lua5.1 lua-socket lua-filesystem mosquitto
 luacheck python3-paho-mqtt`. CI (`.github/workflows/ci.yml`) runs all of the
 above on every push touching `core/`.
 
-## Status
+## Status (docs/21 §15)
 
-Phase 1 (kernel, adapters, api v2 skeleton, build, CI): done.
-Phase 2 (library, tokens, playback, device, v1 compatibility): in progress.
+- Phase 1 (kernel, adapters, api v2, build, CI): done.
+- Phase 2 (library, tokens, playback, device, uploads, v1 compatibility): done —
+  the 38 backend checks of the 1.x bench pass unchanged on the new core.
+- Phase 3 (bedtime, update, network + mDNS): done — 24 bedtime, 13 network and
+  47 page checks of the 1.x bench pass unchanged; 127 unit specs; endurance run
+  (`core/spec/integration/endurance.py`) in CI for 3 minutes, nightly for longer.
+- Phase 4 (Wi-Fi manager, Bluetooth rescue, security) → 2.1.
+- Phase 5 (a real Jooki: A/B install, 24 h, rollback): next.
+
+Oracle on your machine: `tools/openjooki/tests` with `PLAYER_LUA=core` and
+`CORE_BUILD=<repo>/build` (see `start_player.sh`).

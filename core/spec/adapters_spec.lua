@@ -83,6 +83,18 @@ describe("adapters.files", function()
     assert_nil(d2); assert_eq(why2, "version too low")
   end)
 
+  it("the sum does not depend on the insertion order of nested keys (read back in another process)", function()
+    local a = { z = { b = 1, a = { 2, 3 }, c = { x = "y" } }, list = { { k = 1, j = 2 } } }
+    files.write(path, a, 1)
+    local doc = files.read(path, 1)
+    assert_eq(doc, a)
+    -- re-encode the decoded copy (different insertion order) and compare bodies
+    assert_eq(files.encode_body(doc), files.encode_body(a))
+    files.write(path, doc, 1)
+    local again, why = files.read(path, 1)
+    assert_eq(again, a, why)
+  end)
+
   it("reads 1.x files without a sum (compatibility)", function()
     files.write_text(path, '{"_":{"version":1},"user_1":{"title":"A","tracks":[]}}')
     local doc, ver = files.read(path, 1)

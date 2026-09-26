@@ -36,3 +36,29 @@ jobs:
         with:
           name: core-build
           path: build/
+
+  # The 1.x bench suites (written for the patched Muuselabs program) run unchanged against the new core:
+  # this is the oracle of docs/21 §14.
+  oracle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    needs: core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto ffmpeg python3-paho-mqtt python3-pip
+          sudo pip3 install --break-system-packages playwright
+          sudo python3 -m playwright install --with-deps chromium
+      - name: Build the core
+        run: python3 tools/build/bundle.py
+      - name: "Bench as root (it creates /jooki, /data/mode, /tmp/web_ctrl_dirs like the device)"
+        env:
+          CORE_BUILD: ${{ github.workspace }}/build
+          PLAYER_LUA: core
+        run: |
+          cd tools/openjooki/tests
+          sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null && sleep 1 \
+            && python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py && python3 e2e.py \
+            && python3 ../../../core/spec/integration/endurance.py 3'

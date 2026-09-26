@@ -45,16 +45,36 @@ local function parse(text, min_version)
   return doc, meta.version
 end
 
---- Deterministic encoding of the body (sorted keys) so the sum is stable.
+--- Deterministic encoding (objects with sorted keys at every level, arrays in
+--- order) so the sum is the same whatever the table's insertion order.
+local function is_array(t)
+  local n = 0
+  for _ in pairs(t) do n = n + 1 end
+  return n > 0 and #t == n
+end
+
+local function encode_sorted(v)
+  if type(v) ~= "table" then return json.encode(v) end
+  if is_array(v) then
+    local parts = {}
+    for i = 1, #v do parts[i] = encode_sorted(v[i]) end
+    return "[" .. table.concat(parts, ",") .. "]"
+  end
+  local keys = {}
+  for k in pairs(v) do keys[#keys + 1] = tostring(k) end
+  if #keys == 0 then return "[]" end   -- rxi/json also encodes an empty table as []
+  table.sort(keys)
+  local parts = {}
+  for _, k in ipairs(keys) do parts[#parts + 1] = json.encode(k) .. ":" .. encode_sorted(v[k]) end
+  return "{" .. table.concat(parts, ",") .. "}"
+end
+
 function files.encode_body(t)
-  -- rxi/json encodes keys in table order; we sort by re-inserting into a
-  -- key-sorted table is not possible in Lua, so we encode ourselves for
-  -- objects at the top level only (bodies are objects of objects).
   local keys = {}
   for k in pairs(t) do keys[#keys + 1] = tostring(k) end
   table.sort(keys)
   local parts = {}
-  for _, k in ipairs(keys) do parts[#parts + 1] = json.encode(k) .. ":" .. json.encode(t[k]) end
+  for _, k in ipairs(keys) do parts[#parts + 1] = json.encode(k) .. ":" .. encode_sorted(t[k]) end
   return "{" .. table.concat(parts, ",") .. "}"
 end
 
@@ -103,6 +123,42 @@ function files.write_text(path, text)
   if not f then return nil, tostring(err) end
   f:write(text)
   f:close()
+  return true
+end
+
+--- exists, size (LuaFileSystem when present, a plain open otherwise).
+function files.stat(path)
+  local ok, lfs = pcall(require, "lfs")
+  if ok and lfs then
+    local a = lfs.attributes(path)
+    if not a then return false, nil end
+    return true, a.size
+  end
+  local f = io.open(path, "rb")
+  if not f then return false, nil end
+  local size = f:seek("end")
+  f:close()
+  return true, size
+end
+
+--- rename, then report the size of the result.
+function files.rename(from, to)
+  local ok, err = os.rename(from, to)
+  if not ok then return nil, tostring(err) end
+  local _, size = files.stat(to)
+  return true, nil, size
+end
+
+--- Flags are empty files in /data/mode (the daemons and scripts read them).
+files.FLAG_DIR = "/data/mode"
+function files.flag(name, set)
+  local path = files.FLAG_DIR .. "/" .. name
+  if set then
+    local ok, lfs = pcall(require, "lfs")
+    if ok and lfs and not lfs.attributes(files.FLAG_DIR) then lfs.mkdir(files.FLAG_DIR) end
+    return files.write_text(path, "")
+  end
+  os.remove(path)
   return true
 end
 

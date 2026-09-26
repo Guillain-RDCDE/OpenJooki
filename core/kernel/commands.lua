@@ -59,6 +59,25 @@ local executors = {
     check(type(c.path) == "string" and type(c.reply) == "string", "files.read_text needs path and reply")
     ctx.emitted[#ctx.emitted + 1] = { type = c.reply, path = c.path, text = a.files.read_text(c.path), ref = c.ref }
   end,
+  ["files.write_text"] = function(a, c)
+    check(type(c.path) == "string" and type(c.text) == "string", "files.write_text needs path and text")
+    local ok, err = a.files.write_text(c.path, c.text)
+    if not ok then log.warn("commands.write_text_failed", { path = c.path, err = tostring(err) }) end
+  end,
+  ["files.flag"] = function(a, c)
+    check(type(c.name) == "string" and c.name:match("^[%w_]+$"), "files.flag needs a name")
+    a.files.flag(c.name, c.set == true)
+  end,
+  ["files.rename"] = function(a, c, ctx)
+    check(type(c.from) == "string" and type(c.to) == "string", "files.rename needs from and to")
+    local ok, err, size = a.files.rename(c.from, c.to)
+    if c.reply then ctx.emitted[#ctx.emitted + 1] = { type = c.reply, ok = ok == true, err = err, size = size, ref = c.ref } end
+  end,
+  ["files.stat"] = function(a, c, ctx)
+    check(type(c.path) == "string" and type(c.reply) == "string", "files.stat needs path and reply")
+    local exists, size = a.files.stat(c.path)
+    ctx.emitted[#ctx.emitted + 1] = { type = c.reply, path = c.path, exists = exists, size = size, ref = c.ref }
+  end,
   ["timer.every"] = function(a, c) timers.every(c.name, c.seconds, a.clock.now()) end,
   ["timer.once"] = function(a, c) timers.once(c.name, c.seconds, a.clock.now()) end,
   ["timer.cancel"] = function(_, c) timers.cancel(c.name) end,

@@ -7,7 +7,7 @@ BD1, BD2 = "04000000B00001", "04000000B00003"   # two black dragons (star 262 = 
 FOX = "04000000F00001"                          # fox (257 = 0x101)
 results = []
 def check(name, cond, info=""):
-    results.append((name, bool(cond))); print(("PASS " if cond else "FAIL ") + name + ("" if cond else "  -> %s" % info))
+    results.append((name, bool(cond))); print(("PASS " if cond else "FAIL ") + name + ("" if cond else "  -> %s" % (info,)))
 def fresh(pre=None):
     subprocess.run(["bash", "setup.sh"], capture_output=True)
     if pre: pre()
@@ -15,7 +15,8 @@ def fresh(pre=None):
     subprocess.run(["./start_player.sh", LUA], capture_output=True); time.sleep(1.0)
     return Jooki()
 def pid_player():
-    return subprocess.run(["pgrep", "-f", "^lua5.1 run"], capture_output=True, text=True).stdout.strip()
+    # the 1.x program runs as "lua5.1 run.lua ...", the 2.0 core as "lua5.1 .../harness.lua ..."
+    return subprocess.run(["pgrep", "-f", "^lua5.1 (run|.*harness)"], capture_output=True, text=True).stdout.strip()
 def beeps(): return open("/tmp/bench_services.log").read().count("errorbeep")
 def newpl(j, title):
     before = set(j.pls); j.send("PLAYLIST_NEW", {"title": title, "audiobook": False})

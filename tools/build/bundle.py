@@ -114,6 +114,15 @@ def main():
     stripped = strip_lua(readable)
 
     open(os.path.join(a.out, "core.lua"), "w", encoding="utf-8", newline="\n").write(readable)
+    # the bench harness: the 4 host stubs, then the bundle (same as the device's C host)
+    open(os.path.join(a.out, "harness.lua"), "w", encoding="utf-8", newline="\n").write(
+        "function c_syslog(level, msg) end\n"
+        "function c_alsa_set_volume(v, x) local f = io.open('/tmp/bench_vol.log', 'a') if f then f:write(tostring(v) .. '\\n') f:close() end return 0 end\n"
+        "function c_isTerminating() return _G.__terminating == true end\n"
+        "function c_sd_notify() io.stdout:write('READY\\n') io.stdout:flush() end\n"
+        "local src = assert(io.open(arg[1])):read('*a')\n"
+        "local f = assert(loadstring(src, '=core'))\n"
+        "f()\n")
     open(os.path.join(a.out, "core.min.lua"), "w", encoding="utf-8", newline="\n").write(stripped)
     lib = encode(stripped)
     open(os.path.join(a.out, "player.lib"), "wb").write(lib)

@@ -64,6 +64,18 @@ function fakes.files()
   function f.remove(path) store[path] = nil return true end
   function f.read_text(path) return store[path] and store[path].text end
   function f.write_text(path, text) store[path] = { text = text } return true end
+  function f.stat(path)
+    local d = store[path]
+    if not d then return false, nil end
+    return true, d.size or (d.text and #d.text) or 0
+  end
+  function f.rename(from, to)
+    if not store[from] then return nil, "no such file" end
+    store[to] = store[from]; store[from] = nil
+    return true, nil, f.stat(to) and select(2, f.stat(to))
+  end
+  f.flags = {}
+  function f.flag(name, set) f.flags[name] = set or nil return true end
   return f
 end
 

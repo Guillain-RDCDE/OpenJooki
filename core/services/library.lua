@@ -362,6 +362,15 @@ library.schemas = S
 --- Register the api commands and the boot handler.
 function library.install(api, dispatch)
   dispatch.on("boot", "library", library.on_boot)
+  -- a playlist created by another service (Spotify preset)
+  dispatch.on("library.add_playlist", "library", function(doc, ev)
+    return mutate(doc, { playlists = true }, function(lib)
+      local id, err = ops.playlist_new(lib, { title = ev.title, star = ev.star }, ev.wall or ev.now or 0)
+      if not id then return nil, err end
+      lib.playlists[id].image, lib.playlists[id].spotify, lib.playlists[id].deezer = ev.image, ev.spotify, ev.deezer
+      return id
+    end)
+  end)
   api.command("playlist.new", S.playlist_new, function(doc, p, ev)
     return mutate(doc, { playlists = true }, function(lib) return ops.playlist_new(lib, p, ev.wall or ev.now or 0) end)
   end)

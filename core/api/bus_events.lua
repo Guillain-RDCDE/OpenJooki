@@ -61,6 +61,29 @@ function bus_events.translate(topic, payload)
     return { type = "bt.connected", mac = d.mac }
   end
   if topic == "/j/esp32/input/bt/state" then return { type = "bt.state", code = tonumber(payload) } end
+  local sp = topic:match("^/j/spotify/input/([%w_]+)$")
+  if sp then
+    if sp == "position" or sp == "volume" then return { type = "spotify." .. sp, ms = tonumber(payload), value = tonumber(payload) } end
+    if sp == "active" then return { type = "spotify.active", active = (payload == "true" or payload == "1") } end
+    if sp == "new_preset" then return { type = "spotify.new_preset", raw = payload } end
+    local d = jsonish(payload) or {}
+    if sp == "now_playing" then return { type = "spotify.now_playing", data = d } end
+    if sp == "login" then return { type = "spotify.login", username = d.username } end
+    if sp == "set_cfg" then return { type = "spotify.set_cfg", shuffle_mode = d.shuffle_mode, repeat_mode = d.repeat_mode } end
+    return { type = "spotify." .. sp }
+  end
+  local dz = topic:match("^/j/deezer/input/([%w_]+)$")
+  if dz then
+    if dz == "position" then return { type = "deezer.position", ms = tonumber(payload) } end
+    if dz == "paused" then return { type = "deezer.paused", flag = tostring(payload) } end
+    if dz == "now_pl" then return { type = "deezer.now_pl", uri = tostring(payload) } end
+    if dz == "playlists" then return { type = "deezer.playlists", raw = payload } end
+    local d = jsonish(payload) or {}
+    if dz == "login" then return { type = "deezer.login", name = d.name, id = d.id } end
+    if dz == "options" then return { type = "deezer.options", license = d.license } end
+    if dz == "now_playing" then return { type = "deezer.now_playing", data = d } end
+    return { type = "deezer." .. dz }
+  end
   local dhcp = topic:match("^/j/net/dhcp/(%w+)$")
   if dhcp then return { type = "net.dhcp", event = dhcp } end
   if topic == "/j/event" then return { type = "system.event", name = tostring(payload) } end

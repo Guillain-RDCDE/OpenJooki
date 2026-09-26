@@ -68,6 +68,17 @@ check("S3 garbage -> invalid_argument, core still alive", r and r["error"]["code
 r = cmd({"v": 2, "id": "a3", "type": "core.version"})
 check("S4 core.version event", r and r["ok"] and got["events"] and got["events"][-1]["payload"]["core"], got["events"][-1:])
 
+# the optional streaming module (ADR-0009): a fake spotify_ctrl logs in, the state follows;
+# a preset request while nothing plays is refused, the core stays alive
+n = len(got["states"])
+c.publish("/j/spotify/input/login", json.dumps({"username": "fake-spotify"}))
+t = time.time()
+while time.time() - t < 2 and len(got["states"]) <= n: time.sleep(0.02)
+sp = [s for s in got["states"][n:] if s.get("patch", {}).get("spotify")]
+check("S8 spotify login from the daemon reaches the state", sp and sp[-1]["patch"]["spotify"]["username"] == "fake-spotify", got["states"][n:][-2:])
+r = cmd({"v": 2, "id": "a4", "type": "spotify.new_playlist", "payload": {"title": "x"}})
+check("S8 preset while idle -> unavailable, core alive", r and r["ok"] is False and r["error"]["code"] == "unavailable" and proc.poll() is None, r)
+
 # idle traffic budget: 10 s of silence
 before = len(got["all"]); time.sleep(10); idle = len(got["all"]) - before
 check("S5 idle bus traffic <= 0.5 msg/s (got %.2f)" % (idle / 10), idle <= 5, idle)

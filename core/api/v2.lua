@@ -35,6 +35,8 @@ function api.commands()
   return out
 end
 
+function api.schema_of(ctype) return commands[ctype] and commands[ctype].schema end
+
 local function reply(id, ok, err)
   local r = { v = 2, id = id, ok = ok }
   if err then r.error = err end

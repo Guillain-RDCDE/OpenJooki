@@ -122,6 +122,21 @@ local function start(doc, pb, playlist_id, opts)
   local lib = doc.library or { playlists = {}, tracks = {} }
   local p = lib.playlists[playlist_id]
   if not p then return nil, { code = "not_found", field = "playlist", message = "unknown playlist" } end
+  local has_streaming, streaming = pcall(require, "services.streaming")
+  local svc = has_streaming and streaming.service_of(p)
+  if svc then
+    local now, cmds0 = streaming.start(doc, playlist_id, p)
+    if not now then return { commands = cmds0 } end
+    local cmds = {}
+    if pb.state == "playing" or pb.state == "paused" or pb.state == "starting" then
+      if pb.now and pb.now.service == "FILE" then cmds[#cmds + 1] = cmd_audio("stop", MUSIC) end
+    end
+    for _, c in ipairs(cmds0) do cmds[#cmds + 1] = c end
+    pb.now, pb.state, pb.position_ms, pb.resume_ms = now, "starting", 0, nil
+    pb.paused_by, pb.paused_at = nil, nil
+    cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
+    return { state = { playback = pb }, commands = cmds }
+  end
   local n = #(p.tracks or {})
   local cmds = {}
   if n == 0 then
@@ -205,9 +220,13 @@ function playback.on_request(doc, ev)
   return r
 end
 
+local function is_streaming(pb) return pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER") end
+local function stream_cmds(pb, action, arg) return { commands = require("services.streaming").transport(pb.now.service, action, arg) } end
+
 function playback.on_pause(doc, ev)
   local pb = pb_of(doc)
   if pb.state ~= "playing" and pb.state ~= "starting" then return nil end
+  if is_streaming(pb) then return stream_cmds(pb, "pause") end
   pb.paused_by, pb.paused_at = ev.source, ev.now
   if pb.now and pb.now.service == "STREAM" then
     return { state = { playback = pb }, commands = { cmd_audio("stop", MUSIC) } }
@@ -217,6 +236,7 @@ end
 
 function playback.on_resume(doc, ev)
   local pb = pb_of(doc)
+  if pb.state == "paused" and is_streaming(pb) then return stream_cmds(pb, "resume") end
   if pb.state == "paused" then return playback.resume_paused(doc, pb, ev.now) end
   if (pb.state == "ended" or pb.state == "idle") and pb.now then
     return start(doc, pb, pb.now.playlist, { index = pb.now.index, restart = true, now_s = ev.now })
@@ -247,11 +267,16 @@ local function step(doc, pb, delta, ev)
   return start(doc, pb, now.playlist, { queue_pos = pos, restart = true, now_s = ev.now })
 end
 
-function playback.on_next(doc, ev) return step(doc, pb_of(doc), 1, ev) end
+function playback.on_next(doc, ev)
+  local pb = pb_of(doc)
+  if is_streaming(pb) then return stream_cmds(pb, "next") end
+  return step(doc, pb, 1, ev)
+end
 
 function playback.on_prev(doc, ev)
   local pb = pb_of(doc)
   if not pb.now then return nil end
+  if is_streaming(pb) then return stream_cmds(pb, "prev") end
   if not ev.forced and pb.state ~= "playing" and pb.state ~= "starting" then return nil end
   if (pb.position_ms or 0) > 5000 then
     pb.position_ms = 0
@@ -264,6 +289,7 @@ function playback.on_seek(doc, ev)
   local pb = pb_of(doc)
   if not pb.now or pb.now.service == "STREAM" then return nil end
   local ms = math.max(1, math.floor(tonumber(ev.ms) or 1))
+  if is_streaming(pb) then return stream_cmds(pb, "seek", ms) end
   pb.position_ms = ms
   return { state = { playback = pb }, commands = { cmd_audio("seek", MUSIC, ms) } }
 end
@@ -271,12 +297,14 @@ end
 function playback.on_skip(doc, ev)
   local pb = pb_of(doc)
   if not pb.now or pb.now.service == "STREAM" then return nil end
+  if is_streaming(pb) then return stream_cmds(pb, "skip", math.floor(tonumber(ev.seconds) or 0)) end
   return { commands = { cmd_audio("skip_sec", MUSIC, math.floor(tonumber(ev.seconds) or 0)) } }
 end
 
 function playback.on_stop(doc)
   local pb = pb_of(doc)
   if pb.state == "idle" then return nil end
+  if is_streaming(pb) then return stream_cmds(pb, "stop") end
   return { state = { playback = pb }, commands = { cmd_audio("stop", MUSIC) } }
 end
 

@@ -18,7 +18,8 @@ main.lua    wiring only
 Rules (enforced by review and CI): a service never requires an adapter; a
 handler is `(doc, event) -> { state = {...}, commands = {...} }` and does no
 I/O; every side effect is a command executed by the kernel; every module has
-its spec; the built bundle stays under 160 KiB.
+its spec; the built bundle stays under 176 KiB (`bundle.py --without
+services.streaming` builds a lean core without Spotify/Deezer, ADR-0009).
 
 ## Run
 
@@ -28,10 +29,11 @@ lua5.1 core/spec/run.lua core/spec/integration/bus_spec.lua  # needs mosquitto o
 python3 tools/build/bundle.py                              # build/core.lua, core.min.lua, player.lib
 python3 core/spec/integration/smoke.py                     # boots the built core against mosquitto
 luacheck core                                              # lint (.luacheckrc at the repo root)
+lua5.1 tools/build/apidoc.lua > docs/api-v2.md             # the v2 contract, generated from the code
 ```
 
 The bench distribution needs: `lua5.1 lua-socket lua-filesystem mosquitto
-luacheck python3-paho-mqtt`. CI (`.github/workflows/ci.yml`) runs all of the
+luacheck` and `paho-mqtt>=2` (pip; the Ubuntu package is 1.x). CI (`.github/workflows/ci.yml`) runs all of the
 above on every push touching `core/`.
 
 ## Status (docs/21 §15)
@@ -40,8 +42,10 @@ above on every push touching `core/`.
 - Phase 2 (library, tokens, playback, device, uploads, v1 compatibility): done —
   the 38 backend checks of the 1.x bench pass unchanged on the new core.
 - Phase 3 (bedtime, update, network + mDNS): done — 24 bedtime, 13 network and
-  47 page checks of the 1.x bench pass unchanged; 127 unit specs; endurance run
+  47 page checks of the 1.x bench pass unchanged; 134 unit specs; endurance run
   (`core/spec/integration/endurance.py`) in CI for 3 minutes, nightly for longer.
+  Spotify Connect / Deezer ported as the optional `streaming` module (ADR-0009,
+  best effort: bench-verified with a fake daemon, not against the services).
 - Phase 4 (Wi-Fi manager, Bluetooth rescue, security) → 2.1.
 - Phase 5 (a real Jooki: A/B install, 24 h, rollback): next.
 

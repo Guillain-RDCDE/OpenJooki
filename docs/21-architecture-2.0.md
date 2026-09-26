@@ -86,7 +86,7 @@ the build and test pipeline.
 | | value | source |
 |---|---|---|
 | Runtime | Lua 5.1, LuaSocket, LuaFileSystem; no C we control | C host (ADR-0001) |
-| Program size | **≤ 160 KiB** stripped source (hard limit 200 KiB in the host) | docs/22 §1 |
+| Program size | **≤ 176 KiB** stripped source (hard limit 200 KiB in the host); the v1 compatibility layer (14 KiB) leaves in 2.1, `streaming` (11 KiB) can be left out with `--without` | docs/22 §1 |
 | Memory | **≤ 4 MB** RSS steady state (1.x: 2.9 MB); no growth over 24 h | budget test |
 | Boot → ready | **≤ 8 s** after process start (1.x: 10 s) | measured |
 | Token → sound | **≤ 700 ms** (instrumented in the log) | to instrument |
@@ -298,13 +298,13 @@ bug.
 | 0 | this document, ADRs reviewed | approved by the maintainer | done 2026-09-26 |
 | 1 | build pipeline, kernel, adapters + fakes, log, config, CI skeleton | boots on the bench, answers a v2 `state.get`; budgets measured | done 2026-09-26 |
 | 2 | library, tokens, playback, device (volume, lights, buttons, power), uploads | unit specs green; 1.x backend checks (38) green through the v1 layer | done 2026-09-26 |
-| 3 | bedtime, update, network (health, mDNS), api v1+v2 complete | **all 122 integration checks of the 1.x bench green on the new core** (38 + 24 + 13 + 47) + 127 unit specs; endurance run in CI | done 2026-09-26 (24 h endurance: nightly) |
+| 3 | bedtime, update, network (health, mDNS), api v1+v2 complete, optional `streaming` (ADR-0009) | **all 122 integration checks of the 1.x bench green on the new core** (38 + 24 + 13 + 47) + 134 unit specs; endurance run in CI; `docs/api-v2.md` generated from the code | done 2026-09-26 (24 h endurance: nightly) |
 | 4 | Wi-Fi manager + Bluetooth rescue page; security (§12) | new checks green; security review signed | → 2.1 |
 | 5 | our Jooki: A/B install, 24 h, rollback test, family use for a week | no regression, no data change, family approval | next |
 | 6 | release 2.0 (old core kept on the spare partition for one release) | published; installer + OTA verified | — |
 
-Budgets measured on the bench at the end of phase 3: stripped bundle 145 KiB
-(limit 160), boot to ready 20 ms, idle bus traffic 0 message/s, no shell
+Budgets measured on the bench at the end of phase 3: stripped bundle 160 KiB
+with streaming, 149 without (limit 176), boot to ready 20 ms, idle bus traffic 0 message/s, no shell
 process on a timer (only user actions), RSS 4.8 MB on x86-64 (the 4 MB device
 budget is measured in phase 5).
 

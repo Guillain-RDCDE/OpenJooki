@@ -442,6 +442,13 @@ function device.install(api, dispatch)
     local a = audiocfg_of(doc)
     if p.shuffle_mode ~= nil then a.shuffle_mode = p.shuffle_mode end
     if p.repeat_mode ~= nil then a.repeat_mode = p.repeat_mode end
+    return { state = { audiocfg = a }, commands = { { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 },
+                                                   emit("audiocfg.changed", { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode }) } }
+  end)
+  dispatch.on("device.set_config_request", "device", function(doc, ev)
+    local a = audiocfg_of(doc)
+    if ev.shuffle_mode ~= nil then a.shuffle_mode = ev.shuffle_mode == true end
+    if ev.repeat_mode ~= nil then a.repeat_mode = tonumber(ev.repeat_mode) or a.repeat_mode end
     return { state = { audiocfg = a }, commands = { { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } } }
   end)
   api.command("device.toy_safe", S.enable, function(doc, p) return device.on_toy_safe(doc, { enable = p.enable }) end)

@@ -92,7 +92,8 @@ with sync_playwright() as p:
     # E6 reorder by drag (pointer events) on desktop-size page
     dctx = b.new_context(viewport={"width": 1200, "height": 900}, locale="fr-FR", bypass_csp=True); dp = dctx.new_page()
     dp.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
-    dp.goto(URL + "/#/p/" + pid); dp.wait_for_selector("li[data-i='0']")
+    dp.goto(URL + "/#/p/" + pid); dp.wait_for_selector("li[data-i='2']")
+    dp.wait_for_selector("li[data-i='0'] .handle", state="visible")   # the handle renders after the row
     order = list(J.pls[pid]["tracks"])
     h0 = dp.locator("li[data-i='0'] .handle").bounding_box(); h2 = dp.locator("li[data-i='2']").bounding_box()
     dp.mouse.move(h0["x"] + 10, h0["y"] + 10); dp.mouse.down()

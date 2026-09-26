@@ -10,6 +10,12 @@ local playback = require("services.playback")
 local device = require("services.device")
 local uploads = require("services.uploads")
 local bedtime = require("services.bedtime")
+-- optional module (ADR-0009): absent from a `--without services.streaming` build
+local has_streaming, streaming = pcall(require, "services.streaming")
+if not has_streaming then
+  local off = function() return nil, { code = "unavailable", field = "", message = "streaming not built in" } end
+  streaming = { on_new_spotify_playlist = off, on_deezer_get_playlists = off, on_deezer_set_cfg = off }
+end
 local schema = require("api.schema")
 local v1 = {}
 
@@ -128,6 +134,9 @@ H.PLAYLIST_NEW = function(doc, p, ev)
   return lib(doc, { playlists = true }, function(l) return library.ops.playlist_new(l, { title = p.title, audiobook = p.audiobook == true, star = type(p.star) == "string" and p.star or nil }, ev.wall or ev.now or 0) end)
 end
 H.PLAYLIST_NEW_DEEZER = H.PLAYLIST_NEW
+H.PLAYLIST_NEW_SPOTIFY = function(doc, p) return streaming.on_new_spotify_playlist(doc, { title = p.title, star = type(p.star) == "string" and p.star or nil }) end
+H.DEEZER_GET_PLAYLISTS = function() return streaming.on_deezer_get_playlists() end
+H.SET_CFG_DEEZER = function(doc, p) return streaming.on_deezer_set_cfg(doc, p) end
 H.PLAYLIST_ADD_TRACK = function(doc, p) return lib(doc, { playlists = true }, function(l) return library.ops.playlist_add_track(l, p.playlistId, p.trackId) end) end
 H.PLAYLIST_ADD_STREAM = function(doc, p, ev) return lib(doc, { playlists = true, tracks = true }, function(l) return library.ops.playlist_add_stream(l, p.playlistId, p.title, p.url, ev.wall or ev.now or 0) end) end
 H.PLAYLIST_DELETE = function(doc, p) return lib(doc, { playlists = true, tracks = true }, function(l) return library.ops.playlist_delete(l, p.playlistId) end) end
@@ -186,7 +195,8 @@ H.SET_CFG = function(doc, p)
     if m == true then m = 1 elseif m == false then m = 0 end
     a.repeat_mode = tonumber(m) or a.repeat_mode
   end
-  return { state = { audiocfg = a }, commands = { { kind = "files.write", path = ((doc.config or {}).data_dir or "/jooki/external/jooki") .. "/audiocfg.json", doc = a, version = 1 } } }, nil, { "audio" }
+  return { state = { audiocfg = a }, commands = { { kind = "files.write", path = ((doc.config or {}).data_dir or "/jooki/external/jooki") .. "/audiocfg.json", doc = a, version = 1 },
+                                                 { kind = "emit", event = { type = "audiocfg.changed", shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode } } } }, nil, { "audio" }
 end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
 H.SET_WIFI = function(_, p)

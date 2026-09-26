@@ -15,7 +15,8 @@ jobs:
       - name: Tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto lua-check python3-paho-mqtt
+          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto lua-check python3-pip
+          sudo pip3 install --break-system-packages "paho-mqtt>=2"   # the apt package is 1.x (no CallbackAPIVersion)
       - name: Unit specs
         run: lua5.1 core/spec/run.lua
       - name: Lint (no globals, no unused)
@@ -48,8 +49,8 @@ jobs:
       - name: Tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto ffmpeg python3-paho-mqtt python3-pip
-          sudo pip3 install --break-system-packages playwright
+          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto ffmpeg python3-pip
+          sudo pip3 install --break-system-packages "paho-mqtt>=2" playwright
           sudo python3 -m playwright install --with-deps chromium
       - name: Build the core
         run: python3 tools/build/bundle.py

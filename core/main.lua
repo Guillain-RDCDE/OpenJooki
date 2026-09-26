@@ -43,7 +43,8 @@ local bus = require("adapters.bus").new({
   client_id = config.get("mqtt_client_id"), keepalive = config.get("mqtt_keepalive_s"),
   min_backoff = config.get("mqtt_reconnect_min_s"), max_backoff = config.get("mqtt_reconnect_max_s"),
   topics = { api.TOPIC_CMD, "/j/web/input/#", "/j/audio/input/#", "/j/nfc/input/#", "/j/gpio/input/#",
-             "/j/power/input/#", "/j/esp32/input/#", "/j/net/dhcp/#", "/j/event", "/j/mender", "/j/mender/shutdown_app" },
+             "/j/power/input/#", "/j/esp32/input/#", "/j/net/dhcp/#", "/j/event", "/j/mender", "/j/mender/shutdown_app",
+             "/j/spotify/input/#", "/j/deezer/input/#" },
 })
 local mdns = require("adapters.mdns").new()
 local adapters = { bus = bus, files = files, clock = clock, host = host, shell = shell, mdns = mdns }
@@ -79,6 +80,10 @@ require("services.device").install(api, dispatch)
 require("services.uploads").install(api, dispatch)
 require("services.bedtime").install(api, dispatch)
 require("services.update").install(api, dispatch)
+-- optional (ADR-0009): disabled by configuration, or absent from a `--without services.streaming` build
+if config.get("streaming_enabled") and package.preload["services.streaming"] then
+  require("services.streaming").install(api, dispatch)
+end
 v1.install(dispatch)
 
 require("services.network").install(api, dispatch)

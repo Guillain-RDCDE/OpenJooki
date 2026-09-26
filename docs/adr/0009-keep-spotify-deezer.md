@@ -26,6 +26,15 @@ Jooki Play, the cloud heartbeat and the Mender client stay dropped: their
 servers are gone and Jooki Play embeds a dead API key.
 
 ## Consequences
-- About 400 readable lines more and one more fake daemon on the bench.
+- About 250 readable lines (11 KiB stripped) more; the size budget goes from
+  160 to 176 KiB (the v1 compatibility layer, 14 KiB, leaves in 2.1). A lean
+  build without the module: `bundle.py --without services.streaming`;
+  `main.lua` and the v1 layer tolerate its absence.
+- Ported: login/logout/active, now-playing and transport (pause, continue,
+  next, previous, seek, skip), presets (`spotify.new_playlist` creates the
+  playlist from what is playing), shuffle/repeat/volume forwarded to the
+  active service, Deezer login/options/playlists/credentials.
+- Not ported: the Deezer daemon restart (`deezer_ctrl` is not on the 2022
+  firmware) — `deezer.set_config` writes the credentials and logs a warning.
 - Playlist records keep their `spotify`/`deezer` fields; the library ignores
   them except to hand them to `streaming`.

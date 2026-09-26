@@ -7,8 +7,10 @@
   shared with 1.x. Design: `docs/21-architecture-2.0.md`; what it replaces:
   `docs/22-core-inventory.md`; decisions: `docs/adr/`.
 - Phases 1–3 done on the bench: the 122 integration checks of the 1.x bench
-  (backend, bedtime, network, page) pass unchanged on the new core, plus 127
+  (backend, bedtime, network, page) pass unchanged on the new core, plus 134
   unit specs, lint, size budget and an endurance run, all in CI.
+- Spotify Connect and Deezer kept (optional `streaming` module, ADR-0009).
+  The v2 contract is documented from the code in `docs/api-v2.md`.
 - Not on any Jooki yet: phase 5 (A/B install on a real device) is next.
 
 ## Firmware 1.3.0 (not released yet) — bedtime

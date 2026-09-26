@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-label="Playback state machine"><style>
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;fill:#222}
+.t{font-weight:700;font-size:15px}.s{font-size:12px;fill:#555}.h{font-weight:700;font-size:17px}
+.box{stroke:#333;stroke-width:1.2}.dash{stroke-dasharray:6 4}
+.arrow{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="400" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">Playback: one state machine, five states, no surprises</text>
+<rect x="40" y="120" width="130" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="105" y="150" text-anchor="middle" class="t">idle</text>
+<rect x="240" y="120" width="130" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="305" y="142" text-anchor="middle" class="t">starting</text>
+<text x="305" y="158" text-anchor="middle" class="s">command sent,</text>
+<text x="305" y="173" text-anchor="middle" class="s">waiting for audio</text>
+<rect x="440" y="120" width="130" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="505" y="150" text-anchor="middle" class="t">playing</text>
+<rect x="440" y="230" width="130" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="505" y="260" text-anchor="middle" class="t">paused</text>
+<rect x="640" y="120" width="130" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="705" y="142" text-anchor="middle" class="t">ended</text>
+<text x="705" y="158" text-anchor="middle" class="s">track finished</text>
+<path d="M170 150 L240 150" class="arrow"/>
+<rect x="164" y="132" width="80" height="19" fill="#fff" rx="3"/>
+<text x="205" y="144" text-anchor="middle" class="s">play(track)</text>
+<path d="M370 150 L440 150" class="arrow"/>
+<rect x="355" y="132" width="99" height="19" fill="#fff" rx="3"/>
+<text x="405" y="144" text-anchor="middle" class="s">audio: playing</text>
+<path d="M505 180 L505 230" class="arrow"/>
+<rect x="449" y="187" width="42" height="19" fill="#fff" rx="3"/>
+<text x="470" y="199" text-anchor="middle" class="s">pause</text>
+<path d="M540 230 L540 180" class="arrow"/>
+<rect x="555" y="187" width="48" height="19" fill="#fff" rx="3"/>
+<text x="580" y="199" text-anchor="middle" class="s">resume</text>
+<path d="M570 150 L640 150" class="arrow"/>
+<rect x="561" y="132" width="86" height="19" fill="#fff" rx="3"/>
+<text x="605" y="144" text-anchor="middle" class="s">audio: ended</text>
+<path d="M705 120 L705 80 L305 80 L305 120" class="arrow"/>
+<rect x="239" y="62" width="131" height="19" fill="#fff" rx="3"/>
+<text x="305" y="74" text-anchor="middle" class="s">next track (if any)</text>
+<path d="M770 150 L840 150 L840 290 L105 290 L105 180" class="arrow"/>
+<rect x="231" y="272" width="138" height="19" fill="#fff" rx="3"/>
+<text x="300" y="284" text-anchor="middle" class="s">no next track / stop</text>
+<text x="40" y="330" text-anchor="start" class="s">Every transition saves the resume position (audiobooks), updates the lights and publishes the state.</text>
+<text x="40" y="347" text-anchor="start" class="s">Anything else (a message that does not fit the current state) is logged and ignored — never applied.</text></svg>

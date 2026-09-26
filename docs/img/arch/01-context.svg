@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 545" width="960" height="545" role="img" aria-label="Context: what we own, what we keep"><style>
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;fill:#222}
+.t{font-weight:700;font-size:15px}.s{font-size:12px;fill:#555}.h{font-weight:700;font-size:17px}
+.box{stroke:#333;stroke-width:1.2}.dash{stroke-dasharray:6 4}
+.arrow{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="545" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">The Jooki v2 at runtime: what we own, what we keep</text>
+<rect x="360" y="60" width="240" height="90" rx="10" fill="#fbe3cf" class="box"/>
+<text x="480" y="97" text-anchor="middle" class="t">Web page</text>
+<text x="480" y="113" text-anchor="middle" class="s">phone or computer</text>
+<text x="480" y="128" text-anchor="middle" class="s">(ours, 1.x → 2.0)</text>
+<path d="M480 150 L480 205" class="arrow2"/>
+<rect x="395" y="158" width="170" height="34" fill="#fff" rx="3"/>
+<text x="480" y="170" text-anchor="middle" class="s">MQTT over WebSocket :8000</text>
+<text x="480" y="185" text-anchor="middle" class="s">+ HTTP /upload</text>
+<rect x="300" y="205" width="360" height="120" rx="10" fill="#fbe3cf" class="box"/>
+<text x="480" y="257" text-anchor="middle" class="t">THE CORE (2.0)</text>
+<text x="480" y="273" text-anchor="middle" class="s">player.lib — application logic</text>
+<text x="480" y="288" text-anchor="middle" class="s">playlists · tokens · playback · bedtime · network</text>
+<text x="480" y="303" text-anchor="middle" class="s">readable open-source Lua, built into the Jooki format</text>
+<rect x="40" y="430" width="880" height="34" rx="6" fill="#e9e9e9" class="box"/>
+<text x="480" y="447" text-anchor="middle" class="t">MQTT bus — mosquitto :1883 (open on the LAN today; localhost in 2.0)</text>
+<path d="M565 325 L565 430" class="arrow2"/>
+<rect x="607" y="340" width="144" height="19" fill="#fff" rx="3"/>
+<text x="680" y="352" text-anchor="middle" class="s">commands ↓   events ↑</text>
+<rect x="40" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="120" y="395" text-anchor="middle" class="t">esp32_ctrl</text>
+<text x="120" y="484" text-anchor="middle" class="s">Wi-Fi · Bluetooth · NFC</text>
+<text x="120" y="501" text-anchor="middle" class="s">(ESP32 chip)</text>
+<rect x="218" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="298" y="395" text-anchor="middle" class="t">gpio_ctrl</text>
+<text x="298" y="484" text-anchor="middle" class="s">buttons</text>
+<rect x="396" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="476" y="395" text-anchor="middle" class="t">ht_ctrl</text>
+<text x="476" y="484" text-anchor="middle" class="s">lights</text>
+<rect x="574" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="654" y="395" text-anchor="middle" class="t">audio_ctrl</text>
+<text x="654" y="484" text-anchor="middle" class="s">sound output</text>
+<text x="654" y="501" text-anchor="middle" class="s">(GStreamer, ALSA)</text>
+<rect x="752" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="832" y="395" text-anchor="middle" class="t">web_ctrl</text>
+<text x="832" y="484" text-anchor="middle" class="s">HTTP server</text>
+<text x="832" y="501" text-anchor="middle" class="s">static files, /upload</text>
+<path d="M120 430 L120 420" class="arrow"/>
+<path d="M298 430 L298 420" class="arrow"/>
+<path d="M476 430 L476 420" class="arrow"/>
+<path d="M654 430 L654 420" class="arrow"/>
+<path d="M832 430 L832 420" class="arrow"/>
+<rect x="40" y="60" width="260" height="90" rx="10" fill="#e9e9e9" class="box dash"/>
+<text x="170" y="97" text-anchor="middle" class="t">C host `player`</text>
+<text x="170" y="113" text-anchor="middle" class="s">loads player.lib (zlib, 200 KiB)</text>
+<text x="170" y="128" text-anchor="middle" class="s">gives 4 functions: ALSA volume,</text>
+<text x="170" y="143" text-anchor="middle" class="s">syslog, terminating?, sd_notify</text>
+<path d="M300 105 L380 205" class="arrow"/>
+<rect x="322" y="137" width="35" height="19" fill="#fff" rx="3"/>
+<text x="340" y="149" text-anchor="middle" class="s">runs</text>
+<rect x="700" y="60" width="220" height="90" rx="10" fill="#dfeef8" class="box"/>
+<text x="810" y="97" text-anchor="middle" class="t">Data partition</text>
+<text x="810" y="113" text-anchor="middle" class="s">/jooki/external/jooki</text>
+<text x="810" y="128" text-anchor="middle" class="s">music files + JSON databases</text>
+<path d="M700 105 L620 205" class="arrow2"/>
+<rect x="610" y="137" width="99" height="19" fill="#fff" rx="3"/>
+<text x="660" y="149" text-anchor="middle" class="s">reads / writes</text>
+<rect x="30" y="520" width="16" height="16" rx="3" fill="#fbe3cf" class="box"/>
+<text x="52" y="533" class="s">ours (open source)</text>
+<rect x="245" y="520" width="16" height="16" rx="3" fill="#e9e9e9" class="box"/>
+<text x="267" y="533" class="s">kept as is (closed, works)</text>
+<rect x="460" y="520" width="16" height="16" rx="3" fill="#dfeef8" class="box"/>
+<text x="482" y="533" class="s">family data</text></svg>

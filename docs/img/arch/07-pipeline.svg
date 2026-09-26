@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-label="Delivery pipeline"><style>
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;fill:#222}
+.t{font-weight:700;font-size:15px}.s{font-size:12px;fill:#555}.h{font-weight:700;font-size:17px}
+.box{stroke:#333;stroke-width:1.2}.dash{stroke-dasharray:6 4}
+.arrow{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="300" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">From a source change to a child&#x27;s Jooki: every step checked, every step reversible</text>
+<rect x="30" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>
+<text x="115" y="122" text-anchor="middle" class="t">sources</text>
+<text x="115" y="138" text-anchor="middle" class="s">readable Lua</text>
+<text x="115" y="153" text-anchor="middle" class="s">modules + tests</text>
+<path d="M200 130 L216 130" class="arrow"/>
+<rect x="216" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>
+<text x="301" y="122" text-anchor="middle" class="t">build</text>
+<text x="301" y="138" text-anchor="middle" class="s">bundle · strip</text>
+<text x="301" y="153" text-anchor="middle" class="s">≤ 160 KiB check</text>
+<text x="301" y="168" text-anchor="middle" class="s">deterministic</text>
+<path d="M386 130 L402 130" class="arrow"/>
+<rect x="402" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>
+<text x="487" y="122" text-anchor="middle" class="t">bench (CI)</text>
+<text x="487" y="138" text-anchor="middle" class="s">179+ checks on</text>
+<text x="487" y="153" text-anchor="middle" class="s">every push</text>
+<text x="487" y="168" text-anchor="middle" class="s">real mosquitto</text>
+<path d="M572 130 L588 130" class="arrow"/>
+<rect x="588" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>
+<text x="673" y="122" text-anchor="middle" class="t">release</text>
+<text x="673" y="138" text-anchor="middle" class="s">image + sha256</text>
+<text x="673" y="153" text-anchor="middle" class="s">+ version.json</text>
+<text x="673" y="168" text-anchor="middle" class="s">from a green commit</text>
+<path d="M758 130 L774 130" class="arrow"/>
+<rect x="774" y="80" width="170" height="100" rx="10" fill="#e9e9e9" class="box"/>
+<text x="859" y="122" text-anchor="middle" class="t">Jooki (A/B)</text>
+<text x="859" y="138" text-anchor="middle" class="s">spare partition</text>
+<text x="859" y="153" text-anchor="middle" class="s">rollback armed</text>
+<text x="859" y="168" text-anchor="middle" class="s">old core kept</text>
+<text x="30" y="220" text-anchor="start" class="s">Red at any step = nothing goes further. A release is a script run, never a manual copy.</text>
+<text x="30" y="237" text-anchor="start" class="s">On the Jooki, the previous version stays bootable: one command (or an automatic rollback) brings it back.</text></svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 545" width="960" height="545" role="img" aria-label="Modules"><style>
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;fill:#222}
+.t{font-weight:700;font-size:15px}.s{font-size:12px;fill:#555}.h{font-weight:700;font-size:17px}
+.box{stroke:#333;stroke-width:1.2}.dash{stroke-dasharray:6 4}
+.arrow{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="545" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">Modules and the only dependency rule: arrows go down, never up</text>
+<rect x="30" y="60" width="900" height="70" rx="10" fill="#fbe3cf" class="box"/>
+<text x="480" y="87" text-anchor="middle" class="t">api  —  the contract with the page (v2, and v1 kept for compatibility)</text>
+<text x="480" y="103" text-anchor="middle" class="s">validates every message, maps it to a core command, publishes state and typed errors</text>
+<rect x="30" y="160" width="900" height="190" rx="10" fill="#fdf1e6" class="box dash"/>
+<text x="480" y="255" text-anchor="middle" class="t"></text>
+<text x="45" y="182" text-anchor="start" class="t">core services (plain Lua tables + functions, no I/O)</text>
+<rect x="45" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="103" y="257" text-anchor="middle" class="t">library</text>
+<text x="103" y="273" text-anchor="middle" class="s">playlists, tracks,</text>
+<text x="103" y="288" text-anchor="middle" class="s">tokens, unused</text>
+<rect x="171" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="229" y="257" text-anchor="middle" class="t">playback</text>
+<text x="229" y="273" text-anchor="middle" class="s">state machine,</text>
+<text x="229" y="288" text-anchor="middle" class="s">queue, resume</text>
+<rect x="297" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="355" y="257" text-anchor="middle" class="t">tokens</text>
+<text x="355" y="273" text-anchor="middle" class="s">NFC → character</text>
+<text x="355" y="288" text-anchor="middle" class="s">→ playlist</text>
+<rect x="423" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="481" y="257" text-anchor="middle" class="t">bedtime</text>
+<text x="481" y="273" text-anchor="middle" class="s">timer, fade,</text>
+<text x="481" y="288" text-anchor="middle" class="s">night window</text>
+<rect x="549" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="607" y="257" text-anchor="middle" class="t">device</text>
+<text x="607" y="273" text-anchor="middle" class="s">volume &amp; limits,</text>
+<text x="607" y="288" text-anchor="middle" class="s">lights, power,</text>
+<text x="607" y="303" text-anchor="middle" class="s">buttons</text>
+<rect x="675" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="733" y="257" text-anchor="middle" class="t">network</text>
+<text x="733" y="273" text-anchor="middle" class="s">Wi-Fi manager,</text>
+<text x="733" y="288" text-anchor="middle" class="s">health, mDNS</text>
+<rect x="801" y="200" width="116" height="130" rx="10" fill="#fbe3cf" class="box"/>
+<text x="859" y="257" text-anchor="middle" class="t">update</text>
+<text x="859" y="273" text-anchor="middle" class="s">check, start,</text>
+<text x="859" y="288" text-anchor="middle" class="s">rollback info</text>
+<rect x="30" y="380" width="430" height="110" rx="10" fill="#e9e9e9" class="box"/>
+<text x="245" y="427" text-anchor="middle" class="t">ports &amp; adapters (all I/O lives here)</text>
+<text x="245" y="443" text-anchor="middle" class="s">bus (MQTT)  ·  files (atomic JSON)  ·  clock  ·  host (ALSA, syslog)</text>
+<text x="245" y="458" text-anchor="middle" class="s">shell (the few scripts we still call)  ·  mdns (UDP socket)</text>
+<rect x="500" y="380" width="430" height="110" rx="10" fill="#fbe3cf" class="box"/>
+<text x="715" y="427" text-anchor="middle" class="t">kernel</text>
+<text x="715" y="443" text-anchor="middle" class="s">event loop, timers, dispatcher, structured log,</text>
+<text x="715" y="458" text-anchor="middle" class="s">config, schema versions &amp; migrations</text>
+<path d="M480 130 L480 160" class="arrow"/>
+<path d="M245 350 L245 380" class="arrow"/>
+<path d="M715 350 L715 380" class="arrow"/>
+<text x="30" y="512" text-anchor="start" class="s">Test rule: a core service is tested with fake adapters (fake clock, fake bus, in-memory files).</text>
+<text x="30" y="529" text-anchor="start" class="s">Adapters are tested alone against the real thing (mosquitto, disk).</text></svg>

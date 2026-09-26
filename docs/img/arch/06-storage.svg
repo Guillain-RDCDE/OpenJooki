@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-label="Storage"><style>
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;fill:#222}
+.t{font-weight:700;font-size:15px}.s{font-size:12px;fill:#555}.h{font-weight:700;font-size:17px}
+.box{stroke:#333;stroke-width:1.2}.dash{stroke-dasharray:6 4}
+.arrow{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="360" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">Data: same files as 1.x, written so that a power cut can never lose them</text>
+<rect x="30" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
+<text x="100" y="92" text-anchor="middle" class="t">playlists.json</text>
+<text x="100" y="108" text-anchor="middle" class="s">v1 → v2 migration</text>
+<rect x="185" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
+<text x="255" y="92" text-anchor="middle" class="t">tracks.json</text>
+<text x="255" y="108" text-anchor="middle" class="s">one entry per file</text>
+<rect x="340" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
+<text x="410" y="92" text-anchor="middle" class="t">tokens.json</text>
+<text x="410" y="108" text-anchor="middle" class="s">UID → character</text>
+<rect x="495" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
+<text x="565" y="92" text-anchor="middle" class="t">audiocfg.json</text>
+<text x="565" y="108" text-anchor="middle" class="s">volume, modes</text>
+<rect x="650" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
+<text x="720" y="92" text-anchor="middle" class="t">bedtime.json</text>
+<text x="720" y="108" text-anchor="middle" class="s">night settings</text>
+<rect x="805" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
+<text x="875" y="92" text-anchor="middle" class="t">resume.json</text>
+<text x="875" y="108" text-anchor="middle" class="s">audiobook positions</text>
+<text x="30" y="160" text-anchor="start" class="s">/jooki/external/jooki/  (data partition, untouched by firmware updates — 1.x and 2.0 read the same files, so a rollback keeps the library)</text>
+<rect x="30" y="200" width="170" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="115" y="230" text-anchor="middle" class="t">1. write .tmp</text>
+<rect x="230" y="200" width="170" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="315" y="230" text-anchor="middle" class="t">2. fsync</text>
+<rect x="430" y="200" width="170" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="515" y="221" text-anchor="middle" class="t">3. rename over</text>
+<text x="515" y="239" text-anchor="middle" class="t">the old file</text>
+<rect x="630" y="200" width="170" height="60" rx="10" fill="#fbe3cf" class="box"/>
+<text x="715" y="221" text-anchor="middle" class="t">4. keep .bak</text>
+<text x="715" y="239" text-anchor="middle" class="t">(previous version)</text>
+<path d="M200 230 L230 230" class="arrow"/>
+<path d="M400 230 L430 230" class="arrow"/>
+<path d="M600 230 L630 230" class="arrow"/>
+<rect x="830" y="190" width="100" height="80" rx="10" fill="#fff8d6" class="box"/>
+<text x="880" y="222" text-anchor="middle" class="t">on load</text>
+<text x="880" y="238" text-anchor="middle" class="s">schema version</text>
+<text x="880" y="253" text-anchor="middle" class="s">→ migrate</text>
+<text x="30" y="300" text-anchor="start" class="s">Read: file → if unreadable, .bak → if unreadable, empty database + loud log line (never a crash).</text>
+<text x="30" y="317" text-anchor="start" class="s">Write: only when something changed, at most once per second, and always before power-off.</text></svg>

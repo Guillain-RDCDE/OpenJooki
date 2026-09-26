@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 350" width="960" height="350" role="img" aria-label="Token sequence"><style>
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;fill:#222}
+.t{font-weight:700;font-size:15px}.s{font-size:12px;fill:#555}.h{font-weight:700;font-size:17px}
+.box{stroke:#333;stroke-width:1.2}.dash{stroke-dasharray:6 4}
+.arrow{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a)}
+.arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
+</style>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="350" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">A token is put on the Jooki: what happens, in order (&lt; 1 s)</text>
+<rect x="30" y="90" width="140" height="80" rx="10" fill="#e9e9e9" class="box"/>
+<text x="100" y="122" text-anchor="middle" class="t">esp32_ctrl</text>
+<text x="100" y="138" text-anchor="middle" class="s">token UID +</text>
+<text x="100" y="153" text-anchor="middle" class="s">character code</text>
+<path d="M170 130 L185 130" class="arrow"/>
+<rect x="185" y="90" width="140" height="80" rx="10" fill="#fbe3cf" class="box"/>
+<text x="255" y="122" text-anchor="middle" class="t">tokens</text>
+<text x="255" y="138" text-anchor="middle" class="s">character → playlist</text>
+<text x="255" y="153" text-anchor="middle" class="s">unknown one: learn it</text>
+<path d="M325 130 L340 130" class="arrow"/>
+<rect x="340" y="90" width="140" height="80" rx="10" fill="#fbe3cf" class="box"/>
+<text x="410" y="122" text-anchor="middle" class="t">library</text>
+<text x="410" y="138" text-anchor="middle" class="s">tracks of the playlist</text>
+<text x="410" y="153" text-anchor="middle" class="s">(audiobook? shuffle?)</text>
+<path d="M480 130 L495 130" class="arrow"/>
+<rect x="495" y="90" width="140" height="80" rx="10" fill="#fbe3cf" class="box"/>
+<text x="565" y="122" text-anchor="middle" class="t">playback</text>
+<text x="565" y="138" text-anchor="middle" class="s">resume position?</text>
+<text x="565" y="153" text-anchor="middle" class="s">build play command</text>
+<path d="M635 130 L650 130" class="arrow"/>
+<rect x="650" y="90" width="140" height="80" rx="10" fill="#fbe3cf" class="box"/>
+<text x="720" y="122" text-anchor="middle" class="t">bedtime</text>
+<text x="720" y="138" text-anchor="middle" class="s">night? → timer,</text>
+<text x="720" y="153" text-anchor="middle" class="s">volume limit</text>
+<path d="M790 130 L805 130" class="arrow"/>
+<rect x="805" y="90" width="140" height="80" rx="10" fill="#e9e9e9" class="box"/>
+<text x="875" y="122" text-anchor="middle" class="t">audio_ctrl</text>
+<text x="875" y="138" text-anchor="middle" class="s">plays the file</text>
+<rect x="30" y="220" width="900" height="60" rx="10" fill="#dfeef8" class="box"/>
+<text x="480" y="250" text-anchor="middle" class="t">state published to the page: nowPlaying, playback, bedtime.sleep  —  lights: playing</text>
+<path d="M480 170 L480 220" class="arrow"/>
+<text x="30" y="310" text-anchor="start" class="s">Empty playlist → the &quot;empty&quot; sound, no error beep.   Unknown character → learned, shown on the page, nothing plays.</text>
+<text x="30" y="327" text-anchor="start" class="s">Any failure → logged, lights show an error, the loop goes on.</text></svg>

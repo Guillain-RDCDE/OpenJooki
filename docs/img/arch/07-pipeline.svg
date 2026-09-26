@@ -15,7 +15,7 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <rect x="216" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>
 <text x="301" y="122" text-anchor="middle" class="t">build</text>
 <text x="301" y="138" text-anchor="middle" class="s">bundle · strip</text>
-<text x="301" y="153" text-anchor="middle" class="s">≤ 160 KiB check</text>
+<text x="301" y="153" text-anchor="middle" class="s">≤ 176 KiB check</text>
 <text x="301" y="168" text-anchor="middle" class="s">deterministic</text>
 <path d="M386 130 L402 130" class="arrow"/>
 <rect x="402" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>

@@ -159,7 +159,7 @@ d.save("06-storage.svg", "Storage")
 # 7. Delivery pipeline --------------------------------------------------------
 d = D(960, 300)
 d.text(20, 30, "From a source change to a child's Jooki: every step checked, every step reversible", "h")
-steps = [("sources", "readable Lua\nmodules + tests", OURS), ("build", "bundle · strip\n≤ 160 KiB check\ndeterministic", OURS), ("bench (CI)", "179+ checks on\nevery push\nreal mosquitto", OURS), ("release", "image + sha256\n+ version.json\nfrom a green commit", OURS), ("Jooki (A/B)", "spare partition\nrollback armed\nold core kept", KEPT)]
+steps = [("sources", "readable Lua\nmodules + tests", OURS), ("build", "bundle · strip\n≤ 176 KiB check\ndeterministic", OURS), ("bench (CI)", "179+ checks on\nevery push\nreal mosquitto", OURS), ("release", "image + sha256\n+ version.json\nfrom a green commit", OURS), ("Jooki (A/B)", "spare partition\nrollback armed\nold core kept", KEPT)]
 for i, (n, sub, f) in enumerate(steps):
     x = 30 + i * 186
     d.box(x, 80, 170, 100, n, sub, fill=f)

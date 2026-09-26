@@ -151,7 +151,7 @@ has a `README` (purpose, owns, events in, commands out, invariants) and a
 | `api` | v1/v2 translation, subscriptions | `bus.web.*` | `bus.web.state`, `bus.web.reply` | every inbound message validated against its schema |
 
 Size targets: no module above 600 lines of readable Lua; no function above
-60 lines; total readable source ≈ 6 000 lines, ≤ 160 KiB after stripping
+60 lines; total readable source ≈ 6 000 lines, ≤ 176 KiB after stripping
 (the build fails otherwise).
 
 ## 8. The contract (api v2)

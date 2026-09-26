@@ -59,7 +59,8 @@ def cmd(msg, wait=2.0):
 
 r = cmd({"v": 2, "id": "a1", "type": "state.get"})
 check("S2 state.get answers ok with the id", r == {"v": 2, "id": "a1", "ok": True}, r)
-st = got["states"][-1] if got["states"] else None
+fulls = [s for s in got["states"] if isinstance(s, dict) and s.get("full")]   # a patch may follow the full state
+st = fulls[-1] if fulls else None
 check("S2 full state published with rev and device info", st and st.get("full") and st["state"]["device"]["hostname"] == "jooki-bench" and st["state"]["device"]["core"], st)
 r = cmd({"v": 2, "id": "a2", "type": "playlist.explode"})
 check("S3 unknown command -> typed not_found error", r and r["ok"] is False and r["error"]["code"] == "not_found", r)

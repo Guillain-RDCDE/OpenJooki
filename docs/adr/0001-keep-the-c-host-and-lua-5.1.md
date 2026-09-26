@@ -25,7 +25,7 @@ on them beyond that file.
 ## Consequences
 - Lua 5.1 limits (no integer type, no `goto`, `#` undefined with holes) are
   handled by the coding standard and tests.
-- Size budget 160 KiB stripped; build step required (ADR-0006 keeps
+- Size budget 176 KiB stripped (160 before ADR-0009); build step required (ADR-0006 keeps
   dependencies small).
 - The loader's format (XOR + zlib) is reproduced by our build tool
   (`lua_patches.encode` already does it).

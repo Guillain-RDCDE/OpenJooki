@@ -14,3 +14,4 @@ change is a new record that supersedes it. Numbering is chronological.
 | [0006](0006-third-party-code.md) | Third-party code: minimal, vendored, pinned | proposed |
 | [0007](0007-security-model.md) | Close root execution over HTTP; bind MQTT to localhost; password on the WebSocket | proposed |
 | [0008](0008-no-shell-in-the-hot-loop.md) | No shell processes or temp files in the loop | proposed |
+| [0009](0009-keep-spotify-deezer.md) | Keep Spotify Connect and Deezer as an optional module | accepted |

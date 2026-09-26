@@ -1,7 +1,7 @@
 # OpenJooki 2.0 — the core, designed to last
 
-**Status: proposal for review. Nothing here is built yet.**
-Decisions to take are listed at the end (§17). The decisions already taken
+**Status: approved by the maintainer on 2026-09-26; implementation started
+(phase 1).** The decisions taken are listed at the end (§17). The decisions already taken
 and their alternatives are in `docs/adr/`. The complete analysis of the
 program we replace is in `docs/22-core-inventory.md`.
 
@@ -49,9 +49,14 @@ kernel, updater) untouched.
 6. Security by default: nothing on the LAN can run commands on the Jooki.
 
 **Non-goals** (explicitly out): rewriting the closed hardware daemons or the
-ESP32 firmware; supporting Spotify/Deezer/Jooki Play (dead services); a new
-web page (the 1.x page keeps working through the v1 compatibility layer, and
-gets a v2 client later); Jooki v1 (different hardware; a later target).
+ESP32 firmware; Jooki Play and the Muuselabs cloud (dead services with
+hard-coded keys); a new web page (the 1.x page keeps working through the v1
+compatibility layer, and gets a v2 client later); Jooki v1 (different
+hardware; a later target). **Spotify Connect and Deezer are kept** as an
+optional `streaming` module (decision of the maintainer, §17.3): the closed
+`spotify_ctrl` daemon is still on the device and some families may use it;
+we port the message paths as they are, mark them "best effort" (no account to
+test with), and never let them affect the rest.
 
 ## 3. The Jooki at runtime: what we own, what we keep
 
@@ -142,6 +147,7 @@ has a `README` (purpose, owns, events in, commands out, invariants) and a
 | `device` | volume, limits, lights, power, buttons, flags | `knobs`, `gpio.*`, `power.*`, `esp32.*`, api | `host.volume`, `bus.led.*`, `shell` (toysafe, lang, poweroff) | knob value re-applied through the limit chain; long-press timing; battery thresholds |
 | `network` | Wi-Fi state, preferred list, health, mDNS | `esp32.net.*`, `dhcp.*`, `timer`, api | `bus.esp32.net.*`, `mdns.answer` | safe switch (§11); never removes a working network |
 | `update` | check/start status | api, `timer` | `shell.run(o.sh)` (allow-listed) | one at a time; status file for the page |
+| `streaming` (optional) | Spotify/Deezer login state, presets | `spotify.*`, `deezer.*`, api | `bus.spotify.*`, `bus.deezer.*` | ported as is; isolated: a failure here never touches local playback |
 | `api` | v1/v2 translation, subscriptions | `bus.web.*` | `bus.web.state`, `bus.web.reply` | every inbound message validated against its schema |
 
 Size targets: no module above 600 lines of readable Lua; no function above
@@ -313,20 +319,19 @@ ones with tests of similar size); phases 4–6 are shorter but calendar-bound
 | Losing the Jooki during network work | safe switch rule; Bluetooth rescue tested before phase 4 ships |
 | The maintainer's time | phases are independently shippable; 1.3 stays supported |
 
-## 17. Decisions needed from the maintainer
+## 17. Decisions (taken by the maintainer on 2026-09-26)
 
-1. **Scope**: full 2.0 (phases 1–6), or ship the new core first (1–3, same
-   features as 1.3) and Wi-Fi manager + security as 2.1? *Recommendation:*
-   1–3 first; a smaller first switch is safer, and 4 depends on it anyway.
-2. **Closing `/ll`**: acceptable that a factory Jooki's first install keeps one
-   `/ll` call, after which it is closed, and that later updates need a code
-   shown on the Jooki's page? *Recommendation:* yes.
-3. **Drop Spotify/Deezer/Jooki Play/cloud/Mender code paths** (dead services)?
-   *Recommendation:* yes, with the data fields kept so old files still load.
-4. **ESP32 power-save experiment** on our Jooki (reversible; battery cost
-   measured before any release)? *Recommendation:* yes, in phase 4.
-5. **Language of the code and docs**: English throughout (public project),
-   French summaries in the README for parents? *Recommendation:* yes.
+1. **Scope**: ship the new core first (phases 1–3, same features as 1.3) as
+   **2.0**; Wi-Fi manager and security (phase 4) as **2.1**.
+2. **Closing `/ll`**: yes — a factory Jooki's first install keeps one `/ll`
+   call, after which it is closed; later privileged actions need a code shown
+   on the Jooki's page (ADR-0007).
+3. **Spotify and Deezer are kept** (optional `streaming` module, ADR-0009);
+   Jooki Play, the cloud heartbeat and the Mender client are dropped (dead
+   services), their data fields preserved so old files still load.
+4. **ESP32 power-save experiment**: kept in the backlog, not scheduled.
+5. **Language**: English for code and documentation; French summaries in the
+   README for parents.
 
 ---
 

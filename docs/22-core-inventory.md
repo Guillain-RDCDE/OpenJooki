@@ -28,7 +28,7 @@ its behaviour, not its code.
 |---|---|---|---|
 | main chunk | 1 261 | wiring: state document, topic table, init, system tags, power, Wi-Fi, web handlers | **rewrite** as `kernel` + `api` + small services |
 | `Catalog` | 1 029 | playlists / tracks / tokens database, uploads, unused tracks, play actions | **rewrite** as `library` (+ `playback` for actions) |
-| `audio` | 579 | playback state, next/prev, system sounds, Spotify/Deezer glue | **rewrite** as `playback` (Spotify/Deezer dropped) |
+| `audio` | 579 | playback state, next/prev, system sounds, Spotify/Deezer glue | **rewrite** as `playback`; Spotify/Deezer glue **ported** into an optional `streaming` module |
 | `jplay` | 170 | "Jooki Play" cloud streaming (dead service, hard-coded API key) | **drop** |
 | `leds` | 168 | colours, groups, event → light mapping | **rewrite** as part of `device` |
 | `audiocfg` | 134 | volume, shuffle, repeat, headphones; ALSA + `audiocfg.json` | **rewrite** as part of `device` |
@@ -49,9 +49,11 @@ its behaviour, not its code.
 | `sha1` | 211 | kikito sha.lua (MIT), used only to shorten Spotify URIs in logs | **drop** |
 | `ojbed`, `ojnet` (OpenJooki 1.3) | 420 | bedtime, network health, mDNS | **port** (already written test-first) |
 
-Third-party code is 1 423 of 5 508 lines (26 %). Spotify, Deezer and Jooki Play
-code paths are about 600 more lines that do nothing useful since the services
-closed.
+Third-party code is 1 423 of 5 508 lines (26 %). Jooki Play, the cloud
+heartbeat and the Mender client are about 250 lines that do nothing useful
+since the services closed. Spotify and Deezer paths (about 350 lines) are
+kept in 2.0 as an optional module: the `spotify_ctrl` daemon is still on the
+device and some families may use it.
 
 ## 3. The main chunk, piece by piece
 
@@ -300,8 +302,9 @@ separate hardware-side limit handled by the ESP32.
 5. **Handlers reach everywhere**: closures over 30 upvalues, one-letter names,
    state mutated from anywhere; no way to test a handler without the whole
    program. 2.0: pure handlers, adapters.
-6. **Dead weight**: Spotify, Deezer, Jooki Play (hard-coded API key), cloud
-   heartbeat, Mender client, `sha1`, factory/production tags: ~1 900 lines.
+6. **Dead weight**: Jooki Play (hard-coded API key), cloud heartbeat, Mender
+   client, `sha1`, factory/production tags: ~1 500 lines with the libraries.
+   (Spotify/Deezer are kept by decision, isolated in their own module.)
 7. **Security**: `web_ctrl` `/ll?action=` executes any command as root for any
    device on the Wi-Fi; `mosquitto` listens on all interfaces (1883 and 8000)
    without authentication. Not the Lua's fault, but the Lua is what talks to

@@ -13,7 +13,8 @@ installed on the device at runtime; everything ships inside `player.lib`.
 - **MQTT**: an in-house minimal 3.1.1 client (~300 lines): connect, subscribe,
   publish QoS 0, keep-alive, reconnect with backoff; tested against mosquitto
   on the bench. No QoS 1/2, no TLS (localhost only).
-- **No SHA-1**, no base64 library (not needed once dead services are gone);
+- **No SHA-1** (it only shortened Spotify URIs in log lines; a plain prefix
+  does), no base64 library (only Jooki Play used it);
   md5 for track ids implemented in Lua (~120 lines) and tested against
   `md5sum`.
 - Every vendored file has its licence header and a `VENDOR.md` line with the

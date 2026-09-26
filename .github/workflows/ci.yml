@@ -25,6 +25,7 @@ jobs:
         run: python3 tools/build/bundle.py --max-kib 176 && python3 tools/build/bundle.py --without services.streaming --out /tmp/lean
       - name: Broker
         run: |
+          sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)
           printf 'listener 1883 127.0.0.1\nallow_anonymous true\nlistener 8000\nprotocol websockets\n' > /tmp/m.conf
           mosquitto -c /tmp/m.conf -d
           sleep 1
@@ -61,6 +62,7 @@ jobs:
           CORE_BUILD: ${{ github.workspace }}/build
           PLAYER_LUA: core
         run: |
+          sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)
           cd tools/openjooki/tests
           chmod +x *.sh
           sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null && sleep 1 \

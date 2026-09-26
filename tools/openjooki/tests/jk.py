@@ -5,7 +5,7 @@ class Jooki:
     def __init__(s, host="127.0.0.1", port=1883, http="http://127.0.0.1:8080", transport="tcp", user=None, pw=None):
         s.host, s.http = host, http
         s.state, s.errors, s.lock = {}, [], threading.Lock()
-        s.c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "test%d"%random.randint(0,1e6), transport=transport)
+        s.c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "test%d"%random.randint(0,10**6), transport=transport)
         if user: s.c.username_pw_set(user, pw)
         s.c.on_message = s._msg
         s.c.connect(host, port); s.c.subscribe("/j/web/output/#"); s.c.loop_start(); time.sleep(0.3)
@@ -18,7 +18,7 @@ class Jooki:
             elif m.topic.endswith("/error"): s.errors.append(d)
     def _merge(s, a, b):
         for k, v in b.items():
-            if k in ("db",) or not isinstance(v, dict) or not isinstance(a.get(k), dict): a[k] = v
+            if k in ("db", "bedtime") or not isinstance(v, dict) or not isinstance(a.get(k), dict): a[k] = v
             else: s._merge(a[k], v)
     def send(s, typ, payload):
         s.c.publish("/j/web/input/"+typ, payload if isinstance(payload,str) else json.dumps(payload))

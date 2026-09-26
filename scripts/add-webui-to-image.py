@@ -8,6 +8,8 @@ what `jooki.py patch webui` applies on a live Jooki, and writes a new image:
                                         the original is kept as player.lib.openjooki-orig
   * /jooki/app/www/public/           -> the new web page (tools/openjooki/webui/);
                                         the 2018 web app is moved to public-openjooki-orig/
+  * /etc/syslog-ng/syslog-ng.conf    -> logs stay on the Jooki (tools/openjooki/system/);
+                                        the original is kept as <file>.openjooki-orig
   * /etc/openjooki-version           -> the new version number
 
 No mount and no root needed: it edits the ext4 image with `debugfs` (e2fsprogs),
@@ -22,6 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 import lua_patches as L  # noqa: E402
+from jooki import SYSTEM_DIR, SYSTEM_FILES  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
 WEB_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
@@ -122,6 +125,15 @@ def main():
         put(out, os.path.join(WEBUI, f), PUB + "/" + f)
     print("web page installed:", ", ".join(WEB_FILES))
 
+    # --- system files (original kept once) ---
+    for path, f in sorted(SYSTEM_FILES.items()):
+        if exists(out, path) and not exists(out, path + ".openjooki-orig"):
+            local = os.path.join(work, os.path.basename(path) + ".orig")
+            open(local, "wb").write(cat(out, path))
+            put(out, local, path + ".openjooki-orig")
+        put(out, os.path.join(SYSTEM_DIR, f), path)
+    print("system files installed:", ", ".join(sorted(SYSTEM_FILES)))
+
     # --- version ---
     vf = os.path.join(work, "version")
     open(vf, "w").write(version + "\n")
@@ -134,6 +146,8 @@ def main():
     expect = {LIB: lib, "/etc/openjooki-version": (version + "\n").encode()}
     for f in WEB_FILES:
         expect[PUB + "/" + f] = open(os.path.join(WEBUI, f), "rb").read()
+    for path, f in SYSTEM_FILES.items():
+        expect[path] = open(os.path.join(SYSTEM_DIR, f), "rb").read()
     for path, data in expect.items():
         if hashlib.sha256(cat(out, path)).hexdigest() != hashlib.sha256(data).hexdigest():
             raise SystemExit("read-back mismatch: " + path)

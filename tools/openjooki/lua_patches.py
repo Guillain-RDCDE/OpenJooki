@@ -28,11 +28,14 @@ Fixes (see docs/18-web-ui.md):
              position no longer makes a token beep, empty playlist plays the
              "empty" sound, "previous" works while paused, repeat/shuffle saved,
              dead-cloud curl calls time out.
+  bedtime  : audiobooks resume at the saved chapter and position (survives a
+             power-off), sleep timer with a gentle fade, night window with a
+             volume limit, automatic timer and dimmed lights (docs/19-bedtime.md).
 """
 import zlib
 
 MARK_OLD = "_G._MINIFIED=true\n"
-MARK_NEW = "_G._MINIFIED=true\n_G._OPENJOOKI_LUA='4'\n"
+MARK_NEW = "_G._MINIFIED=true\n_G._OPENJOOKI_LUA='5'\n"
 MAX_SIZE = 204800          # player binary decompresses into a 200 KiB buffer
 
 def decode(blob):
@@ -693,6 +696,558 @@ patch("check / start an OpenJooki update from the web page (topics)",
 """["/j/web/input/GET_STATE"]=e.on.get_state,
 ["/j/web/input/OJ_UPDATE_CHECK"]=a(e.oj_update_check,nil,true),
 ["/j/web/input/OJ_UPDATE_START"]=a(e.oj_update_start,nil,true),""")
+
+# ---------------------------------------------------------------- bedtime (1.3.0)
+# One small module (ojbed) plus the hooks that feed it.  See docs/19-bedtime.md.
+#   resume : an audiobook remembers its chapter AND the position in it, on disk
+#            (resume.json), so it survives the Jooki turning itself off; it
+#            restarts 15 s earlier; the end of the book clears it.
+#   sleep  : a sleep timer (minutes, or "end of this chapter") that lowers the
+#            volume gently before pausing, then restores the volume.
+#   night  : a time window (default 20:00-07:00, Europe/Paris) during which every
+#            playback gets the timer on its own, the volume is capped whatever
+#            the knob says, and the lights are dimmed.
+# The volume limit and the fade are applied where the volume reaches the
+# hardware, because the knob re-sends its position every second.
+OJBED_LUA = r"""package.preload['ojbed']=(function(...)
+local B={}
+local J=require'jsondb'
+local L=require'log'
+local X=require'sys'
+local CF='/jooki/external/jooki/bedtime.json'
+local RF='/jooki/external/jooki/resume.json'
+local DEF={enabled=true,start=1200,stop=420,timer=20,maxvol=30,dim=true,tzbase=60,tzdst='EU'}
+local C={}
+for k,v in pairs(DEF)do C[k]=v end
+local R={}
+local S={cfg=C,night=false,resume=R}
+local st,pub,acfg,cat
+local fade,restore,sl=1,false,nil
+local pausedAt=nil
+local function back(r)return(r and r.t)and 60000 or 15000 end
+local lastN,lastP,lastS,dirty=-1e3,0,0,false
+local FADE=60
+local function A()return require'audio'end
+function B.now()return require'syscmd'.uptime()end
+local function dow(y,m,d)
+local k={0,3,2,5,0,3,5,1,4,6,2,4}
+if m<3 then y=y-1 end
+return(y+math.floor(y/4)-math.floor(y/100)+math.floor(y/400)+k[m]+d)%7
+end
+local function lastSun(y,m)return 31-dow(y,m,31)end
+function B.localMinutes(u)
+u=u or os.date('!*t')
+if u.year<2024 then return nil end
+local off=tonumber(C.tzbase)or 0
+if C.tzdst=='EU'then
+local k=u.month*10000+u.day*100+u.hour
+if k>=30000+lastSun(u.year,3)*100+1 and k<100000+lastSun(u.year,10)*100+1 then off=off+60 end
+end
+return(u.hour*60+u.min+off)%1440
+end
+function B.isNight(u)
+if not C.enabled then return false end
+local m=B.localMinutes(u)
+if not m then return false end
+local a,b=C.start,C.stop
+if a==b then return false end
+if a<b then return m>=a and m<b end
+return m>=a or m<b
+end
+function B.vol(v)
+v=tonumber(v)or 0
+if S.night and C.maxvol<100 and v>C.maxvol then v=C.maxvol end
+if fade<1 then v=math.floor(v*fade+.5)end
+return v
+end
+function B.led(c)
+if not(S.night and C.dim)then return c end
+local o={}
+for i=1,3 do
+local x=tonumber(c[i])or 0
+o[i]=x>0 and math.max(1,math.floor(x*.05+.5))or 0
+end
+return o
+end
+local function applyVol()if acfg then pcall(acfg.syncVol)end end
+local function setFade(f)
+if f>=1 then f=1 elseif f<0 then f=0 end
+if math.abs(f-fade)<.02 and f<1 and f>0 then return end
+if f==fade then return end
+fade=f
+applyVol()
+end
+local function publish()
+S.sleep=false
+if sl then
+local r=nil
+if sl.ends then r=math.max(0,math.floor(sl.ends-B.now()+.5))end
+S.sleep={mode=sl.mode,remaining=r,total=sl.total,auto=sl.auto}
+end
+lastP=B.now()
+if pub then pcall(pub,'.bedtime')end
+end
+function B.saveResume()
+dirty=false
+lastS=B.now()
+if cat then for k in pairs(R)do if not cat.playlists[k]then R[k]=nil end end end
+J.markDirty(R)
+if not J.write(RF,R,1)then L.error('OJ_RESUME write failed')end
+publish()
+end
+function B.save()if dirty then B.saveResume()end end
+function B.startSleep(sec,mode,auto)
+sl={mode=mode or'time',total=sec,ends=sec and(B.now()+sec),auto=auto or nil}
+L.info('OJ_SLEEP start',sl.mode,sec,auto)
+publish()
+end
+local function finish()
+L.info('OJ_SLEEP done')
+sl=nil
+local a=A()
+if a.isPlaying()or a.isStarting()then
+local np=st and st.audio.nowPlaying
+local r=np and np.audiobook and R[np.playlistId]
+if r and r.id==np.trackId then r.t=true dirty=true end
+a.pause()
+restore=true
+else
+setFade(1)
+end
+publish()
+end
+function B.cancel()
+sl=nil
+restore=false
+setFade(1)
+publish()
+end
+function B.onEnded()
+if sl and sl.mode=='track'then
+L.info('OJ_SLEEP end of chapter')
+sl=nil
+setFade(1)
+publish()
+return true
+end
+return false
+end
+function B.onPos(np,pos)
+if not(np and np.audiobook and np.service=='FILE'and np.playlistId and np.trackId)then return end
+pos=math.floor(tonumber(pos)or 0)
+local r=R[np.playlistId]
+if r and r.id==np.trackId and math.abs((r.pos or 0)-pos)<1000 then return end
+R[np.playlistId]={id=np.trackId,pos=pos,t=(restore and r and r.id==np.trackId and r.t)or nil}
+dirty=true
+end
+function B.resumeFor(pl,tracks)
+local r=R[pl]
+if not r then return nil end
+for i,x in ipairs(tracks)do
+if x==r.id then
+local p=(tonumber(r.pos)or 0)-back(r)
+if p>=5000 then return i,p end
+return i,nil
+end
+end
+return nil
+end
+function B.onState(s)
+local np=st and st.audio.nowPlaying
+if s=='PLAYING'then
+if restore then restore=false setFade(1)end
+if np and np.resume_ms then
+local ms=np.resume_ms
+np.resume_ms=nil
+L.info('OJ_RESUME seek',ms)
+pcall(A().on.do_seek,{position_ms=ms})
+elseif pausedAt and B.now()-pausedAt>60 and np and np.audiobook and np.service=='FILE'then
+local p=(tonumber(st.audio.playback.position_ms)or 0)-back(R[np.playlistId])
+if p>=5000 then
+L.info('OJ_RESUME rewind',p)
+pcall(A().on.do_seek,{position_ms=p})
+end
+end
+pausedAt=nil
+if S.night and not sl and C.timer>0 then B.startSleep(C.timer*60,'time',true)end
+elseif s=='STARTING'then
+if not(np and np.resume_ms)then B.onPos(np,0)end
+elseif s=='ENDED'then
+if np and np.audiobook and np.service=='FILE'and np.playlistId and cat then
+local p=cat.playlists[np.playlistId]
+local nx=nil
+for i,x in ipairs(p and p.tracks or{})do if x==np.trackId then nx=p.tracks[i+1]end end
+if nx then R[np.playlistId]={id=nx,pos=0}else R[np.playlistId]=nil end
+B.saveResume()
+end
+elseif s=='PAUSED'or s=='STOPPED'then
+pausedAt=B.now()
+if dirty then B.saveResume()end
+end
+end
+function B.tick(now)
+if now-lastN>=15 then
+lastN=now
+local n=B.isNight()
+if n~=S.night then
+S.night=n
+L.info('OJ_NIGHT',n)
+applyVol()
+pcall(A().updateLeds)
+publish()
+end
+end
+local a=A()
+if restore and not(a.isPlaying()or a.isStarting())then restore=false setFade(1)end
+if sl then
+local f=1
+if sl.mode=='time'then
+local r=sl.ends-now
+if r<=0 then finish()return end
+local fd=math.min(FADE,sl.total/3)
+if r<fd then f=r/fd end
+else
+local d=tonumber(st.audio.nowPlaying.duration_ms)or 0
+local p=tonumber(st.audio.playback.position_ms)or 0
+if d>0 and p>0 and d-p<20000 then f=(d-p)/20000 end
+end
+if not restore then setFade(f)end
+if now-lastP>=15 then publish()end
+end
+if dirty and now-lastS>=60 then B.saveResume()end
+end
+local function hm(v)
+if type(v)=='number'and v>=0 and v<1440 then return math.floor(v)end
+if type(v)=='string'then
+local h,m=v:match('^(%d%d?):(%d%d)$')
+h,m=tonumber(h),tonumber(m)
+if h and m and h<24 and m<60 then return h*60+m end
+end
+return nil
+end
+function B.set(p)
+if type(p)~='table'then return false,'invalid payload'end
+local n={}
+for k,v in pairs(C)do n[k]=v end
+for _,k in ipairs({'enabled','dim'})do
+if p[k]~=nil then
+if type(p[k])~='boolean'then return false,'invalid '..k end
+n[k]=p[k]
+end
+end
+for _,k in ipairs({'start','stop'})do
+if p[k]~=nil then
+local v=hm(p[k])
+if not v then return false,'invalid '..k end
+n[k]=v
+end
+end
+local lim={timer={0,180},maxvol={5,100},tzbase={-840,840}}
+for k,r in pairs(lim)do
+if p[k]~=nil then
+local v=tonumber(p[k])
+if not v or v<r[1]or v>r[2]then return false,'invalid '..k end
+n[k]=math.floor(v)
+end
+end
+if p.tzdst~=nil then
+if p.tzdst~='EU'and p.tzdst~='none'then return false,'invalid tzdst'end
+n.tzdst=p.tzdst
+end
+for k,v in pairs(n)do C[k]=v end
+local t={}
+for k,v in pairs(C)do t[k]=v end
+J.markDirty(t)
+if not J.write(CF,t,1)then return false,'write failed'end
+lastN=-1e3
+B.tick(B.now())
+publish()
+return true
+end
+function B.onSleep(p)
+if type(p)~='table'then return false,'invalid payload'end
+if p.cancel then B.cancel()return true end
+if p.mode=='track'then B.startSleep(nil,'track')return true end
+local s=tonumber(p.seconds)or(tonumber(p.minutes)and tonumber(p.minutes)*60)
+if not s or s<1 or s>4*3600 then return false,'invalid duration'end
+B.startSleep(math.floor(s),'time')
+return true
+end
+function B.onResumeReset(p)
+if type(p)~='table'or type(p.playlistId)~='string'then return false,'invalid payload'end
+R[p.playlistId]=nil
+B.saveResume()
+return true
+end
+local function load(f)
+if not X.exists(f)then return nil end
+return J.read(f,1)
+end
+function B.init(state,p,a,c)
+st,pub,acfg,cat=state,p,a,c
+local f=load(CF)
+if type(f)=='table'then
+for k,v in pairs(DEF)do
+if type(f[k])==type(v)then C[k]=f[k]end
+end
+end
+local r=load(RF)
+if type(r)=='table'then
+for k,v in pairs(r)do
+if type(v)=='table'and type(v.id)=='string'then R[k]={id=v.id,pos=tonumber(v.pos)or 0}end
+end
+end
+state.bedtime=S
+S.night=B.isNight()
+lastN=B.now()
+applyVol()
+pcall(A().updateLeds)
+end
+return B
+end)
+"""
+
+# ---------------------------------------------------------------- network health (1.3.0)
+# ojnet: what the page needs to show how solid the Wi-Fi is, one-time cleanup of
+# the logs the original system piled up, and the name "<hostname>.local".
+#   wifi   : reads /tmp/oj-wifi.log (Wi-Fi events copied there by syslog-ng, see
+#            system/syslog-ng.conf): access point in use, drops and beacon losses
+#            since boot; published in the state as "net".
+#   logs   : at boot, removes the queue of logs waiting for Muuselabs' Papertrail
+#            and keeps only the end of the old never-rotated log.
+#   mDNS   : answers "<hostname>.local" (e.g. jooki2-0426e8.local) with the
+#            Jooki's address, so the page opens without knowing the IP (web_ctrl
+#            only serves its own name: any other name is redirected to the dead
+#            Muuselabs setup site); AAAA queries get an NSEC "IPv4 only" answer
+#            so browsers do not wait for IPv6. Shares
+#            port 5353 with spotify_ctrl's own responder (SO_REUSEADDR); if the
+#            port cannot be shared, the Jooki simply keeps working without it.
+OJNET_LUA = r"""package.preload['ojnet']=(function(...)
+local N={}
+local L=require'log'
+local WF='/tmp/oj-wifi.log'
+local LD='/jooki/external/logs/syslog-ng'
+local S={ap=nil,drops=0,beacons=0,since=0,name=nil}
+local st,pub
+local U,joined,joinedIp=nil,false,nil
+local lastW,lastJ=-1e3,-1e3
+local names={}
+local function publish()if pub then pcall(pub,'.net')end end
+function N.readWifi(txt)
+local d,b,ap=0,0,nil
+for l in txt:gmatch('[^\n]+')do
+if l:find('wifi:state: run -> init',1,true)then d=d+1
+elseif l:find('bcn_timout',1,true)then b=b+1 end
+local a=l:match('wifi:connected with (.-), aid')
+if a then ap=a end
+end
+return d,b,ap
+end
+local function wifi()
+local f=io.open(WF,'r')
+local txt=''
+if f then txt=f:read('*a')or'' f:close()end
+local d,b,ap=N.readWifi(txt)
+local w=st and st.wifi
+if w and w.stat=='success'and type(w.ssid)=='string'then ap=w.ssid end
+if d~=S.drops or b~=S.beacons or ap~=S.ap then
+S.drops,S.beacons,S.ap=d,b,ap
+publish()
+end
+end
+local function u16(p,i)return p:byte(i)*256+p:byte(i+1)end
+function N.qname(p,i)
+local t={}
+for _=1,20 do
+local n=p:byte(i)
+if not n or n>=192 then return nil end
+if n==0 then return table.concat(t,'.'),i+1 end
+t[#t+1]=p:sub(i+1,i+n)
+i=i+n+1
+end
+return nil
+end
+local function enc(n)
+local o={}
+for part in n:gmatch('[^%.]+')do o[#o+1]=string.char(#part)..part end
+return table.concat(o)..string.char(0)
+end
+function N.answer(q,ip,unicast,id,question,qt)
+local a,b,c,d=ip:match('^(%d+)%.(%d+)%.(%d+)%.(%d+)$')
+if not a then return nil end
+local ttl=unicast and 10 or 120
+local cls=unicast and 1 or 32769
+local hd=(unicast and id or string.char(0,0))..string.char(132,0,0,unicast and 1 or 0,0,1,0,0,0,0)
+local rr
+if qt==28 then
+local nx=enc(q)..string.char(0,1,64)
+rr=enc(q)..string.char(0,47,math.floor(cls/256),cls%256,0,0,math.floor(ttl/256),ttl%256,0,#nx)..nx
+else
+rr=enc(q)..string.char(0,1,math.floor(cls/256),cls%256,0,0,math.floor(ttl/256),ttl%256,0,4,tonumber(a),tonumber(b),tonumber(c),tonumber(d))
+end
+return hd..(unicast and question or'')..rr
+end
+function N.handle(p,ip)
+if #p<17 or p:byte(3)>=128 then return {}end
+local out={}
+local i=13
+for _=1,u16(p,5)do
+local n,j=N.qname(p,i)
+if not n or not p:byte(j+3)then break end
+local qt=u16(p,j)
+local q=p:sub(i,j+3)
+i=j+4
+n=n:lower()
+if names[n]and(qt==1 or qt==255 or qt==28)and ip then out[#out+1]={n=n,q=q,t=qt}end
+end
+return out
+end
+local function mdns()
+if not U then return end
+for _=1,8 do
+local p,rip,rport=U:receivefrom()
+if not p then return end
+local ip=st and st.device and st.device.ip
+for _,r in ipairs(N.handle(p,ip))do
+local uni=rport~=5353
+local pkt=N.answer(r.n,ip,uni,p:sub(1,2),r.q,r.t)
+if pkt then
+if uni then U:sendto(pkt,rip,rport)else U:sendto(pkt,'224.0.0.251',5353)end
+end
+end
+end
+end
+local function join(now)
+local ip=st and st.device and st.device.ip
+if not U or not ip or ip==''then return end
+if joined and joinedIp==ip then return end
+if joined then pcall(U.setoption,U,'ip-drop-membership',{multiaddr='224.0.0.251',interface=joinedIp})end
+local ok=U:setoption('ip-add-membership',{multiaddr='224.0.0.251',interface=ip})
+joined,joinedIp=ok and true or false,ok and ip or nil
+if ok then L.info('OJ_MDNS answering',ip)end
+end
+local function openMdns()
+local ok,s=pcall(function()return require'socket'.udp()end)
+if not ok or not s then return end
+s:setoption('reuseaddr',true)
+pcall(s.setoption,s,'reuseport',true)
+if not s:setsockname('0.0.0.0',5353)then L.warn('OJ_MDNS port 5353 not available')s:close()return end
+s:settimeout(0)
+pcall(s.setoption,s,'ip-multicast-ttl',255)
+U=s
+end
+function N.cleanup()
+os.execute("(cd "..LD.." 2>/dev/null && rm -f syslog-ng-0*.qf && if [ -f syslog-ng.log ]; then tail -n 3000 syslog-ng.log > syslog-ng.old.log; rm -f syslog-ng.log; fi) >/dev/null 2>&1 &")
+end
+function N.tick(now)
+if now-lastW>=20 then lastW=now wifi()end
+if now-lastJ>=30 then lastJ=now pcall(join,now)end
+mdns()
+end
+function N.init(state,p)
+st,pub=state,p
+local h=(state.device and state.device.hostname or''):lower():gsub('%.local$','')
+if h~=''then names[h..'.local']=true S.name=h..'.local'end
+S.since=require'syscmd'.uptime()
+state.net=S
+N.cleanup()
+pcall(openMdns)
+wifi()
+end
+return N
+end)
+"""
+
+patch("bedtime module", "package.preload['bluetooth']=(function(...)",
+      OJBED_LUA + OJNET_LUA + "package.preload['bluetooth']=(function(...)")
+patch("bedtime: volume limit and fade applied where the volume reaches the hardware",
+"""local e=c_alsa_set_volume(e,0)""",
+"""local e=c_alsa_set_volume(require'ojbed'.vol(e),0)""")
+patch("bedtime: dimmed lights at night",
+"""local e=h('%s,%s',e,l(a))""",
+"""local e=h('%s,%s',e,l(require'ojbed'.led(a)))""")
+patch("bedtime: playback state changes",
+"""e.playback.state=t
+g(t)
+p(t)
+u()
+end""",
+"""e.playback.state=t
+g(t)
+p(t)
+pcall(require'ojbed'.onState,t)
+u()
+end""")
+patch("bedtime: 'end of chapter' timer stops instead of playing the next track",
+"""if not l(a)then return end
+n('ENDED')
+""",
+"""if not l(a)then return end
+n('ENDED')
+if require'ojbed'.onEnded()then return end
+""")
+patch("bedtime: audiobook position recorded",
+"""function t.on.gs_position(t)
+if not l(t)then return end
+e.playback.position_ms=t.pos
+""",
+"""function t.on.gs_position(t)
+if not l(t)then return end
+e.playback.position_ms=t.pos
+pcall(require'ojbed'.onPos,e.nowPlaying,t.pos)
+""")
+patch("bedtime: an audiobook resumes at its saved chapter and position",
+"""if not t or not o.tracks[t]then
+t=self:trackToPlay(r)
+if not o.tracks[t]then t=1 end
+s=t
+end""",
+"""local oj=nil
+if not t or not o.tracks[t]then
+t=self:trackToPlay(r)
+if o.audiobook then
+local x,y=require'ojbed'.resumeFor(r,o.tracks)
+t=x or 1
+oj=y
+end
+if not o.tracks[t]then t=1 end
+s=t
+end""")
+patch("bedtime: resume position carried by the play action",
+"""queueIndex=s,
+trackIndex=t,""",
+"""queueIndex=s,
+trackIndex=t,
+resume_ms=oj,""")
+patch("bedtime: state filter",
+"""elseif a==T then i={userMessages=t.userMessages}""",
+"""elseif a==T then i={userMessages=t.userMessages}
+elseif a=='.bedtime'then i={bedtime=t.bedtime}
+elseif a=='.net'then i={net=t.net}""")
+patch("bedtime: init",
+"""i.init(h,t.audio,e.userCat,e.publish_state,c.isActiveOrWarn)""",
+"""i.init(h,t.audio,e.userCat,e.publish_state,c.isActiveOrWarn)
+require'ojbed'.init(t,e.publish_partial,l,e.userCat)
+pcall(require'ojnet'.init,t,e.publish_partial)""")
+patch("bedtime: tick",
+"""d.update(y,d.inactivity,y)""",
+"""d.update(y,d.inactivity,y)
+local ok,er=pcall(require'ojbed'.tick,y)
+if not ok then o.error('OJ_TICK',er)end
+ok,er=pcall(require'ojnet'.tick,y)
+if not ok then o.error('OJ_TICK net',er)end""")
+patch("bedtime: saved on power off",
+"""e.userCat:save()
+l.save()""",
+"""e.userCat:save()
+l.save()
+pcall(require'ojbed'.save)""")
+patch("bedtime: web messages",
+"""["/j/web/input/OJ_UPDATE_START"]=a(e.oj_update_start,nil,true),""",
+"""["/j/web/input/OJ_UPDATE_START"]=a(e.oj_update_start,nil,true),
+["/j/web/input/OJ_SLEEP"]=a(function(x)return require'ojbed'.onSleep(x)end),
+["/j/web/input/OJ_BEDTIME_SET"]=a(function(x)return require'ojbed'.set(x)end),
+["/j/web/input/OJ_RESUME_RESET"]=a(function(x)return require'ojbed'.onResumeReset(x)end),""")
 
 def apply(src):
     """Return patched source. Raises ValueError (nothing applied) on any mismatch."""

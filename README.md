@@ -51,6 +51,20 @@ On your phone, open **`http://` + your Jooki's address**, for example
 - play, pause, change the volume, turn the Jooki off;
 - see your OpenJooki version and **update it in one tap** when a new one is out.
 
+**At bedtime** (since 1.3.0):
+
+- **audiobooks resume where your child fell asleep**, chapter and minute, even
+  after the Jooki turned itself off (mark the playlist as *Audiobook*);
+- a **sleep timer** in the player (10 to 60 minutes, or *end of chapter*): the
+  volume goes down gently, then the Jooki pauses;
+- a **night mode** (Settings → Bedtime, 20:00–07:00 by default): every token
+  starts the timer on its own, the volume is limited whatever the knob says, and
+  the lights are dimmed.
+
+The page also works on a weak Wi‑Fi (uploads retry on their own), shows how
+good the Wi‑Fi is, and answers at **`http://<its name>.local/`** (the name is
+shown in Settings), so you don't need the address any more.
+
 The page is part of OpenJooki: nothing else to install.
 
 ### Questions

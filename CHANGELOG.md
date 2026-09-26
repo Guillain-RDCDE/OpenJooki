@@ -1,5 +1,25 @@
 # OpenJooki — Changelog
 
+## Firmware 1.3.0 (not released yet) — bedtime
+- **Audiobooks resume where the child fell asleep**: chapter and position are
+  saved on the Jooki and survive it turning itself off; it starts again 15 s
+  earlier (60 s after the sleep timer); the end of the book goes back to
+  chapter 1; *Start again from the beginning* on the playlist page.
+- **Sleep timer** (10–60 min or *end of chapter*) from the player, with a gentle
+  fade of the volume before the pause.
+- **Night mode** (default 20:00–07:00, Europe/Paris with summer time): automatic
+  timer (20 min), volume limited (30 %) whatever the knob says, dimmed lights.
+- **Put back in order (1, 2, 3…)** for playlists whose uploads arrived out of order.
+- New messages `OJ_SLEEP`, `OJ_BEDTIME_SET`, `OJ_RESUME_RESET`; see `docs/19-bedtime.md`.
+- **Network health** (`docs/20-network-health.md`): uploads retry on their own
+  when the Wi-Fi drops (and a **Retry** button after 4 tries); Wi-Fi quality in
+  Settings; **logs no longer sent to Muuselabs' Papertrail** and kept to one week
+  on the Jooki (the old 39 MB log and 11 MB send queue are cleaned); the page
+  answers at **`http://<its-name>.local/`** (e.g. `jooki2-0426e8.local`, shown
+  in Settings), whatever address the router gives it.
+- Bench: 57 unit + 24 bedtime + 13 network + 38 backend + 47 page checks;
+  installed and checked on a real Jooki v2.
+
 ## Firmware 1.2.0 (2026-09-25) — update from the Jooki's own page
 - **Settings** shows the installed OpenJooki version and checks GitHub for a
   newer release. When there is one, a banner appears on the home page and

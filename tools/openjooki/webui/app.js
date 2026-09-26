@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '1.2.0';
+  var VERSION = '1.3.0';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -66,6 +66,10 @@
       up_fail: 'Le Jooki n\'a pas pu ajouter ce fichier', up_timeout: 'Pas de réponse du Jooki',
       uploads_running: 'Des envois sont en cours. Quitter la page les interrompra.',
       clear_done: 'Masquer les envois terminés',
+      up_retrying: function (n, m) { return 'Connexion perdue, nouvel essai (' + n + '/' + m + ')…'; }, up_retry: 'Réessayer',
+      wifi_good: 'Signal bon', wifi_fair: 'Signal moyen', wifi_weak: 'Signal faible',
+      wifi_drops: function (n) { return n + (n > 1 ? ' coupures' : ' coupure') + ' depuis le démarrage'; },
+      wifi_advice: 'Rapprochez le Jooki d\'une borne Wi-Fi. La musique marche sans Wi-Fi : seuls cette page et les envois en ont besoin.',
       err_readonly: 'Action impossible sur les morceaux non utilisés.',
       err_internal: 'Le Jooki a rencontré une erreur. Réessaie.',
       err_empty_title: 'Le nom ne peut pas être vide.',
@@ -85,7 +89,19 @@
       upd_running: 'Mise à jour en cours…', upd_keep: 'Garde le Jooki branché. Cette page se reconnecte toute seule.',
       upd_rebooting: 'Le Jooki redémarre sur la nouvelle version…', upd_done: function (v) { return 'Jooki mis à jour : OpenJooki ' + v; },
       upd_failed: 'La mise à jour n\'a pas pu se faire. Ton Jooki n\'a pas changé.', upd_banner: function (v) { return 'Mise à jour ' + v + ' disponible'; },
-      upd_see: 'Voir'
+      upd_see: 'Voir',
+      bedtime: 'Heure du coucher', sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
+      sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre',
+      sleep_left: function (s) { return 'Arrêt dans ' + s; }, sleep_at_end: 'Arrêt à la fin de ce morceau',
+      sleep_auto: 'automatique (mode nuit)', sleep_cancel: 'Annuler la minuterie',
+      night_mode: 'Mode nuit', night_help: 'Pendant ces heures, chaque écoute s\'arrête toute seule, le volume est limité et les lumières sont tamisées.',
+      night_from: 'De', night_to: 'À', night_timer: 'Minuterie automatique', night_timer_none: 'Aucune',
+      night_maxvol: 'Volume maximum', night_nolimit: 'pas de limite', night_dim: 'Lumières tamisées',
+      night_now: 'Mode nuit en ce moment', night_next: function (h) { return 'Commence à ' + h; },
+      night_clock: 'L\'heure du Jooki vient d\'Internet (heure d\'été comprise).',
+      resume_at: function (c, s) { return 'Reprendra au chapitre ' + c + (s ? ' · ' + s : ''); },
+      resume_restart: 'Recommencer au début', resume_done: 'Reprendra au chapitre 1',
+      sort_tracks: 'Remettre dans l\'ordre (1, 2, 3…)', sorted: 'Pistes remises dans l\'ordre'
     },
     en: {
       playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
@@ -144,6 +160,10 @@
       up_fail: 'The Jooki could not add this file', up_timeout: 'No answer from the Jooki',
       uploads_running: 'Uploads are in progress. Leaving the page will stop them.',
       clear_done: 'Hide finished uploads',
+      up_retrying: function (n, m) { return 'Connection lost, retrying (' + n + '/' + m + ')…'; }, up_retry: 'Retry',
+      wifi_good: 'Good signal', wifi_fair: 'Fair signal', wifi_weak: 'Weak signal',
+      wifi_drops: function (n) { return n + (n === 1 ? ' drop' : ' drops') + ' since start-up'; },
+      wifi_advice: 'Move the Jooki closer to a Wi-Fi access point. Music works without Wi-Fi: only this page and uploads need it.',
       err_readonly: 'Not possible on unused tracks.',
       err_internal: 'The Jooki hit an error. Please retry.',
       err_empty_title: 'The name cannot be empty.',
@@ -163,7 +183,19 @@
       upd_running: 'Updating…', upd_keep: 'Keep the Jooki plugged in. This page reconnects by itself.',
       upd_rebooting: 'The Jooki is restarting on the new version…', upd_done: function (v) { return 'Jooki updated: OpenJooki ' + v; },
       upd_failed: 'The update could not be done. Your Jooki has not changed.', upd_banner: function (v) { return 'Update ' + v + ' available'; },
-      upd_see: 'Show'
+      upd_see: 'Show',
+      bedtime: 'Bedtime', sleep_timer: 'Sleep timer', sleep_off: 'Off',
+      sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
+      sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
+      sleep_auto: 'automatic (night mode)', sleep_cancel: 'Cancel the timer',
+      night_mode: 'Night mode', night_help: 'During these hours, every listen stops by itself, the volume is limited and the lights are dimmed.',
+      night_from: 'From', night_to: 'To', night_timer: 'Automatic timer', night_timer_none: 'None',
+      night_maxvol: 'Maximum volume', night_nolimit: 'no limit', night_dim: 'Dimmed lights',
+      night_now: 'Night mode right now', night_next: function (h) { return 'Starts at ' + h; },
+      night_clock: 'The Jooki gets its time from the Internet (summer time included).',
+      resume_at: function (c, s) { return 'Will resume at chapter ' + c + (s ? ' · ' + s : ''); },
+      resume_restart: 'Start again from the beginning', resume_done: 'Will resume at chapter 1',
+      sort_tracks: 'Put back in order (1, 2, 3…)', sorted: 'Tracks put back in order'
     }
   };
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -263,7 +295,9 @@
     vol: '<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
     power: '<path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>',
     note: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
-    link0: '<path d="M8 12h8"/>'
+    link0: '<path d="M8 12h8"/>',
+    moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+    sort: '<path d="M4 6h9M4 12h7M4 18h5M17 4v16M14 17l3 3 3-3"/>'
   };
   function icon(name) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -302,7 +336,7 @@
   function collator() { try { return new Intl.Collator(lang, { numeric: true, sensitivity: 'base' }); } catch (e) { return { compare: function (a, b) { return a < b ? -1 : a > b ? 1 : 0; } }; } }
 
   /* ------------------------------------------------------------------ state */
-  var S = { db: { playlists: {}, tracks: {}, tokens: {} }, audio: { config: {}, playback: {}, nowPlaying: {} }, nfc: {}, device: {}, power: {}, wifi: {}, userMessages: [] };
+  var S = { db: { playlists: {}, tracks: {}, tokens: {} }, audio: { config: {}, playback: {}, nowPlaying: {} }, nfc: {}, device: {}, power: {}, wifi: {}, userMessages: [], bedtime: {} };
   var gotState = false;
   function normalize() {
     S.db = obj(S.db);
@@ -316,6 +350,10 @@
     S.audio.nowPlaying = obj(S.audio.nowPlaying);
     S.nfc = obj(S.nfc); S.device = obj(S.device); S.power = obj(S.power); S.wifi = obj(S.wifi);
     S.userMessages = arr(S.userMessages);
+    S.net = obj(S.net);
+    S.bedtime = obj(S.bedtime);
+    S.bedtime.cfg = obj(S.bedtime.cfg);
+    S.bedtime.resume = obj(S.bedtime.resume);
   }
   function mergeState(p) {
     if (!p || typeof p !== 'object') return;
@@ -324,6 +362,9 @@
         S.audio = obj(S.audio);
         Object.keys(p.audio).forEach(function (s) { S.audio[s] = p.audio[s]; });
         if (p.audio.playback) posStamp = Date.now();
+      } else if (k === 'bedtime') {
+        S.bedtime = p.bedtime;
+        sleepStamp = Date.now();
       } else {
         S[k] = p[k];
       }
@@ -331,7 +372,7 @@
     if (p.db) gotState = true;
     normalize();
   }
-  var posStamp = Date.now();
+  var posStamp = Date.now(), sleepStamp = Date.now();
   function pls() { return S.db.playlists; }
   function userPlaylists() {
     var c = collator();
@@ -374,6 +415,7 @@
     client.onclose = function () {
       var was = online;
       online = false;
+      uploads.forEach(function (u) { if (u.status === 'processing') u.lost = true; });
       if (was || !everOnline) render();
       retryTimer = setTimeout(connect, retryDelay);
       retryDelay = Math.min(retryDelay * 1.6, 8000);
@@ -396,6 +438,7 @@
       if (posOnly) return;
       waiters = waiters.filter(function (w) { return !w(data); });
       if (!autoChecked && S.device.openjooki) { autoChecked = true; setTimeout(checkUpdate, 1500); }
+      syncClock();
       handleUserMessages();
       scheduleRender();
     } else if (topic === '/j/web/output/error') {
@@ -503,47 +546,91 @@
     render();
     pump();
   }
+  // A weak Wi-Fi drops connections: a failed or stalled transfer is retried on its own
+  // (after the Jooki is back), and a lost answer is checked again after reconnecting.
+  var UP_TRIES = 4, UP_STALL_MS = 30000, UP_DELAYS = [3000, 8000, 20000];
   function pump() {
     if (upBusy) return;
-    var u = uploads.filter(function (x) { return x.status === 'queued'; })[0];
-    if (!u) return;
+    var now = Date.now();
+    var u = uploads.filter(function (x) { return x.status === 'queued' && !(x.retryAt > now); })[0];
+    if (!u) {
+      var next = uploads.filter(function (x) { return x.status === 'queued'; }).map(function (x) { return x.retryAt; })[0];
+      if (next) setTimeout(pump, Math.max(200, next - now));
+      return;
+    }
     if (!online) { setTimeout(pump, 1500); return; }
     upBusy = true;
-    u.status = 'uploading';
+    u.status = 'uploading'; u.progress = 0; u.tries = (u.tries || 0) + 1; u.note = null;
     var uid = String(Math.floor(Math.random() * 9e6) + 1e6);
     var fd = new FormData();
     fd.append(uid, u.file, u.name);
     var xhr = new XMLHttpRequest();
+    var lastMove = Date.now(), ended = false;
+    var stall = setInterval(function () { if (Date.now() - lastMove > UP_STALL_MS) { xhr.abort(); } }, 2000);
+    function netFail(why) {
+      if (ended) return; ended = true; clearInterval(stall);
+      retryOrFail(u, why);
+    }
     xhr.open('POST', '/upload');
-    xhr.upload.onprogress = function (e) { if (e.lengthComputable) { u.progress = e.loaded / e.total; updateUploadRow(u); } };
-    xhr.onerror = xhr.ontimeout = function () { finishUp(u, 'error', t('up_net')); };
+    xhr.upload.onprogress = function (e) { lastMove = Date.now(); if (e.lengthComputable) { u.progress = e.loaded / e.total; updateUploadRow(u); } };
+    xhr.onerror = xhr.ontimeout = xhr.onabort = function () { netFail(t('up_net')); };
     xhr.onload = function () {
-      if (xhr.status !== 200) { finishUp(u, 'error', t('up_net') + ' (' + xhr.status + ')'); return; }
+      if (ended) return; ended = true; clearInterval(stall);
+      if (xhr.status !== 200) { retryOrFail(u, t('up_net') + ' (' + xhr.status + ')'); return; }
       u.progress = 1;
       u.status = 'processing';
       render();
-      var before = u.playlistId && pls()[u.playlistId] ? arr(pls()[u.playlistId].tracks).length : -1;
+      var beforePl = u.playlistId && pls()[u.playlistId] ? arr(pls()[u.playlistId].tracks).length : -1;
+      var beforeLib = Object.keys(S.db.tracks).length;
+      var p = { uploadId: uid, filename: u.name };
+      if (u.playlistId) p.playlistId = u.playlistId;
+      var resent = false;
+      u.lost = false;
       var timer = setTimeout(function () { finishUp(u, 'error', t('up_timeout')); }, 240000);
+      function added() {
+        if (u.playlistId) return pls()[u.playlistId] && arr(pls()[u.playlistId].tracks).length > beforePl;
+        return Object.keys(S.db.tracks).length > beforeLib;
+      }
       waiters.push(function (partial) {
+        if (u.status !== 'processing') return true;
+        if (partial.audio) {                 // full state after a reconnection: did the Jooki get it?
+          if (!u.lost) return false;
+          u.lost = false;
+          if (added()) { clearTimeout(timer); finishUp(u, 'done'); return true; }
+          if (!resent) { resent = true; send('PLAYLIST_ADD_UPLOAD', p); }
+          return false;
+        }
         if (!(partial.db && partial.device)) return false; // end of an upload request
         clearTimeout(timer);
         if (u.failType) { finishUp(u, 'error', t(u.failType === 'UPLOAD_FAIL_TYPE' ? 'up_type' : 'up_fail')); return true; }
-        if (u.playlistId && pls()[u.playlistId] && arr(pls()[u.playlistId].tracks).length <= before) {
+        if (u.playlistId && pls()[u.playlistId] && arr(pls()[u.playlistId].tracks).length <= beforePl) {
+          if (resent && !u.failType) { finishUp(u, 'done'); return true; } // first request had worked
           finishUp(u, 'error', t('up_fail')); return true;
         }
         finishUp(u, 'done');
         return true;
       });
-      var p = { uploadId: uid, filename: u.name };
-      if (u.playlistId) p.playlistId = u.playlistId;
-      if (!send('PLAYLIST_ADD_UPLOAD', p)) { clearTimeout(timer); finishUp(u, 'error', t('up_net')); }
+      if (!send('PLAYLIST_ADD_UPLOAD', p)) u.lost = true;
     };
     xhr.send(fd);
     render();
   }
+  function retryOrFail(u, why) {
+    upBusy = false;
+    if (u.tries < UP_TRIES && u.file) {
+      u.status = 'queued'; u.progress = 0;
+      u.retryAt = Date.now() + UP_DELAYS[Math.min(u.tries - 1, UP_DELAYS.length - 1)];
+      u.note = t('up_retrying', u.tries + 1, UP_TRIES);
+      render(); setTimeout(pump, 50);
+      return;
+    }
+    u.status = 'error'; u.error = why; u.canRetry = !!u.file;
+    render(); setTimeout(pump, 50);
+  }
+  function retryUpload(u) { u.status = 'queued'; u.tries = 0; u.retryAt = 0; u.error = null; u.canRetry = false; render(); pump(); }
   function finishUp(u, status, err) {
     if (u.status === 'done' || u.status === 'error') return;
-    u.status = status; u.error = err || null; u.file = null;
+    u.status = status; u.error = err || null; u.file = null; u.note = null;
     upBusy = false;
     render();
     setTimeout(pump, 50);
@@ -562,12 +649,13 @@
     var anyDone = list.some(function (u) { return u.status === 'done' || u.status === 'error'; });
     return h('div', { class: 'card uploads' },
       list.map(function (u) {
-        var st = u.status === 'queued' ? t('queued') : u.status === 'uploading' ? t('uploading') + ' ' + Math.round(u.progress * 100) + ' %'
+        var st = u.status === 'queued' ? (u.note || t('queued')) : u.status === 'uploading' ? t('uploading') + ' ' + Math.round(u.progress * 100) + ' %'
           : u.status === 'processing' ? t('processing') : u.status === 'done' ? t('done') : u.error;
         return h('div', { class: 'up ' + u.status, 'data-up': u.key },
           h('div', { class: 'row' }, h('div', { class: 'grow ellipsis' }, u.name), h('span', { class: 'small muted' }, fmtBytes(u.size))),
           h('div', { class: 'bar' }, h('i', { style: 'width:' + (u.status === 'done' || u.status === 'processing' ? 100 : Math.round(u.progress * 100)) + '%' })),
-          h('div', { class: 'st' }, st));
+          h('div', { class: 'st row' }, h('span', { class: 'grow' }, st),
+            u.status === 'error' && u.canRetry ? h('button', { class: 'btn ghost', 'data-k': 'upretry-' + u.key, onclick: function () { retryUpload(u); } }, t('up_retry')) : null));
       }),
       anyDone && !uploadsActive() ? h('div', { class: 'up' }, h('button', { class: 'btn ghost block', onclick: function () {
         uploads = uploads.filter(function (u) { return u.playlistId !== (playlistId || null) || (u.status !== 'done' && u.status !== 'error'); }); render();
@@ -760,9 +848,21 @@
           } }, icon('x')));
       }));
     }
+    var rs = p.audiobook ? S.bedtime.resume[id] : null;
+    var ri = rs ? tracks.indexOf(rs.id) : -1;
+    var sorted = sortedTracks(tracks);
+    var unsorted = tracks.length > 1 && sorted.join('|') !== tracks.join('|');
     var more = h('div', { class: 'card', style: 'margin-top:16px' },
       h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('audiobook_help'))),
-        h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })));
+        h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
+      p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
+        h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
+        ri >= 0 ? h('button', { class: 'btn ghost', 'data-k': 'resumereset', onclick: function () { send('OJ_RESUME_RESET', { playlistId: id }); } }, t('resume_restart')) : null) : null,
+      unsorted ? h('div', { class: 'kv' }, h('button', { class: 'btn ghost block', 'data-k': 'sorttracks', onclick: function () {
+        optimisticTracks(id, sorted);
+        send('PLAYLIST_UPDATE', { playlist: { id: id, tracks: sorted } });
+        toast(t('sorted'));
+      } }, icon('sort'), t('sort_tracks'))) : null);
     var del = h('div', { class: 'actions' }, h('button', { class: 'btn danger', onclick: function () {
       confirmBox(t('delete_playlist_q', p.title || '—'), t('delete_playlist_text'), t('delete'), true).then(function (ok) {
         if (!ok) return;
@@ -1107,14 +1207,13 @@
     var bat = isNaN(lvl) || (lvl === 0 && pw.level && !pw.level.mv) ? '—' : Math.round(lvl / 10) + ' %' + (pw.charging ? ' · ' + t('charging') : pw.connected ? ' · ' + t('plugged') : '');
     var du = obj(d.diskUsage);
     var total = Number(du.total) * 1024, used = Number(du.used) * 1024, free = Number(du.available) * 1024;
-    var sig = w.signal !== undefined && w.signal !== null ? ' (' + w.signal + ' dBm)' : '';
     return [
       h('div', { class: 'section-title' }, t('device')),
       h('div', { class: 'card' },
         h('div', { class: 'kv' }, h('span', null, t('device_name')), h('b', null, (d.hostname || '—').replace(/\.local$/, ''))),
         h('div', { class: 'kv' }, h('span', null, t('battery')), h('b', null, bat)),
-        h('div', { class: 'kv' }, h('span', null, t('wifi')), h('b', null, (w.ssid || '—') + sig)),
-        h('div', { class: 'kv' }, h('span', null, t('ip')), h('b', null, d.ip || location.hostname)),
+        wifiRow(w),
+        h('div', { class: 'kv' }, h('span', null, t('ip')), h('b', null, (d.ip || location.hostname) + (S.net.name ? ' · ' + S.net.name : ''))),
         h('div', { class: 'kv' }, h('span', null, t('storage')), h('b', null, total ? fmtBytes(free) + ' ' + t('free') + ' / ' + fmtBytes(total) : '—')),
         total ? h('div', { class: 'meter' }, h('i', { style: 'width:' + Math.min(100, Math.round(used / total * 100)) + '%' })) : null,
         h('div', { class: 'kv' }, h('span', null, t('version')), h('b', null, 'OpenJooki ' + (d.openjooki || '—'),
@@ -1128,6 +1227,7 @@
           onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } })),
         h('label', { class: 'switch' }, h('span', null, t('repeat')), h('input', { type: 'checkbox', role: 'switch', checked: cfg.repeat_mode === 1 || cfg.repeat_mode === true, 'data-k': 'repeat',
           onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }))),
+      bedtimeCard(),
       h('div', { class: 'section-title' }, t('language')),
       h('div', { class: 'card', style: 'padding:12px 16px' }, h('div', { class: 'seg', role: 'group', 'aria-label': t('language') },
         h('button', { class: lang === 'fr' ? 'on' : '', onclick: function () { setLang('fr'); } }, 'Français'),
@@ -1140,7 +1240,97 @@
       } }, icon('power'), t('power_off')))
     ];
   }
+  function wifiRow(w) {
+    var dbm = Number(w.signal);
+    var has = w.signal !== undefined && w.signal !== null && !isNaN(dbm);
+    var q = !has ? null : dbm >= -65 ? 'good' : dbm >= -75 ? 'fair' : 'weak';
+    var n = S.net, drops = Number(n.drops) || 0;
+    return h('div', { class: 'kv col', 'data-k': 'wifirow' },
+      h('div', { class: 'row', style: 'width:100%' }, h('span', { class: 'grow' }, t('wifi')),
+        h('b', null, (w.ssid || '—') + (has ? ' · ' + dbm + ' dBm' : ''))),
+      q ? h('div', { class: 'small wifi-' + q, 'data-k': 'wifiq' }, t('wifi_' + q) + (drops ? ' · ' + t('wifi_drops', drops) : '')) : null,
+      q === 'weak' ? h('div', { class: 'small muted' }, t('wifi_advice')) : null);
+  }
   function setLang(l) { lang = l; lsSet('oj.lang', l); document.documentElement.lang = l; render(); }
+
+  /* ------------------------------------------------------------------ bedtime */
+  function sleepInfo() { var s = S.bedtime.sleep; return s && typeof s === 'object' && s.mode ? s : null; }
+  function sleepLeft() {
+    var s = sleepInfo();
+    if (!s || s.remaining === undefined || s.remaining === null) return null;
+    return Math.max(0, Number(s.remaining) - (Date.now() - sleepStamp) / 1000);
+  }
+  function sleepText() {
+    var s = sleepInfo();
+    if (!s) return t('sleep_timer');
+    return (s.mode === 'track' ? t('sleep_at_end') : t('sleep_left', fmtTime(sleepLeft()))) + (s.auto ? ' · ' + t('sleep_auto') : '');
+  }
+  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? t('sleep_track') : fmtTime(sleepLeft()); }
+  function hm(m) { m = Number(m) || 0; var hh = Math.floor(m / 60) % 24, mm = m % 60; return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; }
+  // the Jooki keeps UTC: tell it the family's time zone (Europe: summer time rule handled on the Jooki)
+  function browserClock() {
+    var y = new Date().getFullYear();
+    var jan = new Date(y, 0, 1).getTimezoneOffset(), jul = new Date(y, 6, 1).getTimezoneOffset();
+    var zone = '';
+    try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    if (jan !== jul && /^Europe\//.test(zone)) return { tzbase: -Math.max(jan, jul), tzdst: 'EU' };
+    return { tzbase: -new Date().getTimezoneOffset(), tzdst: 'none' };
+  }
+  var clockSynced = false;
+  function syncClock() {
+    var c = S.bedtime.cfg;
+    if (clockSynced || c.tzbase === undefined || !online) return;
+    clockSynced = true;
+    var b = browserClock();
+    if (b.tzbase !== c.tzbase || b.tzdst !== c.tzdst) send('OJ_BEDTIME_SET', b);
+  }
+  function setBedtime(p) { var b = browserClock(); p.tzbase = b.tzbase; p.tzdst = b.tzdst; send('OJ_BEDTIME_SET', p); }
+  function sleepPanel() {
+    var s = sleepInfo();
+    return h('div', { class: 'sleep' },
+      h('div', { class: 'row small muted sleephead' }, icon('moon'), h('span', { 'data-sleep': '1' }, sleepText())),
+      h('div', { class: 'chips' },
+        [10, 20, 30, 45, 60].map(function (m) {
+          return h('button', { class: 'toggle', 'data-sleep-min': String(m), onclick: function () { send('OJ_SLEEP', { minutes: m }); } }, t('sleep_min', m));
+        }),
+        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, t('sleep_track')),
+        s ? h('button', { class: 'toggle', 'data-k': 'sleepoff', 'aria-label': t('sleep_cancel'), onclick: function () { send('OJ_SLEEP', { cancel: true }); } }, icon('x'), t('sleep_off')) : null));
+  }
+  var nightVolDrag = null;
+  function bedtimeCard() {
+    var c = S.bedtime.cfg;
+    if (c.start === undefined) return null; // firmware without bedtime
+    var mv = nightVolDrag !== null ? nightVolDrag : Number(c.maxvol) || 100;
+    var timers = [0, 10, 15, 20, 30, 45, 60];
+    if (timers.indexOf(Number(c.timer)) < 0) { timers.push(Number(c.timer)); timers.sort(function (a, b) { return a - b; }); }
+    function volLabel(v) { return t('night_maxvol') + ' : ' + (v >= 100 ? t('night_nolimit') : v + ' %'); }
+    return [h('div', { class: 'section-title' }, t('bedtime')),
+      h('div', { class: 'card', 'data-k': 'bedcard' },
+        h('label', { class: 'switch' }, h('div', null, h('div', null, t('night_mode')), h('div', { class: 'small muted' }, t('night_help'))),
+          h('input', { type: 'checkbox', role: 'switch', checked: !!c.enabled, 'data-k': 'nighton', onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })),
+        c.enabled ? [
+          h('div', { class: 'kv', 'data-k': 'nightstatus' }, S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start)))),
+          h('div', { class: 'timepair' },
+            h('label', { class: 'field' }, h('span', null, t('night_from')), h('input', { class: 'input', type: 'time', value: hm(c.start), 'data-k': 'nightstart',
+              onchange: function (e) { if (e.target.value) setBedtime({ start: e.target.value }); } })),
+            h('label', { class: 'field' }, h('span', null, t('night_to')), h('input', { class: 'input', type: 'time', value: hm(c.stop), 'data-k': 'nightstop',
+              onchange: function (e) { if (e.target.value) setBedtime({ stop: e.target.value }); } }))),
+          h('label', { class: 'field pad' }, h('span', null, t('night_timer')),
+            h('select', { class: 'input', 'data-k': 'nighttimer', onchange: function (e) { e.target.blur(); setBedtime({ timer: Number(e.target.value) }); } },
+              timers.map(function (m) { return h('option', { value: String(m), selected: Number(c.timer) === m ? 'selected' : null }, m ? t('sleep_min', m) : t('night_timer_none')); }))),
+          h('label', { class: 'field pad' }, h('span', { 'data-nightvol': '1' }, volLabel(mv)),
+            h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol',
+              oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
+              onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
+          h('label', { class: 'switch' }, h('span', null, t('night_dim')), h('input', { type: 'checkbox', role: 'switch', checked: !!c.dim, 'data-k': 'nightdim',
+            onchange: function (e) { setBedtime({ dim: e.target.checked }); } })),
+          h('p', { class: 'small muted pad', style: 'margin:4px 0 14px' }, t('night_clock'))
+        ] : null)];
+  }
+  function sortedTracks(list) {
+    var c = collator();
+    return list.slice().sort(function (a, b) { return c.compare(trackTitle(a), trackTitle(b)) || (a < b ? -1 : a > b ? 1 : 0); });
+  }
 
   /* ------------------------------------------------------------------ player */
   function isPlaying() { return S.audio.playback.state === 'PLAYING' || S.audio.playback.state === 'STARTING'; }
@@ -1170,7 +1360,8 @@
       h('div', { class: 'info', role: 'button', tabindex: '0', 'aria-label': t('open_player'), onclick: function () { if (now) nowPlayingModal(); },
         onkeydown: function (e) { if (e.key === 'Enter' && now) nowPlayingModal(); } },
         h('div', { class: 't ellipsis' }, now ? cleanTitle(np.track || trackTitle(np.trackId)) : t('nothing_playing')),
-        h('div', { class: 's ellipsis' }, now ? (np.source || (pl && pl.title) || '') : t('nothing_hint'))),
+        h('div', { class: 's ellipsis' }, sleepInfo() ? h('span', { class: 'sleepmini' }, icon('moon'), h('span', { 'data-sleep-short': '1' }, sleepShort())) : null,
+          now ? (np.source || (pl && pl.title) || '') : t('nothing_hint'))),
       now ? h('button', { class: 'icon-btn', 'aria-label': t('prev'), onclick: function () { send('DO_PREV', {}); } }, icon('prev')) : null,
       now ? h('button', { class: 'icon-btn accent', 'aria-label': isPlaying() ? t('pause') : t('play'), 'data-k': 'pp',
         onclick: function () { send(isPlaying() ? 'DO_PAUSE' : 'DO_PLAY', {}); } }, icon(isPlaying() ? 'pause' : 'play')) : null,
@@ -1182,7 +1373,8 @@
       live: true,
       sig: function () {
         var np = S.audio.nowPlaying, c = S.audio.config;
-        return [np.playlistId, np.trackId, np.trackIndex, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms].join('|');
+        var sl = sleepInfo() || {};
+        return [np.playlistId, np.trackId, np.trackIndex, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];
@@ -1212,11 +1404,16 @@
           h('div', { class: 'toggles' },
             h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
             h('button', { class: 'toggle' + (cfg.repeat_mode === 1 ? ' on' : ''), 'aria-pressed': String(cfg.repeat_mode === 1), onclick: function () { send('SET_CFG', { repeat_mode: cfg.repeat_mode === 1 ? 0 : 1 }); } }, icon('repeat'), t('repeat'))),
+          S.bedtime.cfg.start !== undefined ? sleepPanel() : null,
           h('div', { class: 'foot' }, h('button', { class: 'btn block', onclick: closeModal }, t('close'))));
       }
     });
   }
   setInterval(function () {
+    if (sleepInfo()) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-sleep]'), function (el) { el.textContent = sleepText(); });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-sleep-short]'), function (el) { el.textContent = sleepShort(); });
+    }
     if (!hasNow() || S.audio.playback.state !== 'PLAYING') return;
     var d = Number(S.audio.nowPlaying.duration_ms) || 0;
     var p = curPos();
@@ -1241,7 +1438,7 @@
   function render() {
     if (!root) return;
     watchUpdateReconnect();
-    if (ui.dragging) return;
+    if (ui.dragging || nightVolDrag !== null) return;
     var ae = document.activeElement;
     if (ae && ae.tagName === 'SELECT' && root.contains(ae)) { pendingRender = true; return; }
     pendingRender = false;

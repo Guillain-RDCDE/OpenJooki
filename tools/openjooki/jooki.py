@@ -455,6 +455,9 @@ WWW_PUBLIC = "/jooki/app/www/public"
 WWW_ORIG = "/jooki/app/www/public-openjooki-orig"   # old 2018 web app, kept (not served)
 OLD_WWW = ("index.html", "asset-manifest.json", "service-worker.js", "deezer_channel.html", "static/js", "static/css")
 PLAYER_LIB = "/jooki/lib/player.lib"
+# System files OpenJooki replaces (the original is kept once as <file>.openjooki-orig).
+SYSTEM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "system")
+SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf"}   # logs stay on the Jooki
 
 def ssh_bytes(host, remote_cmd, data=None, timeout=120):
     """ssh with binary stdin/stdout (busybox has no base64: we stream the bytes)."""
@@ -513,12 +516,14 @@ def _webui_build(host):
     lib = L.encode(L.apply(src))
     files = {}
     for f in WEBUI_FILES:
-        with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[f] = fh.read()
+        with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[WWW_PUBLIC+"/"+f] = fh.read()
+    for path, f in SYSTEM_FILES.items():
+        with open(os.path.join(SYSTEM_DIR, f), "rb") as fh: files[path] = fh.read()
     return r.stdout, lib, files
 
 def _webui_expected(lib, files, root=""):
     exp = {root+PLAYER_LIB: _md5(lib)}
-    for f, b in files.items(): exp[root+WWW_PUBLIC+"/"+f] = _md5(b)
+    for path, b in files.items(): exp[root+path] = _md5(b)
     return exp
 
 def _md5_match(host, exp, prefix=""):
@@ -540,7 +545,8 @@ def ab_webui(host, dry_run=False):
     s = _spare(a); sdev = "/dev/mmcblk0p"+s; MP = "/mnt/p2patch"
     try: orig, lib, files = _webui_build(host)
     except Exception as e: log("build failed: %s" % e); return 1
-    log("player.lib: %d -> %d bytes (patched); web files: %s" % (len(orig), len(lib), ", ".join(WEBUI_FILES)))
+    log("player.lib: %d -> %d bytes (patched); web files: %s; system files: %s"
+        % (len(orig), len(lib), ", ".join(WEBUI_FILES), ", ".join(sorted(SYSTEM_FILES))))
     if webui_active_ok(host, lib, files):
         log("Web UI and fixes already installed (active partition). Nothing to do."); return 0
     if dry_run: log("[dry-run] build OK, nothing written"); return 0
@@ -558,10 +564,12 @@ def ab_webui(host, dry_run=False):
                  % (WWW_PUBLIC, o, WWW_ORIG, o, WWW_ORIG, d, WWW_PUBLIC, o, WWW_ORIG, o))
     for o in WEBUI_STALE:
         prep += "rm -f $R%s/%s; " % (WWW_PUBLIC, o)
+    for path in SYSTEM_FILES:
+        prep += "test -f $R%s.openjooki-orig || cp -a $R%s $R%s.openjooki-orig; " % (path, path, path)
     prep += "sync; echo PREP_OK"
     r = ssh(host, prep, timeout=60)
     if "PREP_OK" not in r.stdout: log("prepare failed -> aborting (boot unchanged): %s" % (r.stdout+r.stderr)[-300:]); return 1
-    targets = [(PLAYER_LIB, lib)] + [(WWW_PUBLIC+"/"+f, b) for f, b in files.items()]
+    targets = [(PLAYER_LIB, lib)] + sorted(files.items())
     for path, data in targets:
         r = ssh_bytes(host, mnt+"cat > %s%s.new && mv %s%s.new %s%s && chmod 644 %s%s && sync && echo PUT_OK"
                       % (MP, path, MP, path, MP, path, MP, path), data=data, timeout=60)

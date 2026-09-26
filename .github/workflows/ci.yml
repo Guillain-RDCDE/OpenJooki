@@ -66,3 +66,10 @@ jobs:
           sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null && sleep 1 \
             && python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py && python3 e2e.py \
             && python3 ../../../core/spec/integration/endurance.py 3'
+      - name: Bench logs (on failure)
+        if: failure()
+        run: |
+          for f in /tmp/player.log /tmp/mosq.log /tmp/webctrl.log /tmp/fakeaudio.log; do echo "=== $f"; sudo tail -n 40 $f 2>/dev/null; done
+          echo "=== web dirs"; sudo ls -la /tmp/web_ctrl_dirs/ /tmp/web_ctrl_dirs/public/ 2>&1 | head -30
+          echo "=== listeners"; sudo ss -ltnp | grep -E ':(1883|8000|8080) ' || true
+          mosquitto -h | head -1

@@ -22,7 +22,13 @@ with sync_playwright() as p:
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_CONNECTION_RESET" not in m.text else None)
     pg.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
     toasts = []
-    pg.goto(URL + "/"); pg.wait_for_selector(".pl[data-pl]")
+    pg.goto(URL + "/")
+    try: pg.wait_for_selector(".pl[data-pl]")
+    except Exception:
+        # say why before dying: what the page got, what it said, what the core has
+        print("E0 page never listed the playlists\n  console:", errs[-10:], "\n  html:", pg.content()[:1500].replace("\n", " "),
+              "\n  core playlists:", sorted(J.pls), "\n  http /:", subprocess.run(["curl", "-sI", URL + "/"], capture_output=True, text=True).stdout[:200], flush=True)
+        raise
     check("E0 home lists the 6 playlists", pg.locator(".pl[data-pl]").count() == 6, pg.locator(".pl[data-pl]").count())
     # E1 create
     pg.click("[data-k=newpl]"); pg.fill("[data-k=plname]", "  Histoires du soir "); pg.keyboard.press("Enter")

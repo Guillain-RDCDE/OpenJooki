@@ -2,7 +2,7 @@
 """Generates the functional diagrams of docs/21-architecture-2.0.md as plain SVG
 (readable on GitHub and in VS Code, no tooling needed to view them)."""
 import os, html
-OUT = r"C:\Users\loutr\Dropbox\Perso\GitHub\Jooki\docs\img\arch"
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "img", "arch")
 os.makedirs(OUT, exist_ok=True)
 
 OURS, KEPT, DATA, NOTE = "#fbe3cf", "#e9e9e9", "#dfeef8", "#fff8d6"

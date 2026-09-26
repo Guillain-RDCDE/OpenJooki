@@ -278,7 +278,7 @@ release notes derived from it; firmware `version.json` as today.
 
 | Level | What | Runs |
 |---|---|---|
-| Unit (busted) | each service with fake adapters; the state machines exhaustively; property tests on library operations (no file lost, unused consistent, ids unique) | every push, < 1 min |
+| Unit (`core/spec/run.lua`, a dependency-free runner with the busted vocabulary) | each service with fake adapters; the state machines exhaustively; property tests on library operations (no file lost, unused consistent, ids unique) | every push, < 1 min |
 | Adapters | bus against a real mosquitto; files against a real disk (crash injection: kill between tmp and rename) | every push |
 | Contract | every v2 message against its schema; v1 translation table | every push |
 | Integration (the bench) | the whole core with the fake audio engine, real mosquitto, the page in Chromium: **the 179 checks of 1.3, rewritten to v2**, plus new ones | every push, ~6 min |

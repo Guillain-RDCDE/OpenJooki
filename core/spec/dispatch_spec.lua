@@ -1,0 +1,60 @@
+local dispatch = require("kernel.dispatch")
+local log = require("kernel.log")
+
+describe("kernel.dispatch", function()
+  local now
+  before_each(function()
+    now = 0
+    log.configure({ level = "error", sinks = {}, clock = function() return now end })
+    dispatch.reset({ budget = 3, clock = function() return now end })
+  end)
+
+  it("routes an event to its handlers and merges their results in order", function()
+    dispatch.on("nfc.tag", "tokens", function(doc, ev) return { state = { tokens = { last = ev.uid } }, commands = { { kind = "a" } } } end)
+    dispatch.on("nfc.tag", "playback", function(doc, ev) return { commands = { { kind = "b" } } } end)
+    local changes, commands, errors = dispatch.handle({}, { type = "nfc.tag", uid = "04AA" })
+    assert_eq(changes, { tokens = { last = "04AA" } })
+    assert_eq(commands, { { kind = "a" }, { kind = "b" } })
+    assert_eq(errors, {})
+  end)
+
+  it("ignores events nobody handles", function()
+    local changes, commands = dispatch.handle({}, { type = "nothing" })
+    assert_eq(changes, {}); assert_eq(commands, {})
+  end)
+
+  it("isolates a failing handler and keeps the others running", function()
+    dispatch.on("t", "bad", function() error("boom") end)
+    dispatch.on("t", "good", function() return { commands = { { kind = "ok" } } } end)
+    local _, commands, errors = dispatch.handle({}, { type = "t" })
+    assert_eq(commands, { { kind = "ok" } })
+    assert_eq(#errors, 1)
+    assert_match(errors[1].err, "boom")
+    assert_false(errors[1].disabled)
+  end)
+
+  it("disables a handler over its error budget, re-enables nothing until restart", function()
+    dispatch.on("t", "bad", function() error("boom") end)
+    for _ = 1, 3 do dispatch.handle({}, { type = "t" }) end
+    assert_false(dispatch.disabled("bad"))
+    local _, _, errors = dispatch.handle({}, { type = "t" })
+    assert_true(errors[1].disabled)
+    assert_true(dispatch.disabled("bad"))
+    local _, _, errors2 = dispatch.handle({}, { type = "t" })
+    assert_eq(errors2, {})
+    now = 120
+    assert_true(dispatch.disabled("bad"))
+  end)
+
+  it("treats a non-table result as a failure", function()
+    dispatch.on("t", "odd", function() return 42 end)
+    local _, _, errors = dispatch.handle({}, { type = "t" })
+    assert_eq(errors[1].err, "bad result type")
+  end)
+
+  it("lists the event types it knows", function()
+    dispatch.on("b", "m", function() end)
+    dispatch.on("a", "m", function() end)
+    assert_eq(dispatch.event_types(), { "a", "b" })
+  end)
+end)

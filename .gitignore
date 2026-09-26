@@ -31,3 +31,6 @@ tools/openjooki/tests/player*.lua
 tools/openjooki/tests/player.lib
 tools/openjooki/tests/media/
 tools/openjooki/tests/shots/
+
+# 2.0 core build output (tools/build/bundle.py)
+/build/

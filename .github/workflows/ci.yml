@@ -1,0 +1,38 @@
+name: core
+
+on:
+  push:
+    paths: ["core/**", "tools/build/**", ".github/workflows/ci.yml"]
+  pull_request:
+    paths: ["core/**", "tools/build/**", ".github/workflows/ci.yml"]
+
+jobs:
+  core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto luacheck python3-paho-mqtt
+      - name: Unit specs
+        run: lua5.1 core/spec/run.lua
+      - name: Lint (no globals, no unused)
+        run: luacheck core
+      - name: Build (size budget)
+        run: python3 tools/build/bundle.py --max-kib 160
+      - name: Broker
+        run: |
+          printf 'listener 1883 127.0.0.1\nallow_anonymous true\nlistener 8000\nprotocol websockets\n' > /tmp/m.conf
+          mosquitto -c /tmp/m.conf -d
+          sleep 1
+      - name: Bus integration
+        run: lua5.1 core/spec/run.lua core/spec/integration/bus_spec.lua
+      - name: Smoke (boot, contract, budgets)
+        run: python3 core/spec/integration/smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: core-build
+          path: build/

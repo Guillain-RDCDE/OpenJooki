@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenJooki · a bigger SD card</title>
+<meta name="description" content="Move your Jooki to a bigger SD card with a Windows computer: one file, nothing to install.">
+<style>
+  :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee}
+  @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333}}
+  *{box-sizing:border-box}
+  body{margin:0;font:17px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:0 20px 60px}
+  main{max-width:620px;margin:0 auto}
+  h1{color:var(--accent);font-size:1.8em;margin:.8em 0 .05em;text-align:center}
+  .sub{color:var(--muted);margin:0 0 1.4em;text-align:center}
+  img{display:block;width:100%;max-width:576px;margin:0 auto;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.18)}
+  .cap{color:var(--muted);font-size:.85em;text-align:center;margin:8px 0 0}
+  .btn{display:block;text-decoration:none;text-align:center;background:var(--accent);color:#fff;padding:17px;border-radius:12px;font-weight:700;margin:26px auto 6px;font-size:1.15em;max-width:460px}
+  .tiny{color:var(--muted);font-size:.82em;text-align:center;margin:0}
+  h2{font-size:1.15em;margin:1.8em 0 .4em}
+  ol,ul{padding-left:1.3em}li{margin:.35em 0}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.92em;margin-top:1.6em}
+  a{color:var(--accent)}
+  footer{color:var(--muted);font-size:.78em;text-align:center;margin-top:40px}
+</style>
+</head>
+<body>
+<main>
+  <h1>A bigger SD card</h1>
+  <p class="sub">Out of room for music? Move your Jooki to a bigger card with a Windows computer. One file, nothing to install.</p>
+
+  <img src="img/sdcard-tool.png" alt="The window of the tool: step 1, the Jooki's card, chosen in the list of card readers" width="576" height="369">
+  <p class="cap">The window, in English or French like your Windows.</p>
+
+  <a class="btn" href="Jooki-SD-card.cmd" download>Download the tool</a>
+  <p class="tiny">Windows 10 or 11 · a card reader · about 8 GB free in Documents</p>
+
+  <h2>How it goes</h2>
+  <ol>
+    <li>Take the SD card out of the Jooki and put it in the computer.</li>
+    <li>Double-click the file and say <b>Yes</b> when Windows asks for permission.</li>
+    <li>The tool reads the Jooki's card, then asks for the new one: it copies everything,
+      checks every byte, and gives the music all the space of the new card.</li>
+    <li>Put the new card in the Jooki: at the first start it uses all the space by itself.</li>
+  </ol>
+
+  <h2>Nothing to lose</h2>
+  <ul>
+    <li>The Jooki's card is only <b>read</b>, never written: keep it, it is your way back.</li>
+    <li>A copy of it is kept in your Documents.</li>
+    <li>Only card readers are offered, never your computer's disks, and the new card is
+      confirmed by name and size before it is erased.</li>
+  </ul>
+
+  <p class="note">New tool: checked on disk images, including the real layout of a Jooki's
+    card stretched to 32 GB. Cards up to 32 GB are the same kind as the Jooki's own; bigger
+    ones have not been tried in a Jooki yet. How it works:
+    <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/sdcard">tools/sdcard</a>.</p>
+
+  <footer><a href="./">OpenJooki</a> · community firmware for the Jooki v2 · not affiliated with the original maker</footer>
+</main>
+</body>
+</html>

@@ -13,7 +13,8 @@ The Jooki v2 keeps everything on a micro SD card inside it: 8 GB, of which about
 
 ## How to
 
-1. Download [`Jooki-SD-card.cmd`](Jooki-SD-card.cmd) (on GitHub: *Download raw file*).
+1. Download it from **[the tool's page](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)**
+   (the file itself: [`docs/Jooki-SD-card.cmd`](../../docs/Jooki-SD-card.cmd)).
 2. Open the Jooki and take its card out.
 3. Double-click the file and say **Yes** when Windows asks for permission (it needs it
    to read and write cards). Then follow the window:

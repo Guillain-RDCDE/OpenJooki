@@ -24,6 +24,8 @@ exit /b
 # Only removable cards and USB disks are offered, never a system disk. The source must have
 # the Jooki's layout; the target must be bigger; the target's name and size are confirmed.
 # Bench: JOOKI_SD_TEST="clone|<src.img>|<dst.img>" or "grow|<dst.img>" runs on files, no window.
+# Docs: JOOKI_SD_PREVIEW=<file.png> draws the window and closes it (JOOKI_SD_DEMO=1: an example
+# card reader in the list, JOOKI_SD_LANG=en|fr); nothing is read or written then.
 # ----------------------------------------------------------------------------------------------
 $ErrorActionPreference = 'Stop'
 
@@ -176,7 +178,7 @@ public static class JookiSd {
 }
 '@
 
-$fr = (Get-UICulture).TwoLetterISOLanguageName -eq 'fr'
+$fr = if ($env:JOOKI_SD_LANG) { $env:JOOKI_SD_LANG -eq 'fr' } else { (Get-UICulture).TwoLetterISOLanguageName -eq 'fr' }
 function T([string]$en, [string]$fra) { if ($fr) { $fra } else { $en } }
 $Chunk = 4MB
 
@@ -254,7 +256,10 @@ function Get-Cards {
         ($_.BusType -in 'SD', 'MMC' -or ($_.BusType -eq 'USB' -and $removable -contains [int]$_.Number))
     } | Sort-Object Number
 }
-function Label-Of($d) { "{0}  ·  {1:N1} {2}" -f $d.FriendlyName, ($d.Size / 1e9), (T "GB" "Go") }
+# numbers written like the interface's language (7,9 Go / 7.9 GB), whatever Windows' own settings
+$Nums = if ($fr) { [Globalization.CultureInfo]::GetCultureInfo('fr-FR') } else { [Globalization.CultureInfo]::InvariantCulture }
+function Fmt([string]$f) { [string]::Format($Nums, $f, $args) }
+function Label-Of($d) { Fmt "{0}  ·  {1:N1} {2}" $d.FriendlyName ($d.Size / 1e9) (T "GB" "Go") }
 
 $form = New-Object Windows.Forms.Form
 $form.Text = T "Jooki: move to a bigger SD card" "Jooki : passer à une plus grande carte SD"
@@ -274,12 +279,13 @@ $info = New-Object Windows.Forms.Label; $info.Location = '20,280'; $info.Size = 
 $form.Controls.AddRange(@($title, $text, $combo, $refresh, $go, $bar, $info))
 
 $state = @{ step = 1; image = $null; srcBytes = 0 }
-$progress = { param($done, $total) $bar.Value = [int](1000 * $done / $total); $info.Text = "{0:N1} / {1:N1} {2}" -f ($done / 1e9), ($total / 1e9), (T "GB" "Go"); [Windows.Forms.Application]::DoEvents() }
+$progress = { param($done, $total) $bar.Value = [int](1000 * $done / $total); $info.Text = Fmt "{0:N1} / {1:N1} {2}" ($done / 1e9) ($total / 1e9) (T "GB" "Go"); [Windows.Forms.Application]::DoEvents() }
 $status = { param($m) $title.Text = $m; [Windows.Forms.Application]::DoEvents() }
 
 function Fill-Cards {
     $combo.Items.Clear()
-    foreach ($d in Get-Cards) { $combo.Items.Add([pscustomobject]@{ Disk = $d; Text = (Label-Of $d) }) | Out-Null }
+    $cards = if ($env:JOOKI_SD_DEMO -and $env:JOOKI_SD_PREVIEW) { @([pscustomobject]@{ FriendlyName = 'Generic SD/MMC Card Reader'; Size = 7948206080; Number = -1 }) } else { Get-Cards }   # picture for the docs
+    foreach ($d in $cards) { $combo.Items.Add([pscustomobject]@{ Disk = $d; Text = (Label-Of $d) }) | Out-Null }
     $combo.DisplayMember = 'Text'
     if ($combo.Items.Count) { $combo.SelectedIndex = 0 }
     $go.Enabled = $combo.Items.Count -gt 0
@@ -313,7 +319,7 @@ $go.Add_Click({
         if ($state.step -eq 1) {
             $dir = [Environment]::GetFolderPath('MyDocuments')
             $free = (New-Object IO.DriveInfo ([IO.Path]::GetPathRoot($dir))).AvailableFreeSpace
-            if ($free -lt $d.Size + 500MB) { throw ((T "Not enough free space in Documents: {0:N1} GB needed." "Pas assez de place dans Documents : il faut {0:N1} Go.") -f (($d.Size + 500MB) / 1e9)) }
+            if ($free -lt $d.Size + 500MB) { throw (Fmt (T "Not enough free space in Documents: {0:N1} GB needed." "Pas assez de place dans Documents : il faut {0:N1} Go.") (($d.Size + 500MB) / 1e9)) }
             $src = [JookiSd]::Open("\\.\PhysicalDrive$($d.Number)", $false)
             try {
                 try { [JookiSd]::CheckJooki([JookiSd]::ReadAt($src, 0, 34)) | Out-Null }

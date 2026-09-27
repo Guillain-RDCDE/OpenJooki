@@ -44,6 +44,16 @@ some phones search the web instead.
 
 Tip: add the page to your home screen to open it in one tap.
 
+## More room for music: a bigger SD card
+
+The Jooki keeps its music on a small SD card inside it (about 5 GB free for music).
+With a Windows computer you can move everything to a **bigger card**, in a few clicks:
+one file to download, nothing to install, and the Jooki's own card is never changed.
+
+**[→ The bigger SD card tool](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)**
+
+[![The bigger SD card tool](docs/img/sdcard-tool.png)](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)
+
 ## Questions
 
 - **Will I lose my music or my tokens?** No. They live on a part of the Jooki
@@ -51,9 +61,6 @@ Tip: add the page to your home screen to open it in one tap.
 - **What if something goes wrong?** Unplug the Jooki and plug it back in: it goes
   back to the previous version by itself.
 - **Can anyone outside my home see my Jooki?** No. No account, no cloud, no tracking.
-- **Running out of space?** Move it to a bigger SD card with a Windows computer:
-  [one file, nothing to install](tools/sdcard/README.md).
-
 ## Coming next
 
 **OpenJooki 2.0** is being tested on a family Jooki: it starts faster, and you can

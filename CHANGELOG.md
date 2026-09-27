@@ -1,5 +1,16 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.0.1 (27 September 2026) — an update you can follow
+- **While updating from the Jooki's page**: the steps in plain words under the
+  spinner (looking for the new version, downloading with its percentage, checking,
+  installing, checking the installation, restarting), instead of the installer's own
+  output (the download meter was copied as is: unreadable and frightening on a phone).
+- **No false "the update could not be done"**: a short loss of the connection while
+  the Jooki is busy writing is no longer taken for a restart; the page waits for the
+  installer to announce the restart, and recognises the new version when it comes
+  back even if it missed that line. Seen on our Jooki: the page said the update had
+  failed while it was still checking what it had written, then went on and succeeded.
+
 ## OpenJooki 2.0.0 (27 September 2026) — a brand new program inside
 - **Our own program for the Jooki**, rewritten from scratch in readable Lua, in
   place of the original one: one event loop, pure handlers, all input and output

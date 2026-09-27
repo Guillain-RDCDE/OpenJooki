@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.0';
+  var VERSION = '2.0.1';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -96,6 +96,7 @@
       upd_rebooting: 'Le Jooki redémarre sur la nouvelle version…', upd_done: function (v) { return 'Jooki mis à jour : OpenJooki ' + v; },
       upd_failed: 'La mise à jour n\'a pas pu se faire. Ton Jooki n\'a pas changé.', upd_banner: function (v) { return 'Mise à jour ' + v + ' disponible'; },
       upd_see: 'Voir',
+      upd_steps: ['Recherche de la nouvelle version', 'Téléchargement', 'Vérification du téléchargement', 'Installation (ne débranche pas le Jooki)', 'Vérification de l\'installation', 'Redémarrage sur la nouvelle version'],
       bedtime: 'Heure du coucher', sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
       sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre',
       sleep_left: function (s) { return 'Arrêt dans ' + s; }, sleep_at_end: 'Arrêt à la fin de ce morceau',
@@ -196,6 +197,7 @@
       upd_rebooting: 'The Jooki is restarting on the new version…', upd_done: function (v) { return 'Jooki updated: OpenJooki ' + v; },
       upd_failed: 'The update could not be done. Your Jooki has not changed.', upd_banner: function (v) { return 'Update ' + v + ' available'; },
       upd_see: 'Show',
+      upd_steps: ['Looking for the new version', 'Downloading', 'Checking the download', 'Installing (keep the Jooki plugged in)', 'Checking the installation', 'Restarting on the new version'],
       bedtime: 'Bedtime', sleep_timer: 'Sleep timer', sleep_off: 'Off',
       sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
       sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
@@ -1160,7 +1162,7 @@
   function startUpdate() {
     confirmBox(t('upd_q', upd.latest), t('upd_text'), t('upd_now'), false).then(function (ok) {
       if (!ok) return;
-      upd.state = 'running'; upd.lines = ''; upd.startedFrom = installed();
+      upd.state = 'running'; upd.lines = ''; upd.startedFrom = installed(); upd.step = 0; upd.pct = null; upd.reboot = false;
       send('OJ_UPDATE_START', {});
       render();
       setTimeout(function poll() {
@@ -1168,16 +1170,45 @@
         getText('/oj-status.txt', function (txt) {
           if (txt) {
             upd.lines = txt;
+            var p = updProgress(txt);
+            upd.step = p.step; upd.pct = p.pct;
+            // what the installer wrote before it asked for the reboot: later lines come from a dying process
+            var before = txt.split('REBOOT_NOW')[0];
             if (/already up to date/i.test(txt)) { upd.state = 'checked'; toast(t('upd_uptodate')); render(); return; }
-            if (/ERROR|SAFETY|INVALID|not performed|did not complete|download failed|no network|invalid manifest/i.test(txt) && !/retry/i.test(txt.split('\n').filter(Boolean).pop() || '')) {
+            if (!p.reboot && /ERROR|SAFETY|INVALID|not performed|did not complete|download failed|no network|invalid manifest/i.test(before) && !/retry/i.test(before.split('\n').filter(Boolean).pop() || '')) {
               upd.state = 'failed'; render(); return;
             }
+            upd.reboot = p.reboot;
           }
           render();
           setTimeout(poll, 3000);
         });
       }, 1500);
     });
+  }
+  // The installer's report (oj-status.txt, its own words and curl's meter) -> which step, how far.
+  // Steps: 0 looking, 1 downloading, 2 checking the download, 3 installing, 4 checking the install, 5 restarting.
+  function updProgress(txt) {
+    var step = 0, pct = null, lines = txt.split(/[\r\n]+/), dl = false;
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      if (/downloading/i.test(l)) { step = Math.max(step, 1); dl = true; }
+      else if (/verifying sha256|image intact/i.test(l)) { step = Math.max(step, 2); dl = false; }
+      else if (/A\/B install|writing to spare/i.test(l)) { step = Math.max(step, 3); dl = false; }
+      else if (/bit-for-bit|bit-perfect/i.test(l)) step = Math.max(step, 4);
+      else if (/arming|commit-on-boot|REBOOT_NOW/i.test(l)) step = Math.max(step, 5);
+      var m = dl && /^\s*(\d{1,3})\s+\d+(\.\d+)?[kMG]?\s+\d{1,3}\s/.exec(l);   // curl: "  8 40.0M  8 3293k ..."
+      if (m) pct = Math.min(100, +m[1]);
+    }
+    return { step: step, pct: step === 1 ? pct : null, reboot: /REBOOT_NOW/.test(txt) };
+  }
+  function updSteps() {
+    var names = t('upd_steps'), cur = upd.state === 'rebooting' ? 5 : (upd.step || 0);
+    return h('ol', { class: 'updsteps' }, names.map(function (n, i) {
+      var done = i < cur, now = i === cur;
+      return h('li', { class: done ? 'done' : now ? 'now' : '' }, h('span', { class: 'mark' }, done ? '✓' : now ? '•' : ''),
+        h('span', null, n + (now && i === 1 && upd.pct !== null ? ' … ' + upd.pct + ' %' : now ? '…' : '')));
+    }));
   }
   function updateCard() {
     var cur = installed();
@@ -1187,12 +1218,11 @@
     else if (upd.state === 'failed') status = t('upd_failed');
     else if (upd.state === 'checked') status = updateAvailable() ? t('upd_available', upd.latest) : t('upd_uptodate');
     if (upd.state === 'running' || upd.state === 'rebooting') {
-      var last = (upd.lines || '').split('\n').filter(Boolean).pop() || '';
       return h('div', { class: 'card', style: 'padding:16px', 'data-k': 'updcard' },
         h('div', { class: 'row' }, h('div', { class: 'spinner', style: 'width:28px;height:28px;border-width:3px;margin:0' }),
           h('b', { class: 'grow' }, upd.state === 'rebooting' ? t('upd_rebooting') : t('upd_running'))),
-        h('p', { class: 'small muted' }, t('upd_keep')),
-        last ? h('p', { class: 'small', style: 'font-family:ui-monospace,monospace;word-break:break-word' }, last.replace(/^\[[^\]]*\]\s*/, '')) : null);
+        updSteps(),
+        h('p', { class: 'small muted' }, t('upd_keep')));
     }
     if (upd.state === 'checked' && updateAvailable()) action = h('button', { class: 'btn primary block', 'data-k': 'updnow', onclick: startUpdate }, icon('upload'), t('upd_now'));
     else action = h('button', { class: 'btn block', 'data-k': 'updcheck', disabled: upd.state === 'checking' || !cur, onclick: checkUpdate }, t('upd_check'));
@@ -1201,11 +1231,17 @@
   }
   var lastOnline = true, backAt = 0;
   function watchUpdateReconnect() {
-    if (upd.state === 'running' && !online && lastOnline) upd.state = 'rebooting';
+    // only once the installer has asked for the reboot: before that, a lost connection (a busy Jooki,
+    // a hiccup of the Wi-Fi) is not a restart, and the report is simply read again when it comes back
+    if (upd.state === 'running' && !online && lastOnline && upd.reboot) upd.state = 'rebooting';
+    var busy = upd.state === 'running' || upd.state === 'rebooting';
+    // back with the new version: done, whether or not we saw the "restarting" line (read every 3 s)
+    if (busy && online && gotState && installed() && installed() !== upd.startedFrom) {
+      upd.state = 'checked'; toast(t('upd_done', installed())); upd.latest = installed(); backAt = 0;
+    }
+    // back with the old version after an announced restart: the Jooki went back on its own
     if (upd.state === 'rebooting' && online && gotState && installed()) {
-      if (installed() !== upd.startedFrom) {
-        upd.state = 'checked'; toast(t('upd_done', installed())); upd.latest = installed(); backAt = 0;
-      } else if (!backAt) {
+      if (!backAt) {
         backAt = Date.now();
         setTimeout(function () { if (upd.state === 'rebooting' && installed() === upd.startedFrom) { upd.state = 'failed'; render(); } }, 90000);
       }

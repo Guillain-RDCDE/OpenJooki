@@ -323,6 +323,14 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
 .wifi-fair { color: var(--accent); font-weight: 600; }
 .wifi-weak { color: var(--danger); font-weight: 600; }
 
+/* update in progress: the steps in plain words, instead of the installer's own output */
+.updsteps { list-style: none; margin: 14px 0 6px; padding: 0; }
+.updsteps li { display: flex; gap: 10px; align-items: baseline; padding: 3px 0; color: var(--muted); font-size: 15px; }
+.updsteps .mark { width: 18px; flex: none; text-align: center; font-weight: 700; }
+.updsteps li.done { color: var(--text); }
+.updsteps li.done .mark { color: var(--ok); }
+.updsteps li.now { color: var(--accent); font-weight: 700; }
+
 /* large screens: the whole app (menu, content, player bar) in a centred column, 80 % of the width */
 @media (min-width: 1400px) {
   :root { --frame-w: 80vw; --frame-l: calc((100vw - var(--frame-w)) / 2); --outer: #ebe7e1; }

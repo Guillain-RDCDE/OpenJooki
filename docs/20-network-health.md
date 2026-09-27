@@ -30,10 +30,16 @@ configuration is kept as `/etc/syslog-ng/syslog-ng.conf.openjooki-orig`.
 **A name instead of an address.** The Jooki answers mDNS for its own name,
 `<hostname>.local` (for example `jooki2-0426e8.local`, shown in Settings): the
 page opens at `http://jooki2-0426e8.local/` from macOS, iOS, Windows 10+ and
-recent Android, even when the router gives the Jooki another address. A shorter
-`jooki.local` is not possible: the Jooki's web server (`web_ctrl`, closed)
-serves only its own name and redirects any other one to Muuselabs' dead setup
-site. IPv6 queries get the standard "IPv4 only" answer (NSEC), so browsers do
+recent Android, even when the router gives the Jooki another address. An
+*extra* name (alias) is not possible: the Jooki's web server (`web_ctrl`,
+closed) serves only the system's own hostname and redirects any other one to
+Muuselabs' dead setup site. So with the 2.0 core the name itself can be
+**changed** (Settings > Name > Rename, command `OJ_SET_NAME` / `device.set_name`):
+lower-case letters, digits and inner hyphens, applied at once and kept in
+`/data/openjooki/hostname`. At boot `ml-jooki-hostname.sh` applies it, and so
+does the last sysinit line of `/etc/inittab` (it used to set the factory name
+again after rcS). `/etc/hostname` always keeps the factory name, which stays
+the device id. After a rename the old address stops answering. IPv6 queries get the standard "IPv4 only" answer (NSEC), so browsers do
 not wait 5 s for an IPv6 address. The responder shares UDP 5353 with
 `spotify_ctrl`'s own (which only announces `A8:EE:C6:04:26:E8.local`); if the
 port could not be shared the Jooki simply works without the name.

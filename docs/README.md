@@ -95,10 +95,10 @@ page (the 1.x one is kept), atomic data files shared with 1.x.
   the contract, generated from the code: [api-v2.md](api-v2.md); the code: [core/](../core/README.md).
 - The test bench of 1.x is the oracle: its integration checks pass unchanged on
   the new core, in CI, with the core's own unit specs, lint, size and memory budgets.
-- **Running on a family Jooki since 27 September 2026**: it starts faster than 1.x,
-  reads the charger at boot, lets the family choose the Jooki's network name, and
-  gives the page a proper home-screen icon. A factory Jooki's data was checked to
-  survive the move to 2.0 and the way back. Not in a release yet.
+- **Released as OpenJooki 2.0.0 on 27 September 2026**, after a day on a family Jooki:
+  it starts faster than 1.x, lets the family choose the Jooki's network name, and gives
+  the page a proper home-screen icon. A factory Jooki's data was checked to survive the
+  move to 2.0 and the way back.
 
 ## Layout
 

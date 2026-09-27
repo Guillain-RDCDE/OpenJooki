@@ -1,36 +1,34 @@
 # OpenJooki — Changelog
 
-## Core 2.0 (in development, `core/`) — the application rewritten
-- Our own application for the Jooki, readable Lua built into the Jooki's
-  format: one event loop, pure handlers, all I/O behind adapters, a versioned
-  contract (v2) with the page and the v1 contract kept, atomic data files
-  shared with 1.x. Design: `docs/21-architecture-2.0.md`; what it replaces:
-  `docs/22-core-inventory.md`; decisions: `docs/adr/`.
-- Phases 1–3 done on the bench: the integration checks of the 1.x bench
-  (backend, bedtime, network, page) pass unchanged on the new core, with the
-  core's own unit specs, lint, size budget and an endurance run, all in CI.
-- Spotify Connect and Deezer kept (optional `streaming` module, ADR-0009).
-  The v2 contract is documented from the code in `docs/api-v2.md`.
-- **Phase 5 started on 27 September 2026: running on a family Jooki** (A/B
-  install, the previous version kept on the other partition). Found and done there:
-  - **Faster start**: ready about 2 s sooner than 1.x. The player no longer waits
-    1 s at boot (the core repeats its orders to the Wi-Fi/NFC chip until it
-    answers, so tokens can never stay deaf), and the web server's folders are
-    prepared in the background.
-  - **Plugged in = never switches itself off**: the charger is read at boot, as
-    1.x did (2.0 had lost it: a Jooki switched on while plugged in turned itself
-    off after 15 minutes of silence).
-  - **A name of your own** for the Jooki on the network (Settings → Name →
-    Rename, e.g. `http://jooki.local`), kept across updates and restarts.
-  - **A home-screen icon** of our own and a web app manifest: full screen on
-    iPhone, a sharp icon on Android.
-  - **The page on large screens** sits in a centred column.
-  - Boot timeline measured on the device (each start-up script in `dmesg`, the
-    core's own steps in its state).
-- A factory Jooki's data was checked to survive the move to 2.0 and the way back
-  to the factory program; release images no longer carry the name and MAC address
-  of the Jooki they were made from.
-- Not in a release yet: 24 h run, forced rollback test and a week of family use first.
+## OpenJooki 2.0.0 (27 September 2026) — a brand new program inside
+- **Our own program for the Jooki**, rewritten from scratch in readable Lua, in
+  place of the original one: one event loop, pure handlers, all input and output
+  behind adapters, a versioned contract (v2) with the page and the 1.x one kept,
+  atomic data files shared with 1.x. Design: `docs/21-architecture-2.0.md`; what it
+  replaces: `docs/22-core-inventory.md`; decisions: `docs/adr/`; the contract,
+  generated from the code: `docs/api-v2.md`.
+- **Faster start**: ready about a third sooner than 1.x (about 6.5 s instead of 8.9 s
+  after the kernel on our Jooki). The player no longer waits 1 s at boot (the core
+  repeats its orders to the Wi-Fi/NFC chip until it answers, so tokens never stay
+  deaf), and the web server's folders are prepared in the background.
+- **A name of your own** for the Jooki on the network (Settings → Name → Rename, e.g.
+  `http://jooki.local`), kept across updates and restarts.
+- **A home-screen icon** of our own and a web app manifest: full screen on iPhone, a
+  sharp icon on Android.
+- **The page on large screens** sits in a centred column.
+- Everything 1.3.0 does is kept: the integration checks of the 1.x bench (backend,
+  bedtime, network, page) pass unchanged on the new program, with its own unit specs,
+  lint, size and memory budgets and an endurance run, all in CI. Spotify Connect and
+  Deezer kept (optional `streaming` module, ADR-0009).
+- Checked on a family Jooki since the morning of the release (six A/B installs, boot
+  timeline measured in `dmesg` and in the program's own state, memory within budget),
+  and a factory Jooki's data checked to survive the move to 2.0 and the way back to
+  the factory program. Found and fixed on the device: a Jooki switched on while
+  plugged in used to believe it was on battery (the charger is now read at boot).
+- Release images no longer carry the name and MAC address of the Jooki they were
+  made from.
+- **A bigger SD card** (not part of the firmware): tools for Windows, Mac and Linux,
+  https://guillain-rdcde.github.io/OpenJooki/sdcard.html
 
 ## Firmware 1.3.0 (26 September 2026) — bedtime
 - **Audiobooks resume where the child fell asleep**: chapter and position are

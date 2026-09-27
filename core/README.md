@@ -47,8 +47,9 @@ above on every push touching `core/`.
   Spotify Connect / Deezer ported as the optional `streaming` module (ADR-0009,
   best effort: bench-verified with a fake daemon, not against the services).
 - Phase 4 (Wi-Fi manager, Bluetooth rescue, security) → 2.1.
-- Phase 5 (a real Jooki: A/B install, 24 h, rollback): started 2026-09-27 — running
-  on a family Jooki; 24 h run, forced rollback and a week of use to come.
+- Phase 5 (a real Jooki: A/B install, 24 h, rollback): 2026-09-27, running on a family
+  Jooki; 24 h run, forced rollback and a week of use still to come.
+- Phase 6: released as OpenJooki 2.0.0 on 2026-09-27.
 
 Oracle on your machine: `tools/openjooki/tests` with `PLAYER_LUA=core` and
 `CORE_BUILD=<repo>/build` (see `start_player.sh`).

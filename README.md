@@ -51,6 +51,8 @@ Tip: add the page to your home screen to open it in one tap.
 - **What if something goes wrong?** Unplug the Jooki and plug it back in: it goes
   back to the previous version by itself.
 - **Can anyone outside my home see my Jooki?** No. No account, no cloud, no tracking.
+- **Running out of space?** Move it to a bigger SD card with a Windows computer:
+  [one file, nothing to install](tools/sdcard/README.md).
 
 ## Coming next
 

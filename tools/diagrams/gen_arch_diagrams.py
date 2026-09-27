@@ -54,18 +54,18 @@ class D:
 # 1. Context ------------------------------------------------------------------
 d = D(960, 545)
 d.text(20, 30, "The Jooki v2 at runtime: what we own, what we keep", "h")
-d.box(360, 60, 240, 90, "Web page", "phone or computer\n(ours, 1.x → 2.0)")
+d.box(360, 60, 240, 90, "Web page", "phone or computer\n(ours, served by the Jooki)")
 d.arrow([(480, 150), (480, 205)], "MQTT over WebSocket :8000\n+ HTTP /upload", both=True, ly=170)
-d.box(300, 205, 360, 120, "THE CORE (2.0)", "player.lib — application logic\nplaylists · tokens · playback · bedtime · network\nreadable open-source Lua, built into the Jooki format")
-d.box(40, 430, 880, 34, "MQTT bus — mosquitto :1883 (open on the LAN today; localhost in 2.0)", fill=KEPT, r=6)
+d.box(300, 205, 360, 120, "THE CORE (2.0)", "player.lib — application logic\nplaylists · tokens · playback · bedtime · uploads · update\nreadable open-source Lua, built into the Jooki format")
+d.box(40, 430, 880, 34, "MQTT bus — mosquitto :1883 and WebSocket :8000 (open on the home network, as in 1.x)", fill=KEPT, r=6)
 d.arrow([(565, 325), (565, 430)], "commands ↓   events ↑", both=True, lx=680, ly=352)
-kept = [("esp32_ctrl", "Wi-Fi · Bluetooth · NFC\n(ESP32 chip)"), ("gpio_ctrl", "buttons"), ("ht_ctrl", "lights"), ("audio_ctrl", "sound output\n(GStreamer, ALSA)"), ("web_ctrl", "HTTP server\nstatic files, /upload")]
+kept = [("esp32_ctrl", "Wi-Fi · Bluetooth\n· NFC (ESP32)"), ("gpio_ctrl", "buttons"), ("ht_ctrl", "lights, battery"), ("audio_ctrl", "sound output\n(GStreamer, ALSA)"), ("web_ctrl", "HTTP server\nfiles, /upload"), ("spotify_ctrl", "Spotify Connect\n(optional)")]
 for i, (n, sub) in enumerate(kept):
-    x = 40 + i * 178
-    d.box(x, 370, 160, 50, n, fill=KEPT, r=8)
-    d.text(x + 80, 484, sub, "s", "middle")
-for i in range(5):
-    x = 120 + i * 178
+    x = 40 + i * 148
+    d.box(x, 370, 136, 50, n, fill=KEPT, r=8)
+    d.text(x + 68, 484, sub, "s", "middle")
+for i in range(6):
+    x = 108 + i * 148
     d.arrow([(x, 430), (x, 420)])
 d.box(40, 60, 260, 90, "C host `player`", "loads player.lib (zlib, 200 KiB)\ngives 4 functions: ALSA volume,\nsyslog, terminating?, sd_notify", fill=KEPT, dash=True)
 d.arrow([(300, 105), (380, 205)], "runs")
@@ -97,10 +97,10 @@ d.text(20, 30, "Modules and the only dependency rule: arrows go down, never up",
 d.box(30, 60, 900, 70, "api  —  the contract with the page (v2, and v1 kept for compatibility)", "validates every message, maps it to a core command, publishes state and typed errors")
 d.box(30, 160, 900, 190, "", fill="#fdf1e6", dash=True)
 d.text(45, 182, "core services (plain Lua tables + functions, no I/O)", "t")
-mods = [("library", "playlists, tracks,\ntokens, unused"), ("playback", "state machine,\nqueue, resume"), ("tokens", "NFC → character\n→ playlist"), ("bedtime", "timer, fade,\nnight window"), ("device", "volume & limits,\nlights, power,\nbuttons"), ("network", "Wi-Fi manager,\nhealth, mDNS"), ("update", "check, start,\nrollback info")]
+mods = [("library", "playlists,\ntracks, tokens,\nunused"), ("playback", "state machine,\nqueue, resume"), ("tokens", "NFC →\ncharacter →\nplaylist"), ("bedtime", "timer, fade,\nnight window"), ("device", "volume, lights,\npower, buttons"), ("uploads", "page file →\nchecked track"), ("network", "Wi-Fi health,\nname (mDNS)"), ("update", "check, start\n(GitHub)"), ("streaming", "Spotify,\nDeezer\n(optional)")]
 for i, (n, sub) in enumerate(mods):
-    x = 45 + i * 126
-    d.box(x, 200, 116, 130, n, sub)
+    x = 45 + i * 98
+    d.box(x, 200, 92, 130, n, sub)
 d.box(30, 380, 430, 110, "ports & adapters (all I/O lives here)", "bus (MQTT)  ·  files (atomic JSON)  ·  clock  ·  host (ALSA, syslog)\nshell (the few scripts we still call)  ·  mdns (UDP socket)", fill=KEPT)
 d.box(500, 380, 430, 110, "kernel", "event loop, timers, dispatcher, structured log,\nconfig, schema versions & migrations")
 d.arrow([(480, 130), (480, 160)])
@@ -148,9 +148,9 @@ for i, (n, sub) in enumerate(files):
     d.box(30 + i * 155, 70, 140, 60, n, sub, fill=DATA, r=6)
 d.text(30, 160, "/jooki/external/jooki/  (data partition, untouched by firmware updates — 1.x and 2.0 read the same files, so a rollback keeps the library)", "s")
 d.box(30, 200, 170, 60, "1. write .tmp")
-d.box(230, 200, 170, 60, "2. fsync")
-d.box(430, 200, 170, 60, "3. rename over\nthe old file")
-d.box(630, 200, 170, 60, "4. keep .bak\n(previous version)")
+d.box(230, 200, 170, 60, "2. keep .bak\n(previous version)")
+d.box(430, 200, 170, 60, "3. rename .tmp\nover the file")
+d.box(630, 200, 170, 60, "4. sync to disk\n(at power-off)")
 for x in (200, 400, 600): d.arrow([(x, 230), (x + 30, 230)])
 d.box(830, 190, 100, 80, "on load", "schema version\n→ migrate", fill=NOTE)
 d.text(30, 300, "Read: file → if unreadable, .bak → if unreadable, empty database + loud log line (never a crash).\nWrite: only when something changed, at most once per second, and always before power-off.", "s")
@@ -159,7 +159,7 @@ d.save("06-storage.svg", "Storage")
 # 7. Delivery pipeline --------------------------------------------------------
 d = D(960, 300)
 d.text(20, 30, "From a source change to a child's Jooki: every step checked, every step reversible", "h")
-steps = [("sources", "readable Lua\nmodules + tests", OURS), ("build", "bundle · strip\n≤ 176 KiB check\ndeterministic", OURS), ("bench (CI)", "179+ checks on\nevery push\nreal mosquitto", OURS), ("release", "image + sha256\n+ version.json\nfrom a green commit", OURS), ("Jooki (A/B)", "spare partition\nrollback armed\nold core kept", KEPT)]
+steps = [("sources", "readable Lua\nmodules + tests", OURS), ("build", "bundle · strip\n≤ 176 KiB check\ndeterministic", OURS), ("test bench", "unit specs +\nthe full bench\nreal mosquitto", OURS), ("release", "image + sha256\n+ version.json\nfrom a green commit", OURS), ("Jooki (A/B)", "spare partition\nrollback armed\nold core kept", KEPT)]
 for i, (n, sub, f) in enumerate(steps):
     x = 30 + i * 186
     d.box(x, 80, 170, 100, n, sub, fill=f)
@@ -169,7 +169,7 @@ d.save("07-pipeline.svg", "Delivery pipeline")
 
 # 8. Wi-Fi safe switch --------------------------------------------------------
 d = D(960, 300)
-d.text(20, 30, "Changing access point without ever losing the Jooki", "h")
+d.text(20, 30, "Changing access point without ever losing the Jooki (planned for 2.1)", "h")
 steps = [("1. keep", "the working network\nstays configured"), ("2. add", "the new network is\nadded, not swapped"), ("3. try", "when idle: connect\nto the new one"), ("4. prove", "IP + page reachable\nfor 2 minutes"), ("5. prefer", "new one becomes\nthe first choice")]
 for i, (n, sub) in enumerate(steps):
     x = 30 + i * 186

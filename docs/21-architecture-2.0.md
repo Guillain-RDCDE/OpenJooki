@@ -202,13 +202,15 @@ with the breakdown (lookup, command, engine).
 - Files and formats of 1.x kept (ADR-0004) with `_.version` bumped to 2 where
   a field changes; migrations are functions `v1 → v2` tested on real copies
   (we keep anonymised snapshots of our library in the bench).
-- `adapters.files.write(path, table)`: encode, write `.tmp`, `fsync`, rename,
-  keep `.bak`; read: file → `.bak` → empty + error event. A checksum line in
-  `_` lets us detect truncation cheaply.
+- `adapters.files.write(path, table)`: encode, write `.tmp`, keep the old file
+  as `.bak`, rename `.tmp` over it; read: file → `.bak` → empty + error event.
+  A file that does not parse counts as missing, so a truncated write falls back
+  to `.bak`. There is no `fsync` per write: the filesystem commits on its own
+  within seconds, and a `sync` runs at shutdown.
 - Writes are coalesced (dirty set flushed at most once a second, always on
   shutdown and before power-off).
-- A nightly `self-check` event: free space, every track file present, orphan
-  files, database readable; result in `state.health`.
+- Not done yet: a nightly `self-check` event (free space, every track file
+  present, orphan files, database readable; result in `state.health`).
 - Track ids stay "first 16 hex of md5 of the file": that dedups uploads and
   keeps 1.x libraries valid. The md5 is computed in Lua streaming (no shell)
   — 4 MB/s on this CPU is enough for a 10 MB file in a few seconds, off the
@@ -301,7 +303,7 @@ bug.
 | 3 | bedtime, update, network (health, mDNS), api v1+v2 complete, optional `streaming` (ADR-0009) | **all 122 integration checks of the 1.x bench green on the new core** (38 + 24 + 13 + 47) + 134 unit specs; endurance run in CI; `docs/api-v2.md` generated from the code | done 2026-09-26 (24 h endurance: nightly) |
 | 4 | Wi-Fi manager + Bluetooth rescue page; security (§12) | new checks green; security review signed | → 2.1 |
 | 5 | our Jooki: A/B install, 24 h, rollback test, family use for a week | no regression, no data change, family approval | 2026-09-27: installed (A/B, six times), boot to ready about 6.5 s on the device (1.x: 8.9 s), RSS 2.9 MB; 24 h run, forced rollback and a week of use still to come after the release |
-| 6 | release 2.0 (old core kept on the spare partition for one release) | published; installer + OTA verified | published 2026-09-27 as 2.0.0 |
+| 6 | release 2.0 (old core kept on the spare partition for one release) | published; installer + OTA verified | published 2026-09-27 as 2.0.0, then 2.0.1 |
 
 Budgets measured on the bench at the end of phase 3: stripped bundle 160 KiB
 with streaming, 149 without (limit 176), boot to ready 20 ms, idle bus traffic 0 message/s, no shell

@@ -6,7 +6,7 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 .arrow2{stroke:#333;stroke-width:1.6;fill:none;marker-end:url(#a);marker-start:url(#b)}
 </style>
 <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#333"/></marker>
-<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="300" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">Changing access point without ever losing the Jooki</text>
+<marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="300" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">Changing access point without ever losing the Jooki (planned for 2.1)</text>
 <rect x="30" y="80" width="170" height="90" rx="10" fill="#fbe3cf" class="box"/>
 <text x="115" y="117" text-anchor="middle" class="t">1. keep</text>
 <text x="115" y="133" text-anchor="middle" class="s">the working network</text>

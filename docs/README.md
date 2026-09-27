@@ -98,7 +98,9 @@ page (the 1.x one is kept), atomic data files shared with 1.x.
 - **Released as OpenJooki 2.0.0 on 27 September 2026**, after a day on a family Jooki:
   it starts faster than 1.x, lets the family choose the Jooki's network name, and gives
   the page a proper home-screen icon. A factory Jooki's data was checked to survive the
-  move to 2.0 and the way back.
+  move to 2.0 and the way back. **2.0.1** (same day) makes the update screen show plain
+  steps instead of a raw download meter, and no longer reports a failed update on a
+  brief network drop.
 
 ## Layout
 

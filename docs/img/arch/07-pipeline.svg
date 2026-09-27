@@ -19,9 +19,9 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <text x="301" y="168" text-anchor="middle" class="s">deterministic</text>
 <path d="M386 130 L402 130" class="arrow"/>
 <rect x="402" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>
-<text x="487" y="122" text-anchor="middle" class="t">bench (CI)</text>
-<text x="487" y="138" text-anchor="middle" class="s">179+ checks on</text>
-<text x="487" y="153" text-anchor="middle" class="s">every push</text>
+<text x="487" y="122" text-anchor="middle" class="t">test bench</text>
+<text x="487" y="138" text-anchor="middle" class="s">unit specs +</text>
+<text x="487" y="153" text-anchor="middle" class="s">the full bench</text>
 <text x="487" y="168" text-anchor="middle" class="s">real mosquitto</text>
 <path d="M572 130 L588 130" class="arrow"/>
 <rect x="588" y="80" width="170" height="100" rx="10" fill="#fbe3cf" class="box"/>

@@ -10,7 +10,7 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <rect x="360" y="60" width="240" height="90" rx="10" fill="#fbe3cf" class="box"/>
 <text x="480" y="97" text-anchor="middle" class="t">Web page</text>
 <text x="480" y="113" text-anchor="middle" class="s">phone or computer</text>
-<text x="480" y="128" text-anchor="middle" class="s">(ours, 1.x → 2.0)</text>
+<text x="480" y="128" text-anchor="middle" class="s">(ours, served by the Jooki)</text>
 <path d="M480 150 L480 205" class="arrow2"/>
 <rect x="395" y="158" width="170" height="34" fill="#fff" rx="3"/>
 <text x="480" y="170" text-anchor="middle" class="s">MQTT over WebSocket :8000</text>
@@ -18,36 +18,41 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <rect x="300" y="205" width="360" height="120" rx="10" fill="#fbe3cf" class="box"/>
 <text x="480" y="257" text-anchor="middle" class="t">THE CORE (2.0)</text>
 <text x="480" y="273" text-anchor="middle" class="s">player.lib — application logic</text>
-<text x="480" y="288" text-anchor="middle" class="s">playlists · tokens · playback · bedtime · network</text>
+<text x="480" y="288" text-anchor="middle" class="s">playlists · tokens · playback · bedtime · uploads · update</text>
 <text x="480" y="303" text-anchor="middle" class="s">readable open-source Lua, built into the Jooki format</text>
 <rect x="40" y="430" width="880" height="34" rx="6" fill="#e9e9e9" class="box"/>
-<text x="480" y="447" text-anchor="middle" class="t">MQTT bus — mosquitto :1883 (open on the LAN today; localhost in 2.0)</text>
+<text x="480" y="447" text-anchor="middle" class="t">MQTT bus — mosquitto :1883 and WebSocket :8000 (open on the home network, as in 1.x)</text>
 <path d="M565 325 L565 430" class="arrow2"/>
 <rect x="607" y="340" width="144" height="19" fill="#fff" rx="3"/>
 <text x="680" y="352" text-anchor="middle" class="s">commands ↓   events ↑</text>
-<rect x="40" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
-<text x="120" y="395" text-anchor="middle" class="t">esp32_ctrl</text>
-<text x="120" y="484" text-anchor="middle" class="s">Wi-Fi · Bluetooth · NFC</text>
-<text x="120" y="501" text-anchor="middle" class="s">(ESP32 chip)</text>
-<rect x="218" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
-<text x="298" y="395" text-anchor="middle" class="t">gpio_ctrl</text>
-<text x="298" y="484" text-anchor="middle" class="s">buttons</text>
-<rect x="396" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
-<text x="476" y="395" text-anchor="middle" class="t">ht_ctrl</text>
-<text x="476" y="484" text-anchor="middle" class="s">lights</text>
-<rect x="574" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
-<text x="654" y="395" text-anchor="middle" class="t">audio_ctrl</text>
-<text x="654" y="484" text-anchor="middle" class="s">sound output</text>
-<text x="654" y="501" text-anchor="middle" class="s">(GStreamer, ALSA)</text>
-<rect x="752" y="370" width="160" height="50" rx="8" fill="#e9e9e9" class="box"/>
-<text x="832" y="395" text-anchor="middle" class="t">web_ctrl</text>
-<text x="832" y="484" text-anchor="middle" class="s">HTTP server</text>
-<text x="832" y="501" text-anchor="middle" class="s">static files, /upload</text>
-<path d="M120 430 L120 420" class="arrow"/>
-<path d="M298 430 L298 420" class="arrow"/>
-<path d="M476 430 L476 420" class="arrow"/>
-<path d="M654 430 L654 420" class="arrow"/>
-<path d="M832 430 L832 420" class="arrow"/>
+<rect x="40" y="370" width="136" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="108" y="395" text-anchor="middle" class="t">esp32_ctrl</text>
+<text x="108" y="484" text-anchor="middle" class="s">Wi-Fi · Bluetooth</text>
+<text x="108" y="501" text-anchor="middle" class="s">· NFC (ESP32)</text>
+<rect x="188" y="370" width="136" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="256" y="395" text-anchor="middle" class="t">gpio_ctrl</text>
+<text x="256" y="484" text-anchor="middle" class="s">buttons</text>
+<rect x="336" y="370" width="136" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="404" y="395" text-anchor="middle" class="t">ht_ctrl</text>
+<text x="404" y="484" text-anchor="middle" class="s">lights, battery</text>
+<rect x="484" y="370" width="136" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="552" y="395" text-anchor="middle" class="t">audio_ctrl</text>
+<text x="552" y="484" text-anchor="middle" class="s">sound output</text>
+<text x="552" y="501" text-anchor="middle" class="s">(GStreamer, ALSA)</text>
+<rect x="632" y="370" width="136" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="700" y="395" text-anchor="middle" class="t">web_ctrl</text>
+<text x="700" y="484" text-anchor="middle" class="s">HTTP server</text>
+<text x="700" y="501" text-anchor="middle" class="s">files, /upload</text>
+<rect x="780" y="370" width="136" height="50" rx="8" fill="#e9e9e9" class="box"/>
+<text x="848" y="395" text-anchor="middle" class="t">spotify_ctrl</text>
+<text x="848" y="484" text-anchor="middle" class="s">Spotify Connect</text>
+<text x="848" y="501" text-anchor="middle" class="s">(optional)</text>
+<path d="M108 430 L108 420" class="arrow"/>
+<path d="M256 430 L256 420" class="arrow"/>
+<path d="M404 430 L404 420" class="arrow"/>
+<path d="M552 430 L552 420" class="arrow"/>
+<path d="M700 430 L700 420" class="arrow"/>
+<path d="M848 430 L848 420" class="arrow"/>
 <rect x="40" y="60" width="260" height="90" rx="10" fill="#e9e9e9" class="box dash"/>
 <text x="170" y="97" text-anchor="middle" class="t">C host `player`</text>
 <text x="170" y="113" text-anchor="middle" class="s">loads player.lib (zlib, 200 KiB)</text>

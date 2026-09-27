@@ -11,6 +11,7 @@ what `jooki.py patch webui` applies on a live Jooki, and writes a new image:
   * /etc/syslog-ng/syslog-ng.conf    -> logs stay on the Jooki (tools/openjooki/system/);
                                         the original is kept as <file>.openjooki-orig
   * /etc/openjooki-version           -> the new version number
+  * /etc/hostname, /etc/mac          -> neutral (each Jooki writes its own at every boot)
 
 No mount and no root needed: it edits the ext4 image with `debugfs` (e2fsprogs),
 then checks it with `e2fsck -fn` and reads every written file back.
@@ -113,9 +114,12 @@ def main():
     for rel in OLD_FILES:
         p = PUB + "/" + rel
         if exists(out, p):
-            local = os.path.join(work, rel.replace("/", "_"))
-            open(local, "wb").write(cat(out, p))
-            put(out, local, ORIG + "/" + rel)
+            # the 2018 original is kept once, like jooki.py does: a later image must not
+            # replace it with the previous OpenJooki page of the same name
+            if not exists(out, ORIG + "/" + rel):
+                local = os.path.join(work, rel.replace("/", "_"))
+                open(local, "wb").write(cat(out, p))
+                put(out, local, ORIG + "/" + rel)
             dbg(out, ["rm " + p], write=True)
     for d in ("static/js", "static/css"):
         if exists(out, PUB + "/" + d):
@@ -145,6 +149,14 @@ def main():
     open(vf, "w").write(version + "\n")
     put(out, vf, "/etc/openjooki-version")
 
+    # --- no trace of the Jooki the base image was dumped from: its name and MAC address.
+    # Every Jooki writes its own into both files at each boot (ml-jooki-hostname.sh, S31).
+    NEUTRAL = {"/etc/hostname": b"jooki\n", "/etc/mac": b""}
+    for path, data in NEUTRAL.items():
+        local = os.path.join(work, os.path.basename(path) + ".neutral")
+        open(local, "wb").write(data)
+        put(out, local, path)
+
     # --- checks ---
     r = subprocess.run(["e2fsck", "-fn", out], capture_output=True, text=True)
     if r.returncode != 0:
@@ -154,6 +166,7 @@ def main():
         expect[PUB + "/" + f] = open(os.path.join(WEBUI, f), "rb").read()
     for path, f in sysfiles.items():
         expect[path] = open(os.path.join(SYSTEM_DIR, f), "rb").read()
+    expect.update(NEUTRAL)
     for path, data in expect.items():
         if hashlib.sha256(cat(out, path)).hexdigest() != hashlib.sha256(data).hexdigest():
             raise SystemExit("read-back mismatch: " + path)

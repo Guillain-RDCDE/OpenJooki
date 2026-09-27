@@ -19,7 +19,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.
 
 `device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `system`, `config`.
 
-## Commands (33)
+## Commands (34)
 
 ### `bedtime.set`
 
@@ -159,6 +159,26 @@ Payload schema:
       "type": "boolean"
     }
   },
+  "type": "object"
+}
+```
+
+### `device.set_name`
+
+
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "maxLength": 40,
+      "type": "string"
+    }
+  },
+  "required": ["name"],
   "type": "object"
 }
 ```

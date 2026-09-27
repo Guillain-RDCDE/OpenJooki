@@ -407,6 +407,31 @@ function device.on_boot(doc, ev)
                      limits = { maxvol = 100, fade = 1, dim = false } }, commands = cmds }
 end
 
+--- The Jooki's name on the network (name.local). web_ctrl, closed, serves only the system's own
+--- name and sends any other one to Muuselabs' dead setup site: so the name is changed, not aliased.
+--- "" goes back to the factory name (jooki2-XXXXXX, which stays the device id in /etc/hostname).
+function device.normalize_name(raw)
+  local n = tostring(raw or ""):lower():gsub("^%s+", ""):gsub("%s+$", ""):gsub("%.local$", "")
+  return n
+end
+-- same rule as the shell action set_name (which checks again): a-z, 0-9, inner hyphens, 1-32
+local function valid_name(s) return #s <= 32 and (s:match("^[a-z0-9]$") or s:match("^[a-z0-9][a-z0-9%-]*[a-z0-9]$")) ~= nil end
+function device.on_set_name(doc, raw)
+  local n = device.normalize_name(raw)
+  if n == "localhost" or not (n == "" or valid_name(n)) then
+    return nil, { code = "invalid_argument", field = "name", message = "invalid name (a-z, 0-9, -, 1 to 32 characters)" }
+  end
+  local d = copy(doc.device or {})
+  local effective = n ~= "" and n or tostring(d.id or ""):lower()
+  if effective == "" then return nil, { code = "unavailable", field = "name", message = "factory name unknown" } end
+  d.hostname = effective .. ".local"
+  local net = copy(doc.net or {})
+  net.name = d.hostname
+  return { state = { device = d, net = net },
+           commands = { { kind = "shell", action = "set_name", args = { name = n } },
+                        { kind = "log", level = "info", key = "device.name", fields = { name = effective } } } }
+end
+
 function device.on_timer(doc, ev)
   if ev.name == "device.inactivity" then return device.on_inactivity(doc, ev) end
   if ev.name == "device.tick" then return device.on_tick(doc, ev) end
@@ -422,6 +447,7 @@ local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 } }, additionalProperties = false }
 S.enable = { type = "object", required = { "enable" }, properties = { enable = { type = "boolean" } }, additionalProperties = false }
+S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 device.schemas = S
 
@@ -478,7 +504,8 @@ function device.install(api, dispatch)
     return { state = { audiocfg = a }, commands = { { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } } }
   end)
   api.command("device.toy_safe", S.enable, function(doc, p) return device.on_toy_safe(doc, { enable = p.enable }) end)
-  api.command("device.power_off", nil, function(_, _, ev) return device.on_off_request(nil, { reason = "page", now = ev.now }) end)
+  api.command("device.set_name", S.name, function(doc, p) return device.on_set_name(doc, p.name) end)
+  api.command("device.power_off", nil,function(_, _, ev) return device.on_off_request(nil, { reason = "page", now = ev.now }) end)
   api.command("device.set_wifi", S.wifi, function(_, p) return { commands = { { kind = "shell", action = "wifi_add", args = { ssid = p.ssid, password = p.password, lang = "EN" } } } } end)
   api.command("device.speak_info", nil, function() return { commands = { { kind = "shell", action = "speak_info" }, emit("playback.pause_request", { source = "speak_info" }) } } end)
 end

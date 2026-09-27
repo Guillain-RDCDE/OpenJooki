@@ -137,6 +137,19 @@ describe("adapters.shell", function()
   it("marks background actions", function()
     shell.run("speak_info", {})
     assert_true(calls[1].bg)
+    shell.run("setup_web_dirs", { data = "/jooki/external/jooki" })   -- 0.8 s on the device: never blocks the boot
+    assert_true(calls[2].bg)
+  end)
+
+  it("set_name: a checked network name, or empty for the factory name; anything else never runs", function()
+    assert_eq(shell.run("set_name", { name = "alexandre-2" }), "out")
+    assert_eq(calls[1].argv[#calls[1].argv], "alexandre-2")
+    assert_eq(shell.run("set_name", { name = "" }), "out")
+    for _, bad in ipairs({ "Jooki", "-jooki", "jooki-", "jo oki", "x;reboot", "a.local", string.rep("a", 33), 7 }) do
+      local o, e = shell.run("set_name", { name = bad })
+      assert_nil(o); assert_match(e, "bad name")
+    end
+    assert_eq(#calls, 2)
   end)
 end)
 

@@ -131,6 +131,11 @@ describe("api.v1", function()
     assert_eq(r.state.audiocfg.repeat_mode, 0); assert_true(r.state.audiocfg.shuffle_mode); assert_eq(r.commands[1].kind, "files.write")
     r = cmd(doc, "MESSAGE_DISMISS", { id = "a" })
     assert_match(r.commands[1].payload.msg, "invalid msg id")
+    doc.device = { id = "jooki2-0426E8" }
+    r = cmd(doc, "OJ_SET_NAME", { name = "Jooki" })
+    assert_eq(r.state.device.hostname, "jooki.local"); assert_eq(r.commands[1].action, "set_name")
+    r = cmd(doc, "OJ_SET_NAME", { name = "jo oki" })
+    assert_match(r.commands[1].payload.msg, "invalid name")
     doc.userMessages = { { id = 3, messageType = "UPLOAD_FAIL" } }
     r = cmd(doc, "MESSAGE_DISMISS", { id = 3 })
     assert_eq(r.state.userMessages, {})

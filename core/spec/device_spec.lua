@@ -180,6 +180,19 @@ describe("services.device — lights and toy safe", function()
     assert_nil(device.on_knobs(doc, { volume = 40 }))
   end)
 
+  it("set_name: normalizes, checks, changes device.hostname and net.name; empty = factory name", function()
+    local doc = doc_with({ net = { name = "jooki2-0426e8.local", ip = "10.0.0.2" } }); doc.device.id = "jooki2-0426E8"
+    local r = device.on_set_name(doc, "  Jooki.local ")
+    assert_eq(r.state.device.hostname, "jooki.local"); assert_eq(r.state.net.name, "jooki.local"); assert_eq(r.state.net.ip, "10.0.0.2")
+    assert_eq(r.commands[1].action, "set_name"); assert_eq(r.commands[1].args.name, "jooki")
+    r = device.on_set_name(doc, "")
+    assert_eq(r.state.device.hostname, "jooki2-0426e8.local"); assert_eq(r.commands[1].args.name, "")
+    for _, bad in ipairs({ "jo oki", "-a", "a-", "localhost", "x;reboot", string.rep("a", 33) }) do
+      local ok, err = device.on_set_name(doc, bad)
+      assert_nil(ok); assert_eq(err.code, "invalid_argument")
+    end
+  end)
+
   it("boot reads the charger: plugged in at start never powers off for inactivity, and no cable sound", function()
     local r = device.on_boot(doc_with(), { audiocfg = {}, flags = {}, now = 5, plugged = "1" })
     assert_true(r.state.power.connected)

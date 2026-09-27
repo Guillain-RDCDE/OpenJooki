@@ -152,6 +152,7 @@ timers.every("health", 60, clock.now())
 
 -- boot: scratch directory, the web server's directories, then the family's files
 pcall(function() local lfs = require("lfs"); if not lfs.attributes(config.get("scratch_dir")) then lfs.mkdir(config.get("scratch_dir")) end end)
+-- (in the background: 0.8 s on the device, and web_ctrl only starts 5 s after the core)
 do
   local out, rc = shell.run("setup_web_dirs", { data = data_dir })
   if rc ~= 0 then log.error("boot.web_dirs_failed", { rc = rc, out = tostring(out) }) end

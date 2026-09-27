@@ -54,6 +54,12 @@
       saved: 'Enregistré', no_tokens: 'Aucun jeton connu pour l\'instant.',
       other_chars: 'Personnages sans jeton connu',
       device: 'Appareil', device_name: 'Nom', battery: 'Batterie', charging: 'en charge', plugged: 'branché',
+      rename: 'Renommer', name_title: 'Nom du Jooki sur le réseau',
+      name_help: function (f) { return 'Lettres minuscules, chiffres et tirets. La page s\'ouvrira à l\'adresse nom.local. Laisse vide pour revenir au nom d\'origine (' + f + ').'; },
+      name_invalid: 'Lettres minuscules, chiffres et tirets seulement (32 au plus), sans tiret au début ni à la fin.',
+      name_done: function (n) { return 'Le Jooki s\'appelle maintenant ' + n; },
+      name_text: function (u) { return 'Sa page est désormais à l\'adresse ' + u + ' — l\'ancienne ne répond plus. Garde ce lien en favori. Spotify affichera le nouveau nom au prochain redémarrage.'; },
+      name_open: 'Ouvrir la nouvelle adresse',
       wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', free: 'libres', version: 'Version',
       playback: 'Lecture', toy_safe: 'Volume limité (mode enfant)', shuffle: 'Aléatoire', repeat: 'Répéter',
       language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
@@ -148,6 +154,12 @@
       saved: 'Saved', no_tokens: 'No known token yet.',
       other_chars: 'Characters without a known token',
       device: 'Device', device_name: 'Name', battery: 'Battery', charging: 'charging', plugged: 'plugged in',
+      rename: 'Rename', name_title: 'Jooki name on the network',
+      name_help: function (f) { return 'Lower-case letters, digits and hyphens. The page will open at name.local. Leave empty to go back to the original name (' + f + ').'; },
+      name_invalid: 'Lower-case letters, digits and hyphens only (32 at most), no hyphen at the start or the end.',
+      name_done: function (n) { return 'The Jooki is now called ' + n; },
+      name_text: function (u) { return 'Its page is now at ' + u + ' — the old address no longer answers. Bookmark this link. Spotify will show the new name after the next restart.'; },
+      name_open: 'Open the new address',
       wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', free: 'free', version: 'Version',
       playback: 'Playback', toy_safe: 'Limited volume (kids mode)', shuffle: 'Shuffle', repeat: 'Repeat',
       language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
@@ -1210,7 +1222,8 @@
     return [
       h('div', { class: 'section-title' }, t('device')),
       h('div', { class: 'card' },
-        h('div', { class: 'kv' }, h('span', null, t('device_name')), h('b', null, (d.hostname || '—').replace(/\.local$/, ''))),
+        h('div', { class: 'kv' }, h('span', null, t('device_name')), h('span', { class: 'row' }, h('b', null, (d.hostname || '—').replace(/\.local$/, '')),
+          d.core ? h('button', { class: 'btn ghost', 'data-k': 'rename', onclick: nameModal }, t('rename')) : null)),
         h('div', { class: 'kv' }, h('span', null, t('battery')), h('b', null, bat)),
         wifiRow(w),
         h('div', { class: 'kv' }, h('span', null, t('ip')), h('b', null, (d.ip || location.hostname) + (S.net.name ? ' · ' + S.net.name : ''))),
@@ -1239,6 +1252,36 @@
         });
       } }, icon('power'), t('power_off')))
     ];
+  }
+  // The Jooki's network name (2.0 core only). The Jooki's web server answers only to its own name,
+  // so after a rename the page lives at the new address and the old one stops answering.
+  function nameModal() {
+    var d = S.device, factory = String(d.id || '').toLowerCase();
+    var cur = String(d.hostname || '').replace(/\.local$/, '').toLowerCase();
+    var name = cur === factory ? '' : cur, bad = false;
+    function valid(v) { return v === '' || (v.length <= 32 && v !== 'localhost' && /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(v)); }
+    function save() {
+      var v = name.trim().toLowerCase().replace(/\.local$/, '');
+      if (!valid(v)) { bad = true; renderModal(); return; }
+      var eff = v || factory, url = 'http://' + eff + '.local/';
+      closeModal();
+      if (eff === cur) return;
+      send('OJ_SET_NAME', { name: v });
+      confirmBox(t('name_done', eff), t('name_text', url), t('name_open'), false).then(function (ok) { if (ok) location.href = url; });
+    }
+    openModal({
+      autofocus: 'devname',
+      render: function () {
+        return [h('h3', null, t('name_title')),
+          h('label', { class: 'field' }, h('span', null, t('device_name')),
+            h('input', { class: 'input', 'data-k': 'devname', maxlength: '40', placeholder: factory, value: name, autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false',
+              oninput: function (e) { name = e.target.value; if (bad) { bad = false; renderModal(); } },
+              onkeydown: function (e) { if (e.key === 'Enter') save(); } })),
+          h('p', { class: 'small ' + (bad ? 'accent-text' : 'muted') }, bad ? t('name_invalid') : t('name_help', factory)),
+          h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, t('cancel')),
+            h('button', { class: 'btn primary', 'data-k': 'namesave', onclick: save }, t('save')))];
+      }
+    });
   }
   function wifiRow(w) {
     var dbm = Number(w.signal);

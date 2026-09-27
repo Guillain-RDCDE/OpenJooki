@@ -7,6 +7,8 @@ local shell = {}
 local function is_ssid(s) return type(s) == "string" and #s >= 1 and #s <= 32 and not s:find("[%c'\"\\]") end
 local function is_lang(s) return type(s) == "string" and s:match("^[A-Z][A-Z]$") ~= nil end
 local function is_path(s) return type(s) == "string" and s:sub(1, 1) == "/" and not s:find("[%c'\"\\]") and not s:find("%.%.") end
+-- a network name: lower-case letters, digits, inner hyphens, 1-32 characters ("" = back to the factory name)
+local function is_hostname(s) return type(s) == "string" and #s <= 32 and (s:match("^[a-z0-9]$") or s:match("^[a-z0-9][a-z0-9%-]*[a-z0-9]$")) ~= nil end
 
 -- name -> { argv = function(args) -> list | nil, err ; background = bool }
 shell.ACTIONS = {
@@ -44,18 +46,28 @@ cd /jooki/external/logs/syslog-ng 2>/dev/null || exit 0
 rm -f syslog-ng-0*.qf
 if [ -f syslog-ng.log ]; then tail -n 3000 syslog-ng.log > syslog-ng.old.log; rm -f syslog-ng.log; fi
 exit 0]] } end, background = true },
-  -- what web_ctrl serves: /tmp/web_ctrl_dirs/{public,uploads,wifi_setup,deezer} rebuilt once at boot (1.x setupWebServer)
+  -- what web_ctrl serves: /tmp/web_ctrl_dirs/{public,uploads,wifi_setup,deezer} rebuilt once at boot (1.x setupWebServer).
+  -- In the background (0.8 s on the device, web_ctrl starts 5 s after the core): a failure goes to syslog itself.
   setup_web_dirs = { argv = function(a) if not is_path(a.data) then return nil, "bad path" end
                              return { "sh", "-c", [[
 D="$1"; W=/tmp/web_ctrl_dirs
+fail() { logger -t openjooki-core "error boot.web_dirs_failed"; exit 1; }
 rm -f "$D"/uploads/upload_* 2>/dev/null
-rm -rf "$W" && mkdir -p "$W/public" "$W/wifi_setup/setup" "$W/deezer" "$D/uploads" "$D/artwork" || exit 1
-ln -s "$D/uploads" "$W/uploads" && ln -s "$D/artwork" "$W/public/artwork" || exit 1
+rm -rf "$W" && mkdir -p "$W/public" "$W/wifi_setup/setup" "$W/deezer" "$D/uploads" "$D/artwork" || fail
+ln -s "$D/uploads" "$W/uploads" && ln -s "$D/artwork" "$W/public/artwork" || fail
 for f in /jooki/app/www/public/*; do [ -e "$f" ] && ln -s "$f" "$W/public/"; done
 for f in /jooki/app/www/wifi_setup/public/*; do [ -e "$f" ] && ln -s "$f" "$W/wifi_setup/setup/"; done
 for f in /jooki/app/www/deezer/*; do [ -e "$f" ] && ln -s "$f" "$W/deezer/"; done
-exit 0]], "setup_web_dirs", a.data } end },
+exit 0]], "setup_web_dirs", a.data } end, background = true },
   md5            = { argv = function(a) if not is_path(a.file) then return nil, "bad path" end return { "md5sum", a.file } end },
+  -- the name chosen on the page: kept on /data (survives A/B updates), applied now; the boot script
+  -- (ml-jooki-hostname.sh) applies it again at every start. /etc/hostname keeps the factory name (device id).
+  set_name       = { argv = function(a) if not (a.name == "" or is_hostname(a.name)) then return nil, "bad name" end
+                             return { "sh", "-c", [[
+N="$1"; F=/data/openjooki/hostname
+mkdir -p /data/openjooki || exit 1
+if [ -z "$N" ]; then rm -f "$F"; N=$(cat /etc/hostname); else printf '%s\n' "$N" > "$F.tmp" && mv "$F.tmp" "$F" || exit 1; fi
+sync; hostname "$N"]], "set_name", a.name } end },
 }
 
 shell.count = 0

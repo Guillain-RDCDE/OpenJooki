@@ -461,10 +461,12 @@ SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf",   # logs stay
                 "/etc/init.d/rcS": "rcS"}                             # boot timestamps in dmesg
 # Only with the 2.0 core (--core): the start script without the 1 s wait before the player. The core
 # says its boot orders to the ESP32 again by itself; the 1.x program does not, so it keeps the original.
-CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh"}
+# Also core-only: the boot script that applies the name chosen on the page (OJ_SET_NAME).
+CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh",
+                     "/jooki/bin/ml-jooki-hostname.sh": "ml-jooki-hostname.sh"}
 def system_files(core=None): return dict(SYSTEM_FILES, **(CORE_SYSTEM_FILES if core else {}))
 # Files that must stay executable (init runs rcS directly: without +x the Jooki would not start).
-SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755"}
+SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755", "/jooki/bin/ml-jooki-hostname.sh": "755"}
 def file_mode(path): return SYSTEM_MODES.get(path, "644")
 
 def ssh_bytes(host, remote_cmd, data=None, timeout=120):

@@ -24,6 +24,20 @@ f()
 open(os.path.join(ROOT, "build", "harness.lua"), "w").write(HARNESS)
 
 subprocess.run([sys.executable, os.path.join(ROOT, "tools", "build", "bundle.py")], check=True)
+# the bus client (and the fake esp32_ctrl) is up before the core starts, as on the device
+got = {"replies": [], "states": [], "events": [], "all": []}
+c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "smoke")
+def on_msg(cl, u, m):
+    try: d = json.loads(m.payload.decode())
+    except Exception: d = m.payload
+    got["all"].append((time.time(), m.topic))
+    if m.topic == "/j/web/v2/reply": got["replies"].append(d)
+    elif m.topic == "/j/web/v2/state": got["states"].append(d)
+    elif m.topic == "/j/web/v2/event": got["events"].append(d)
+    # the device's esp32_ctrl answers the knobs question (headphones out: nothing changes)
+    elif m.topic == "/j/esp32/output/knobs/state": cl.publish("/j/esp32/input/knobs/state", '{"hp_state":0}')
+c.on_message = on_msg
+c.connect("127.0.0.1", 1883); c.subscribe("/j/#"); c.loop_start()
 env = dict(os.environ, OPENJOOKI_LOG="info", id="jooki-bench", hostname="jooki-bench.local", machine="bench")
 proc = subprocess.Popen(["lua5.1", os.path.join(ROOT, "build", "harness.lua"), os.path.join(ROOT, "build", "core.min.lua")],
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env, cwd=ROOT)
@@ -37,17 +51,6 @@ while time.time() - t0 < 10:
     if line.startswith("READY"): ready = True; break
 check("S1 core boots and reports ready in < 10 s (%.2fs)" % (time.time() - t0), ready, lines[-5:])
 
-got = {"replies": [], "states": [], "events": [], "all": []}
-c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "smoke")
-def on_msg(cl, u, m):
-    try: d = json.loads(m.payload.decode())
-    except Exception: d = m.payload
-    got["all"].append((time.time(), m.topic))
-    if m.topic == "/j/web/v2/reply": got["replies"].append(d)
-    elif m.topic == "/j/web/v2/state": got["states"].append(d)
-    elif m.topic == "/j/web/v2/event": got["events"].append(d)
-c.on_message = on_msg
-c.connect("127.0.0.1", 1883); c.subscribe("/j/#"); c.loop_start()
 time.sleep(0.5)
 
 def cmd(msg, wait=2.0):

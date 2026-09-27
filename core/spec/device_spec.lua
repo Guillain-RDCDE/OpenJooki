@@ -30,7 +30,7 @@ describe("services.device — volume chain", function()
   end)
 
   it("knob reports change the volume and the headphones only when they differ", function()
-    local doc = doc_with()
+    local doc = doc_with(); doc.device.esp32_up = true   -- the first answer only marks esp32_ctrl up (see boot spec)
     assert_nil(device.on_knobs(doc, { volume = 40, headphones = false }))
     local r = device.on_knobs(doc, { volume = 55, headphones = true })
     assert_eq(r.state.audiocfg.volume, 55); assert_true(r.state.audiocfg.headphones_en)
@@ -159,6 +159,25 @@ describe("services.device — lights and toy safe", function()
     local r = device.on_boot(doc_with(), { audiocfg = { volume = 70 }, flags = { TOY_SAFE_OFF = true }, now = 5 })
     assert_eq(r.state.audiocfg.volume, 70); assert_false(r.state.device.toy_safe)
     assert_eq(kinds(r)[1], "vol 70"); assert_eq(kinds(r)[#kinds(r)], "emit system.event Evt.Jooki.Ready")
+  end)
+
+  it("boot tells the ESP32 at once, again at 1 and 3 s, until esp32_ctrl has answered once", function()
+    local r = device.on_boot(doc_with(), { audiocfg = {}, flags = {}, now = 5 })
+    local k = table.concat(kinds(r), "|")
+    assert_true(k:find("esp32/output/nfc/mode/set 1", 1, true) ~= nil)
+    local onces = {}
+    for _, c in ipairs(r.commands) do if c.kind == "timer.once" then onces[#onces + 1] = c.name .. "@" .. c.seconds end end
+    assert_eq(onces, { "device.esp32_init.1@1", "device.esp32_init.2@3" })
+    local doc = doc_with()
+    local t = device.on_timer(doc, { name = "device.esp32_init.1", now = 6 })
+    assert_eq(kinds(t), { "esp32/output/device/send_all_notifications ", "esp32/output/nfc/mode/set 1", "esp32/output/knobs/state " })
+    -- the knobs answer (nothing else changes) marks esp32_ctrl as listening: no more resends
+    doc.audiocfg.volume = 40
+    local kr = device.on_knobs(doc, { volume = 40 })
+    assert_true(kr.state.device.esp32_up); assert_true(kr.state.device.toy_safe)
+    doc.device = kr.state.device
+    assert_nil(device.on_timer(doc, { name = "device.esp32_init.2", now = 8 }))
+    assert_nil(device.on_knobs(doc, { volume = 40 }))
   end)
 
   it("boot reads the charger: plugged in at start never powers off for inactivity, and no cable sound", function()

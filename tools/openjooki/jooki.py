@@ -459,8 +459,12 @@ PLAYER_LIB = "/jooki/lib/player.lib"
 SYSTEM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "system")
 SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf",   # logs stay on the Jooki
                 "/etc/init.d/rcS": "rcS"}                             # boot timestamps in dmesg
+# Only with the 2.0 core (--core): the start script without the 1 s wait before the player. The core
+# says its boot orders to the ESP32 again by itself; the 1.x program does not, so it keeps the original.
+CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh"}
+def system_files(core=None): return dict(SYSTEM_FILES, **(CORE_SYSTEM_FILES if core else {}))
 # Files that must stay executable (init runs rcS directly: without +x the Jooki would not start).
-SYSTEM_MODES = {"/etc/init.d/rcS": "755"}
+SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755"}
 def file_mode(path): return SYSTEM_MODES.get(path, "644")
 
 def ssh_bytes(host, remote_cmd, data=None, timeout=120):
@@ -533,7 +537,7 @@ def _webui_build(host, core=None):
     files = {}
     for f in WEBUI_FILES:
         with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[WWW_PUBLIC+"/"+f] = fh.read()
-    for path, f in SYSTEM_FILES.items():
+    for path, f in system_files(core).items():
         with open(os.path.join(SYSTEM_DIR, f), "rb") as fh: files[path] = fh.read()
     return r.stdout, lib, files
 
@@ -564,7 +568,7 @@ def ab_webui(host, dry_run=False, core=None):
     except Exception as e: log("build failed: %s" % e); return 1
     log("player.lib: %d -> %d bytes (%s); web files: %s; system files: %s"
         % (len(orig), len(lib), "2.0 core " + os.path.basename(core) if core else "patched",
-           ", ".join(WEBUI_FILES), ", ".join(sorted(SYSTEM_FILES))))
+           ", ".join(WEBUI_FILES), ", ".join(sorted(system_files(core)))))
     if webui_active_ok(host, lib, files):
         log("Web UI and fixes already installed (active partition). Nothing to do."); return 0
     if dry_run: log("[dry-run] build OK, nothing written"); return 0
@@ -582,7 +586,7 @@ def ab_webui(host, dry_run=False, core=None):
                  % (WWW_PUBLIC, o, WWW_ORIG, o, WWW_ORIG, d, WWW_PUBLIC, o, WWW_ORIG, o))
     for o in WEBUI_STALE:
         prep += "rm -f $R%s/%s; " % (WWW_PUBLIC, o)
-    for path in SYSTEM_FILES:
+    for path in system_files(core):
         prep += "test -f $R%s.openjooki-orig || cp -a $R%s $R%s.openjooki-orig; " % (path, path, path)
     prep += "sync; echo PREP_OK"
     r = ssh(host, prep, timeout=60)

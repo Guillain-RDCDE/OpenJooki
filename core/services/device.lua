@@ -80,6 +80,11 @@ end
 function device.on_knobs(doc, ev)
   local a = audiocfg_of(doc)
   local r = { state = {}, commands = {} }
+  -- a knobs answer proves esp32_ctrl listens (and got the boot orders sent before the question)
+  if not (doc.device or {}).esp32_up then
+    local d = copy(doc.device or {}); d.esp32_up = true
+    r.state.device = d
+  end
   if ev.volume ~= nil and clamp(ev.volume) ~= a.volume then
     local s = set_volume(doc, ev.volume)
     r.state.audiocfg = s.state.audiocfg
@@ -365,6 +370,19 @@ function device.on_df(doc, ev)
 end
 
 -- ------------------------------------------------------------------ boot / api
+-- What the ESP32 must hear at boot: every notification once, the NFC reader on, the knobs.
+-- All three are idempotent. The core may start before esp32_ctrl listens (the original start
+-- script waited 1 s for it), so they are said again a little later, until the ESP32 side has
+-- answered once (device.esp32_up, set by the knobs answer): tokens must never stay deaf.
+local ESP32_RESEND_S = { 1, 3 }
+local function esp32_init()
+  return {
+    { kind = "bus.publish", topic = "/j/esp32/output/device/send_all_notifications", payload = "" },
+    { kind = "bus.publish", topic = "/j/esp32/output/nfc/mode/set", payload = "1" },
+    { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" },
+  }
+end
+
 function device.on_boot(doc, ev)
   local a = audiocfg_of({ audiocfg = ev.audiocfg })
   local flags = ev.flags or {}
@@ -373,14 +391,15 @@ function device.on_boot(doc, ev)
   local cmds = {
     { kind = "host.volume", percent = device.effective_volume(doc, a.volume) },
     { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = "speaker" },
-    { kind = "bus.publish", topic = "/j/esp32/output/device/send_all_notifications", payload = "" },
-    { kind = "bus.publish", topic = "/j/esp32/output/nfc/mode/set", payload = "1" },
-    { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" },
+  }
+  for _, c in ipairs(esp32_init()) do cmds[#cmds + 1] = c end
+  for i, s in ipairs(ESP32_RESEND_S) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
+  for _, c in ipairs({
     { kind = "timer.every", name = "device.inactivity", seconds = 30 },
     { kind = "timer.every", name = "device.tick", seconds = 0.5 },
     { kind = "timer.every", name = "device.knobs", seconds = 10 },
     emit("system.event", { name = "Evt.Jooki.Ready" }),
-  }
+  }) do cmds[#cmds + 1] = c end
   -- plugged at start (1.x did the same): known from the first second, so no cable sound either
   local connected
   if ev.plugged == "1" then connected = true elseif ev.plugged == "0" then connected = false end
@@ -392,6 +411,10 @@ function device.on_timer(doc, ev)
   if ev.name == "device.inactivity" then return device.on_inactivity(doc, ev) end
   if ev.name == "device.tick" then return device.on_tick(doc, ev) end
   if ev.name == "device.knobs" then return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end
+  if ev.name:match("^device%.esp32_init%.%d$") then
+    if (doc.device or {}).esp32_up then return nil end
+    return { commands = esp32_init() }
+  end
   return nil
 end
 

@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 import lua_patches as L  # noqa: E402
-from jooki import SYSTEM_DIR, SYSTEM_FILES, file_mode, load_core  # noqa: E402
+from jooki import SYSTEM_DIR, file_mode, load_core, system_files  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
 WEB_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
@@ -131,13 +131,14 @@ def main():
     print("web page installed:", ", ".join(WEB_FILES))
 
     # --- system files (original kept once) ---
-    for path, f in sorted(SYSTEM_FILES.items()):
+    sysfiles = system_files(core)   # the start script without the 1 s wait comes only with the 2.0 core
+    for path, f in sorted(sysfiles.items()):
         if exists(out, path) and not exists(out, path + ".openjooki-orig"):
             local = os.path.join(work, os.path.basename(path) + ".orig")
             open(local, "wb").write(cat(out, path))
             put(out, local, path + ".openjooki-orig", mode="0100" + file_mode(path))
         put(out, os.path.join(SYSTEM_DIR, f), path, mode="0100" + file_mode(path))
-    print("system files installed:", ", ".join(sorted(SYSTEM_FILES)))
+    print("system files installed:", ", ".join(sorted(sysfiles)))
 
     # --- version ---
     vf = os.path.join(work, "version")
@@ -151,7 +152,7 @@ def main():
     expect = {LIB: lib, "/etc/openjooki-version": (version + "\n").encode()}
     for f in WEB_FILES:
         expect[PUB + "/" + f] = open(os.path.join(WEBUI, f), "rb").read()
-    for path, f in SYSTEM_FILES.items():
+    for path, f in sysfiles.items():
         expect[path] = open(os.path.join(SYSTEM_DIR, f), "rb").read()
     for path, data in expect.items():
         if hashlib.sha256(cat(out, path)).hexdigest() != hashlib.sha256(data).hexdigest():

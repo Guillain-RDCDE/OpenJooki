@@ -23,7 +23,9 @@ local function kernel_uptime()
   local v = s and tonumber(s:match("^(%S+)"))
   return v and math.floor(v * 100 + 0.5) / 100 or nil
 end
-local BOOT = { start_s = kernel_uptime() }
+local BOOT = { start_s = kernel_uptime(), marks = {} }
+-- a step of the boot, on the same clock ("name=seconds"), kept in health.boot.marks
+local function mark(name) BOOT.marks[#BOOT.marks + 1] = name .. "=" .. tostring(kernel_uptime()) end
 
 local function env(name, default)
   local v = os.getenv(name)
@@ -59,6 +61,7 @@ local bus = require("adapters.bus").new({
 })
 local mdns = require("adapters.mdns").new()
 local adapters = { bus = bus, files = files, clock = clock, host = host, shell = shell, mdns = mdns }
+mark("adapters")
 
 log.configure({
   level = env("JOOKI_LOG_LEVEL", "info") == "debug" and "debug" or (env("OPENJOOKI_LOG", "info")),
@@ -98,6 +101,7 @@ end
 v1.install(dispatch)
 
 require("services.network").install(api, dispatch)
+mark("services")
 
 -- health: every 60 s, memory and bus statistics into the state
 dispatch.on("timer", "health", function(doc, ev)
@@ -109,10 +113,13 @@ dispatch.on("timer", "health", function(doc, ev)
     f:close()
   end
   -- syslog-ng starts throttled and drops what is logged in the first seconds: say the boot times here
-  if not BOOT.logged and BOOT.ready_s then BOOT.logged = true; log.info("core.boot", { start_s = BOOT.start_s, ready_s = BOOT.ready_s }) end
+  if not BOOT.logged and BOOT.ready_s then
+    BOOT.logged = true
+    log.info("core.boot", { start_s = BOOT.start_s, ready_s = BOOT.ready_s, marks = BOOT.marks_text })
+  end
   return { state = { health = { degraded = doc.health and doc.health.degraded or false, rss_kb = rss,
                                 uptime_s = math.floor(ev.now), bus = bus.stats, shell_calls = shell.count,
-                                boot = { start_s = BOOT.start_s, ready_s = BOOT.ready_s } } } }
+                                boot = { start_s = BOOT.start_s, ready_s = BOOT.ready_s, marks = BOOT.marks_text } } } }
 end)
 
 -- every event carries the wall clock too (bedtime, ids)
@@ -135,7 +142,9 @@ end
 loop.init(adapters, { translate = translate_with_time, publisher = publisher,
   each_turn = function(doc)   -- the name on the network, answered from the loop (no handler involved)
     if mdns:available() and doc.net then
-      if doc.net.name and not mdns.names[doc.net.name] then mdns:set_names({ doc.net.name }) end
+      -- only its own name: web_ctrl (closed) redirects any other Host, jooki.local included, to
+      -- Muuselabs' dead setup site (docs/20). Names are kept lower case by the adapter.
+      if doc.net.name and not mdns.names[doc.net.name:lower()] then mdns:set_names({ doc.net.name }) end
       mdns:serve(doc.net.ip)
     end
   end })
@@ -147,6 +156,7 @@ do
   local out, rc = shell.run("setup_web_dirs", { data = data_dir })
   if rc ~= 0 then log.error("boot.web_dirs_failed", { rc = rc, out = tostring(out) }) end
 end
+mark("web_dirs")
 local function read_or_empty(path)
   local doc, note = files.read(path, 1)
   if not doc then
@@ -160,7 +170,7 @@ local flags = {}
 for _, name in ipairs({ "STAY_ON", "TOY_SAFE_OFF", "WIFI_OFF", "BT_OFF", "FACTORY", "LOG_BUTTONS" }) do
   if files.exists(files.FLAG_DIR .. "/" .. name) then flags[name] = true end
 end
-loop.emit({
+local boot_event = {
   type = "boot", now = clock.now(), wall = clock.wall(),
   library = { playlists = read_or_empty(data_dir .. "/playlists.json"), tracks = read_or_empty(data_dir .. "/tracks.json"),
               tokens = read_or_empty(data_dir .. "/tokens.json") },
@@ -172,10 +182,15 @@ loop.emit({
   -- the power controller only reports a cable change: without this a Jooki plugged in at boot
   -- would believe it runs on battery and power itself off after 15 min of silence
   plugged = (files.read_text(config.get("plugged_file")) or ""):match("^%s*([01])"),
-})
+}
+mark("files")
+loop.emit(boot_event)
+mark("boot_event")
 
 log.info("core.start", { version = VERSION, host = host.available() and "device" or "bench" })
 host.ready()
 BOOT.ready_s = kernel_uptime()
-state.set("health", { degraded = (state.get("health") or {}).degraded or false, boot = { start_s = BOOT.start_s, ready_s = BOOT.ready_s } })
+BOOT.marks_text = table.concat(BOOT.marks, " ")
+state.set("health", { degraded = (state.get("health") or {}).degraded or false,
+                      boot = { start_s = BOOT.start_s, ready_s = BOOT.ready_s, marks = BOOT.marks_text } })
 loop.run()

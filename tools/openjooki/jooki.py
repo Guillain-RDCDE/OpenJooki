@@ -449,7 +449,8 @@ def ab_harden(host):
 
 # ---------------- "webui" patch: new web page + application fixes via A/B ----------------
 WEBUI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui")
-WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
+WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js",
+               "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png")   # home-screen icon (make_icons.py)
 WEBUI_STALE = ("config.js",)   # shadowed by web_ctrl's "/config" prefix route: never ship it
 WWW_PUBLIC = "/jooki/app/www/public"
 WWW_ORIG = "/jooki/app/www/public-openjooki-orig"   # old 2018 web app, kept (not served)

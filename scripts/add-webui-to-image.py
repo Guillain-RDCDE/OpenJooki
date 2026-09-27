@@ -25,10 +25,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 import lua_patches as L  # noqa: E402
-from jooki import SYSTEM_DIR, file_mode, load_core, system_files  # noqa: E402
+from jooki import SYSTEM_DIR, WEBUI_FILES, file_mode, load_core, system_files  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
-WEB_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
+WEB_FILES = WEBUI_FILES   # one list, in jooki.py
 PUB = "/jooki/app/www/public"
 ORIG = "/jooki/app/www/public-openjooki-orig"
 OLD_FILES = ("index.html", "asset-manifest.json", "service-worker.js", "deezer_channel.html",

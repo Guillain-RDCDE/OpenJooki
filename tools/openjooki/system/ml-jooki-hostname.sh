@@ -36,19 +36,25 @@ get_hostname() {
   fi
 }
 
-write_hostname() {
-    get_hostname
-    echo "$hostname" > /etc/hostname
-    echo "$mac" > /etc/mac
-    # OpenJooki: the name chosen on the page (/data survives updates), if valid; otherwise the
-    # factory name. /etc/hostname always keeps the factory name: it is the device id.
+# OpenJooki: the name chosen on the page (/data survives updates), if valid; otherwise the
+# factory name. /etc/hostname always keeps the factory name: it is the device id.
+apply_name() {
     name="$(head -n 1 /data/openjooki/hostname 2>/dev/null || true)"
     if [ "${#name}" -le 32 ] && echo "$name" | grep -qE '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$'; then
       hostname "$name"
     else
       hostname "$(cat /etc/hostname)"
     fi
+}
+
+write_hostname() {
+    get_hostname
+    echo "$hostname" > /etc/hostname
+    echo "$mac" > /etc/mac
+    apply_name
     sync
 }
 
+# inittab calls this with --name-only after rcS (where it used to set the factory name again)
+if [ "${1:-}" = "--name-only" ]; then apply_name; exit 0; fi
 write_hostname

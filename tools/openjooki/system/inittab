@@ -1,0 +1,36 @@
+
+::sysinit:/bin/mount -t proc proc /proc
+::sysinit:/bin/mount -t sysfs sysfs /sys
+::sysinit:/bin/mount -t devtmpfs devtmpfs /dev
+::sysinit:/bin/mount -o remount,rw,sync /
+::sysinit:/bin/mkdir -p /dev/pts
+::sysinit:/bin/mount -t devpts devpts /dev/pts
+::sysinit:/bin/mount -a
+
+::sysinit:/etc/init.d/rcS
+
+::ctrlaltdel:/sbin/reboot
+::shutdown:/etc/init.d/rcK
+::shutdown:/usr/bin/killall player
+
+::shutdown:/bin/ps
+::shutdown:/usr/bin/lsof
+
+::shutdown:/bin/umount -v /mnt/config
+::shutdown:/bin/mount -o ro,remount /data
+::shutdown:/bin/umount /dev/mmcblk0p7
+
+::shutdown:/bin/mount -o ro,remount /
+
+
+::shutdown:/sbin/swapoff /dev/mmcblk0p4
+
+::shutdown:/usr/bin/checkfs.sh
+
+::shutdown:/bin/sleep 1
+
+::restart:/sbin/init
+
+# OpenJooki: the name chosen on the page, or the factory name (/etc/hostname) as before
+null::sysinit:/jooki/bin/ml-jooki-hostname.sh --name-only
+ttyS2::respawn:/sbin/getty -L 115200 ttyS2

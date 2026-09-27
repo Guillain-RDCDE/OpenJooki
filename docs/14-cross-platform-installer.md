@@ -25,7 +25,7 @@ prints an address `http://<mac-ip>:PORT/`. You open it **from the phone**
 does the work. Bluetooth is not used (see §4).
 
 ## 3. Phone WITHOUT a PC — the Jooki updates itself  🔬 FEASIBILITY CONFIRMED, to be finalized
-Target: from the phone, go to `http://jooki2-0426E8.local/openjooki.html`,
+Target: from the phone, go to `http://jooki2-A1B2C3.local/openjooki.html`,
 drop the firmware, and **the Jooki installs it on itself**.
 
 What we confirmed on the device:

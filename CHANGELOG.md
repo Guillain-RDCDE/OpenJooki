@@ -6,14 +6,33 @@
   contract (v2) with the page and the v1 contract kept, atomic data files
   shared with 1.x. Design: `docs/21-architecture-2.0.md`; what it replaces:
   `docs/22-core-inventory.md`; decisions: `docs/adr/`.
-- Phases 1–3 done on the bench: the 122 integration checks of the 1.x bench
-  (backend, bedtime, network, page) pass unchanged on the new core, plus 134
-  unit specs, lint, size budget and an endurance run, all in CI.
+- Phases 1–3 done on the bench: the integration checks of the 1.x bench
+  (backend, bedtime, network, page) pass unchanged on the new core, with the
+  core's own unit specs, lint, size budget and an endurance run, all in CI.
 - Spotify Connect and Deezer kept (optional `streaming` module, ADR-0009).
   The v2 contract is documented from the code in `docs/api-v2.md`.
-- Not on any Jooki yet: phase 5 (A/B install on a real device) is next.
+- **Phase 5 started on 27 September 2026: running on a family Jooki** (A/B
+  install, the previous version kept on the other partition). Found and done there:
+  - **Faster start**: ready about 2 s sooner than 1.x. The player no longer waits
+    1 s at boot (the core repeats its orders to the Wi-Fi/NFC chip until it
+    answers, so tokens can never stay deaf), and the web server's folders are
+    prepared in the background.
+  - **Plugged in = never switches itself off**: the charger is read at boot, as
+    1.x did (2.0 had lost it: a Jooki switched on while plugged in turned itself
+    off after 15 minutes of silence).
+  - **A name of your own** for the Jooki on the network (Settings → Name →
+    Rename, e.g. `http://jooki.local`), kept across updates and restarts.
+  - **A home-screen icon** of our own and a web app manifest: full screen on
+    iPhone, a sharp icon on Android.
+  - **The page on large screens** sits in a centred column.
+  - Boot timeline measured on the device (each start-up script in `dmesg`, the
+    core's own steps in its state).
+- A factory Jooki's data was checked to survive the move to 2.0 and the way back
+  to the factory program; release images no longer carry the name and MAC address
+  of the Jooki they were made from.
+- Not in a release yet: 24 h run, forced rollback test and a week of family use first.
 
-## Firmware 1.3.0 (not released yet) — bedtime
+## Firmware 1.3.0 (26 September 2026) — bedtime
 - **Audiobooks resume where the child fell asleep**: chapter and position are
   saved on the Jooki and survive it turning itself off; it starts again 15 s
   earlier (60 s after the sleep timer); the end of the book goes back to
@@ -28,7 +47,7 @@
   when the Wi-Fi drops (and a **Retry** button after 4 tries); Wi-Fi quality in
   Settings; **logs no longer sent to Muuselabs' Papertrail** and kept to one week
   on the Jooki (the old 39 MB log and 11 MB send queue are cleaned); the page
-  answers at **`http://<its-name>.local/`** (e.g. `jooki2-0426e8.local`, shown
+  answers at **`http://<its-name>.local/`** (e.g. `jooki2-a1b2c3.local`, shown
   in Settings), whatever address the router gives it.
 - Bench: 57 unit + 24 bedtime + 13 network + 38 backend + 47 page checks;
   installed and checked on a real Jooki v2.

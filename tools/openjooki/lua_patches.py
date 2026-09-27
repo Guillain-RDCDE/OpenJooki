@@ -1015,7 +1015,7 @@ end)
 #            since boot; published in the state as "net".
 #   logs   : at boot, removes the queue of logs waiting for Muuselabs' Papertrail
 #            and keeps only the end of the old never-rotated log.
-#   mDNS   : answers "<hostname>.local" (e.g. jooki2-0426e8.local) with the
+#   mDNS   : answers "<hostname>.local" (e.g. jooki2-a1b2c3.local) with the
 #            Jooki's address, so the page opens without knowing the IP (web_ctrl
 #            only serves its own name: any other name is redirected to the dead
 #            Muuselabs setup site); AAAA queries get an NSEC "IPv4 only" answer

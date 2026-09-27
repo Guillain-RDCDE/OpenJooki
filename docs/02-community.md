@@ -56,7 +56,7 @@ Everything works LOCALLY (no cloud) through two channels:
 
 ## What this means for us
 - To ADD MUSIC right now: the web interface (192.168.1.61 /
-  jooki2-0426E8.local) → "Add a playlist" is enough, nothing to install.
+  jooki2-A1B2C3.local) → "Add a playlist" is enough, nothing to install.
 - To AUTOMATE: a small homemade script that posts MP3s to /upload and
   creates/links the playlists is doable (the endpoints are known). This is the
   missing link nobody has packaged cleanly — a good candidate for a "Jooki"

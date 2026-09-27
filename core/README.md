@@ -41,13 +41,14 @@ above on every push touching `core/`.
 - Phase 1 (kernel, adapters, api v2, build, CI): done.
 - Phase 2 (library, tokens, playback, device, uploads, v1 compatibility): done —
   the 38 backend checks of the 1.x bench pass unchanged on the new core.
-- Phase 3 (bedtime, update, network + mDNS): done — 24 bedtime, 13 network and
-  47 page checks of the 1.x bench pass unchanged; 134 unit specs; endurance run
+- Phase 3 (bedtime, update, network + mDNS): done — the bedtime, network and
+  page checks of the 1.x bench pass unchanged, with the unit specs; endurance run
   (`core/spec/integration/endurance.py`) in CI for 3 minutes, nightly for longer.
   Spotify Connect / Deezer ported as the optional `streaming` module (ADR-0009,
   best effort: bench-verified with a fake daemon, not against the services).
 - Phase 4 (Wi-Fi manager, Bluetooth rescue, security) → 2.1.
-- Phase 5 (a real Jooki: A/B install, 24 h, rollback): next.
+- Phase 5 (a real Jooki: A/B install, 24 h, rollback): started 2026-09-27 — running
+  on a family Jooki; 24 h run, forced rollback and a week of use to come.
 
 Oracle on your machine: `tools/openjooki/tests` with `PLAYER_LUA=core` and
 `CORE_BUILD=<repo>/build` (see `start_player.sh`).

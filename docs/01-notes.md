@@ -8,19 +8,19 @@ via `jooki.local`. Its real network name and IP were tracked down, the web
 interface responds, and we can add music again.
 
 ## How to reach it (IMPORTANT)
-- **Stable address (bookmark this)**: http://jooki2-0426E8.local
+- **Stable address (bookmark this)**: http://jooki2-A1B2C3.local
 - **Direct IP address**: http://192.168.1.61
 - `jooki.local` does NOT work / no longer works — that is not this device's
-  mDNS name. The correct name is `jooki2-0426E8.local`.
+  mDNS name. The correct name is `jooki2-A1B2C3.local`.
 - From the interface: **Playlists → "Add a playlist"** to upload MP3s.
   "Characters" links a playlist to an NFC token.
 
 ## Device spec sheet (recorded on 2026-09-09)
 | Item | Value |
 |---|---|
-| Network name (mDNS) | jooki2-0426E8 |
+| Network name (mDNS) | jooki2-A1B2C3 |
 | IP (Wi-Fi, DHCP) | 192.168.1.61 |
-| Wi-Fi MAC | A8:EE:C6:04:26:E8 |
+| Wi-Fi MAC | A8:EE:C6:A1:B2:C3 |
 | Wi-Fi signal | -48 dBm (excellent) |
 | Storage | 4585 MB free, 11% used (≈ plenty of room) |
 | Battery | 99%, charging via USB |
@@ -39,7 +39,7 @@ interface responds, and we can add music again.
 
 ## Why it was unreachable
 - The name `jooki.local` does not match this device (real name:
-  `jooki2-0426E8.local`). mDNS resolution therefore failed.
+  `jooki2-A1B2C3.local`). mDNS resolution therefore failed.
 - The original Jooki mobile app is dead since Muuselabs shut down: all
   management now goes through the local web interface.
 - USB is useless: on the Jooki v2, USB mode is disabled from the factory
@@ -47,9 +47,9 @@ interface responds, and we can add music again.
   itself neither as a disk nor as a network peripheral.
 
 ## What to do to avoid losing access again
-1. Bookmark http://jooki2-0426E8.local (Chrome / phone).
+1. Bookmark http://jooki2-A1B2C3.local (Chrome / phone).
 2. In the router (192.168.1.1), **reserve a static IP** for MAC
-   A8:EE:C6:04:26:E8 so the address never changes again.
+   A8:EE:C6:A1:B2:C3 so the address never changes again.
 
 ## "GitHub / tinkering" leads (to explore)
 The community documented the Jooki after the company shut down. Useful if we

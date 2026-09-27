@@ -3,8 +3,8 @@ local mdns = require("adapters.mdns")
 
 describe("services.network", function()
   it("boot: name from the hostname, log cleanup, wifi log timer", function()
-    local r = network.on_boot({ device = { hostname = "JOOKI2-0426E8" } }, { now = 5 })
-    assert_eq(r.state.net, { drops = 0, beacons = 0, since = 5, name = "jooki2-0426e8.local" })
+    local r = network.on_boot({ device = { hostname = "JOOKI2-A1B2C3" } }, { now = 5 })
+    assert_eq(r.state.net, { drops = 0, beacons = 0, since = 5, name = "jooki2-a1b2c3.local" })
     assert_eq(r.commands[1], { kind = "shell", action = "log_cleanup" })
     assert_eq(r.commands[2].name, "network.wifi_log")
   end)
@@ -32,13 +32,13 @@ describe("adapters.mdns packets", function()
     q = q .. string.char(0) .. string.char(0, qtype, 0, 1)
     return (id or "\18\52") .. string.char(0, 0, 0, 1, 0, 0, 0, 0, 0, 0) .. q
   end
-  local names = { ["jooki2-0426e8.local"] = true }
+  local names = { ["jooki2-a1b2c3.local"] = true }
 
   it("parses questions for our names only, any case, A/ANY/AAAA", function()
-    assert_eq(#mdns.questions(query("JOOKI2-0426E8.local", 1), names), 1)
-    assert_eq(#mdns.questions(query("jooki2-0426e8.local", 28), names), 1)
-    assert_eq(#mdns.questions(query("jooki2-0426e8.local", 255), names), 1)
-    assert_eq(#mdns.questions(query("jooki2-0426e8.local", 16), names), 0)
+    assert_eq(#mdns.questions(query("JOOKI2-A1B2C3.local", 1), names), 1)
+    assert_eq(#mdns.questions(query("jooki2-a1b2c3.local", 28), names), 1)
+    assert_eq(#mdns.questions(query("jooki2-a1b2c3.local", 255), names), 1)
+    assert_eq(#mdns.questions(query("jooki2-a1b2c3.local", 16), names), 0)
     assert_eq(#mdns.questions(query("printer.local", 1), names), 0)
     assert_eq(#mdns.questions("\0\0\132\0", names), 0)          -- a response, not a query
     assert_eq(#mdns.questions("garbage", names), 0)
@@ -46,14 +46,14 @@ describe("adapters.mdns packets", function()
   end)
 
   it("answers A with the address and AAAA with an 'IPv4 only' NSEC; unicast echoes id and question", function()
-    local q = mdns.questions(query("jooki2-0426e8.local", 1), names)[1]
+    local q = mdns.questions(query("jooki2-a1b2c3.local", 1), names)[1]
     local a = mdns.answer(q, "192.168.1.19", false)
     assert_eq(a:sub(1, 2), "\0\0"); assert_eq(a:byte(3), 132)
     assert_eq(a:sub(-4), string.char(192, 168, 1, 19))
     assert_true(a:find(string.char(0, 1, 128, 1), 1, true) ~= nil, "cache-flush class for multicast")
     local u = mdns.answer(q, "192.168.1.19", true, "\18\52")
     assert_eq(u:sub(1, 2), "\18\52"); assert_eq(u:byte(6), 1)   -- one question echoed
-    local q6 = mdns.questions(query("jooki2-0426e8.local", 28), names)[1]
+    local q6 = mdns.questions(query("jooki2-a1b2c3.local", 28), names)[1]
     local a6 = mdns.answer(q6, "10.0.0.2", true, "\1\2")
     assert_true(a6:find(string.char(0, 47), 1, true) ~= nil, "NSEC type")
     assert_eq(a6:sub(-3), string.char(0, 1, 64))

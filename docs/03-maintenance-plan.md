@@ -65,7 +65,7 @@ accessible.
 ## THE PLAN (in phases)
 
 ### Phase 0 — Get in + back EVERYTHING up (top priority, do this first)
-1. Static IP for A8:EE:C6:04:26:E8 in the router; bookmark jooki2-0426E8.local.
+1. Static IP for A8:EE:C6:A1:B2:C3 in the router; bookmark jooki2-A1B2C3.local.
 2. Root: add your public SSH key via /config → `ssh root@192.168.1.61`.
 3. Full backup: a `dd` image of the SD card (over the network) OR at minimum an
    archive of content + config + data + ESP32 firmware (.bin) + web UI bundle +

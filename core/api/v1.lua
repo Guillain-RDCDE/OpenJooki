@@ -50,7 +50,7 @@ function PARTS.device(doc)
   local h = doc.health or {}
   return { flags = flags_list(doc.flags), toy_safe = d.toy_safe, id = d.id, hostname = d.hostname, ip = (doc.net or {}).ip or d.ip,
            wifi_mac = d.wifi_mac, machine = d.machine, firmware = d.firmware, openjooki = d.openjooki or d.core,
-           diskUsage = d.diskUsage, usage = d.usage, core = d.core, rss_kb = h.rss_kb }
+           diskUsage = d.diskUsage, usage = d.usage, core = d.core, rss_kb = h.rss_kb, boot = h.boot }
 end
 function PARTS.nfc(doc) return doc.nfc or {} end
 function PARTS.power(doc) return doc.power or {} end

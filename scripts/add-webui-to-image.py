@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 import lua_patches as L  # noqa: E402
-from jooki import SYSTEM_DIR, SYSTEM_FILES, load_core  # noqa: E402
+from jooki import SYSTEM_DIR, SYSTEM_FILES, file_mode, load_core  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
 WEB_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js")
@@ -135,8 +135,8 @@ def main():
         if exists(out, path) and not exists(out, path + ".openjooki-orig"):
             local = os.path.join(work, os.path.basename(path) + ".orig")
             open(local, "wb").write(cat(out, path))
-            put(out, local, path + ".openjooki-orig")
-        put(out, os.path.join(SYSTEM_DIR, f), path)
+            put(out, local, path + ".openjooki-orig", mode="0100" + file_mode(path))
+        put(out, os.path.join(SYSTEM_DIR, f), path, mode="0100" + file_mode(path))
     print("system files installed:", ", ".join(sorted(SYSTEM_FILES)))
 
     # --- version ---

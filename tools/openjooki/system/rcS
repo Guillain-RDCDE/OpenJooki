@@ -1,0 +1,30 @@
+#!/bin/sh
+# OpenJooki: the original Muuselabs rcS, plus boot timestamps (original kept as rcS.openjooki-orig).
+
+# Start all init scripts in /etc/rcS.d and /etc/rc5.d
+# executing them in numerical order.
+#
+
+for i in /etc/rcS.d/S??* /etc/rc5.d/S??* ;do
+
+     # Ignore dangling symlinks (if any).
+     [ ! -f "$i" ] && continue
+     # OpenJooki: timestamp each script in the kernel log (dmesg), to measure the boot
+     if [ -w /dev/kmsg ]; then echo "openjooki-boot: $i" > /dev/kmsg; fi
+
+     case "$i" in
+	*.sh)
+	    # Source shell script for speed.
+	    (
+		trap - INT QUIT TSTP
+		set start
+		. $i
+	    )
+	    ;;
+	*)
+	    # No sh extension, so fork subprocess.
+	    $i start
+	    ;;
+    esac
+done
+if [ -w /dev/kmsg ]; then echo "openjooki-boot: rcS done" > /dev/kmsg; fi

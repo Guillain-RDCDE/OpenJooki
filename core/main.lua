@@ -14,6 +14,17 @@ local json = require("vendor.json")
 
 local VERSION = _G._OPENJOOKI_CORE or "dev"
 
+-- seconds since the kernel started (nil off Linux): the boot timeline is measured on this clock
+local function kernel_uptime()
+  local f = io.open("/proc/uptime", "r")
+  if not f then return nil end
+  local s = f:read("*l")
+  f:close()
+  local v = s and tonumber(s:match("^(%S+)"))
+  return v and math.floor(v * 100 + 0.5) / 100 or nil
+end
+local BOOT = { start_s = kernel_uptime() }
+
 local function env(name, default)
   local v = os.getenv(name)
   if v == nil or v == "" then return default end
@@ -97,8 +108,11 @@ dispatch.on("timer", "health", function(doc, ev)
     for line in f:lines() do rss = rss or tonumber(line:match("^VmRSS:%s+(%d+)")) end
     f:close()
   end
+  -- syslog-ng starts throttled and drops what is logged in the first seconds: say the boot times here
+  if not BOOT.logged and BOOT.ready_s then BOOT.logged = true; log.info("core.boot", { start_s = BOOT.start_s, ready_s = BOOT.ready_s }) end
   return { state = { health = { degraded = doc.health and doc.health.degraded or false, rss_kb = rss,
-                                uptime_s = math.floor(ev.now), bus = bus.stats, shell_calls = shell.count } } }
+                                uptime_s = math.floor(ev.now), bus = bus.stats, shell_calls = shell.count,
+                                boot = { start_s = BOOT.start_s, ready_s = BOOT.ready_s } } } }
 end)
 
 -- every event carries the wall clock too (bedtime, ids)
@@ -159,4 +173,6 @@ loop.emit({
 
 log.info("core.start", { version = VERSION, host = host.available() and "device" or "bench" })
 host.ready()
+BOOT.ready_s = kernel_uptime()
+state.set("health", { degraded = (state.get("health") or {}).degraded or false, boot = { start_s = BOOT.start_s, ready_s = BOOT.ready_s } })
 loop.run()

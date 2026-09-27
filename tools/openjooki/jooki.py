@@ -457,7 +457,11 @@ OLD_WWW = ("index.html", "asset-manifest.json", "service-worker.js", "deezer_cha
 PLAYER_LIB = "/jooki/lib/player.lib"
 # System files OpenJooki replaces (the original is kept once as <file>.openjooki-orig).
 SYSTEM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "system")
-SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf"}   # logs stay on the Jooki
+SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf",   # logs stay on the Jooki
+                "/etc/init.d/rcS": "rcS"}                             # boot timestamps in dmesg
+# Files that must stay executable (init runs rcS directly: without +x the Jooki would not start).
+SYSTEM_MODES = {"/etc/init.d/rcS": "755"}
+def file_mode(path): return SYSTEM_MODES.get(path, "644")
 
 def ssh_bytes(host, remote_cmd, data=None, timeout=120):
     """ssh with binary stdin/stdout (busybox has no base64: we stream the bytes)."""
@@ -585,12 +589,17 @@ def ab_webui(host, dry_run=False, core=None):
     if "PREP_OK" not in r.stdout: log("prepare failed -> aborting (boot unchanged): %s" % (r.stdout+r.stderr)[-300:]); return 1
     targets = [(PLAYER_LIB, lib)] + sorted(files.items())
     for path, data in targets:
-        r = ssh_bytes(host, mnt+"cat > %s%s.new && mv %s%s.new %s%s && chmod 644 %s%s && sync && echo PUT_OK"
-                      % (MP, path, MP, path, MP, path, MP, path), data=data, timeout=60)
+        m = file_mode(path)
+        r = ssh_bytes(host, mnt+"cat > %s%s.new && chmod %s %s%s.new && mv %s%s.new %s%s && sync && echo PUT_OK"
+                      % (MP, path, m, MP, path, MP, path, MP, path), data=data, timeout=60)
         if b"PUT_OK" not in r.stdout: log("write failed (%s) -> aborting (boot unchanged)" % path); return 1
     exp = _webui_expected(lib, files, root=MP)
     if not _md5_match(host, exp, prefix=mnt.replace("set -e; ", "")+" "):
         log("verification on the spare partition failed -> aborting (boot unchanged)"); return 1
+    exe = [p for p in SYSTEM_MODES if SYSTEM_MODES[p] == "755" and p in files]
+    if exe:
+        r = ssh(host, mnt.replace("set -e; ", "") + " " + " && ".join("test -x %s%s" % (MP, p) for p in exe) + " && echo EXEC_OK")
+        if "EXEC_OK" not in r.stdout: log("executable check on the spare partition failed -> aborting (boot unchanged)"); return 1
     log("    spare partition verified (md5 of %d files)" % len(exp))
     log("[4] switch to p%s (patched)" % s)
     if ab_switch(host, s) != 0: log("switch KO -> back to p%s" % a); ab_switch(host, a); return 2

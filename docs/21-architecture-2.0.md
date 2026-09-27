@@ -62,8 +62,8 @@ test with), and never let them affect the rest.
 
 ![Context](img/arch/01-context.svg)
 
-We keep: the C host that loads our program (ADR-0001), the five hardware
-daemons, mosquitto, the kernel, the A/B updater. We own: the core, the page,
+We keep: the C host that loads our program (ADR-0001), the closed
+daemons (hardware, web server, Spotify), mosquitto, the kernel, the A/B updater. We own: the core, the page,
 the build and test pipeline.
 
 ## 4. Principles (and how each one is enforced)

@@ -381,7 +381,10 @@ function device.on_boot(doc, ev)
     { kind = "timer.every", name = "device.knobs", seconds = 10 },
     emit("system.event", { name = "Evt.Jooki.Ready" }),
   }
-  return { state = { audiocfg = a, flags = flags, device = d, power = { level = { mv = 0, p = 0, t = 0 } }, activity = { last = ev.now or 0, buttons = {} },
+  -- plugged at start (1.x did the same): known from the first second, so no cable sound either
+  local connected
+  if ev.plugged == "1" then connected = true elseif ev.plugged == "0" then connected = false end
+  return { state = { audiocfg = a, flags = flags, device = d, power = { level = { mv = 0, p = 0, t = 0 }, connected = connected }, activity = { last = ev.now or 0, buttons = {} },
                      limits = { maxvol = 100, fade = 1, dim = false } }, commands = cmds }
 end
 

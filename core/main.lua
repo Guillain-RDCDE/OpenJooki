@@ -169,6 +169,9 @@ loop.emit({
   bedtime = read_or_empty(data_dir .. "/bedtime.json"),
   system = { tracks = system_tracks },
   flags = flags,
+  -- the power controller only reports a cable change: without this a Jooki plugged in at boot
+  -- would believe it runs on battery and power itself off after 15 min of silence
+  plugged = (files.read_text(config.get("plugged_file")) or ""):match("^%s*([01])"),
 })
 
 log.info("core.start", { version = VERSION, host = host.available() and "device" or "bench" })

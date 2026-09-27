@@ -9,6 +9,7 @@ config.defaults = {
   system_dir = "/jooki/app/system",           -- event sounds shipped with the firmware
   scratch_dir = "/run/openjooki",             -- tmpfs scratch (never the flash)
   version_file = "/etc/openjooki-version",
+  plugged_file = "/sys/kernel/htdrv/plugged",  -- "1" when the charger is in (read once at boot, like 1.x)
   -- bus
   mqtt_host = "127.0.0.1",
   mqtt_port = 1883,

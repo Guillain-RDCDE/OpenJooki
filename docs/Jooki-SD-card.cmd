@@ -23,7 +23,8 @@ exit /b
 #     filesystem to the partition at the first boot.
 # Only removable cards and USB disks are offered, never a system disk. The source must have
 # the Jooki's layout; the target must be bigger; the target's name and size are confirmed.
-# Bench: JOOKI_SD_TEST="clone|<src.img>|<dst.img>" or "grow|<dst.img>" runs on files, no window.
+# Bench: JOOKI_SD_TEST="clone|<src.img>|<dst.img>" or "grow|<dst.img>" runs on files, no window;
+# "disks|<source disk>|<target disk>|<image>" runs the window's two steps on real disks (admin).
 # Docs: JOOKI_SD_PREVIEW=<file.png> draws the window and closes it (JOOKI_SD_DEMO=1: an example
 # card reader in the list, JOOKI_SD_LANG=en|fr); nothing is read or written then.
 # ----------------------------------------------------------------------------------------------
@@ -227,6 +228,34 @@ function Write-Card([string]$imagePath, $target, [long]$targetBytes, [scriptbloc
     } finally { $img.Dispose() }
 }
 
+# Step 1: the Jooki's card (disk number) -> image file. The card is opened read-only.
+function Read-Card([int]$num, [long]$size, [string]$image, [scriptblock]$progress, [scriptblock]$status) {
+    $src = [JookiSd]::Open("\\.\PhysicalDrive$num", $false)
+    try {
+        try { [JookiSd]::CheckJooki([JookiSd]::ReadAt($src, 0, 34)) | Out-Null }
+        catch { throw (T "This is not a Jooki's card (or it cannot be read). Choose the card taken out of the Jooki." "Ce n'est pas la carte d'un Jooki (ou elle est illisible). Choisis la carte sortie du Jooki.") }
+        $out = New-Object IO.FileStream($image, 'CreateNew', 'Write')
+        try {
+            & $status (T "Reading the Jooki's card..." "Lecture de la carte du Jooki...")
+            Copy-Region $src $out 0 0 $size $progress | Out-Null
+        } finally { $out.Dispose() }
+    } finally { $src.Dispose() }
+}
+
+# Step 2: image -> the new card (disk number): its partitions removed, its volumes locked and
+# dismounted while we write, then Windows told to read the new table.
+function Write-CardToDisk([int]$num, [long]$size, [string]$image, [scriptblock]$progress, [scriptblock]$status) {
+    try { Clear-Disk -Number $num -RemoveData -RemoveOEM -Confirm:$false } catch { }
+    $locks = @()
+    foreach ($p in (Get-Partition -DiskNumber $num -ErrorAction SilentlyContinue)) {
+        foreach ($v in $p.AccessPaths) { if ($v -like '\\?\Volume*') { $h = [JookiSd]::LockVolume($v); if ($h) { $locks += $h } } }
+    }
+    $t = [JookiSd]::Open("\\.\PhysicalDrive$num", $true)
+    try { $n = Write-Card $image $t $size $progress $status } finally { $t.Dispose(); foreach ($h in $locks) { $h.Dispose() } }
+    try { Update-Disk -Number $num } catch { }
+    return $n
+}
+
 # ---------------------------------------------------------------- bench mode (files, no window)
 if ($env:JOOKI_SD_TEST) {
     $a = $env:JOOKI_SD_TEST.Split('|')
@@ -234,6 +263,11 @@ if ($env:JOOKI_SD_TEST) {
     if ($a[0] -eq 'clone') {
         $t = [JookiSd]::Open($a[2], $true)
         try { $n = Write-Card $a[1] $t $t.Length $null $say } finally { $t.Dispose() }
+    } elseif ($a[0] -eq 'disks') {       # "disks|<source disk>|<target disk>|<image file>": the window's own two steps
+        $sd = Get-Disk -Number ([int]$a[1]); $td = Get-Disk -Number ([int]$a[2])
+        Read-Card $sd.Number $sd.Size $a[3] $null $say
+        if ($td.Size -le $sd.Size) { throw "target not bigger" }
+        $n = Write-CardToDisk $td.Number $td.Size $a[3] $null $say
     } elseif ($a[0] -eq 'grow') {
         $t = [JookiSd]::Open($a[1], $true)
         try { $n = [JookiSd]::GrowContent($t, [long]($t.Length / 512)); [JookiSd]::Verify($t, [long]($t.Length / 512)) | Out-Null } finally { $t.Dispose() }
@@ -320,30 +354,14 @@ $go.Add_Click({
             $dir = [Environment]::GetFolderPath('MyDocuments')
             $free = (New-Object IO.DriveInfo ([IO.Path]::GetPathRoot($dir))).AvailableFreeSpace
             if ($free -lt $d.Size + 500MB) { throw (Fmt (T "Not enough free space in Documents: {0:N1} GB needed." "Pas assez de place dans Documents : il faut {0:N1} Go.") (($d.Size + 500MB) / 1e9)) }
-            $src = [JookiSd]::Open("\\.\PhysicalDrive$($d.Number)", $false)
-            try {
-                try { [JookiSd]::CheckJooki([JookiSd]::ReadAt($src, 0, 34)) | Out-Null }
-                catch { throw (T "This is not a Jooki's card (or it cannot be read). Choose the card taken out of the Jooki." "Ce n'est pas la carte d'un Jooki (ou elle est illisible). Choisis la carte sortie du Jooki.") }
-                $state.image = Join-Path $dir ("Jooki-card-{0:yyyyMMdd-HHmm}.img" -f (Get-Date))
-                $out = New-Object IO.FileStream($state.image, 'CreateNew', 'Write')
-                try {
-                    & $status (T "Reading the Jooki's card..." "Lecture de la carte du Jooki...")
-                    Copy-Region $src $out 0 0 $d.Size $progress | Out-Null
-                } finally { $out.Dispose() }
-            } finally { $src.Dispose() }
+            $state.image = Join-Path $dir ("Jooki-card-{0:yyyyMMdd-HHmm}.img" -f (Get-Date))
+            Read-Card $d.Number $d.Size $state.image $progress $status
             $state.srcBytes = $d.Size; $state.step = 2
         } else {
             if ($d.Size -le $state.srcBytes) { throw (T "This card is not bigger than the Jooki's card. Choose the NEW card." "Cette carte n'est pas plus grande que celle du Jooki. Choisis la NOUVELLE carte.") }
             $ok = [Windows.Forms.MessageBox]::Show(((T "Erase EVERYTHING on this card?`n`n{0}" "Effacer TOUT le contenu de cette carte ?`n`n{0}") -f (Label-Of $d)), $form.Text, 'YesNo', 'Warning')
             if ($ok -ne 'Yes') { return }
-            try { Clear-Disk -Number $d.Number -RemoveData -RemoveOEM -Confirm:$false } catch { }
-            $locks = @()
-            foreach ($p in (Get-Partition -DiskNumber $d.Number -ErrorAction SilentlyContinue)) {
-                foreach ($v in $p.AccessPaths) { if ($v -like '\\?\Volume*') { $h = [JookiSd]::LockVolume($v); if ($h) { $locks += $h } } }
-            }
-            $t = [JookiSd]::Open("\\.\PhysicalDrive$($d.Number)", $true)
-            try { Write-Card $state.image $t $d.Size $progress $status | Out-Null } finally { $t.Dispose(); foreach ($h in $locks) { $h.Dispose() } }
-            try { Update-Disk -Number $d.Number } catch { }
+            Write-CardToDisk $d.Number $d.Size $state.image $progress $status | Out-Null
             $state.step = 3
         }
         Show-Step

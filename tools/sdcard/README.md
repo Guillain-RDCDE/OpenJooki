@@ -45,10 +45,19 @@ formats Windows cannot read.
 
 ## Tested
 
-On disk images (not yet on a physical card): a card with the Jooki's layout copied to
-a bigger one, checked with `sgdisk -v`, `e2fsck` and a `resize2fs` like the Jooki's,
-the files kept; the real partition table of a Jooki grown to 32 GB; a target that is
-not bigger, and a card that is not a Jooki's, refused with nothing written.
+- On disk images: a card with the Jooki's layout copied to a bigger one, checked with
+  `sgdisk -v`, `e2fsck` and a `resize2fs` like the Jooki's, the files kept; the real
+  partition table of a Jooki grown to 32 GB; a target that is not bigger, and a card
+  that is not a Jooki's, refused with nothing written.
+- On real Windows disks (two virtual disks attached by Windows, the window's own two
+  steps): the Jooki card's FAT `config` partition mounted by Windows, the new card
+  formatted FAT32 and mounted, as bought. The new card was erased, written, read back,
+  grown, and passed the same checks; Windows then shows the Jooki's partitions on it.
+- Not yet: a physical card in a card reader, and a Jooki started on a bigger card.
+
+Note: the tool never writes to the Jooki's card, but **Windows itself** adds a small
+`System Volume Information` folder to the FAT `config` partition of any card it mounts
+(the Jooki's own card already has one). The Jooki ignores it; the music is not touched.
 
 Bench mode, no window: `JOOKI_SD_TEST="clone|<src.img>|<dst.img>"` or
 `JOOKI_SD_TEST="grow|<card.img>"`; `JOOKI_SD_PREVIEW=<file.png>` draws the window.

@@ -54,7 +54,7 @@ python3 tools/openjooki/jooki.py --host <jooki-ip> patch switch <2|3>           
 Release images get exactly the same changes with `scripts/add-webui-to-image.py`.
 
 A bigger SD card: [the tool's page](sdcard.html) and [how it works](../tools/sdcard/README.md); it copies the Jooki's card to a
-bigger one on Windows and grows the music partition (GPT) to the end of the card.
+bigger one (Windows, Mac, Linux) and grows the music partition (GPT) to the end of the card.
 
 ## The page and the fixes (1.x)
 
@@ -110,7 +110,7 @@ tools/openjooki/system/   system files OpenJooki installs (originals kept)
 tools/openjooki/tests/    off-device test bench (real application + browser)
 tools/openjooki/device/   scripts that run on the Jooki (self-install, OTA)
 tools/build/              builds the core into the Jooki's program format
-tools/sdcard/             how the bigger-SD-card tool works (the tool: docs/Jooki-SD-card.cmd)
+tools/sdcard/             the bigger-SD-card tool: Python (Mac, Linux), the Mac app; Windows: docs/Jooki-SD-card.cmd
 scripts/                  release images
 docs/                     analysis, architecture, runbooks, audit (this page)
 ```

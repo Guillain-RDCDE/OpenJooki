@@ -1,0 +1,21 @@
+#!/bin/bash
+# Jooki SD Card (macOS): starts the tool's local page with the rights to read and write cards
+# (macOS asks for the password), then opens it in the browser. The page only answers this Mac,
+# with a secret token in its address, and stops by itself when closed or left alone.
+APP="$(cd "$(dirname "$0")/.." && pwd)"
+TOOL="$APP/Resources/jooki_sd.py"
+[ -f "$TOOL" ] || TOOL="$(cd "$APP/../.." && pwd)/jooki_sd.py"          # in the repository: tools/sdcard/
+PY=/usr/bin/python3
+PORT=$(( 20000 + RANDOM % 20000 ))
+TOKEN=$("$PY" -c 'import secrets; print(secrets.token_urlsafe(16))') || exit 1
+LOG="/tmp/jooki-sd-$USER.log"
+CMD="JOOKI_SD_USER='$USER' '$PY' '$TOOL' web --port $PORT --token $TOKEN --no-browser > '$LOG' 2>&1 &"
+if [ "${LANG:0:2}" = "fr" ] || defaults read -g AppleLocale 2>/dev/null | grep -q '^fr'; then
+  PROMPT="Jooki SD Card a besoin de ton mot de passe pour lire et écrire les cartes SD."
+else
+  PROMPT="Jooki SD Card needs your password to read and write SD cards."
+fi
+osascript -e "do shell script \"$CMD\" with administrator privileges with prompt \"$PROMPT\"" >/dev/null || exit 0
+URL="http://127.0.0.1:$PORT/?token=$TOKEN"
+for i in $(seq 1 50); do curl -s -o /dev/null "$URL" && break; sleep 0.2; done
+open "$URL"

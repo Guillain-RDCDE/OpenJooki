@@ -2,3 +2,5 @@
 tools/openjooki/system/* text eol=lf
 # Windows scripts: stored and downloaded as-is, with CRLF (cmd labels and goto misbehave with LF)
 *.cmd -text
+# the Mac app launchers: always LF (bash)
+**/*.app/Contents/MacOS/* text eol=lf

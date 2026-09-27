@@ -16,6 +16,8 @@
   img{display:block;width:100%;max-width:576px;margin:0 auto;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.18)}
   .cap{color:var(--muted);font-size:.85em;text-align:center;margin:8px 0 0}
   .btn{display:block;text-decoration:none;text-align:center;background:var(--accent);color:#fff;padding:17px;border-radius:12px;font-weight:700;margin:26px auto 6px;font-size:1.15em;max-width:460px}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);margin-top:10px}
+  code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:.88em}
   .tiny{color:var(--muted);font-size:.82em;text-align:center;margin:0}
   h2{font-size:1.15em;margin:1.8em 0 .4em}
   ol,ul{padding-left:1.3em}li{margin:.35em 0}
@@ -27,22 +29,38 @@
 <body>
 <main>
   <h1>A bigger SD card</h1>
-  <p class="sub">Out of room for music? Move your Jooki to a bigger card with a Windows computer. One file, nothing to install.</p>
+  <p class="sub">Out of room for music? Move your Jooki to a bigger card with a Windows computer or a Mac. Nothing to install.</p>
 
   <img src="img/sdcard-tool.png" alt="The window of the tool: step 1, the Jooki's card, chosen in the list of card readers" width="576" height="369">
-  <p class="cap">The window, in English or French like your Windows.</p>
+  <p class="cap">The window, in English or French like your computer.</p>
 
-  <a class="btn" href="Jooki-SD-card.cmd" download>Download the tool</a>
-  <p class="tiny">Windows 10 or 11 · a card reader · about 8 GB free in Documents</p>
+  <a class="btn" href="Jooki-SD-card.cmd" download>Download for Windows</a>
+  <a class="btn ghost" href="Jooki-SD-Card-mac.zip" download>Download for Mac</a>
+  <p class="tiny">A card reader · about 8 GB free in Documents · Linux: see below</p>
 
   <h2>How it goes</h2>
   <ol>
     <li>Take the SD card out of the Jooki and put it in the computer.</li>
-    <li>Double-click the file and say <b>Yes</b> when Windows asks for permission.</li>
+    <li><b>Windows</b>: double-click the file and say <b>Yes</b> when Windows asks for permission.<br>
+      <b>Mac</b>: unzip, then open <b>Jooki SD Card</b> and type your password when asked
+      (the tool needs it to read and write cards). The steps open in your browser.</li>
     <li>The tool reads the Jooki's card, then asks for the new one: it copies everything,
       checks every byte, and gives the music all the space of the new card.</li>
     <li>Put the new card in the Jooki: at the first start it uses all the space by itself.</li>
   </ol>
+
+  <h2>On a Mac, the first time</h2>
+  <p>The app is not from the App Store, so macOS asks you to confirm once: <b>right-click</b> (or
+    Control-click) <b>Jooki SD Card</b>, choose <b>Open</b>, then <b>Open</b> again. On recent
+    macOS: <b>System Settings → Privacy &amp; Security → Open Anyway</b>. If the Mac offers to
+    install its developer tools, accept: they bring the Python the app uses.</p>
+  <img src="img/sdcard-web.png" alt="The steps on a Mac, in the browser: the Jooki's card chosen in the list" width="640" height="470" style="max-width:420px">
+  <p class="cap">On a Mac or Linux, the same steps in your browser.</p>
+
+  <h2>On Linux</h2>
+  <p>One Python file: <a href="https://github.com/Guillain-RDCDE/OpenJooki/blob/main/tools/sdcard/jooki_sd.py">jooki_sd.py</a>,
+    then <code>sudo python3 jooki_sd.py web</code> (the same steps in your browser) or
+    <code>list</code>, <code>read</code>, <code>write</code> in a terminal.</p>
 
   <h2>Nothing to lose</h2>
   <ul>
@@ -53,7 +71,7 @@
   </ul>
 
   <p class="note">New tool: checked on disk images, including the real layout of a Jooki's
-    card stretched to 32 GB, and on disks attached to Windows. Cards up to 32 GB are the same
+    card stretched to 32 GB, and on disks attached to Windows, macOS and Linux. Cards up to 32 GB are the same
     kind as the Jooki's own; bigger ones have not been tried in a Jooki yet. How it works:
     <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/sdcard">tools/sdcard</a>.</p>
 

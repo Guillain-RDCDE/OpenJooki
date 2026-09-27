@@ -47,8 +47,8 @@ Tip: add the page to your home screen to open it in one tap.
 ## More room for music: a bigger SD card
 
 The Jooki keeps its music on a small SD card inside it (about 5 GB free for music).
-With a Windows computer you can move everything to a **bigger card**, in a few clicks:
-one file to download, nothing to install, and the Jooki's own card is never changed.
+With a Windows computer or a Mac you can move everything to a **bigger card**, in a few
+clicks: nothing to install, and the tool never writes to the Jooki's own card.
 
 **[→ The bigger SD card tool](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)**
 

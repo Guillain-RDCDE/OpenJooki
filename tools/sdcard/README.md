@@ -1,12 +1,18 @@
-# A bigger SD card for the Jooki (Windows)
+# A bigger SD card for the Jooki (Windows, Mac, Linux)
 
 The Jooki v2 keeps everything on a micro SD card inside it: 8 GB, of which about
-5 GB is for music. To get more room, move it to a bigger card with
-**`Jooki-SD-card.cmd`**: one file, nothing to install.
+5 GB is for music. To get more room, move it to a bigger card:
+
+- **Windows**: [`Jooki-SD-card.cmd`](../../docs/Jooki-SD-card.cmd), one file, nothing to install;
+- **Mac**: the app **Jooki SD Card** ([zip](../../docs/Jooki-SD-Card-mac.zip), built by `make_mac_zip.py`
+  from [`Jooki SD Card.app`](Jooki%20SD%20Card.app) and `jooki_sd.py`): it asks for the password,
+  then the steps open in the browser;
+- **Linux** (and Mac in a terminal): [`jooki_sd.py`](jooki_sd.py), Python 3 standard library:
+  `sudo python3 jooki_sd.py web`, or `list`, `read <card> <image>`, `write <image> <card>`, `grow <card>`.
 
 ## What you need
 
-- A Windows 10 or 11 computer with a card reader (built in, or a small USB one).
+- A Windows 10/11 computer, a Mac or a Linux computer, with a card reader (built in, or a small USB one).
 - A new micro SD card, **bigger than 8 GB**. Up to 32 GB is the same kind of card as
   the Jooki's own; bigger cards (SDXC) have not been tried in a Jooki yet.
 - About 8 GB free in your Documents folder.
@@ -53,11 +59,22 @@ formats Windows cannot read.
   steps): the Jooki card's FAT `config` partition mounted by Windows, the new card
   formatted FAT32 and mounted, as bought. The new card was erased, written, read back,
   grown, and passed the same checks; Windows then shows the Jooki's partitions on it.
+- The Python tool (Mac, Linux), the same checks: on Linux with a real block device
+  (a mounted volume on the new card, unmounted by the tool, the new table read by the
+  kernel); on macOS with disks attached by the system (`/dev/rdisk`, the Jooki card's FAT
+  partition mounted by macOS), then checked with the Linux reference tools.
+- The Mac app on a Mac: unzipped by the Finder and by `unzip`, the launcher stays
+  executable, the page runs with the needed rights and refuses any request without its
+  secret token or from another host name. The password dialog itself is macOS's own.
 - Not yet: a physical card in a card reader, and a Jooki started on a bigger card.
 
-Note: the tool never writes to the Jooki's card, but **Windows itself** adds a small
-`System Volume Information` folder to the FAT `config` partition of any card it mounts
-(the Jooki's own card already has one). The Jooki ignores it; the music is not touched.
+Note: the tool never writes to the Jooki's card, but **the computer itself** writes a few
+sectors in the FAT `config` partition of any card it mounts (Windows: a `System Volume
+Information` folder, which the Jooki's own card already has; macOS: its own small files).
+The Jooki ignores them; the music is not touched.
 
-Bench mode, no window: `JOOKI_SD_TEST="clone|<src.img>|<dst.img>"` or
+Bench (Windows tool), no window: `JOOKI_SD_TEST="clone|<src.img>|<dst.img>"` or
 `JOOKI_SD_TEST="grow|<card.img>"`; `JOOKI_SD_PREVIEW=<file.png>` draws the window.
+
+Bench (Python tool): an image file works as a card (`read src.img card.img`, `write card.img dst.img --yes`);
+`JOOKI_SD_BENCH=1` also accepts any block device path; `JOOKI_SD_DEMO=1` shows an example card reader (pictures).

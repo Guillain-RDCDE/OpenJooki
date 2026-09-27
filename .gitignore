@@ -4,6 +4,7 @@ backups/
 *.img.gz
 *.tar.gz
 *.zip
+!docs/Jooki-SD-Card-mac.zip
 # Secrets / keys
 *.pem
 id_*

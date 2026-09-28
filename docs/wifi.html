@@ -54,12 +54,13 @@
 <body>
 <main>
   <h1>Connect the Jooki to Wi-Fi</h1>
-  <p class="sub">Moved house, new internet box, new Wi-Fi password? The Jooki only learnt its network from the old app. This page gives it a new one over Bluetooth. Nothing to install.</p>
+  <p class="sub">Moved house, new internet box, new Wi-Fi password? The Jooki only learnt its network from the old app. This page gives it a new one over Bluetooth, from an Android phone or a computer. Nothing to install. (Not from an iPhone: see below.)</p>
 
   <div class="card bad" id="nobt" hidden>
-    <b>This browser cannot talk Bluetooth.</b>
-    <p>Open this page in <b>Chrome</b> (or Edge) on an <b>Android phone</b>, a <b>Windows PC</b>, a <b>Mac</b> or <b>Linux</b>.
-    An iPhone or iPad cannot do it: use a computer or an Android phone instead.</p>
+    <b>This page cannot reach the Jooki from here.</b>
+    <p>The Jooki listens over <b>Bluetooth</b> when it has no Wi-Fi, and this browser cannot use Bluetooth.</p>
+    <p><b>On an iPhone or iPad, no page can</b>: Apple keeps Bluetooth away from every web page, whatever the browser, Chrome included. It is not something a setting can change.</p>
+    <p>Open this page in <b>Chrome</b> (or Edge) on an <b>Android phone</b>, a <b>Windows PC</b>, a <b>Mac</b> or <b>Linux</b>: two minutes, once. Then the Jooki is back on Wi-Fi, and you use it from your iPhone as usual.</p>
     <p class="tiny">No Chrome at hand? <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/wifi">A small program for the computer</a> does the same.</p>
   </div>
 
@@ -121,6 +122,7 @@
     <ul>
       <li>The Jooki's Wi-Fi chip also speaks Bluetooth, and it always offers the same set-up the old app used at the first start. This page speaks it, straight from the browser: nothing is sent anywhere else.</li>
       <li>The password travels over Bluetooth, over a few metres, without encryption (that is how the Jooki was built). Do it at home.</li>
+      <li><b>Why not from an iPhone or iPad?</b> Apple does not let any web page use Bluetooth, in any browser (Chrome on an iPhone is Safari underneath). The only way round would be an app on the App Store, which OpenJooki does not have. So this one step needs an Android phone or a computer; everything else works from the iPhone.</li>
       <li>The Jooki only does <b>2.4 GHz</b> Wi-Fi. If your box only shows a 5 GHz network, turn its 2.4 GHz one on.</li>
       <li>Once connected, the Jooki's page is at <code>http://jooki.local</code> (or the address your box shows for it), from any phone or computer on that Wi-Fi.</li>
       <li>Prefer a terminal? <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/wifi">jooki_wifi.py</a> does the same on Windows, Mac and Linux.</li>

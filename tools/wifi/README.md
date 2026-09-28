@@ -7,8 +7,12 @@ Espressif's provisioning (protocol v1.1, no security, `wifi_scan`), plus Muusela
 own list of remembered networks. Two things speak it:
 
 - **[The page](https://guillain-rdcde.github.io/OpenJooki/wifi.html)**, in Chrome or
-  Edge on Android, Windows, Mac or Linux (Web Bluetooth; not on iPhone). Nothing to
-  install: find the Jooki, pick a network, type the password.
+  Edge on Android, Windows, Mac or Linux (Web Bluetooth). Nothing to install: find the
+  Jooki, pick a network, type the password.
+  **Not on iPhone or iPad**: iOS exposes Web Bluetooth to no browser (all of them run on
+  WebKit, Chrome included). The only ways round are a native App Store app (not planned:
+  no personal Apple developer account) or third-party "Web Bluetooth browsers", refused
+  because the audience is parents with no technical skill. The page says so plainly.
 - **`jooki_wifi.py`**, the same from a terminal, on Windows, Mac and Linux:
 
 ```sh

@@ -11,6 +11,10 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki. For the **Jooki 2
 - **Your Jooki works, the app does not** → [install OpenJooki from your phone](#install-it-about-15-minutes-from-your-phone), 15 minutes, nothing to open.
 - **Your Jooki no longer starts** (side dots dark, a reset does nothing) → its memory card is dead. [Make it a new card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html) with a Windows computer, a Mac or a Linux computer: ten minutes, and it starts again.
 - **Out of room for music** → [move it to a bigger card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html), same tool.
+- **Your Jooki lost its Wi-Fi** (moved house, new box, new password; its lights stay red) →
+  [give it the new network](https://guillain-rdcde.github.io/OpenJooki/wifi.html) over Bluetooth, two
+  minutes with an **Android phone or a computer**. Not from an iPhone: Apple keeps Bluetooth away
+  from web pages ([why](#questions)).
 - **A question about the lights, the battery, the charger** → [the lights, the battery and the USB-C port](docs/24-hardware-and-lights.md).
 
 ![The OpenJooki page on a phone](docs/img/openjooki-web.png)
@@ -91,6 +95,11 @@ Windows computer, a Mac or a Linux computer, one tool does two things:
 - **What if something goes wrong?** Unplug the Jooki and plug it back in: it goes back
   to the previous version by itself.
 - **Can anyone outside my home see my Jooki?** No. No account, no cloud, no tracking.
+- **Why can't I reconnect the Wi-Fi from my iPhone?** A Jooki without Wi-Fi only listens over
+  Bluetooth, and Apple does not let any web page use Bluetooth on an iPhone or iPad, in any
+  browser (Chrome there is Safari underneath). The only way round would be an app on the App
+  Store, which OpenJooki does not have. So that one step takes an Android phone or a computer
+  (Windows, Mac or Linux) with Chrome, once; everything else works from the iPhone.
 - **And the Jooki 1?** It's on the way, but it's a much more closed box: it takes more work.
 - **What do the lights mean? It gets warm when charging, the battery no longer lasts?**
   See [the lights, the battery and the USB-C port](docs/24-hardware-and-lights.md).

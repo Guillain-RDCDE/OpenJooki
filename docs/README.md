@@ -57,6 +57,11 @@ The SD card: [the tool's page](sdcard.html) and [how it works](../tools/sdcard/R
 bigger one (Windows, Mac, Linux) and grows the music partition (GPT) to the end of the card, or writes a **new card
 from scratch** for a Jooki whose card died ([25-new-sd-card.md](25-new-sd-card.md): what is on it, `tools/sdcard/make_card_image.py`).
 
+Wi-Fi without the app: [the page](wifi.html) gives the Jooki a network over Bluetooth (Web Bluetooth: Chrome on
+Android, Windows, Mac, Linux) and [`tools/wifi/jooki_wifi.py`](../tools/wifi/README.md) does the same from a terminal.
+Not from an iPhone or iPad: iOS has no Web Bluetooth in any browser, and an App Store app is not planned.
+What the Jooki's chip speaks, and its traps: [tools/wifi/README.md](../tools/wifi/README.md).
+
 ## The page and the fixes (1.x)
 
 A local page (no framework, no external request) replaces the 2018 app, and the

@@ -1436,6 +1436,7 @@
       return [Math.floor(rx / s + sw / 2), Math.floor(ry / s + sh / 2)];
     }
     function pushUndo() { undo.push(keep.slice(0)); if (undo.length > 10) undo.shift(); }
+    var ready = function () { return !!keep && !busy; };   // nothing works before the picture is loaded
     function flood(seeds) {   // seeds: [[x, y]]; each zone is compared with the colour under its own seed
       var d = src.getContext('2d').getImageData(0, 0, sw, sh).data, lim = tol * 4.4, changed = false;
       seeds.forEach(function (sd) {
@@ -1457,7 +1458,7 @@
       });
       return changed;
     }
-    function act(seeds) { pushUndo(); if (flood(seeds)) { rebuildCut(); draw(); } else undo.pop(); }
+    function act(seeds) { if (!ready()) return; pushUndo(); if (flood(seeds)) { rebuildCut(); draw(); } else undo.pop(); }
     function removeBackground() {
       var e = 2, mx = Math.floor(sw / 2), my = Math.floor(sh / 2);
       act([[e, e], [sw - 1 - e, e], [e, sh - 1 - e], [sw - 1 - e, sh - 1 - e], [mx, e], [mx, sh - 1 - e], [e, my], [sw - 1 - e, my]]);
@@ -1485,7 +1486,7 @@
       return h('label', { class: 'edrow' }, h('span', null, label), inp, out);
     }
     function save() {
-      if (busy) return; busy = true; status.textContent = t('ed_sending');
+      if (!ready()) return; busy = true; status.textContent = t('ed_sending');
       var o = document.createElement('canvas'); o.width = OUT; o.height = OUT; var c = o.getContext('2d');
       c.beginPath(); c.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2); c.clip();
       place(c, OUT / 2, OUT / 2, OUT / (R * 2)); c.drawImage(cut, 0, 0);
@@ -1509,18 +1510,21 @@
       status,
       h('div', { class: 'edtools' },
         h('button', { class: 'btn', 'data-k': 'edbg', onclick: removeBackground }, t('ed_bg')),
-        h('button', { class: 'btn', 'data-k': 'edundo', onclick: function () { if (undo.length) { keep = undo.pop(); rebuildCut(); draw(); } } }, t('ed_undo')),
-        h('button', { class: 'btn', 'data-k': 'edrot90', onclick: function () { rot = (rot + 90) % 360; rotInp.querySelector('input').value = String(rot > 180 ? rot - 360 : rot); draw(); } }, '↻ 90°')),
+        h('button', { class: 'btn', 'data-k': 'edundo', onclick: function () { if (ready() && undo.length) { keep = undo.pop(); rebuildCut(); draw(); } } }, t('ed_undo')),
+        h('button', { class: 'btn', 'data-k': 'edrot90', onclick: function () { if (!ready()) return; rot = (rot + 90) % 360; rotInp.querySelector('input').value = String(rot > 180 ? rot - 360 : rot); draw(); } }, '↻ 90°')),
       range('edtol', t('ed_tol'), 0, 100, 1, function () { return tol; }, function (v) { tol = v; }),
       (function () { rotInp = range('edrot', t('ed_rot'), -180, 180, 1, function () { return rot; }, function (v) { rot = v; }); return rotInp; })(),
       range('edzoom', t('ed_zoom'), 0.5, 4, 0.1, function () { return zoom; }, function (v) { zoom = v; }),
       h('div', { class: 'foot' },
         h('button', { class: 'btn', onclick: function () { closeModal(); charModal('tag.' + tag); } }, t('cancel')),
-        h('button', { class: 'btn', 'data-k': 'edreset', onclick: function () { pushUndo(); keep.fill(1); rot = 0; zoom = 1; px = py = 0; rebuildCut(); draw(); } }, t('ed_reset')),
+        h('button', { class: 'btn', 'data-k': 'edreset', onclick: function () { if (!ready()) return; pushUndo(); keep.fill(1); rot = 0; zoom = 1; px = py = 0; rebuildCut(); draw(); } }, t('ed_reset')),
         h('button', { class: 'btn primary', 'data-k': 'edsave', onclick: save }, t('ed_save'))));
     var rotInp;
-    openModal({ render: function () { return body; }, onclose: function () { if (url) URL.revokeObjectURL(url); } });
-    var url = URL.createObjectURL(file), img = new Image();
+    openModal({ render: function () { return body; } });
+    // read as a data: URL, not a blob: URL: the page's content security policy allows img-src 'self' data:
+    var img = new Image(), rd = new FileReader();
+    rd.onerror = function () { status.textContent = t('photo_bad'); };
+    rd.onload = function () { img.src = rd.result; };
     img.onload = function () {
       var k = Math.min(1, SRC_MAX / Math.max(img.naturalWidth, img.naturalHeight));
       sw = Math.max(1, Math.round(img.naturalWidth * k)); sh = Math.max(1, Math.round(img.naturalHeight * k));
@@ -1530,7 +1534,7 @@
       rebuildCut(); draw();
     };
     img.onerror = function () { status.textContent = t('photo_bad'); };
-    img.src = url;
+    rd.readAsDataURL(file);
   }
 
   /* ---------------- OpenJooki updates (the Jooki itself talks to GitHub) */

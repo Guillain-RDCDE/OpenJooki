@@ -7,8 +7,14 @@
   playlist. Two limits come from the Jooki's own NFC chip: taking the tag off
   does not pause (use the button), and the same tag twice in a row needs
   something else put on in between. Details in docs/23-nfc-tags.md.
-- **Name your tags.** A tag's card is named by the end of its id until you type
-  a name in its field ("Name this tag"); that name is then what the whole page
+- **The Tokens screen is now a wall of visuals, searched by name.** One tile per
+  character or tag: its picture, its name, the playlist it starts. A search box
+  above filters by name (a character's, a token's nickname, a tag's name or its
+  playlist). Tap a tile to open its sheet: choose the playlist, name each token,
+  forget one. Choosing a playlist another character already starts now asks
+  first instead of taking it silently.
+- **Name your tags.** A tag's tile is named by the end of its id until you type
+  a name in its sheet ("Name this tag"); that name is then what the whole page
   shows for it, on the playlist cards too. With many tags, name them.
 
 ## OpenJooki 2.0.3 (28 September 2026) — a parent code, and switches you control

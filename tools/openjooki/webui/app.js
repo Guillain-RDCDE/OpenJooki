@@ -50,6 +50,8 @@
       nfc_tag: 'Tag NFC', foreign_hint: 'Un autre objet NFC (un amiibo, un autocollant) apparaît aussi ici quand tu le poses : il lance sa playlist, mais le retirer ne met pas en pause, et il faut poser autre chose entre deux poses. Utilise le bouton pour la pause.',
       launches: 'Lance', none_dash: '— Aucune playlist —',
       token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)', tag_name_ph: 'Nom de ce tag (pour t\'y retrouver)',
+      tok_search_ph: 'Rechercher un jeton par son nom', tok_no_match: 'Aucun jeton ne porte ce nom.',
+      pl_taken: function (pl, ch) { return '« ' + pl + ' » est lancée par ' + ch + '. La donner à ce jeton à la place ?'; },
       seen_n: function (n) { return 'posé ' + n + ' fois'; }, on_jooki: 'Sur le Jooki',
       forget: 'Oublier', forget_q: 'Oublier ce jeton ?',
       forget_text: 'Il disparaît de la liste et réapparaîtra la prochaine fois qu\'il sera posé. La playlist du personnage ne change pas.',
@@ -166,6 +168,8 @@
       nfc_tag: 'NFC tag', foreign_hint: 'Another NFC object (an amiibo, a sticker) also shows up here when you put it on: it starts its playlist, but taking it off does not pause, and something else has to be put on between two taps. Use the button to pause.',
       launches: 'Starts', none_dash: '— No playlist —',
       token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)', tag_name_ph: 'Name this tag (to tell them apart)',
+      tok_search_ph: 'Search a token by name', tok_no_match: 'No token has that name.',
+      pl_taken: function (pl, ch) { return '“' + pl + '” is started by ' + ch + '. Give it to this token instead?'; },
       seen_n: function (n) { return 'used ' + n + (n === 1 ? ' time' : ' times'); }, on_jooki: 'On the Jooki',
       forget: 'Forget', forget_q: 'Forget this token?',
       forget_text: 'It leaves the list and comes back next time it is used. The character\'s playlist does not change.',
@@ -282,6 +286,8 @@
       nfc_tag: 'NFC-tag', foreign_hint: 'Een ander NFC-voorwerp (een amiibo, een sticker) verschijnt hier ook als je het erop zet: het start zijn afspeellijst, maar eraf halen pauzeert niet, en er moet iets anders op tussen twee keer. Gebruik de knop om te pauzeren.',
       launches: 'Start', none_dash: '— Geen afspeellijst —',
       token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)', tag_name_ph: 'Naam van deze tag (om ze uit elkaar te houden)',
+      tok_search_ph: 'Zoek een figuurtje op naam', tok_no_match: 'Geen figuurtje met die naam.',
+      pl_taken: function (pl, ch) { return '“' + pl + '” wordt gestart door ' + ch + '. Aan dit figuurtje geven?'; },
       seen_n: function (n) { return n + ' keer gebruikt'; }, on_jooki: 'Op de Jooki',
       forget: 'Vergeten', forget_q: 'Dit figuurtje vergeten?',
       forget_text: 'Het verdwijnt uit de lijst en komt terug zodra het weer gebruikt wordt. De afspeellijst van het personage verandert niet.',
@@ -687,17 +693,20 @@
   var modal = null; // {render: fn -> element, onclose}
   function openModal(m) { modal = m; renderModal(); }
   function closeModal() { var m = modal; modal = null; renderModal(); if (m && m.onclose) m.onclose(); }
-  var modalRoot;
+  var modalRoot, modalRendering = false;   // true while a sheet is rebuilt: its inputs blur without meaning it
   function renderModal() {
     if (!modalRoot) return;
     var keep = captureFocus(modalRoot);
-    modalRoot.innerHTML = '';
-    if (!modal) { document.body.style.overflow = ''; return; }
-    document.body.style.overflow = 'hidden';
-    var sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, modal.render());
-    var ov = h('div', { class: 'overlay', onclick: function (e) { if (e.target === ov) closeModal(); } }, sheet);
-    modalRoot.appendChild(ov);
-    restoreFocus(modalRoot, keep, modal.autofocus);
+    modalRendering = true;
+    try {
+      modalRoot.innerHTML = '';
+      if (!modal) { document.body.style.overflow = ''; return; }
+      document.body.style.overflow = 'hidden';
+      var sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, modal.render());
+      var ov = h('div', { class: 'overlay', onclick: function (e) { if (e.target === ov) closeModal(); } }, sheet);
+      modalRoot.appendChild(ov);
+      restoreFocus(modalRoot, keep, modal.autofocus);
+    } finally { modalRendering = false; }
   }
   function confirmBox(title, text, okLabel, danger) {
     return new Promise(function (resolve) {
@@ -1256,59 +1265,102 @@
   }
 
   var nameDraft = {};
-  function viewTokens() {
+  var tokq = '';   // the Tokens screen's search box
+  function normTxt(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  // characters with a known token (grouped by character), plus those that only have a playlist
+  function tokenGroups() {
     var groups = {};
     Object.keys(S.db.tokens).forEach(function (tag) {
       var tk = S.db.tokens[tag];
       if (!tk || !isUserChar(tk.starId)) return;
       (groups[tk.starId] = groups[tk.starId] || []).push(tag);
     });
-    var linkedOnly = userPlaylists().filter(function (p) { return p.star && !groups[p.star]; }).map(function (p) { return p.star; });
     var ids = Object.keys(groups).sort(function (a, b) { return charInfo(a).order - charInfo(b).order; });
-    function charCard(sid) {
+    var linkedOnly = userPlaylists().filter(function (p) { return p.star && !groups[p.star]; }).map(function (p) { return p.star; });
+    return { groups: groups, ids: ids, linkedOnly: linkedOnly };
+  }
+  // the details of one character (or foreign tag): its playlist, its physical tokens and their names
+  function charModal(sid) {
+    var foreign = !!foreignUid(sid);
+    openModal({
+      live: true,
+      sig: function () { var g = tokenGroups(); var p = playlistOfChar(sid); return JSON.stringify([g.groups[sid], p && p.id, S.nfc.tagId]); },
+      render: function () {
+        var p = playlistOfChar(sid);
+        var tags = (tokenGroups().groups[sid] || []).sort();
+        var sel = h('select', { class: 'input', 'aria-label': t('launches') + ' — ' + charName(sid), 'data-char-select': sid, onchange: function (e) {
+          var v = e.target.value;
+          e.target.blur();
+          if (!v) { if (p) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: false } }); return; }
+          var pl = pls()[v]; var other = pl && pl.star && pl.star !== sid ? pl.star : null;
+          if (!other) { send('PLAYLIST_UPDATE', { playlist: { id: v, star: sid } }); return; }
+          // that playlist is already started by another character: say so before taking it
+          confirmBox(t('launches'), t('pl_taken', pl.title || '—', charName(other)), t('save')).then(function (ok) {
+            if (ok) send('PLAYLIST_UPDATE', { playlist: { id: v, star: sid } });
+            else charModal(sid);
+          });
+        } }, h('option', { value: '' }, t('none_dash')), userPlaylists().map(function (x) { return h('option', { value: x.id, selected: p && p.id === x.id ? 'selected' : null }, x.title || '—'); }));
+        if (p) sel.value = p.id; else sel.value = '';
+        return [
+          h('div', { class: 'row', style: 'margin-bottom:8px' }, tokVisual(sid, '', S.nfc.starId === sid),
+            h('div', { class: 'grow' }, h('h3', { style: 'margin:0' }, charName(sid)),
+              h('div', { class: 'small muted' }, tags.length ? t('n_tokens', tags.length) : t('no_token')))),
+          h('p', { class: 'small muted' }, foreign ? t('foreign_hint') : t('tokens_intro')),
+          h('label', { class: 'field' }, h('span', null, t('launches')), sel),
+          tags.map(function (tag, i) {
+            var tk = S.db.tokens[tag] || {};
+            var live = S.nfc.tagId === tag;
+            var key = 'name-' + tag;
+            var val = nameDraft[tag] !== undefined ? nameDraft[tag] : (tk.name || '');
+            function commit() {
+              if (rendering || modalRendering || nameDraft[tag] === undefined) return;
+              var v = nameDraft[tag].trim();
+              delete nameDraft[tag];
+              if (v !== (tk.name || '')) { send('TOKEN_EDIT', { tagId: tag, name: v }); toast(t('saved')); }
+            }
+            // a foreign tag is its own character: its name IS the card's title, so the field says so
+            return h('div', { class: 'physical', 'data-tag': tag },
+              h('span', { class: 'badge' + (live ? ' accent' : '') }, live ? t('on_jooki') : foreign ? t('nfc_tag') : t('token_n', i + 1)),
+              h('input', { class: 'input grow', 'data-k': key, value: val, maxlength: '60', placeholder: foreign ? t('tag_name_ph') : t('token_name_ph'), 'aria-label': foreign ? t('tag_name_ph') : t('token_n', i + 1),
+                oninput: function (e) { nameDraft[tag] = e.target.value; },
+                onblur: commit, onkeydown: function (e) { if (e.key === 'Enter') { e.target.blur(); } } }),
+              h('button', { class: 'icon-btn', 'aria-label': t('forget'), title: t('forget'), onclick: function () {
+                confirmBox(t('forget_q'), t('forget_text'), t('forget'), true).then(function (ok) { if (ok) send('TOKEN_DELETE', { tagId: tag }); });
+              } }, icon('x')));
+          }),
+          h('div', { class: 'foot' }, h('button', { class: 'btn primary', 'data-k': 'charclose', onclick: closeModal }, t('close')))
+        ];
+      }
+    });
+  }
+  // the Tokens screen: the visuals only, searched by name; the details open on a tap
+  function viewTokens() {
+    var g = tokenGroups();
+    var all = g.ids.concat(g.linkedOnly);
+    var q = normTxt(tokq.trim());
+    function matches(sid) {
+      if (!q) return true;
       var p = playlistOfChar(sid);
-      var tags = (groups[sid] || []).sort();
-      var sel = h('select', { class: 'input', 'aria-label': t('launches') + ' — ' + charName(sid), 'data-char-select': sid, onchange: function (e) {
-        var v = e.target.value;
-        e.target.blur();
-        if (v) send('PLAYLIST_UPDATE', { playlist: { id: v, star: sid } });
-        else if (p) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: false } });
-      } }, h('option', { value: '' }, t('none_dash')), userPlaylists().map(function (x) { return h('option', { value: x.id, selected: p && p.id === x.id ? 'selected' : null }, x.title || '—'); }));
-      if (p) sel.value = p.id; else sel.value = '';
-      return h('div', { class: 'card', style: 'padding:14px 16px;margin-bottom:12px', 'data-char': sid },
-        h('div', { class: 'row' }, tokVisual(sid, '', S.nfc.starId === sid),
-          h('div', { class: 'grow' }, h('div', { class: 'title', style: 'font-weight:700;font-size:17px' }, charName(sid)),
-            h('div', { class: 'small muted' }, tags.length ? t('n_tokens', tags.length) : ''))),
-        h('label', { class: 'field' }, h('span', null, t('launches')), sel),
-        tags.map(function (tag, i) {
-          var tk = S.db.tokens[tag] || {};
-          var live = S.nfc.tagId === tag;
-          var key = 'name-' + tag;
-          var val = nameDraft[tag] !== undefined ? nameDraft[tag] : (tk.name || '');
-          function commit() {
-            if (rendering || nameDraft[tag] === undefined) return;
-            var v = nameDraft[tag].trim();
-            delete nameDraft[tag];
-            if (v !== (tk.name || '')) { send('TOKEN_EDIT', { tagId: tag, name: v }); toast(t('saved')); }
-          }
-          // a foreign tag is its own character: its name IS the card's title, so the field says so
-          var foreign = !!foreignUid(sid);
-          return h('div', { class: 'physical', 'data-tag': tag },
-            h('span', { class: 'badge' + (live ? ' accent' : '') }, live ? t('on_jooki') : foreign ? t('nfc_tag') : t('token_n', i + 1)),
-            h('input', { class: 'input grow', 'data-k': key, value: val, maxlength: '60', placeholder: foreign ? t('tag_name_ph') : t('token_name_ph'), 'aria-label': foreign ? t('tag_name_ph') : t('token_n', i + 1),
-              oninput: function (e) { nameDraft[tag] = e.target.value; },
-              onblur: commit, onkeydown: function (e) { if (e.key === 'Enter') { e.target.blur(); } } }),
-            h('button', { class: 'icon-btn', 'aria-label': t('forget'), title: t('forget'), onclick: function () {
-              confirmBox(t('forget_q'), t('forget_text'), t('forget'), true).then(function (ok) { if (ok) send('TOKEN_DELETE', { tagId: tag }); });
-            } }, icon('x')));
-        }));
+      var names = [charName(sid), p && p.title].concat((g.groups[sid] || []).map(function (tag) { return (S.db.tokens[tag] || {}).name; }));
+      return names.some(function (n) { return n && normTxt(n).indexOf(q) >= 0; });
+    }
+    var shown = all.filter(matches);
+    function tile(sid) {
+      var p = playlistOfChar(sid);
+      var known = !!g.groups[sid];
+      return h('button', { class: 'charopt' + (known ? '' : ' nojeton'), 'data-char': sid, onclick: function () { charModal(sid); } },
+        tokVisual(sid, '', S.nfc.starId === sid),
+        h('div', { class: 'title' }, charName(sid)),
+        h('div', { class: 'sub' }, p ? (p.title || '—') : t('none_dash')));
     }
     return [
-      h('p', { class: 'muted', style: 'margin-top:0' }, t('tokens_intro')),
-      ids.length ? ids.map(charCard) : h('div', { class: 'card empty' }, h('div', { class: 'big' }, '🐉'), t('no_tokens')),
-      linkedOnly.length ? [h('div', { class: 'section-title' }, t('other_chars')), linkedOnly.map(charCard)] : null,
+      all.length ? h('div', { class: 'search' }, icon('search'), h('input', { class: 'input', 'data-k': 'tokq', placeholder: t('tok_search_ph'), value: tokq,
+        oninput: function (e) { tokq = e.target.value; render(); } })) : null,
+      !all.length ? h('div', { class: 'card empty' }, h('div', { class: 'big' }, '🐉'), t('no_tokens'))
+        : !shown.length ? h('div', { class: 'card empty' }, t('tok_no_match'))
+        : h('div', { class: 'chargrid' }, shown.map(tile)),
       h('p', { class: 'small muted', style: 'text-align:center' }, t('tokens_hint')),
-      ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null
+      g.ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null
     ];
   }
 

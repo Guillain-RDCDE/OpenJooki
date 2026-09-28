@@ -122,8 +122,12 @@ with sync_playwright() as p:
     J.wait(lambda: all(v not in J.tracks for v in victims))
     check("E10 delete forever from Unused (files erased)", all(v not in J.tracks and not os.path.exists("/jooki/external/jooki/uploads/" + v) for v in victims), victims)
     # E11 tokens
+    # the screen is a grid of tiles; a tile opens the character's sheet (playlist, tokens, names)
     pg.goto(URL + "/#/tokens"); pg.wait_for_selector("[data-char]")
+    tiles = pg.locator("[data-char]").count()
+    check("E11 tokens screen is tiles only (no select, no input on the page)", tiles >= 6 and pg.locator("[data-char-select]").count() == 0 and pg.locator("[data-k^='name-']").count() == 0, (tiles, pg.locator("[data-char-select]").count()))
     tag = "04000000D00002"  # unnamed dragon
+    pg.click("[data-char='Jooki.Dragon']"); pg.wait_for_selector("[data-k='name-%s']" % tag)
     inp = pg.locator("[data-k='name-%s']" % tag)
     inp.fill("Dragon de Léo"); inp.press("Enter")
     J.wait(lambda: J.tokens[tag].get("name") == "Dragon de Léo")
@@ -131,21 +135,32 @@ with sync_playwright() as p:
     errtoast = pg.locator(".toast.error").count()
     check("E11 naming a token (twice) works, no error", J.tokens[tag].get("name") == "Dragon de Léo" and errtoast == 0, (J.tokens[tag], errtoast))
     check("E11 naming does not steal the playlist", J.pls[pierre].get("star") == "Jooki.Dragon" and not J.pls[pierre].get("tagId"), J.pls[pierre])
-    tri = pl_by_title("Chansons de marins")
+    pg.keyboard.press("Escape"); time.sleep(0.3)
+    pg.fill("[data-k=tokq]", "léo"); time.sleep(0.4)
+    check("E11 search by a token's name keeps only its character", pg.locator("[data-char]").count() == 1 and pg.locator("[data-char='Jooki.Dragon']").count() == 1, pg.locator("[data-char]").count())
+    pg.fill("[data-k=tokq]", ""); time.sleep(0.4)
+    tri = pl_by_title("Chansons de marins")   # started by the Knight in the seed: taking it asks first
+    pg.click("[data-char='Jooki.Black.Whale']"); pg.wait_for_selector("[data-char-select='Jooki.Black.Whale']")
     pg.select_option("[data-char-select='Jooki.Black.Whale']", tri)
+    pg.wait_for_selector("[data-k=ok]"); asked = pg.locator(".sheet").inner_text(); pg.click("[data-k=ok]")
     J.wait(lambda: J.pls[tri].get("star") == "Jooki.Black.Whale")
-    check("E11 link a character to a playlist from the tokens page", J.pls[tri].get("star") == "Jooki.Black.Whale", J.pls[tri])
+    check("E11 link a character to a playlist from the tokens page (asks when the playlist is taken)", "Chevalier" in asked and J.pls[tri].get("star") == "Jooki.Black.Whale", (asked, J.pls[tri]))
+    pg.click("[data-char='Jooki.Black.Whale']"); pg.wait_for_selector("[data-tag='04000000B00002'] button")
     pg.locator("[data-tag='04000000B00002'] button").click(); pg.click("[data-k=ok]")
     J.wait(lambda: "04000000B00002" not in J.tokens)
     check("E11 forget a token keeps the character's playlist", "04000000B00002" not in J.tokens and J.pls[tri].get("star") == "Jooki.Black.Whale", J.pls[tri])
-    # E11b a foreign NFC tag (an amiibo): its own card, linked like a character, then it plays
+    if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
+    # E11b a foreign NFC tag (an amiibo): its own tile, linked like a character, then it plays
     amiibo = "046158B2661290"; fch = "tag." + amiibo
     J.nfc_foreign(amiibo); J.wait(lambda: amiibo in J.tokens)
     pg.wait_for_selector("[data-char='%s']" % fch)
     card = pg.locator("[data-char='%s'] .title" % fch).inner_text()
-    check("E11b a foreign tag gets its own card, named by the end of its id", card.strip().endswith("1290"), card)
+    check("E11b a foreign tag gets its own tile, named by the end of its id", card.strip().endswith("1290"), card)
+    pg.click("[data-char='%s']" % fch); pg.wait_for_selector("[data-char-select='%s']" % fch)
     pg.select_option("[data-char-select='%s']" % fch, tri)
+    pg.wait_for_selector("[data-k=ok]"); pg.click("[data-k=ok]")   # taken from the Black whale: asks
     J.wait(lambda: J.pls[tri].get("star") == fch)
+    if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
     J.nfc_foreign(amiibo); J.wait(lambda: J.state["audio"]["nowPlaying"].get("playlistId") == tri)
     check("E11b the linked foreign tag starts its playlist", J.pls[tri].get("star") == fch and J.state["audio"]["nowPlaying"].get("playlistId") == tri, (J.pls[tri], J.state["audio"].get("nowPlaying")))
     # E12 settings

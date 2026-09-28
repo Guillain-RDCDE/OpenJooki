@@ -94,6 +94,8 @@
       wifi_good: 'Signal bon', wifi_fair: 'Signal moyen', wifi_weak: 'Signal faible',
       wifi_drops: function (n) { return n + (n > 1 ? ' coupures' : ' coupure') + ' depuis le démarrage'; },
       wifi_advice: 'Rapprochez le Jooki d\'une borne Wi-Fi. La musique marche sans Wi-Fi : seuls cette page et les envois en ont besoin.',
+      wifi_bt: 'Déménagement, nouvelle box, nouveau mot de passe ? Reconnectez-le par Bluetooth depuis un téléphone Android ou un ordinateur : ',
+      wifi_bt_name: function (n) { return 'Dans la liste, il s\'appelle ' + n + '.'; },
       err_readonly: 'Action impossible sur les morceaux non utilisés.',
       err_internal: 'Le Jooki a rencontré une erreur. Réessaie.',
       err_empty_title: 'Le nom ne peut pas être vide.',
@@ -226,6 +228,8 @@
       wifi_good: 'Good signal', wifi_fair: 'Fair signal', wifi_weak: 'Weak signal',
       wifi_drops: function (n) { return n + (n === 1 ? ' drop' : ' drops') + ' since start-up'; },
       wifi_advice: 'Move the Jooki closer to a Wi-Fi access point. Music works without Wi-Fi: only this page and uploads need it.',
+      wifi_bt: 'Moved house, new box, new password? Reconnect it over Bluetooth from an Android phone or a computer: ',
+      wifi_bt_name: function (n) { return 'In the list, it is called ' + n + '.'; },
       err_readonly: 'Not possible on unused tracks.',
       err_internal: 'The Jooki hit an error. Please retry.',
       err_empty_title: 'The name cannot be empty.',
@@ -358,6 +362,8 @@
       wifi_good: 'Goed signaal', wifi_fair: 'Matig signaal', wifi_weak: 'Zwak signaal',
       wifi_drops: function (n) { return n + (n === 1 ? ' onderbreking' : ' onderbrekingen') + ' sinds het opstarten'; },
       wifi_advice: 'Zet de Jooki dichter bij een wifi-toegangspunt. Muziek werkt zonder wifi: alleen deze pagina en uploads hebben het nodig.',
+      wifi_bt: 'Verhuisd, nieuwe router, nieuw wachtwoord? Verbind hem opnieuw via bluetooth vanaf een Android-telefoon of een computer: ',
+      wifi_bt_name: function (n) { return 'In de lijst heet hij ' + n + '.'; },
       err_readonly: 'Niet mogelijk bij ongebruikte nummers.',
       err_internal: 'De Jooki liep tegen een fout aan. Probeer het opnieuw.',
       err_empty_title: 'De naam mag niet leeg zijn.',
@@ -1930,7 +1936,18 @@
       h('div', { class: 'row', style: 'width:100%' }, h('span', { class: 'grow' }, t('wifi')),
         h('b', null, (w.ssid || '—') + (has ? ' · ' + dbm + ' dBm' : ''))),
       q ? h('div', { class: 'small wifi-' + q, 'data-k': 'wifiq' }, t('wifi_' + q) + (drops ? ' · ' + t('wifi_drops', drops) : '')) : null,
-      q === 'weak' ? h('div', { class: 'small muted' }, t('wifi_advice')) : null);
+      q === 'weak' ? h('div', { class: 'small muted' }, t('wifi_advice')) : null,
+      wifiBluetoothLine());
+  }
+  // The way back when the Jooki loses its network (docs/wifi.html, over Bluetooth): said here, while
+  // the page can still be read, with the name the Jooki shows in a Bluetooth list (JOOKI2_ + its id).
+  var WIFI_PAGE = 'https://guillain-rdcde.github.io/OpenJooki/wifi.html';
+  function wifiBluetoothLine() {
+    var id = String((S.device && S.device.id) || '');
+    if (!id) return null;
+    var bt = 'JOOKI2_' + id.replace(/^jooki2[-_]/i, '').toUpperCase();
+    return h('div', { class: 'small muted', 'data-k': 'wifibt' }, t('wifi_bt'),
+      h('a', { href: WIFI_PAGE, target: '_blank', rel: 'noopener' }, 'guillain-rdcde.github.io/OpenJooki/wifi'), ' ', t('wifi_bt_name', bt));
   }
   function setLang(l) { lang = l; lsSet('oj.lang', l); document.documentElement.lang = l; render(); }
 

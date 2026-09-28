@@ -2,9 +2,9 @@ name: core
 
 on:
   push:
-    paths: ["core/**", "tools/build/**", ".github/workflows/ci.yml"]
+    paths: ["core/**", "tools/build/**", "tools/openjooki/webui/**", "tools/openjooki/tests/**", "docs/wifi.html", ".github/workflows/ci.yml"]
   pull_request:
-    paths: ["core/**", "tools/build/**", ".github/workflows/ci.yml"]
+    paths: ["core/**", "tools/build/**", "tools/openjooki/webui/**", "tools/openjooki/tests/**", "docs/wifi.html", ".github/workflows/ci.yml"]
 
 jobs:
   core:
@@ -70,6 +70,8 @@ jobs:
             && python3 test_security_backend.py && python3 e2e.py \
             && python3 test_security.py \
             && python3 ../../../core/spec/integration/endurance.py 3'
+      - name: "The Wi-Fi page (docs/wifi.html) against a scripted Jooki"
+        run: cd tools/openjooki/tests && sudo -E python3 test_wifi_page.py
       - name: Bench logs (on failure)
         if: failure()
         run: |

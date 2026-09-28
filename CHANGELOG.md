@@ -16,6 +16,17 @@
 - For the tinkerers: message `OJ_AIRPLANE {minutes}` (1–1440, none = until the next
   start, `cancel: true` = back now), state `device.airplane`, flag
   `/data/mode/OJ_AIRPLANE`, v2 command `device.airplane`. Details in docs/24.
+- **A Jooki that lost its Wi-Fi gets it back without the app.** Moved house, new box,
+  new password: the Jooki only ever learnt its network from the old app, and stayed red
+  and silent. Its Wi-Fi chip also listens over Bluetooth, and a new page,
+  https://guillain-rdcde.github.io/OpenJooki/wifi.html, speaks to it from Chrome on an
+  Android phone or a computer (Windows, Mac, Linux): it shows the networks the Jooki
+  sees and the ones it remembers, you pick one, type the password, done in ten seconds.
+  A network can be forgotten there too. Not from an iPhone or iPad: Apple keeps
+  Bluetooth away from web pages, so that one step takes an Android phone or a computer,
+  once. The Jooki's page now says so under *Settings → Wi-Fi*, with the name the Jooki
+  shows in a Bluetooth list (`JOOKI2_…`). For a terminal: `tools/wifi/jooki_wifi.py`.
+  Proven on a real Jooki, moved between two networks, wrong password reported.
 
 ## SD card tools (28 September 2026) — a new card from scratch
 - **A Jooki that no longer starts because its card died gets a new card**, with

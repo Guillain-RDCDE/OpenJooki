@@ -297,6 +297,11 @@ with sync_playwright() as p:
     pg.wait_for_function("document.querySelector('[data-k=wifiq]') && /Signal bon/.test(document.querySelector('[data-k=wifiq]').textContent)", timeout=15000)
     check("E21 good Wi-Fi shown as good", "Rapprochez" not in pg.locator("[data-k=wifirow]").inner_text())
     check("E21 address shows the .local name", "jooki-bench.local" in pg.locator("main").inner_text())
+    bt = pg.locator("[data-k=wifibt]")
+    check("E21 the way back over Bluetooth is said, with the Jooki's Bluetooth name and the page's link",
+          bt.count() == 1 and "JOOKI2_BENCH" in bt.inner_text() and "Bluetooth" in bt.inner_text()
+          and bt.locator("a").get_attribute("href") == "https://guillain-rdcde.github.io/OpenJooki/wifi.html" and bt.locator("a").get_attribute("target") == "_blank",
+          bt.inner_text() if bt.count() else "no line")
     # E14 offline / reconnect
     subprocess.run(["pkill", "-f", "^mosquitto -c"]); time.sleep(2.5)
     off = pg.locator(".conn").inner_text()

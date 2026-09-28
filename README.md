@@ -85,6 +85,18 @@ Windows computer, a Mac or a Linux computer, one tool does two things:
 
 [![The SD card tool](docs/img/sdcard-choice.png)](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)
 
+## Moved house, new box? Give the Jooki its Wi-Fi back
+
+The Jooki only ever learnt its Wi-Fi from the old app. When the network changes, it
+stays red and silent. Its chip also listens over **Bluetooth**, and one page speaks to
+it: it shows the networks the Jooki sees, you pick yours, type the password, and ten
+seconds later the Jooki is back. From **Chrome on an Android phone or a computer**
+(Windows, Mac or Linux), nothing to install. Not from an iPhone: [why](#questions).
+
+**[→ Connect the Jooki to Wi-Fi](https://guillain-rdcde.github.io/OpenJooki/wifi.html)**
+
+[![The Wi-Fi page: the Jooki found, its networks listed](docs/img/wifi-page.png)](https://guillain-rdcde.github.io/OpenJooki/wifi.html)
+
 ## Questions
 
 - **My Jooki does not start at all, whatever I do.** Nine times out of ten its memory

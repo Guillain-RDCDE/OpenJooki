@@ -63,7 +63,9 @@ cp "$BASE" "$CONF.tmp" 2>/dev/null || cp "$CONF" "$CONF.tmp"
 #    bound to the Wi-Fi IP only, password required; the localhost anonymous
 #    listener is untouched, so the closed daemons keep working.
 if [ -f "$LANFLAG" ]; then
-  IP=$(ip -4 -o addr show 2>/dev/null | grep -v ' lo ' | grep -oE 'inet [0-9.]+' | sed 's/inet //' | head -n 1)
+  # the Wi-Fi IP: `ip` lives in /sbin and is not on the boot PATH; the route's src is
+  # the address other devices reach us on (same trick as /jooki/app/services/wifi_ip.sh)
+  IP=$(/sbin/ip route get 1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1);exit}}')
   if [ -n "$IP" ]; then
     { echo ""; echo "$MARK"; echo "listener 1883 $IP"; echo "protocol mqtt"; \
       echo "allow_anonymous false"; echo "password_file $PW"; } >> "$CONF.tmp"
@@ -73,8 +75,15 @@ if [ -f "$LANFLAG" ]; then
 fi
 mv "$CONF.tmp" "$CONF" 2>/dev/null
 
-# 6. a settings change (not the boot path): the broker is already up -> reload it
-if [ -f /var/run/mosquitto.pid ] && kill -0 "$(cat /var/run/mosquitto.pid 2>/dev/null)" 2>/dev/null; then
-  /etc/init.d/mosquitto restart >/dev/null 2>&1 || true
+# 6. a settings change (not the boot path): the broker is already up -> restart it with
+#    the new config. This device daemonizes mosquitto with -d, keeps no pidfile and has
+#    no working init.d, so restart by hand (mirrors /etc/rcS.d/S58_mosquitto.sh). At boot
+#    S57 runs before S58, so nothing is running yet and this is skipped.
+MPID=$(ps 2>/dev/null | grep '[m]osquitto -c' | awk '{print $1}' | head -n 1)
+if [ -n "$MPID" ]; then
+  kill "$MPID" 2>/dev/null
+  sleep 1
+  rm -f /var/run/mosquitto.pid 2>/dev/null
+  /usr/sbin/mosquitto -c "$CONF" -d 2>/dev/null
 fi
 exit 0

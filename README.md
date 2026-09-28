@@ -6,6 +6,13 @@
 
 Free, made by a parent, not affiliated with Muuselabs / Jooki. For the **Jooki 2**.
 
+## Start here
+
+- **Your Jooki works, the app does not** → [install OpenJooki from your phone](#install-it-about-15-minutes-from-your-phone), 15 minutes, nothing to open.
+- **Your Jooki no longer starts** (side dots dark, a reset does nothing) → its memory card is dead. [Make it a new card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html) with a Windows computer, a Mac or a Linux computer: ten minutes, and it starts again.
+- **Out of room for music** → [move it to a bigger card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html), same tool.
+- **A question about the lights, the battery, the charger** → [the lights, the battery and the USB-C port](docs/24-hardware-and-lights.md).
+
 ![The OpenJooki page on a phone](docs/img/openjooki-web.png)
 
 ## What you get
@@ -76,6 +83,9 @@ Windows computer, a Mac or a Linux computer, one tool does two things:
 
 ## Questions
 
+- **My Jooki does not start at all, whatever I do.** Nine times out of ten its memory
+  card is dead. [A new card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)
+  brings it back; the music has to be added again.
 - **Will I lose my music or my tokens?** No. They live on a part of the Jooki that
   updates never touch.
 - **What if something goes wrong?** Unplug the Jooki and plug it back in: it goes back

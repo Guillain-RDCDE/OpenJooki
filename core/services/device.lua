@@ -103,7 +103,7 @@ function device.on_knobs(doc, ev)
 end
 
 -- ------------------------------------------------------------------ buttons (1.x keys module)
-local LONG_CIRCLE_S, LONG_AIRPLANE_S = 2, 5
+local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
 
 local function activity_of(doc)
@@ -165,6 +165,12 @@ function device.on_tick(doc, ev)
       a2.buttons[n] = nil; changed = true
       cmds[#cmds + 1] = emit("radio.set", { wifi = n == "airplane_mode_off", bt = n == "airplane_mode_off" })
     end
+  end
+  -- prev + next held together for 10 s: clear the parent code (docs/adr/0007 — whoever
+  -- holds the Jooki is allowed). A confirmation sound is played by services.security.
+  if act.buttons.prev and act.buttons.next and now - math.max(act.buttons.prev, act.buttons.next) >= LONG_RESET_S then
+    a2.buttons.prev = nil; a2.buttons.next = nil; changed = true
+    cmds[#cmds + 1] = emit("security.parent_clear", { physical = true })
   end
   if not changed then return nil end
   return { state = { activity = a2 }, commands = cmds }

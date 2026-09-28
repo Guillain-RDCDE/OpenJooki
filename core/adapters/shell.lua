@@ -29,6 +29,17 @@ shell.ACTIONS = {
   factory_reset  = { argv = function() return { "/jooki/app/services/factory_reset.sh" } end },
   poweroff       = { argv = function() return { "/sbin/poweroff" } end },
   reboot         = { argv = function() return { "/sbin/reboot" } end },
+  -- maintenance SSH (docs/adr/0007): a second dropbear on 2222 (the factory one on 22 keeps root off);
+  -- turned off after an hour by the core. Killing targets only the 2222 instance, never port 22.
+  ssh_on         = { argv = function() return { "sh", "-c", "dropbear -p 2222 -R >/dev/null 2>&1; echo on" } end, background = true },
+  ssh_off        = { argv = function() return { "sh", "-c",
+                             "for p in $(ps 2>/dev/null | grep 'dropbear -p 2222' | grep -v grep | awk '{print $1}'); do kill $p 2>/dev/null; done; echo off" } end },
+  -- MQTT on the LAN for home automation: flip the flag, then let the boot script rebuild the
+  -- broker config and restart it (it adds/removes a LAN listener bound to the Wi-Fi IP, password required).
+  mqtt_lan       = { argv = function(a) return { "sh", "-c", [[
+if [ "$1" = "on" ]; then touch /data/openjooki/mqtt_lan; else rm -f /data/openjooki/mqtt_lan; fi
+[ -x /etc/rcS.d/S57_oj-security.sh ] && /etc/rcS.d/S57_oj-security.sh >/dev/null 2>&1
+echo ok]], "mqtt_lan", (a.on == true) and "on" or "off" } end, background = true },
   -- OpenJooki updates (docs/18): the Jooki itself fetches version.json / the installer from GitHub, in the background
   update_check   = { argv = function(a) if not is_path(a.out) then return nil, "bad path" end
                              return { "sh", "-c", [[

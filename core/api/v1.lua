@@ -10,6 +10,7 @@ local playback = require("services.playback")
 local device = require("services.device")
 local uploads = require("services.uploads")
 local bedtime = require("services.bedtime")
+local security = require("services.security")
 -- optional module (ADR-0009): absent from a `--without services.streaming` build
 local has_streaming, streaming = pcall(require, "services.streaming")
 if not has_streaming then
@@ -66,18 +67,20 @@ function PARTS.bedtime(doc)
 end
 function PARTS.net(doc) return doc.net end
 function PARTS.bluetooth(doc) return doc.bluetooth or {} end
+-- security switches (docs/adr/0007); the parent CODE is never here, only whether one is set
+function PARTS.maintenance(doc) return doc.maintenance or {} end
 
 function v1.state(doc)
   return { userMessages = PARTS.userMessages(doc), nfc = PARTS.nfc(doc), audio = PARTS.audio(doc), wifi = PARTS.wifi(doc),
            bt = (doc.bluetooth and doc.bluetooth.connected_mac) or "", bluetooth = PARTS.bluetooth(doc), power = PARTS.power(doc),
            mender = {}, spotify = doc.spotify or { active = false }, deezer = doc.deezer or {}, device = PARTS.device(doc),
-           jplay = {}, db = PARTS.db(doc), bedtime = doc.bedtime, net = doc.net }
+           jplay = {}, db = PARTS.db(doc), bedtime = doc.bedtime, net = doc.net, maintenance = PARTS.maintenance(doc) }
 end
 
 -- which 1.x sub-trees change when one of our keys changes
 local MAP = { library = { "db" }, playback = { "audio" }, resume = { "bedtime" }, audiocfg = { "audio" }, device = { "device" }, flags = { "device" },
               health = { "device" }, nfc = { "nfc" }, power = { "power" }, net = { "wifi", "net", "device" }, userMessages = { "userMessages" },
-              bedtime = { "bedtime" }, bluetooth = { "bluetooth" } }
+              bedtime = { "bedtime" }, bluetooth = { "bluetooth" }, maintenance = { "maintenance" } }
 
 --- Partial publish for the keys that changed (nil when none of them is visible in v1).
 --- Contract kept from 1.x: a message carrying BOTH `db` and `device` means "an
@@ -229,7 +232,28 @@ end
 H.OJ_UPDATE_CHECK = function() return { commands = { { kind = "emit", event = { type = "update.check" } } } } end
 H.OJ_SET_NAME = function(doc, p) return device.on_set_name(doc, p.name) end
 H.OJ_UPDATE_START = function() return { commands = { { kind = "emit", event = { type = "update.start" } } } } end
+-- security switches (docs/adr/0007)
+H.OJ_SSH_ON = function(doc, _, ev) return security.on_ssh(doc, { on = true, wall = ev.wall }) end
+H.OJ_SSH_OFF = function(doc) return security.on_ssh(doc, { on = false }) end
+H.OJ_MQTT_LAN = function(doc, p) return security.on_mqtt_lan(doc, { on = p.on == true }) end
+H.OJ_PARENT_SET = function(doc, p) return security.on_parent_set(doc, { code = p.code, current = p.current }) end
+H.OJ_PARENT_CLEAR = function(doc, p) return security.on_parent_clear(doc, { current = p.current }) end
 v1.handlers = H
+
+-- Parent code (docs/adr/0007): when a code is set, the page must carry it to change
+-- anything (delete a playlist, change Wi-Fi, start an update, flip a switch...).
+-- Playing music, volume and the sleep timer stay open for the children. Setting or
+-- clearing the code checks the current one itself, so they are not gated here.
+local PROTECTED = {
+  PLAYLIST_NEW = true, PLAYLIST_NEW_DEEZER = true, PLAYLIST_NEW_SPOTIFY = true,
+  PLAYLIST_ADD_TRACK = true, PLAYLIST_ADD_STREAM = true, PLAYLIST_ADD_UPLOAD = true,
+  PLAYLIST_DELETE = true, PLAYLIST_UPDATE = true, TOKEN_EDIT = true, TOKEN_DELETE = true,
+  SET_CFG = true, SET_TOY_SAFE = true, SET_WIFI = true, SHUTDOWN = true,
+  DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
+  OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
+  OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_MQTT_LAN = true,
+}
+v1.PROTECTED = PROTECTED
 
 --- The handler for v1.cmd events.
 function v1.on_cmd(doc, ev)
@@ -243,6 +267,10 @@ function v1.on_cmd(doc, ev)
   end
   local h = H[ev.name]
   if not h then return { commands = { err_cmd("unknown topic " .. tostring(ev.name)) } } end
+  local code = security._parent_code()
+  if code and code ~= "" and PROTECTED[ev.name] and tostring(payload.code or "") ~= code then
+    return { commands = { err_cmd("PARENT_CODE_REQUIRED") } }
+  end
   local hok, result, err, force = pcall(h, doc, payload, ev)
   if type(force) ~= "table" then force = nil end   -- library.mutate returns the op's own value third
   if not hok then

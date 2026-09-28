@@ -94,6 +94,7 @@ require("services.device").install(api, dispatch)
 require("services.uploads").install(api, dispatch)
 require("services.bedtime").install(api, dispatch)
 require("services.update").install(api, dispatch)
+require("services.security").install(api, dispatch)
 -- optional (ADR-0009): disabled by configuration, or absent from a `--without services.streaming` build
 if config.get("streaming_enabled") and package.preload["services.streaming"] then
   require("services.streaming").install(api, dispatch)

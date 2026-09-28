@@ -51,6 +51,10 @@
       launches: 'Lance', none_dash: '— Aucune playlist —',
       token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)', tag_name_ph: 'Nom de ce tag (pour t\'y retrouver)',
       tok_search_ph: 'Rechercher un jeton par son nom', tok_no_match: 'Aucun jeton ne porte ce nom.',
+      photo_btn: 'Photo', photo_remove: 'Retirer la photo', ed_title: 'La photo du tag',
+      ed_hint: 'Touche une zone pour l\'enlever (baguette magique). Glisse pour déplacer.', ed_bg: 'Enlever le fond',
+      ed_tol: 'Tolérance', ed_rot: 'Rotation', ed_zoom: 'Zoom', ed_undo: 'Annuler le dernier', ed_reset: 'Tout remettre', ed_save: 'Enregistrer',
+      ed_sending: 'Envoi de la photo…', photo_fail: 'La photo n\'a pas pu être enregistrée.', photo_bad: 'Ce fichier n\'est pas une image lisible.',
       pl_taken: function (pl, ch) { return '« ' + pl + ' » est lancée par ' + ch + '. La donner à ce jeton à la place ?'; },
       seen_n: function (n) { return 'posé ' + n + ' fois'; }, on_jooki: 'Sur le Jooki',
       forget: 'Oublier', forget_q: 'Oublier ce jeton ?',
@@ -169,6 +173,10 @@
       launches: 'Starts', none_dash: '— No playlist —',
       token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)', tag_name_ph: 'Name this tag (to tell them apart)',
       tok_search_ph: 'Search a token by name', tok_no_match: 'No token has that name.',
+      photo_btn: 'Photo', photo_remove: 'Remove the photo', ed_title: 'The tag\'s photo',
+      ed_hint: 'Tap a zone to remove it (magic wand). Drag to move.', ed_bg: 'Remove the background',
+      ed_tol: 'Tolerance', ed_rot: 'Rotation', ed_zoom: 'Zoom', ed_undo: 'Undo last', ed_reset: 'Start over', ed_save: 'Save',
+      ed_sending: 'Sending the photo…', photo_fail: 'The photo could not be saved.', photo_bad: 'This file is not a readable image.',
       pl_taken: function (pl, ch) { return '“' + pl + '” is started by ' + ch + '. Give it to this token instead?'; },
       seen_n: function (n) { return 'used ' + n + (n === 1 ? ' time' : ' times'); }, on_jooki: 'On the Jooki',
       forget: 'Forget', forget_q: 'Forget this token?',
@@ -287,6 +295,10 @@
       launches: 'Start', none_dash: '— Geen afspeellijst —',
       token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)', tag_name_ph: 'Naam van deze tag (om ze uit elkaar te houden)',
       tok_search_ph: 'Zoek een figuurtje op naam', tok_no_match: 'Geen figuurtje met die naam.',
+      photo_btn: 'Foto', photo_remove: 'Foto verwijderen', ed_title: 'De foto van de tag',
+      ed_hint: 'Tik op een zone om die weg te halen (toverstaf). Sleep om te verplaatsen.', ed_bg: 'Achtergrond weghalen',
+      ed_tol: 'Tolerantie', ed_rot: 'Draaien', ed_zoom: 'Zoom', ed_undo: 'Laatste ongedaan maken', ed_reset: 'Opnieuw beginnen', ed_save: 'Opslaan',
+      ed_sending: 'Foto wordt verstuurd…', photo_fail: 'De foto kon niet worden opgeslagen.', photo_bad: 'Dit bestand is geen leesbare afbeelding.',
       pl_taken: function (pl, ch) { return '“' + pl + '” wordt gestart door ' + ch + '. Aan dit figuurtje geven?'; },
       seen_n: function (n) { return n + ' keer gebruikt'; }, on_jooki: 'Op de Jooki',
       forget: 'Vergeten', forget_q: 'Dit figuurtje vergeten?',
@@ -892,6 +904,12 @@
     var c = charInfo(starId);
     var el = h('div', { class: 'tok ' + (cls || '') + (live ? ' live' : ''), title: charName(starId) });
     if (!starId) { el.className += ' none'; el.appendChild(icon('token')); return el; }
+    var fu = foreignUid(starId), ftk = fu && S.db.tokens[fu];
+    if (ftk && ftk.image) {   // the picture given to a tag (a 128 px PNG on the Jooki, see tokenImageEditor)
+      var pic = h('img', { src: ftk.image, alt: '' });
+      pic.onerror = function () { pic.replaceWith(h('span', { class: 'letter' }, (charName(starId) || '?').charAt(0))); };
+      el.appendChild(pic); return el;
+    }
     if (c.art && c.art.charAt(0) === '#') el.appendChild(h('div', { class: 'disc', style: 'background:' + c.art }));
     else if (c.art) {
       var img = h('img', { src: MEDIA + c.art, alt: '' });
@@ -1284,7 +1302,10 @@
     var foreign = !!foreignUid(sid);
     openModal({
       live: true,
-      sig: function () { var g = tokenGroups(); var p = playlistOfChar(sid); return JSON.stringify([g.groups[sid], p && p.id, S.nfc.tagId]); },
+      sig: function () {
+        var g = tokenGroups(); var p = playlistOfChar(sid);
+        return JSON.stringify([g.groups[sid], p && p.id, S.nfc.tagId, (g.groups[sid] || []).map(function (tag) { return (S.db.tokens[tag] || {}).image || ''; })]);
+      },
       render: function () {
         var p = playlistOfChar(sid);
         var tags = (tokenGroups().groups[sid] || []).sort();
@@ -1297,7 +1318,7 @@
           // that playlist is already started by another character: say so before taking it
           confirmBox(t('launches'), t('pl_taken', pl.title || '—', charName(other)), t('save')).then(function (ok) {
             if (ok) send('PLAYLIST_UPDATE', { playlist: { id: v, star: sid } });
-            else charModal(sid);
+            charModal(sid);   // the question replaced the sheet: back to it either way
           });
         } }, h('option', { value: '' }, t('none_dash')), userPlaylists().map(function (x) { return h('option', { value: x.id, selected: p && p.id === x.id ? 'selected' : null }, x.title || '—'); }));
         if (p) sel.value = p.id; else sel.value = '';
@@ -1328,6 +1349,14 @@
                 confirmBox(t('forget_q'), t('forget_text'), t('forget'), true).then(function (ok) { if (ok) send('TOKEN_DELETE', { tagId: tag }); });
               } }, icon('x')));
           }),
+          // a tag can carry a picture: taken now, picked from the gallery or a file on a computer
+          foreign && tags.length ? h('div', { class: 'row', style: 'gap:8px;margin-top:6px' },
+            h('label', { class: 'btn', style: 'cursor:pointer' }, icon('upload'), t('photo_btn'),
+              h('input', { type: 'file', accept: 'image/*', 'data-k': 'photo', style: 'display:none', onchange: function (e) {
+                var f = e.target.files && e.target.files[0]; if (!f) return;
+                closeModal(); tokenImageEditor(tags[0], f);
+              } })),
+            (S.db.tokens[tags[0]] || {}).image ? h('button', { class: 'btn ghost', 'data-k': 'photo-remove', onclick: function () { send('TOKEN_EDIT', { tagId: tags[0], image: false }); } }, t('photo_remove')) : null) : null,
           h('div', { class: 'foot' }, h('button', { class: 'btn primary', 'data-k': 'charclose', onclick: closeModal }, t('close')))
         ];
       }
@@ -1362,6 +1391,146 @@
       h('p', { class: 'small muted', style: 'text-align:center' }, t('tokens_hint')),
       g.ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null
     ];
+  }
+
+  /* ------------------------------------------------------------------ a picture for a tag */
+  // The whole job happens in the browser: the photo (camera, gallery or a file on a computer) is
+  // read into a canvas, the background is removed by flood fill (a tap = a magic wand on that
+  // zone, "Remove the background" = the same from the edges), then rotation, zoom and drag frame
+  // the object in a circle. The Jooki only receives a 128 px PNG (about 10 KB).
+  function uploadBlob(blob, name, cb) {
+    var uid = String(Math.floor(Math.random() * 9e6) + 1e6);
+    var fd = new FormData(); fd.append(uid, blob, name);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload'); xhr.timeout = 60000;
+    xhr.onerror = xhr.ontimeout = xhr.onabort = function () { cb(null); };
+    xhr.onload = function () { cb(xhr.status === 200 ? uid : null); };
+    xhr.send(fd);
+  }
+  function tokenImageEditor(tag, file) {
+    var SRC_MAX = 640, VIEW = 320, OUT = 128, R = VIEW / 2 - 6;
+    var src = document.createElement('canvas'), cut = document.createElement('canvas'), sw = 0, sh = 0;
+    var keep = null, undo = [], rot = 0, zoom = 1, px = 0, py = 0, tol = 30, busy = false;
+    var view = h('canvas', { class: 'edcanvas', width: VIEW, height: VIEW, 'aria-label': t('ed_title') });
+    var vctx = view.getContext('2d');
+    var status = h('div', { class: 'small muted', style: 'min-height:18px' }, t('ed_hint'));
+    function fitScale() { return (R * 2) / Math.max(sw, sh); }
+    function rebuildCut() {
+      var c = cut.getContext('2d'); c.clearRect(0, 0, sw, sh); c.drawImage(src, 0, 0);
+      var d = c.getImageData(0, 0, sw, sh), a = d.data;
+      for (var i = 0, n = sw * sh; i < n; i++) if (!keep[i]) a[i * 4 + 3] = 0;
+      c.putImageData(d, 0, 0);
+    }
+    function place(ctx, cx, cy, k) {
+      ctx.translate(cx + px * k, cy + py * k); ctx.rotate(rot * Math.PI / 180); var s = fitScale() * zoom * k; ctx.scale(s, s); ctx.translate(-sw / 2, -sh / 2);
+    }
+    function draw() {
+      vctx.clearRect(0, 0, VIEW, VIEW);
+      vctx.save(); vctx.globalAlpha = 0.25; place(vctx, VIEW / 2, VIEW / 2, 1); vctx.drawImage(cut, 0, 0); vctx.restore();
+      vctx.save(); vctx.beginPath(); vctx.arc(VIEW / 2, VIEW / 2, R, 0, Math.PI * 2); vctx.clip(); place(vctx, VIEW / 2, VIEW / 2, 1); vctx.drawImage(cut, 0, 0); vctx.restore();
+      vctx.save(); vctx.beginPath(); vctx.arc(VIEW / 2, VIEW / 2, R, 0, Math.PI * 2); vctx.strokeStyle = 'rgba(0,0,0,.35)'; vctx.lineWidth = 2; vctx.stroke(); vctx.restore();
+    }
+    function toSrc(vx, vy) {   // a point of the view -> a pixel of the source
+      var x = vx - VIEW / 2 - px, y = vy - VIEW / 2 - py, a = -rot * Math.PI / 180, s = fitScale() * zoom;
+      var rx = x * Math.cos(a) - y * Math.sin(a), ry = x * Math.sin(a) + y * Math.cos(a);
+      return [Math.floor(rx / s + sw / 2), Math.floor(ry / s + sh / 2)];
+    }
+    function pushUndo() { undo.push(keep.slice(0)); if (undo.length > 10) undo.shift(); }
+    function flood(seeds) {   // seeds: [[x, y]]; each zone is compared with the colour under its own seed
+      var d = src.getContext('2d').getImageData(0, 0, sw, sh).data, lim = tol * 4.4, changed = false;
+      seeds.forEach(function (sd) {
+        var x0 = sd[0], y0 = sd[1];
+        if (x0 < 0 || y0 < 0 || x0 >= sw || y0 >= sh) return;
+        var i0 = (y0 * sw + x0), r0 = d[i0 * 4], g0 = d[i0 * 4 + 1], b0 = d[i0 * 4 + 2];
+        if (!keep[i0]) return;
+        var stack = [i0], seen = new Uint8Array(sw * sh); seen[i0] = 1;
+        while (stack.length) {
+          var i = stack.pop(), dr = d[i * 4] - r0, dg = d[i * 4 + 1] - g0, db = d[i * 4 + 2] - b0;
+          if (Math.sqrt(dr * dr + dg * dg + db * db) > lim) continue;
+          keep[i] = 0; changed = true;
+          var x = i % sw, y = (i - x) / sw;
+          if (x > 0 && !seen[i - 1]) { seen[i - 1] = 1; stack.push(i - 1); }
+          if (x < sw - 1 && !seen[i + 1]) { seen[i + 1] = 1; stack.push(i + 1); }
+          if (y > 0 && !seen[i - sw]) { seen[i - sw] = 1; stack.push(i - sw); }
+          if (y < sh - 1 && !seen[i + sw]) { seen[i + sw] = 1; stack.push(i + sw); }
+        }
+      });
+      return changed;
+    }
+    function act(seeds) { pushUndo(); if (flood(seeds)) { rebuildCut(); draw(); } else undo.pop(); }
+    function removeBackground() {
+      var e = 2, mx = Math.floor(sw / 2), my = Math.floor(sh / 2);
+      act([[e, e], [sw - 1 - e, e], [e, sh - 1 - e], [sw - 1 - e, sh - 1 - e], [mx, e], [mx, sh - 1 - e], [e, my], [sw - 1 - e, my]]);
+    }
+    // pointer: a drag moves the picture, a tap is the wand
+    var down = null;
+    function pt(e) { var b = view.getBoundingClientRect(); return [(e.clientX - b.left) * VIEW / b.width, (e.clientY - b.top) * VIEW / b.height]; }
+    view.addEventListener('pointerdown', function (e) { if (busy) return; view.setPointerCapture(e.pointerId); var p = pt(e); down = { x: p[0], y: p[1], px: px, py: py, moved: false }; e.preventDefault(); });
+    view.addEventListener('pointermove', function (e) {
+      if (!down) return; var p = pt(e), dx = p[0] - down.x, dy = p[1] - down.y;
+      if (Math.abs(dx) + Math.abs(dy) > 6) down.moved = true;
+      if (down.moved) { px = down.px + dx; py = down.py + dy; draw(); }
+    });
+    view.addEventListener('pointerup', function (e) {
+      if (!down) return; var d0 = down; down = null;
+      if (!d0.moved) { var p = pt(e), s = toSrc(p[0], p[1]); act([s]); }
+    });
+    view.addEventListener('pointercancel', function () { down = null; });
+    function range(key, label, min, max, step, get, set) {
+      var out = h('span', { class: 'small muted' });
+      var inp = h('input', { type: 'range', class: 'range', 'data-k': key, min: String(min), max: String(max), step: String(step), value: String(get()),
+        'aria-label': label, oninput: function (e) { set(parseFloat(e.target.value)); out.textContent = fmt(); draw(); } });
+      function fmt() { var v = get(); return key === 'edrot' ? Math.round(v) + '°' : key === 'edzoom' ? '×' + v.toFixed(1) : Math.round(v); }
+      out.textContent = fmt();
+      return h('label', { class: 'edrow' }, h('span', null, label), inp, out);
+    }
+    function save() {
+      if (busy) return; busy = true; status.textContent = t('ed_sending');
+      var o = document.createElement('canvas'); o.width = OUT; o.height = OUT; var c = o.getContext('2d');
+      c.beginPath(); c.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2); c.clip();
+      place(c, OUT / 2, OUT / 2, OUT / (R * 2)); c.drawImage(cut, 0, 0);
+      o.toBlob(function (blob) {
+        if (!blob) { busy = false; status.textContent = t('photo_fail'); return; }
+        uploadBlob(blob, 'tok_' + tag + '.png', function (uploadId) {
+          if (!uploadId) { busy = false; status.textContent = t('photo_fail'); return; }
+          var before = (S.db.tokens[tag] || {}).image || '';
+          send('TOKEN_SET_IMAGE', { tagId: tag, uploadId: uploadId });
+          var tries = 0, tm = setInterval(function () {
+            var now = (S.db.tokens[tag] || {}).image || '';
+            if (now && now !== before) { clearInterval(tm); closeModal(); toast(t('saved')); charModal('tag.' + tag); }
+            else if (++tries > 60) { clearInterval(tm); busy = false; status.textContent = t('photo_fail'); }
+          }, 250);
+        });
+      }, 'image/png');
+    }
+    var body = h('div', null,
+      h('h3', null, t('ed_title')),
+      h('div', { class: 'edwrap' }, view),
+      status,
+      h('div', { class: 'edtools' },
+        h('button', { class: 'btn', 'data-k': 'edbg', onclick: removeBackground }, t('ed_bg')),
+        h('button', { class: 'btn', 'data-k': 'edundo', onclick: function () { if (undo.length) { keep = undo.pop(); rebuildCut(); draw(); } } }, t('ed_undo')),
+        h('button', { class: 'btn', 'data-k': 'edrot90', onclick: function () { rot = (rot + 90) % 360; rotInp.querySelector('input').value = String(rot > 180 ? rot - 360 : rot); draw(); } }, '↻ 90°')),
+      range('edtol', t('ed_tol'), 0, 100, 1, function () { return tol; }, function (v) { tol = v; }),
+      (function () { rotInp = range('edrot', t('ed_rot'), -180, 180, 1, function () { return rot; }, function (v) { rot = v; }); return rotInp; })(),
+      range('edzoom', t('ed_zoom'), 0.5, 4, 0.1, function () { return zoom; }, function (v) { zoom = v; }),
+      h('div', { class: 'foot' },
+        h('button', { class: 'btn', onclick: function () { closeModal(); charModal('tag.' + tag); } }, t('cancel')),
+        h('button', { class: 'btn', 'data-k': 'edreset', onclick: function () { pushUndo(); keep.fill(1); rot = 0; zoom = 1; px = py = 0; rebuildCut(); draw(); } }, t('ed_reset')),
+        h('button', { class: 'btn primary', 'data-k': 'edsave', onclick: save }, t('ed_save'))));
+    var rotInp;
+    openModal({ render: function () { return body; }, onclose: function () { if (url) URL.revokeObjectURL(url); } });
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var k = Math.min(1, SRC_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      sw = Math.max(1, Math.round(img.naturalWidth * k)); sh = Math.max(1, Math.round(img.naturalHeight * k));
+      src.width = cut.width = sw; src.height = cut.height = sh;
+      src.getContext('2d').drawImage(img, 0, 0, sw, sh);
+      keep = new Uint8Array(sw * sh); keep.fill(1);
+      rebuildCut(); draw();
+    };
+    img.onerror = function () { status.textContent = t('photo_bad'); };
+    img.src = url;
   }
 
   /* ---------------- OpenJooki updates (the Jooki itself talks to GitHub) */

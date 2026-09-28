@@ -84,10 +84,44 @@ function tokens.on_written(_, ev)
                         { kind = "log", level = "info", key = "tokens.written", fields = { uid = ev.uid } } } }
 end
 
+-- A picture for a token (docs/23 §3): the page sends a small PNG through web_ctrl's /upload
+-- (stored as <data_dir>/uploads/upload_<id>), then TOKEN_SET_IMAGE { tagId, uploadId }.
+-- The file moves to <data_dir>/artwork/tok_<tagId>.png (served at /artwork/) and the token
+-- keeps that address, with the file size as a cache key so the page reloads a new picture.
+local function data_dir(doc) return (doc.config and doc.config.data_dir) or "/jooki/external/jooki" end
+function tokens.image_path(doc, uid) return data_dir(doc) .. "/artwork/tok_" .. uid .. ".png" end
+
+local function image_fail(ref, err)
+  return { commands = { { kind = "files.remove", path = ref.temp },
+                        { kind = "log", level = "warn", key = "tokens.image_failed", fields = { uid = ref.uid, err = err } },
+                        { kind = "emit", event = { type = "user.message", level = "ERROR", messageType = "TOKEN_IMAGE_FAIL", extra = { tagId = ref.uid, err = err } } } } }
+end
+
+--- TOKEN_SET_IMAGE { tagId, uploadId }
+function tokens.on_set_image(doc, ev)
+  local uid, id = tostring(ev.tagId or ""), tostring(ev.uploadId or "")
+  local temp = data_dir(doc) .. "/uploads/upload_" .. id
+  local ref = { uid = uid, temp = temp }
+  if not id:match("^%d+$") then return image_fail(ref, "invalid uploadId") end
+  if not (doc.library and doc.library.tokens[uid]) then return image_fail(ref, "unknown token") end
+  return { commands = { { kind = "files.rename", from = temp, to = tokens.image_path(doc, uid), reply = "tokens.image_moved", ref = ref } } }
+end
+
+function tokens.on_image_moved(doc, ev)
+  local ref = ev.ref
+  if not ev.ok then return image_fail(ref, "rename failed: " .. tostring(ev.err)) end
+  local url = "/artwork/tok_" .. ref.uid .. ".png?v=" .. tostring(ev.size or 0)
+  local r, err = library.mutate(doc, { tokens = true }, function(lib) return library.ops.token_edit(lib, ref.uid, nil, url) end)
+  if not r then return image_fail({ uid = ref.uid, temp = tokens.image_path(doc, ref.uid) }, err.message) end
+  r.commands[#r.commands + 1] = { kind = "log", level = "info", key = "tokens.image_set", fields = { uid = ref.uid, size = ev.size } }
+  return r
+end
+
 function tokens.install(_, dispatch)
   dispatch.on("nfc.tag", "tokens", tokens.on_tag)
   dispatch.on("nfc.removed", "tokens", tokens.on_removed)
   dispatch.on("nfc.written", "tokens", tokens.on_written)
+  dispatch.on("tokens.image_moved", "tokens", tokens.on_image_moved)
 end
 
 return tokens

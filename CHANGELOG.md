@@ -13,6 +13,13 @@
   playlist). Tap a tile to open its sheet: choose the playlist, name each token,
   forget one. Choosing a playlist another character already starts now asks
   first instead of taking it silently.
+- **A photo for each tag.** In a tag's sheet, *Photo* takes a picture (or picks one
+  from the gallery, or a file on a computer). The page then does the work itself,
+  before anything is sent: *Remove the background* clears what touches the edges,
+  a tap on any zone clears it too (a magic wand, with a tolerance slider), and
+  rotation, zoom and drag frame the object in a circle. The Jooki only receives
+  a 128-pixel picture of about 10 KB, kept on the memory card next to the album
+  covers, so two hundred tags cost less than one song. *Remove the photo* drops it.
 - **Name your tags.** A tag's tile is named by the end of its id until you type
   a name in its sheet ("Name this tag"); that name is then what the whole page
   shows for it, on the playlist cards too. With many tags, name them.

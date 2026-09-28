@@ -145,7 +145,8 @@ with sync_playwright() as p:
     pg.wait_for_selector("[data-k=ok]"); asked = pg.locator(".sheet").inner_text(); pg.click("[data-k=ok]")
     J.wait(lambda: J.pls[tri].get("star") == "Jooki.Black.Whale")
     check("E11 link a character to a playlist from the tokens page (asks when the playlist is taken)", "Chevalier" in asked and J.pls[tri].get("star") == "Jooki.Black.Whale", (asked, J.pls[tri]))
-    pg.click("[data-char='Jooki.Black.Whale']"); pg.wait_for_selector("[data-tag='04000000B00002'] button")
+    if not pg.locator("[data-tag='04000000B00002'] button").count(): pg.click("[data-char='Jooki.Black.Whale']")   # the sheet comes back after the question
+    pg.wait_for_selector("[data-tag='04000000B00002'] button")
     pg.locator("[data-tag='04000000B00002'] button").click(); pg.click("[data-k=ok]")
     J.wait(lambda: "04000000B00002" not in J.tokens)
     check("E11 forget a token keeps the character's playlist", "04000000B00002" not in J.tokens and J.pls[tri].get("star") == "Jooki.Black.Whale", J.pls[tri])
@@ -160,6 +161,31 @@ with sync_playwright() as p:
     pg.select_option("[data-char-select='%s']" % fch, tri)
     pg.wait_for_selector("[data-k=ok]"); pg.click("[data-k=ok]")   # taken from the Black whale: asks
     J.wait(lambda: J.pls[tri].get("star") == fch)
+    # E11c a photo for the tag: a red disc on white -> background removed in the browser -> 128 px PNG on the Jooki
+    import struct, zlib
+    def png(w, hgt, px):
+        raw = b"".join(b"\x00" + b"".join(px(x, y) for x in range(w)) for y in range(hgt))
+        def chunk(k, d): return struct.pack(">I", len(d)) + k + d + struct.pack(">I", zlib.crc32(k + d) & 0xffffffff)
+        return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, hgt, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
+    open("media/tag_photo.png", "wb").write(png(200, 160, lambda x, y: b"\xe0\x30\x20" if (x - 100) ** 2 + (y - 80) ** 2 < 55 ** 2 else b"\xff\xff\xff"))
+    if not pg.locator("[data-k=photo]").count(): pg.click("[data-char='%s']" % fch)
+    pg.wait_for_selector("[data-k=photo]", state="attached")
+    pg.set_input_files("[data-k=photo]", "media/tag_photo.png")
+    pg.wait_for_selector("[data-k=edsave]"); time.sleep(0.8)
+    pg.click("[data-k=edbg]"); time.sleep(0.5)
+    alpha = pg.evaluate("(function(){var c=document.querySelector('.edcanvas'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;var a=0;for(var i=3;i<d.length;i+=4)if(d[i]>200)a++;return a/(d.length/4);})()")
+    check("E11c the background is removed in the browser (most of the frame is transparent)", 0.02 < alpha < 0.5, alpha)
+    pg.click("[data-k=edsave]")
+    J.wait(lambda: (J.tokens.get(amiibo) or {}).get("image"), 15)
+    img = (J.tokens.get(amiibo) or {}).get("image") or ""
+    path = "/jooki/external/jooki/artwork/tok_%s.png" % amiibo
+    check("E11c the photo is saved on the Jooki and linked to the tag", img.startswith("/artwork/tok_%s.png?v=" % amiibo) and os.path.exists(path) and 0 < os.path.getsize(path) < 40000, (img, os.path.exists(path) and os.path.getsize(path)))
+    pg.wait_for_selector("[data-char='%s'] .tok img" % fch, timeout=5000)
+    check("E11c the tag's tile shows the photo", pg.locator("[data-char='%s'] .tok img" % fch).get_attribute("src").endswith(img), pg.locator("[data-char='%s'] .tok img" % fch).get_attribute("src"))
+    pg.wait_for_selector("[data-k=photo-remove]", timeout=10000)   # the editor gives way to the tag's sheet again
+    pg.click("[data-k=photo-remove]")
+    J.wait(lambda: not (J.tokens.get(amiibo) or {}).get("image"))
+    check("E11c removing the photo drops the file too", not (J.tokens.get(amiibo) or {}).get("image") and not os.path.exists(path), os.path.exists(path))
     if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
     J.nfc_foreign(amiibo); J.wait(lambda: J.state["audio"]["nowPlaying"].get("playlistId") == tri)
     check("E11b the linked foreign tag starts its playlist", J.pls[tri].get("star") == fch and J.state["audio"]["nowPlaying"].get("playlistId") == tri, (J.pls[tri], J.state["audio"].get("nowPlaying")))

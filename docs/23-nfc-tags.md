@@ -55,7 +55,13 @@ into `nfc.tag { uid, foreign = true }`:
 - a playlist is linked to it as to a character; putting the tag on starts it,
   and an unlinked tag plays the "empty" sound, so the family hears it was seen;
 - it never claims `state.nfc` (the ESP32 will not report its removal, so the
-  page would show it on the Jooki forever), and taking it off does not pause.
+  page would show it on the Jooki forever), and taking it off does not pause;
+- it can carry a picture: the page edits the photo in the browser (flood-fill
+  background removal, rotation, zoom, circle) and sends a 128 px PNG through
+  web_ctrl's `/upload`, then `TOKEN_SET_IMAGE { tagId, uploadId }`. The core
+  moves the file to `<data_dir>/artwork/tok_<UID>.png` (served at `/artwork/`)
+  and stores its address in `tokens.json` (`image`, with the file size as a
+  cache key). `TOKEN_EDIT { image: false }` removes both.
 
 Limits, all on the ESP32's side: no pause on removal; the same tag twice in a
 row needs another tag in between (or the play button); the tag must sit close

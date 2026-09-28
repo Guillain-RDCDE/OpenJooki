@@ -7,6 +7,7 @@
 local json = require("vendor.json")
 local library = require("services.library")
 local playback = require("services.playback")
+local tokens = require("services.tokens")
 local device = require("services.device")
 local uploads = require("services.uploads")
 local bedtime = require("services.bedtime")
@@ -169,7 +170,15 @@ end
 H.PLAYLIST_ADD_FILE = function() return nil, { code = "unavailable", field = "", message = "PLAYLIST_ADD_FILE is not supported by OpenJooki 2.0" } end
 H.TOKEN_EDIT = function(doc, p)
   if type(p.tagId) ~= "string" then return nil, { code = "not_found", field = "tagId", message = "unknown token" } end
-  return lib(doc, { tokens = true }, function(l) return library.ops.token_edit(l, p.tagId, p.name, p.image) end)
+  local had = doc.library and doc.library.tokens[p.tagId] and doc.library.tokens[p.tagId].image
+  local r, err = lib(doc, { tokens = true }, function(l) return library.ops.token_edit(l, p.tagId, p.name, p.image) end)
+  -- image = false: the picture goes away with its file
+  if r and p.image == false and had then r.commands[#r.commands + 1] = { kind = "files.remove", path = tokens.image_path(doc, p.tagId) } end
+  return r, err
+end
+H.TOKEN_SET_IMAGE = function(doc, p)
+  if type(p.tagId) ~= "string" then return nil, { code = "not_found", field = "tagId", message = "unknown token" } end
+  return tokens.on_set_image(doc, { tagId = p.tagId, uploadId = p.uploadId })
 end
 H.TOKEN_DELETE = function(doc, p) return lib(doc, { tokens = true }, function(l) return library.ops.token_forget(l, p.tagId) end) end
 H.DO_PAUSE = function(doc, _, ev) return playback.on_pause(doc, { source = "page", now = ev.now }) or {} end
@@ -247,7 +256,7 @@ v1.handlers = H
 local PROTECTED = {
   PLAYLIST_NEW = true, PLAYLIST_NEW_DEEZER = true, PLAYLIST_NEW_SPOTIFY = true,
   PLAYLIST_ADD_TRACK = true, PLAYLIST_ADD_STREAM = true, PLAYLIST_ADD_UPLOAD = true,
-  PLAYLIST_DELETE = true, PLAYLIST_UPDATE = true, TOKEN_EDIT = true, TOKEN_DELETE = true,
+  PLAYLIST_DELETE = true, PLAYLIST_UPDATE = true, TOKEN_EDIT = true, TOKEN_DELETE = true, TOKEN_SET_IMAGE = true,
   SET_CFG = true, SET_TOY_SAFE = true, SET_WIFI = true, SHUTDOWN = true,
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,

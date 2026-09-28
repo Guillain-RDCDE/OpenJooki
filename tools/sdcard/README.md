@@ -68,9 +68,9 @@ formats Windows cannot read.
   system A first). The build fails if the lending Jooki's name or MAC address is
   anywhere in the result.
 - The image and `sdcard.json` (name, sizes, SHA-256 of the archive and of the raw image)
-  live in a GitHub release of their own, `sdcard`, independent of the firmware releases:
-  the card is a starting point, the Jooki updates itself once it starts (when the image
-  is rebuilt, and why so rarely: [docs/25-new-sd-card.md](../../docs/25-new-sd-card.md)).
+  live in a GitHub release of their own, `sdcard`, at a fixed address independent of the
+  firmware releases, and rebuilt with every release so that the card starts on the newest
+  OpenJooki (the procedure: [docs/25-new-sd-card.md](../../docs/25-new-sd-card.md)).
   The tools read `releases/download/sdcard/sdcard.json`, download the archive into
   Documents, check it, unpack it, check the image, then do exactly the bigger-card
   write: erase the table, write, read back and compare, grow `content` to the end of

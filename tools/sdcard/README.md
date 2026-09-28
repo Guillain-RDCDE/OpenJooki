@@ -1,14 +1,21 @@
-# A bigger SD card for the Jooki (Windows, Mac, Linux)
+# The Jooki's SD card: a bigger one, or a new one (Windows, Mac, Linux)
 
 The Jooki v2 keeps everything on a micro SD card inside it: 8 GB, of which about
-5 GB is for music. To get more room, move it to a bigger card:
+5 GB is for music. The tool does two things, chosen on its first screen:
+
+- **a bigger card**: it copies the Jooki's card to a bigger one, for more music;
+- **a new card from scratch**: for a Jooki that no longer starts because its card is
+  dead. It downloads OpenJooki's complete card image (no family data on it), writes it
+  on a blank card, and the Jooki starts again. Plain-words guide and what is on that
+  card: [docs/25-new-sd-card.md](../../docs/25-new-sd-card.md).
 
 - **Windows**: [`Jooki-SD-card.cmd`](../../docs/Jooki-SD-card.cmd), one file, nothing to install;
 - **Mac**: the app **Jooki SD Card** ([zip](../../docs/Jooki-SD-Card-mac.zip), built by `make_mac_zip.py`
   from [`Jooki SD Card.app`](Jooki%20SD%20Card.app) and `jooki_sd.py`): it asks for the password,
   then the steps open in the browser;
 - **Linux** (and Mac in a terminal): [`jooki_sd.py`](jooki_sd.py), Python 3 standard library:
-  `sudo python3 jooki_sd.py web`, or `list`, `read <card> <image>`, `write <image> <card>`, `grow <card>`.
+  `sudo python3 jooki_sd.py web`, or `list`, `read <card> <image>`, `write <image> <card>`, `grow <card>`,
+  `new <card>` (a new card from scratch; `--image` to use a card image already downloaded).
 
 ## What you need
 
@@ -49,6 +56,26 @@ formats Windows cannot read.
   filesystem to the new partition at the first boot. OpenJooki updates never touch
   that partition.
 
+### A new card from scratch
+
+- The source is not the Jooki's card but OpenJooki's **complete card image**, built by
+  [`make_card_image.py`](make_card_image.py) (Linux, root) from three pieces read on a
+  Jooki (the first 24 MiB of the card with the bootloader, the factory partition p1,
+  the generic files of `/data`) and the release image, on both system slots. Fresh
+  swap, an empty `config` FAT16, an empty music partition of 128 MB with the Jooki's
+  folders; the image stops there (about 2.4 GB), so any card of 4 GB or more will do.
+  The bootloader settings are put at rest (no update pending, boot counter at zero,
+  system A first). The build fails if the lending Jooki's name or MAC address is
+  anywhere in the result.
+- The release carries the image and `sdcard.json` (name, sizes, SHA-256 of the archive
+  and of the raw image). The tools read `sdcard.json` from the newest release, or from
+  the 2.0.4 release when the newest has no card image, download the archive into
+  Documents, check it, unpack it, check the image, then do exactly the bigger-card
+  write: erase the table, write, read back and compare, grow `content` to the end of
+  the card, verify both GPT headers. A card image already downloaded and checked is
+  reused as is.
+- Only cards of 3 GB or more are offered for a new card.
+
 ## Tested
 
 - On disk images: a card with the Jooki's layout copied to a bigger one, checked with
@@ -66,7 +93,22 @@ formats Windows cannot read.
 - The Mac app on a Mac: unzipped by the Finder and by `unzip`, the launcher stays
   executable, the page runs with the needed rights and refuses any request without its
   secret token or from another host name. The password dialog itself is macOS's own.
-- Not yet: a physical card in a card reader, and a Jooki started on a bigger card.
+- The new card (28 September): the image itself, partition by partition, with the Linux
+  reference tools (`sgdisk -v`, `e2fsck -fn` on the five ext4 partitions, `fsck.vfat`,
+  `blkid`, the sources read back identical, the bootloader settings parsed back, the
+  lending Jooki's name and MAC absent). Then the three ways of writing it, all on card
+  files, each card checked the same way plus the Jooki's own first-boot step
+  (`resize2fs` on the music partition, then `e2fsck`): the Python tool from a local image
+  (8 GB card), from a local copy of the release over HTTP (32 GB card), from the real
+  GitHub release (8 GB card); the Windows tool from the archive (5 GB card) and its
+  download, its reuse of good files and its refusal of a corrupted archive; the web page
+  driven by a browser from the first screen to "Done" (8 GB card); a card of 2 GB
+  refused and a corrupted download refused, both with nothing written.
+- Not yet: a physical card in a card reader, a Jooki started on a bigger card, and a
+  Jooki started on a new card made this way. The bootloader, its settings and the
+  factory partition are byte-for-byte those of a working Jooki, and the system
+  partitions are the release every Jooki runs; the first real start is the test that
+  remains.
 
 Note: the tool never writes to the Jooki's card, but **the computer itself** writes a few
 sectors in the FAT `config` partition of any card it mounts (Windows: a `System Volume

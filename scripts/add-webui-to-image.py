@@ -12,11 +12,14 @@ what `jooki.py patch webui` applies on a live Jooki, and writes a new image:
                                         the original is kept as <file>.openjooki-orig
   * /etc/openjooki-version           -> the new version number
   * /etc/hostname, /etc/mac          -> neutral (each Jooki writes its own at every boot)
+  * the leftovers of the Jooki the base image was dumped from are removed (/start, /tmp/*,
+    stray files, authorized SSH keys) and the free blocks zeroed (tools/sdcard/make_card_image.py,
+    scrub_rootfs); --forget <string> makes the build fail if that string is still anywhere
 
 No mount and no root needed: it edits the ext4 image with `debugfs` (e2fsprogs),
 then checks it with `e2fsck -fn` and reads every written file back.
 
-Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version> [--core build/player.lib]
+Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version> [--core build/player.lib] [--forget <s>]...
        --core: install the 2.0 core (tools/build/bundle.py) instead of the patched program
 Then:  scripts/make-release.sh <out.img> <version>
 """
@@ -25,8 +28,10 @@ import gzip, hashlib, os, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
+sys.path.insert(0, os.path.join(HERE, "..", "tools", "sdcard"))
 import lua_patches as L  # noqa: E402
 from jooki import SYSTEM_DIR, WEBUI_FILES, file_mode, load_core, system_files  # noqa: E402
+from make_card_image import scrub_rootfs  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
 WEB_FILES = WEBUI_FILES   # one list, in jooki.py
@@ -80,6 +85,9 @@ def main():
     core = None
     if "--core" in argv:
         i = argv.index("--core"); core = argv[i + 1]; del argv[i:i + 2]
+    forget = []
+    while "--forget" in argv:
+        i = argv.index("--forget"); forget.append(argv[i + 1]); del argv[i:i + 2]
     if len(argv) != 3:
         print(__doc__); sys.exit(1)
     src, out, version = argv
@@ -156,6 +164,10 @@ def main():
         local = os.path.join(work, os.path.basename(path) + ".neutral")
         open(local, "wb").write(data)
         put(out, local, path)
+    # and nothing else of it: run-time files, stray files, keys; deleted files zeroed
+    removed = scrub_rootfs(out, forget)
+    print("leftovers removed: %s; free blocks zeroed%s" % (", ".join(removed) if removed else "none",
+          "; none of %s left" % ", ".join(forget) if forget else ""))
 
     # --- checks ---
     r = subprocess.run(["e2fsck", "-fn", out], capture_output=True, text=True)

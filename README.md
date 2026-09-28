@@ -58,15 +58,21 @@ web instead.
   the time you choose (a few hours, until the morning, or until the next start). The
   Jooki brings them back by itself; tokens and music work the whole time.
 
-## More room for music: a bigger SD card
+## The SD card: more room, or a Jooki brought back to life
 
-The Jooki keeps its music on a small SD card inside it (about 5 GB for music). With a
-Windows computer or a Mac you can move everything to a **bigger card**, in a few clicks,
-and the tool never writes to the Jooki's own card.
+The Jooki keeps everything on a small SD card inside it (about 5 GB for music). With a
+Windows computer, a Mac or a Linux computer, one tool does two things:
 
-**[→ The bigger SD card tool](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)**
+- **a bigger card**: move everything to a bigger card in a few clicks; the tool never
+  writes to the Jooki's own card;
+- **a new card from scratch**: for a Jooki that no longer starts because its card died
+  (dark side dots, reset does nothing). The tool downloads a complete, clean card image
+  and writes it on a blank card; the Jooki starts again, with an empty library. What is
+  on that card: [docs/25-new-sd-card.md](docs/25-new-sd-card.md).
 
-[![The bigger SD card tool](docs/img/sdcard-tool.png)](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)
+**[→ The SD card tool](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)**
+
+[![The SD card tool](docs/img/sdcard-choice.png)](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)
 
 ## Questions
 

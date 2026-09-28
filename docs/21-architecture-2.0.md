@@ -86,7 +86,7 @@ the build and test pipeline.
 | | value | source |
 |---|---|---|
 | Runtime | Lua 5.1, LuaSocket, LuaFileSystem; no C we control | C host (ADR-0001) |
-| Program size | **≤ 192 KiB** stripped source (ADR-0010; 176 before, hard limit 200 KiB in the host); the v1 compatibility layer (14 KiB) leaves in 2.1, `streaming` (11 KiB) can be left out with `--without` | docs/22 §1 |
+| Program size | **≤ 176 KiB** stripped source (hard limit 200 KiB in the host); the v1 compatibility layer (14 KiB) leaves in 2.1, `streaming` (11 KiB) can be left out with `--without` | docs/22 §1 |
 | Memory | **≤ 4 MB** RSS steady state (1.x: 2.9 MB); no growth over 24 h | budget test |
 | Boot → ready | **≤ 8 s** after process start (1.x: 10 s) | measured |
 | Token → sound | **≤ 700 ms** (instrumented in the log) | to instrument |
@@ -151,8 +151,8 @@ has a `README` (purpose, owns, events in, commands out, invariants) and a
 | `api` | v1/v2 translation, subscriptions | `bus.web.*` | `bus.web.state`, `bus.web.reply` | every inbound message validated against its schema |
 
 Size targets: no module above 600 lines of readable Lua; no function above
-60 lines; total readable source ≈ 6 000 lines, ≤ 192 KiB after stripping
-(the build fails otherwise; ADR-0010).
+60 lines; total readable source ≈ 6 000 lines, ≤ 176 KiB after stripping
+(the build fails otherwise).
 
 ## 8. The contract (api v2)
 
@@ -306,7 +306,7 @@ bug.
 | 6 | release 2.0 (old core kept on the spare partition for one release) | published; installer + OTA verified | published 2026-09-27 as 2.0.0, then 2.0.1 |
 
 Budgets measured on the bench at the end of phase 3: stripped bundle 160 KiB
-with streaming, 149 without (limit 176 then, 192 since ADR-0010), boot to ready 20 ms, idle bus traffic 0 message/s, no shell
+with streaming, 149 without (limit 176), boot to ready 20 ms, idle bus traffic 0 message/s, no shell
 process on a timer (only user actions), RSS 4.8 MB on x86-64. On the device
 (phase 5): RSS 2.9 MB, within the 4 MB budget.
 

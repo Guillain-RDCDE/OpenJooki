@@ -169,7 +169,7 @@ local function read_or_empty(path)
 end
 local system_tracks = read_or_empty(config.get("system_dir") .. "/tracks.json")
 local flags = {}
-for _, name in ipairs({ "STAY_ON", "TOY_SAFE_OFF", "WIFI_OFF", "BT_OFF", "FACTORY", "LOG_BUTTONS", "OJ_AIRPLANE" }) do
+for _, name in ipairs({ "STAY_ON", "TOY_SAFE_OFF", "WIFI_OFF", "BT_OFF", "FACTORY", "LOG_BUTTONS" }) do
   if files.exists(files.FLAG_DIR .. "/" .. name) then flags[name] = true end
 end
 local boot_event = {

@@ -52,7 +52,6 @@ local DESC = {
   ["device.set_config"] = "Shuffle and repeat (0 none, 1 all, 2 one).",
   ["device.toy_safe"] = "Kids volume limit (hardware side).", ["device.power_off"] = "Plays the power-off sound, then powers off.",
   ["device.set_wifi"] = "Adds a Wi-Fi network (the Wi-Fi restarts).", ["device.speak_info"] = "The Jooki says its IP address.",
-  ["device.airplane"] = "Switches Wi-Fi and Bluetooth off for `minutes` (1–1440) or, without minutes, until the next start; either way the next start switches them back on. `cancel` switches them back on now. The page loses the Jooki meanwhile.",
   ["upload.add"] = "Imports a file web_ctrl received on /upload (uploadId = the multipart field name).",
   ["bedtime.sleep"] = "Starts (seconds or minutes, or mode = track) or cancels the sleep timer.",
   ["bedtime.set"] = "Night mode settings: enabled, start/stop (\"HH:MM\" or minutes), timer (min), maxvol, dim, tzbase (minutes), tzdst (EU|none).",

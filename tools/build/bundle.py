@@ -104,7 +104,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(ROOT, "build"))
     ap.add_argument("--version", default="2.0.0")
-    ap.add_argument("--max-kib", type=int, default=192)
+    ap.add_argument("--max-kib", type=int, default=176)
     ap.add_argument("--without", action="append", default=[], metavar="MODULE",
                     help="leave an optional module out (e.g. services.streaming); main.lua must tolerate its absence")
     a = ap.parse_args()

@@ -298,71 +298,15 @@ function device.on_toy_safe(doc, ev)
     emit("lights.event", { name = d.toy_safe and "Evt.ToySafe.On" or "Evt.ToySafe.Off" }) } }
 end
 
---- radio.set { wifi?, bt?, bounded? }: the knob (held 5 s) and the system tokens switch the radios
---- for good — the ESP32 remembers airplane mode across restarts, and the way back is a knob
---- gesture few owners know. A change that is not `bounded` therefore also ends any airplane
---- mode the page had started (its timer and its boot flag go).
 function device.on_radio(doc, ev)
   local flags = copy(doc.flags or {})
   flags.WIFI_OFF = (ev.wifi == false) or nil
   flags.BT_OFF = (ev.bt == false) or nil
   local name = (ev.wifi and ev.bt) and "Evt.Airplane.Disable" or ((ev.wifi == false and ev.bt == false) and "Evt.Airplane.Enable" or "Evt.Airplane.Change")
-  local cmds = {
+  return { state = { flags = flags }, commands = {
     { kind = "files.flag", name = "WIFI_OFF", set = ev.wifi == false }, { kind = "files.flag", name = "BT_OFF", set = ev.bt == false },
     { kind = "shell", action = "radio", args = { wifi = ev.wifi ~= false, bt = ev.bt ~= false } },
-    emit("lights.event", { name = name }) }
-  local r = { state = { flags = flags }, commands = cmds }
-  if not ev.bounded then
-    flags.OJ_AIRPLANE = nil
-    local d = copy(doc.device or {})
-    if d.airplane ~= false then
-      d.airplane = false
-      r.state.device = d
-      cmds[#cmds + 1] = { kind = "files.flag", name = "OJ_AIRPLANE", set = false }
-      cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.airplane" }
-    end
-  end
-  return r
-end
-
--- ------------------------------------------------------------------ airplane mode from the page (always bounded)
--- Parents ask for the airplane button the Muuselabs app had (no radio near the bed, or on a
--- plane). From the page it is only ever bounded: for a number of minutes (a timer switches the
--- radios back on) and, whatever happens, until the next start: the flag OJ_AIRPLANE on /data/mode
--- marks it, and at boot the core sees the flag, switches the radios back on and drops it. So a
--- Jooki can never be left with its two side dots orange for good by a tap on the page.
-local AIRPLANE_MAX_MIN = 24 * 60
-local AIRPLANE_BOOT_RESTORE_S = 3      -- after boot: let the ready chime and the ESP32 orders go first
-
---- device.airplane { minutes? (1-1440, or none = until the next start) | cancel = true }
-function device.on_airplane(doc, p, ev)
-  if p.cancel then return device.on_radio(doc, { wifi = true, bt = true }) end
-  local minutes
-  if p.minutes ~= nil then
-    minutes = tonumber(p.minutes)
-    if not minutes or minutes < 1 or minutes > AIRPLANE_MAX_MIN then
-      return nil, { code = "invalid_argument", field = "minutes", message = "invalid duration (1 to " .. AIRPLANE_MAX_MIN .. " minutes)" }
-    end
-    minutes = math.floor(minutes)
-  end
-  local r = device.on_radio(doc, { wifi = false, bt = false, bounded = true })
-  local d = copy(doc.device or {})
-  d.airplane = { ends = minutes and ((ev.wall or 0) + minutes * 60) or nil, boot = true }
-  r.state.device = d
-  r.state.flags.OJ_AIRPLANE = true
-  local cmds = r.commands
-  cmds[#cmds + 1] = { kind = "files.flag", name = "OJ_AIRPLANE", set = true }
-  if minutes then cmds[#cmds + 1] = { kind = "timer.once", name = "device.airplane", seconds = minutes * 60 }
-  else cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.airplane" } end
-  cmds[#cmds + 1] = { kind = "log", level = "info", key = "device.airplane", fields = { minutes = minutes or "boot" } }
-  return r
-end
-
---- The timer (or the boot flag) is over: the radios come back, the flag goes.
-function device.on_airplane_end(doc, why)
-  local r = device.on_radio(doc, { wifi = true, bt = true })
-  r.commands[#r.commands + 1] = { kind = "log", level = "info", key = "device.airplane_end", fields = { why = why } }
-  return r
+    emit("lights.event", { name = name }) } }
 end
 
 -- ------------------------------------------------------------------ lights (1.x language, 1.3 dimming)
@@ -450,16 +394,12 @@ function device.on_boot(doc, ev)
   local flags = ev.flags or {}
   local d = copy(doc.device or {})
   d.toy_safe = not flags.TOY_SAFE_OFF
-  -- false = the page may offer the (bounded) airplane mode; a table = one is running (until the restore below)
-  d.airplane = flags.OJ_AIRPLANE and { boot = true } or false
   local cmds = {
     { kind = "host.volume", percent = device.effective_volume(doc, a.volume) },
     { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = "speaker" },
   }
   for _, c in ipairs(esp32_init()) do cmds[#cmds + 1] = c end
   for i, s in ipairs(ESP32_RESEND_S) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
-  -- an airplane mode started from the page ends at the next start, whatever the ESP32 remembers
-  if flags.OJ_AIRPLANE then cmds[#cmds + 1] = { kind = "timer.once", name = "device.airplane_restore", seconds = AIRPLANE_BOOT_RESTORE_S } end
   for _, c in ipairs({
     { kind = "timer.every", name = "device.inactivity", seconds = 30 },
     { kind = "timer.every", name = "device.tick", seconds = 0.5 },
@@ -502,8 +442,6 @@ function device.on_timer(doc, ev)
   if ev.name == "device.inactivity" then return device.on_inactivity(doc, ev) end
   if ev.name == "device.tick" then return device.on_tick(doc, ev) end
   if ev.name == "device.knobs" then return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end
-  if ev.name == "device.airplane" then return device.on_airplane_end(doc, "timer") end
-  if ev.name == "device.airplane_restore" then return device.on_airplane_end(doc, "boot") end
   if ev.name:match("^device%.esp32_init%.%d$") then
     if (doc.device or {}).esp32_up then return nil end
     return { commands = esp32_init() }
@@ -517,7 +455,6 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
 S.enable = { type = "object", required = { "enable" }, properties = { enable = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
-S.airplane = { type = "object", properties = { minutes = { type = "integer", minimum = 1, maximum = AIRPLANE_MAX_MIN }, cancel = { type = "boolean" } }, additionalProperties = false }
 device.schemas = S
 
 function device.install(api, dispatch)
@@ -577,7 +514,6 @@ function device.install(api, dispatch)
   api.command("device.power_off", nil,function(_, _, ev) return device.on_off_request(nil, { reason = "page", now = ev.now }) end)
   api.command("device.set_wifi", S.wifi, function(_, p) return { commands = { { kind = "shell", action = "wifi_add", args = { ssid = p.ssid, password = p.password, lang = "EN" } } } } end)
   api.command("device.speak_info", nil, function() return { commands = { { kind = "shell", action = "speak_info" }, emit("playback.pause_request", { source = "speak_info" }) } } end)
-  api.command("device.airplane", S.airplane, function(doc, p, ev) return device.on_airplane(doc, p, ev) end)
 end
 
 return device

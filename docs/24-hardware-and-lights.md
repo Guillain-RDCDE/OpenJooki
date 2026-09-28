@@ -73,21 +73,6 @@ guide says the same in one line: "Wi-Fi can be disabled or enabled during
 start-up via the track knob while holding the heart button". On OpenJooki's
 page, Settings shows the Wi-Fi state and lets you add a network.
 
-**Airplane mode from the page (OpenJooki 2).** Parents asked for the button the
-Muuselabs app had: no radio next to the bed, or on a plane. Settings → *Airplane
-mode* switches the Wi-Fi and the Bluetooth off, but never for good: you pick how
-long (a few hours, until the morning, or until the Jooki is switched off and on
-again), the Jooki switches them back on by itself at that time, and in every case
-its next start brings them back. The page loses the Jooki meanwhile, on purpose;
-it says so and tells you when the Wi-Fi returns, instead of "the Jooki is not
-answering". Tokens and music carry on. Under the hood: the radios go off through
-the same `radio.sh` as the knob; a flag `OJ_AIRPLANE` in `/data/mode` marks the
-bounded mode, a timer ends it, and at boot the program sees the flag, waits three
-seconds after the chime and switches the radios back on, whatever the ESP32
-remembers (it keeps airplane mode in its own memory, which is why the knob
-version survives restarts). The knob gesture and the system tokens still switch
-the radios for good, and they cancel a bounded mode when used.
-
 ### 2.2 The heart while charging
 
 The controller owns it. Off the charger the heart is **white**. Muuselabs' own

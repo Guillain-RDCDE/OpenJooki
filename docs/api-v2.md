@@ -19,7 +19,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.
 
 `device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `system`, `config`.
 
-## Commands (35)
+## Commands (34)
 
 ### `bedtime.set`
 
@@ -130,29 +130,6 @@ Payload schema:
     }
   },
   "required": ["appId", "appName", "appVersion", "token"],
-  "type": "object"
-}
-```
-
-### `device.airplane`
-
-Switches Wi-Fi and Bluetooth off for `minutes` (1–1440) or, without minutes, until the next start; either way the next start switches them back on. `cancel` switches them back on now. The page loses the Jooki meanwhile.
-
-Payload schema:
-
-```json
-{
-  "additionalProperties": false,
-  "properties": {
-    "cancel": {
-      "type": "boolean"
-    },
-    "minutes": {
-      "maximum": 1440,
-      "minimum": 1,
-      "type": "integer"
-    }
-  },
   "type": "object"
 }
 ```

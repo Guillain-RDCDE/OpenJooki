@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OpenJooki · a bigger SD card</title>
-<meta name="description" content="Move your Jooki to a bigger SD card with a Windows computer: one file, nothing to install.">
+<title>OpenJooki · the SD card</title>
+<meta name="description" content="A bigger SD card for your Jooki, or a new card for a Jooki that no longer starts: Windows, Mac or Linux, nothing to install.">
 <style>
   :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee}
   @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333}}
@@ -28,17 +28,35 @@
 </head>
 <body>
 <main>
-  <h1>A bigger SD card</h1>
-  <p class="sub">Out of room for music? Move your Jooki to a bigger card with a Windows computer or a Mac. Nothing to install.</p>
+  <h1>The Jooki's SD card</h1>
+  <p class="sub">Out of room for music? Move your Jooki to a <b>bigger card</b>. Jooki dead, card unreadable? Give it a <b>new card</b>, made from scratch. Windows, Mac or Linux, nothing to install.</p>
 
-  <img src="img/sdcard-tool.png" alt="The window of the tool: step 1, the Jooki's card, chosen in the list of card readers" width="576" height="369">
-  <p class="cap">The window, in English or French like your computer.</p>
+  <img src="img/sdcard-choice.png" alt="The first screen of the tool: a bigger card, or a new card for a Jooki that no longer starts" width="576" height="369">
+  <p class="cap">The first screen asks which one you need. In English or French like your computer.</p>
 
   <a class="btn" href="Jooki-SD-card.cmd" download>Download for Windows</a>
   <a class="btn ghost" href="Jooki-SD-Card-mac.zip" download>Download for Mac</a>
   <p class="tiny">A card reader · about 8 GB free in Documents · Linux: see below</p>
 
-  <h2>How it goes</h2>
+  <h2>My Jooki no longer starts: a new card</h2>
+  <p>The side dots stay dark, a reset does nothing, and the card taken out of the Jooki is
+    unreadable: the card is dead, and the Jooki is not. Everything it needs to start again is
+    published here, with nothing personal on it.</p>
+  <ol>
+    <li>Take the dead card out of the Jooki (four screws under it).</li>
+    <li>Open the tool and choose <b>A new card: my Jooki does not start any more</b>.</li>
+    <li>Put a <b>new micro SD card of 4 GB or more</b> in the computer (8 to 32 GB is ideal),
+      choose it, and confirm it may be erased.</li>
+    <li>Wait about ten minutes: the tool downloads the complete card (about 200 MB), checks
+      it, writes it, reads the card back, and gives the music all the room of the card.</li>
+    <li>Put the card in the Jooki and switch it on. The first start takes a little longer.
+      Then open its page as after a first install: the library is empty, ready for your
+      music. Your Wi-Fi is remembered by the Jooki's radio chip, not by the card, so it
+      should reconnect by itself.</li>
+  </ol>
+  <p>What exactly is on that card, and how it is built: <a href="https://github.com/Guillain-RDCDE/OpenJooki/blob/main/docs/25-new-sd-card.md">docs/25-new-sd-card.md</a>.</p>
+
+  <h2>More room for music: a bigger card</h2>
   <ol>
     <li>Take the SD card out of the Jooki and put it in the computer.</li>
     <li><b>Windows</b>: double-click the file and say <b>Yes</b> when Windows asks for permission.<br>
@@ -60,7 +78,7 @@
   <h2>On Linux</h2>
   <p>One Python file: <a href="https://github.com/Guillain-RDCDE/OpenJooki/blob/main/tools/sdcard/jooki_sd.py">jooki_sd.py</a>,
     then <code>sudo python3 jooki_sd.py web</code> (the same steps in your browser) or
-    <code>list</code>, <code>read</code>, <code>write</code> in a terminal.</p>
+    <code>list</code>, <code>read</code>, <code>write</code>, <code>new</code> in a terminal.</p>
 
   <h2>Nothing to lose</h2>
   <ul>
@@ -68,11 +86,14 @@
     <li>A copy of it is kept in your Documents.</li>
     <li>Only card readers are offered, never your computer's disks, and the new card is
       confirmed by name and size before it is erased.</li>
+    <li>The new-card image is checked twice (SHA-256) before a single byte reaches the card,
+      and the card is read back and compared after.</li>
   </ul>
 
-  <p class="note">New tool: checked on disk images, including the real layout of a Jooki's
-    card stretched to 32 GB, and on disks attached to Windows, macOS and Linux. Cards up to 32 GB are the same
-    kind as the Jooki's own; bigger ones have not been tried in a Jooki yet. How it works:
+  <p class="note">Checked on disk images, including the real layout of a Jooki's card stretched
+    to 32 GB, and on disks attached to Windows, macOS and Linux; the new-card image is checked
+    partition by partition with the Linux reference tools. Cards up to 32 GB are the same kind
+    as the Jooki's own; bigger ones have not been tried in a Jooki yet. How it works:
     <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/sdcard">tools/sdcard</a>.</p>
 
   <footer><a href="./">OpenJooki</a> · community firmware for the Jooki v2 · not affiliated with the original maker</footer>

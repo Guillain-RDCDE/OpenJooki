@@ -17,6 +17,24 @@
   start, `cancel: true` = back now), state `device.airplane`, flag
   `/data/mode/OJ_AIRPLANE`, v2 command `device.airplane`. Details in docs/24.
 
+## SD card tools (28 September 2026) — a new card from scratch
+- **A Jooki that no longer starts because its card died gets a new card**, with
+  nothing to copy from anyone: the SD card tool (Windows, Mac, Linux) now starts with
+  a choice, *a bigger card* or *a new card*. The second downloads OpenJooki's complete
+  card image (seven partitions, the Jooki's own bootloader and factory system, the
+  2.0.4 release on both system slots, empty data and music), checks it, writes it,
+  reads it back and grows the music partition to the card. Published with the 2.0.4
+  release (`openjooki-sdcard-2.0.4.img.gz` + `sdcard.json`); built by
+  `tools/sdcard/make_card_image.py`. Plain-words guide: docs/25-new-sd-card.md and
+  https://guillain-rdcde.github.io/OpenJooki/sdcard.html
+- Fixed in the Windows tool: copying more than 2 GB stopped with a number-too-large
+  error (a 32-bit arithmetic slip), so a real 8 GB card could not be copied. Found by
+  the new-card bench; the bigger-card path benefits too.
+- Release images: the build now removes the run-time leftovers of the Jooki an image is
+  made from (`/tmp`, `/start`, stray files, authorized SSH keys) and zeroes the free
+  blocks, and can be told strings that must not remain (`--forget`).
+- Not part of the firmware: nothing changes on a Jooki that works.
+
 ## OpenJooki 2.0.4 (28 September 2026) — any NFC tag, with its name and its photo
 - **An amiibo, a sticker, any NFC tag can start a playlist.** Put it on the
   Jooki: it shows up on the *Tokens* screen as "NFC tag", and you pick its

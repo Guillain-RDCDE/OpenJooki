@@ -6,7 +6,9 @@ docs/Jooki-SD-card.cmd). Python 3 standard library only. Needs root to read and 
   sudo python3 jooki_sd.py read  <card> <image>       # the Jooki's card -> image (card only READ)
   sudo python3 jooki_sd.py write <image> <card>       # image -> bigger card, read back, grown
   sudo python3 jooki_sd.py grow  <card>               # only grow a card already copied
-  sudo python3 jooki_sd.py web                        # the same three steps in a local web page
+  sudo python3 jooki_sd.py new   <card> [--image f]   # a NEW card from scratch (dead Jooki): the
+                                                      # complete card image is downloaded, then written
+  sudo python3 jooki_sd.py web                        # the same steps in a local web page
 <card> is a name from `list` (disk4, sdb, mmcblk0...) or, for tests, an image file.
 
 1. The Jooki's card is only read, never written (the system may add its own small folder to
@@ -17,14 +19,23 @@ docs/Jooki-SD-card.cmd). Python 3 standard library only. Needs root to read and 
 3. Back in the Jooki, its start-up script (S10_init_fs.sh, resize2fs) grows the filesystem.
 Only removable cards are offered (never a system or external hard disk); the source must have
 the Jooki's layout, the target must be bigger and is confirmed.
+
+A new card from scratch (`new`): the same write, but the source is OpenJooki's complete card
+image (tools/sdcard/make_card_image.py: 7 partitions, no family data, about 2.4 GB) fetched from
+the GitHub release, checked (SHA-256) and unpacked in the Documents folder first.
 """
-import argparse, hashlib, http.server, json, os, platform, plistlib, secrets
-import struct, subprocess, sys, threading, time, urllib.parse, webbrowser, zlib
+import argparse, gzip, hashlib, http.server, json, os, platform, plistlib, secrets, shutil
+import struct, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser, zlib
 
 SECTOR = 512
 CHUNK = 4 << 20
 MAX_CARD = 512 * 10**9
 BENCH = os.environ.get("JOOKI_SD_BENCH") == "1"     # tests: any block device given by path
+# the complete card image, published with each release (sdcard.json says its name, sizes and SHA-256);
+# the pinned address is the fallback when the newest release has no card image yet
+RELEASES = "https://github.com/Guillain-RDCDE/OpenJooki/releases"
+MANIFESTS = [RELEASES + "/latest/download/sdcard.json", RELEASES + "/download/v2.0.4/sdcard.json"]
+MIN_NEW_CARD = 3 * 10**9                            # a new card must hold the image and then some
 
 
 class NotJooki(Exception):
@@ -207,6 +218,9 @@ def list_cards():
     """[{id, name, size, path, rawpath}] of removable cards only (never a system or fixed disk)."""
     if os.environ.get("JOOKI_SD_DEMO") == "1":           # pictures for the docs: nothing real behind
         return [{"id": "demo", "name": "Generic SD/MMC Card Reader", "size": 7948206080, "path": None, "rawpath": None}]
+    if BENCH and os.environ.get("JOOKI_SD_BENCH_CARDS"):  # tests of the page: image files play the cards
+        return [{"id": os.path.basename(f), "name": os.path.basename(f), "size": os.path.getsize(f), "path": f, "rawpath": f, "file": True}
+                for f in os.environ["JOOKI_SD_BENCH_CARDS"].split(os.pathsep) if os.path.isfile(f)]
     cards = []
     if platform.system() == "Darwin":
         boot = _mac_boot_disk()
@@ -326,9 +340,116 @@ def write_card_to_disk(image, card, progress=None, status=print):
     return n
 
 
+# ------------------------------------------------------------------ a new card from scratch
+def fetch_manifest(urls=None):
+    """sdcard.json of the release: {version, file, sha256, bytes, image_bytes, image_sha256...}."""
+    last = None
+    if not urls and os.environ.get("JOOKI_SD_MANIFEST"):     # tests: a local copy of the release
+        urls = [os.environ["JOOKI_SD_MANIFEST"]]
+    for u in urls or MANIFESTS:
+        try:
+            with urllib.request.urlopen(u, timeout=30) as r:
+                m = json.loads(r.read().decode())
+            if all(k in m for k in ("version", "file", "sha256", "bytes", "image_bytes", "image_sha256")):
+                m["url"] = u.rsplit("/", 1)[0] + "/" + m["file"]
+                return m
+        except Exception as e:                                   # try the next address
+            last = e
+    raise IOError("cannot fetch the card image's description (%s)" % last)
+
+
+def file_sha256(path, progress=None):
+    h = hashlib.sha256(); total = os.path.getsize(path); done = 0
+    with open(path, "rb") as f:
+        while True:
+            b = f.read(CHUNK)
+            if not b:
+                break
+            h.update(b); done += len(b)
+            if progress:
+                progress(done, total)
+    return h.hexdigest()
+
+
+def download(url, dst, expect_bytes, sha, progress=None, status=print):
+    """url -> dst, checked (size, SHA-256). An existing good file is kept as is."""
+    if os.path.exists(dst) and os.path.getsize(dst) == expect_bytes and file_sha256(dst) == sha:
+        return dst
+    status("download")
+    part = dst + ".part"
+    h = hashlib.sha256(); done = 0
+    with urllib.request.urlopen(url, timeout=60) as r, open(part, "wb") as f:
+        while True:
+            b = r.read(1 << 20)
+            if not b:
+                break
+            f.write(b); h.update(b); done += len(b)
+            if progress:
+                progress(done, expect_bytes)
+    if done != expect_bytes or h.hexdigest() != sha:
+        os.unlink(part)
+        raise IOError("the download is not the published file (size or SHA-256): try again")
+    os.replace(part, dst)
+    return dst
+
+
+def unpack(gz, img, expect_bytes, sha, progress=None, status=print):
+    """gz -> img (the raw card image), checked (size, SHA-256). An existing good image is kept."""
+    if os.path.exists(img) and os.path.getsize(img) == expect_bytes and file_sha256(img, progress) == sha:
+        return img
+    status("unpack")
+    part = img + ".part"
+    h = hashlib.sha256(); done = 0
+    with gzip.open(gz, "rb") as fi, open(part, "wb") as fo:
+        while True:
+            b = fi.read(CHUNK)
+            if not b:
+                break
+            fo.write(b); h.update(b); done += len(b)
+            if progress:
+                progress(done, expect_bytes)
+    if done != expect_bytes or h.hexdigest() != sha:
+        os.unlink(part)
+        raise IOError("the unpacked image is not the published one (size or SHA-256)")
+    os.replace(part, img)
+    return img
+
+
+def new_card_image(folder, progress=None, status=print, manifest=None):
+    """The complete card image, ready to write: fetched into folder, checked, unpacked, checked."""
+    m = manifest or fetch_manifest()
+    gz = os.path.join(folder, "Jooki-new-card-%s.img.gz" % m["version"])
+    img = os.path.join(folder, "Jooki-new-card-%s.img" % m["version"])
+    need = 200 << 20                                          # room for what is not there yet
+    if not (os.path.exists(gz) and os.path.getsize(gz) == m["bytes"]):
+        need += m["bytes"]
+    if not (os.path.exists(img) and os.path.getsize(img) == m["image_bytes"]):
+        need += m["image_bytes"]
+    free = shutil.disk_usage(folder).free
+    if free < need:
+        raise IOError("not enough free space in %s: %.1f GB needed" % (folder, need / 1e9))
+    download(m["url"], gz, m["bytes"], m["sha256"], progress, status)
+    unpack(gz, img, m["image_bytes"], m["image_sha256"], progress, status)
+    return img, m
+
+
+def image_for_new_card(path, progress=None, status=print):
+    """--image on the command line: a .img (used as is) or a .img.gz (unpacked next to it, unchecked)."""
+    if not path.endswith(".gz"):
+        return path
+    img = path[:-3]
+    if not os.path.exists(img):
+        status("unpack")
+        with gzip.open(path, "rb") as fi, open(img + ".part", "wb") as fo:
+            shutil.copyfileobj(fi, fo, CHUNK)
+        os.replace(img + ".part", img)
+    return img
+
+
 # ------------------------------------------------------------------ command line
 WORDS = {"read": "Reading the Jooki's card", "erase": "Erasing the old partition table of the new card",
-         "write": "Writing (step 1 of 2)", "check": "Checking every byte (step 2 of 2)", "grow": "Growing the music partition"}
+         "write": "Writing (step 1 of 2)", "check": "Checking every byte (step 2 of 2)", "grow": "Growing the music partition",
+         "download": "Downloading the card image", "unpack": "Unpacking the card image"}
 
 
 def _cli_progress(done, total):
@@ -353,11 +474,28 @@ def main(argv=None):
     p = sub.add_parser("read"); p.add_argument("card"); p.add_argument("image")
     p = sub.add_parser("write"); p.add_argument("image"); p.add_argument("card"); p.add_argument("--yes", action="store_true")
     p = sub.add_parser("grow"); p.add_argument("card")
+    p = sub.add_parser("new"); p.add_argument("card"); p.add_argument("--image", help="a card image already downloaded (.img or .img.gz)")
+    p.add_argument("--yes", action="store_true"); p.add_argument("--folder", help="where the image is downloaded (default: ~/Documents)")
     p = sub.add_parser("web"); p.add_argument("--port", type=int, default=0); p.add_argument("--token")
     p.add_argument("--no-browser", action="store_true")
     a = ap.parse_args(argv)
     try:
-        if a.cmd == "list":
+        if a.cmd == "new":
+            card = find_card(a.card); _need_root(card)
+            if card["size"] < MIN_NEW_CARD:
+                raise NotJooki("the card is too small (%.1f GB): the new card needs 4 GB or more" % (card["size"] / 1e9))
+            if not a.yes and input("Erase EVERYTHING on %s (%s, %.1f GB)? Type yes: " % (card["id"], card["name"], card["size"] / 1e9)).strip() != "yes":
+                return 1
+            if a.image:
+                image = image_for_new_card(a.image, _cli_progress, _cli_status)
+            else:
+                folder = a.folder or os.path.join(os.path.expanduser("~" + (os.environ.get("SUDO_USER") or "")), "Documents")
+                folder = folder if os.path.isdir(folder) else os.getcwd()
+                image, m = new_card_image(folder, _cli_progress, _cli_status)
+                print("card image: OpenJooki %s (%s)" % (m["version"], image))
+            n = write_card_to_disk(image, card, _cli_progress, _cli_status)
+            print("OK: a new Jooki card, music partition = %d sectors (%.1f GB). Put it in the Jooki and switch it on." % (n, n * SECTOR / 1e9))
+        elif a.cmd == "list":
             for c in list_cards():
                 print("%-10s %6.1f GB  %s" % (c["id"], c["size"] / 1e9, c["name"]))
         elif a.cmd == "read":
@@ -400,34 +538,41 @@ button{background:var(--accent);color:#fff;border:0;font-weight:700;margin-top:1
 .ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-weight:600}
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin:18px 0 6px}.bar i{display:block;height:100%;width:0;background:var(--accent)}
 .muted{color:var(--muted);font-size:.9em}.err{color:#c43a2f;font-weight:600}</style></head><body><main>
-<h1 id="t"></h1><p id="x"></p><select id="s"></select><button class="ghost" id="r"></button><button id="g"></button>
+<h1 id="t"></h1><p id="x"></p><select id="s"></select><button class="ghost" id="r"></button><button id="g"></button><button class="ghost" id="h"></button>
 <div class="bar"><i id="b"></i></div><div class="muted" id="i"></div></main><script>
 var TOKEN=%TOKEN%, fr=(navigator.language||'').slice(0,2)=='fr';
-var T={t1:['1. The Jooki\'s card','1. La carte du Jooki'],x1:['Take the SD card out of the Jooki and put it in this computer (with a card reader if needed), then choose it below. It is only READ: nothing is ever written on it. A copy is kept in your Documents.','Sors la carte SD du Jooki et mets-la dans cet ordinateur (avec un lecteur de cartes si besoin), puis choisis-la ci-dessous. Elle est seulement LUE : rien n\'y est jamais écrit. Une copie est gardée dans tes Documents.'],
+var T={t0:['Your Jooki','Ton Jooki'],x0:['What do you want to do?','Que veux-tu faire ?'],
+g0:['A bigger card: more room for music','Une carte plus grande : plus de place pour la musique'],h0:['A new card: my Jooki does not start any more','Une carte neuve : mon Jooki ne démarre plus'],
+t1:['1. The Jooki\'s card','1. La carte du Jooki'],x1:['Take the SD card out of the Jooki and put it in this computer (with a card reader if needed), then choose it below. It is only READ: nothing is ever written on it. A copy is kept in your Documents.','Sors la carte SD du Jooki et mets-la dans cet ordinateur (avec un lecteur de cartes si besoin), puis choisis-la ci-dessous. Elle est seulement LUE : rien n\'y est jamais écrit. Une copie est gardée dans tes Documents.'],
 g1:['Read the Jooki\'s card','Lire la carte du Jooki'],t2:['2. The new, bigger card','2. La nouvelle carte, plus grande'],x2:['Take out the Jooki\'s card (keep it safe: it is your way back) and put the NEW card in, then click Refresh and choose it. Everything on the new card will be erased.','Retire la carte du Jooki (garde-la précieusement : c\'est ton retour en arrière) et mets la NOUVELLE carte, puis clique sur Actualiser et choisis-la. Tout ce qui est sur la nouvelle carte sera effacé.'],
 g2:['Write and enlarge the new card','Écrire et agrandir la nouvelle carte'],t3:['3. Done!','3. C\'est prêt !'],x3:['Put the new card in the Jooki and switch it on. At the first start it uses all the space by itself. If anything goes wrong, just put the old card back.','Mets la nouvelle carte dans le Jooki et allume-le. Au premier démarrage, il utilise tout l\'espace tout seul. En cas de souci, remets simplement l\'ancienne carte.'],
+tn1:['A new card for the Jooki','Une carte neuve pour le Jooki'],xn1:['Put a NEW micro SD card (4 GB or more) in this computer, then choose it below: everything on it will be erased. The complete card (about 200 MB to download) is fetched, checked, written and read back: allow about ten minutes.','Mets une NOUVELLE carte micro SD (4 Go ou plus) dans cet ordinateur, puis choisis-la ci-dessous : tout ce qui est dessus sera effacé. La carte complète (environ 200 Mo à télécharger) est récupérée, vérifiée, écrite puis relue : compte une dizaine de minutes.'],
+gn1:['Download and write the new card','Télécharger et écrire la carte neuve'],x3n:['Put the card in the Jooki and switch it on. The first start takes a little longer (it prepares the card). Then open the Jooki\'s page as after a first install: its library is empty, ready for your music. It should find your Wi-Fi by itself; if not, set it up as for a new Jooki.','Mets la carte dans le Jooki et allume-le. Le premier démarrage prend un peu plus de temps (il prépare la carte). Ouvre ensuite la page du Jooki comme après une première installation : sa bibliothèque est vide, prête pour ta musique. Il devrait retrouver ton Wi-Fi tout seul ; sinon, règle-le comme pour un Jooki neuf.'],
 g3:['Close','Fermer'],r:['Refresh','Actualiser'],none:['No card found: put the card in, then click Refresh.','Aucune carte détectée : mets la carte, puis clique sur Actualiser.'],
 confirm:['Erase EVERYTHING on this card?','Effacer TOUT le contenu de cette carte ?'],GB:['GB','Go'],bye:['You can close this page.','Tu peux fermer cette page.'],
 read:['Reading the Jooki\'s card...','Lecture de la carte du Jooki...'],erase:['Erasing the old partition table of the new card...','Effacement de l\'ancienne table de la nouvelle carte...'],write:['Writing (step 1 of 2)...','Écriture (étape 1 sur 2)...'],check:['Checking every byte (step 2 of 2)...','Vérification de chaque octet (étape 2 sur 2)...'],grow:['Growing the music partition...','Agrandissement de la partition musique...'],
+download:['Downloading the card image...','Téléchargement de l\'image de la carte...'],unpack:['Unpacking the card image...','Décompression de l\'image de la carte...'],
 failed:['It did not work: ','Ça n\'a pas marché : ']};
 function t(k){return T[k][fr?1:0]}function $(i){return document.getElementById(i)}
 function gb(n){return (n/1e9).toLocaleString(fr?'fr-FR':'en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+' '+t('GB')}
 function api(p,body){return fetch(p+'?token='+TOKEN,{method:body?'POST':'GET',body:body?JSON.stringify(body):null}).then(function(r){return r.json()})}
-var step=1,busy=false;
-function show(){ $('t').textContent=t('t'+step); $('x').textContent=t('x'+step); $('g').textContent=t('g'+step); $('r').textContent=t('r');
-  $('s').style.display=$('r').style.display=step==3?'none':''; }
-function cards(){ api('/cards').then(function(c){ var s=$('s'); s.innerHTML='';
+var step=0,mode='',busy=false;
+function show(){ var x=(step==3&&mode=='new')?'3n':step; $('t').textContent=t('t'+step); $('x').textContent=t('x'+x); $('g').textContent=t('g'+step); $('h').textContent=t('h0'); $('r').textContent=t('r');
+  $('s').style.display=$('r').style.display=(step==3||step==0)?'none':''; $('h').style.display=step==0?'':'none'; $('g').disabled=false; }
+function cards(){ if(step==0||step==3)return; api('/cards').then(function(c){ var s=$('s'); s.innerHTML='';
   c.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.dataset.size=d.size;o.textContent=d.name+'  ·  '+gb(d.size);s.appendChild(o)});
-  $('g').disabled=!c.length&&step!=3; $('i').textContent=c.length?'':t('none'); }); }
+  $('g').disabled=!c.length; $('i').textContent=c.length?'':t('none'); }); }
 function poll(){ api('/status').then(function(st){ if(st.key){$('t').textContent=t(st.key)} if(st.total){$('b').style.width=(100*st.done/st.total)+'%';$('i').textContent=gb(st.done)+' / '+gb(st.total)}
   if(st.running){setTimeout(poll,500);return} busy=false;
   if(st.error){$('i').innerHTML='<span class="err"></span>';$('i').firstChild.textContent=t('failed')+st.error;show();cards();$('g').disabled=false;return}
-  step=st.step; $('b').style.width='0'; show(); cards(); $('g').disabled=false; }); }
+  step=st.step; mode=st.mode||mode; $('b').style.width='0'; show(); cards(); $('g').disabled=false; }); }
 $('r').onclick=cards;
-$('g').onclick=function(){ if(busy)return; if(step==3){api('/quit',{}).then(function(){document.body.innerHTML='<main><p>'+t('bye')+'</p></main>'});return}
+$('h').onclick=function(){ if(busy)return; mode='new'; step='n1'; api('/mode',{mode:mode}).then(function(){show();cards()}); };
+$('g').onclick=function(){ if(busy)return; if(step==0){mode='bigger'; step=1; api('/mode',{mode:mode}).then(function(){show();cards()}); return}
+  if(step==3){api('/quit',{}).then(function(){document.body.innerHTML='<main><p>'+t('bye')+'</p></main>'});return}
   var o=$('s').selectedOptions[0]; if(!o)return;
-  if(step==2&&!confirm(t('confirm')+'\n\n'+o.textContent))return;
-  busy=true; $('g').disabled=true; api(step==1?'/read':'/write',{card:o.value}).then(function(){poll()}); };
+  if((step==2||step=='n1')&&!confirm(t('confirm')+'\n\n'+o.textContent))return;
+  busy=true; $('g').disabled=true; api(step==1?'/read':step==2?'/write':'/new',{card:o.value}).then(function(){poll()}); };
 show(); cards();
 </script></body></html>"""
 
@@ -435,7 +580,7 @@ show(); cards();
 class Job:
     def __init__(self):
         self.lock = threading.Lock()
-        self.state = {"step": 1, "running": False, "key": None, "done": 0, "total": 0, "error": None}
+        self.state = {"step": 0, "mode": "", "running": False, "key": None, "done": 0, "total": 0, "error": None}
         self.image = None
         self.src_size = 0
         self.last = time.time()
@@ -499,7 +644,7 @@ def web(port, token, browser):
             elif path == "/cards":
                 with job.lock:
                     step = job.state["step"]
-                cards = [c for c in list_cards() if step != 2 or c["size"] > job.src_size]
+                cards = [c for c in list_cards() if (step != 2 or c["size"] > job.src_size) and (step != "n1" or c["size"] >= MIN_NEW_CARD)]
                 self._ok([{"id": c["id"], "name": c["name"], "size": c["size"]} for c in cards])
             elif path == "/status":
                 with job.lock:
@@ -519,6 +664,11 @@ def web(port, token, browser):
                 self._ok({"ok": True}); threading.Thread(target=lambda: (time.sleep(0.5), os._exit(0)), daemon=True).start(); return
             if busy:
                 self._ok({"ok": False, "error": "busy"}); return
+            if path == "/mode":                                   # the first screen's choice
+                with job.lock:
+                    if job.state["step"] in (0, 1, "n1") and body.get("mode") in ("bigger", "new"):
+                        job.state.update(mode=body["mode"], step=1 if body["mode"] == "bigger" else "n1")
+                self._ok({"ok": True}); return
             card = next((c for c in list_cards() if c["id"] == body.get("card") and c["path"]), None)
             if not card:
                 self._ok({"ok": False, "error": "no such card"}); return
@@ -541,6 +691,19 @@ def web(port, token, browser):
                     with job.lock:
                         job.state["step"] = 3
                 job.run(step2)
+            elif path == "/new":
+                if card["size"] < MIN_NEW_CARD:
+                    self._ok({"ok": False, "error": "too small"}); return
+
+                def step_new():
+                    image, m = new_card_image(docs, job.progress, job.status)
+                    for f in (image, image + ".gz"):
+                        if os.path.exists(f):
+                            os.chown(f, who.pw_uid, who.pw_gid)          # the downloads belong to the person
+                    write_card_to_disk(image, card, job.progress, job.status)
+                    with job.lock:
+                        job.state.update(step=3, mode="new")
+                job.run(step_new)
             else:
                 self.send_error(404); return
             self._ok({"ok": True})

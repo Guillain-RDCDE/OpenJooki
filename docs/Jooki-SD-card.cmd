@@ -23,12 +23,26 @@ exit /b
 #     filesystem to the partition at the first boot.
 # Only removable cards and USB disks are offered, never a system disk. The source must have
 # the Jooki's layout; the target must be bigger; the target's name and size are confirmed.
+#
+# A NEW card from scratch (the Jooki's card is dead): the same write, but the source is
+# OpenJooki's complete card image (7 partitions, no family data, about 2.4 GB unpacked), fetched
+# from the GitHub release (sdcard.json names it), checked (SHA-256) and unpacked in Documents.
+#
 # Bench: JOOKI_SD_TEST="clone|<src.img>|<dst.img>" or "grow|<dst.img>" runs on files, no window;
-# "disks|<source disk>|<target disk>|<image>" runs the window's two steps on real disks (admin).
+# "disks|<source disk>|<target disk>|<image>" runs the window's two steps on real disks (admin);
+# "new|<card.img.gz>|<dst.img>" unpacks and writes the card image to a file; "fetch|<dir>" only
+# downloads and unpacks (JOOKI_SD_MANIFEST=<url> points at a local copy of sdcard.json).
 # Docs: JOOKI_SD_PREVIEW=<file.png> draws the window and closes it (JOOKI_SD_DEMO=1: an example
-# card reader in the list, JOOKI_SD_LANG=en|fr); nothing is read or written then.
+# card reader in the list, JOOKI_SD_LANG=en|fr, JOOKI_SD_PREVIEW_STEP=0|1|n1); nothing is read or written then.
 # ----------------------------------------------------------------------------------------------
 $ErrorActionPreference = 'Stop'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$Releases = 'https://github.com/Guillain-RDCDE/OpenJooki/releases'
+# the complete card image's description, published with each release; the pinned address is the
+# fallback when the newest release has no card image yet
+$Manifests = @("$Releases/latest/download/sdcard.json", "$Releases/download/v2.0.4/sdcard.json")
+if ($env:JOOKI_SD_MANIFEST) { $Manifests = @($env:JOOKI_SD_MANIFEST) }
+$MinNewCard = 3000000000
 
 Add-Type -TypeDefinition @'
 using System;
@@ -181,6 +195,9 @@ public static class JookiSd {
 
 $fr = if ($env:JOOKI_SD_LANG) { $env:JOOKI_SD_LANG -eq 'fr' } else { (Get-UICulture).TwoLetterISOLanguageName -eq 'fr' }
 function T([string]$en, [string]$fra) { if ($fr) { $fra } else { $en } }
+# numbers written like the interface's language (7,9 Go / 7.9 GB), whatever Windows' own settings
+$Nums = if ($fr) { [Globalization.CultureInfo]::GetCultureInfo('fr-FR') } else { [Globalization.CultureInfo]::InvariantCulture }
+function Fmt([string]$f) { [string]::Format($Nums, $f, $args) }
 $Chunk = 4MB
 
 # Copy $length bytes from $from (at $fromOff) to $to (at $toOff), 4 MB at a time; returns the SHA-256.
@@ -191,7 +208,7 @@ function Copy-Region($from, $to, [long]$fromOff, [long]$toOff, [long]$length, [s
     if ($to) { $to.Seek($toOff, 'Begin') | Out-Null }
     [long]$done = 0
     while ($done -lt $length) {
-        $want = [int][Math]::Min($Chunk, $length - $done)
+        $want = [int][Math]::Min([long]$Chunk, [long]($length - $done))     # both long: beyond 2 GB, Min(int, int) overflows
         $got = 0
         while ($got -lt $want) { $n = $from.Read($buf, $got, $want - $got); if ($n -le 0) { throw "short read" }; $got += $n }
         if ($to) { $to.Write($buf, 0, $want) }
@@ -256,13 +273,103 @@ function Write-CardToDisk([int]$num, [long]$size, [string]$image, [scriptblock]$
     return $n
 }
 
+# ---------------------------------------------------------------- a new card from scratch
+# sdcard.json of the release: version, file, sha256, bytes (the .gz), image_bytes, image_sha256 (unpacked)
+function Get-Manifest {
+    $last = $null
+    foreach ($u in $Manifests) {
+        try {
+            $wc = New-Object Net.WebClient; $wc.Headers['User-Agent'] = 'Jooki-SD-card'
+            $m = $wc.DownloadString($u) | ConvertFrom-Json
+            if ($m.version -and $m.file -and $m.sha256 -and $m.bytes -and $m.image_bytes -and $m.image_sha256) {
+                $m | Add-Member NoteProperty url ($u.Substring(0, $u.LastIndexOf('/')) + '/' + $m.file)
+                return $m
+            }
+        } catch { $last = $_.Exception.Message }
+    }
+    throw (T "Cannot fetch the card image's description (no internet?): $last" "Impossible de récupérer la description de l'image de la carte (pas d'internet ?) : $last")
+}
+
+function Get-Sha256([string]$path, [scriptblock]$progress) {
+    $sha = [Security.Cryptography.SHA256]::Create(); $buf = New-Object byte[] $Chunk
+    $f = [IO.File]::OpenRead($path)
+    try {
+        [long]$done = 0; [long]$total = $f.Length
+        while (($n = $f.Read($buf, 0, $buf.Length)) -gt 0) { $sha.TransformBlock($buf, 0, $n, $null, 0) | Out-Null; $done += $n; if ($progress) { & $progress $done $total } }
+        $sha.TransformFinalBlock((New-Object byte[] 0), 0, 0) | Out-Null
+        return ([BitConverter]::ToString($sha.Hash) -replace '-', '').ToLower()
+    } finally { $f.Dispose() }
+}
+
+# url -> dst, checked (size and SHA-256). A file already there and good is kept.
+function Download-File([string]$url, [string]$dst, [long]$bytes, [string]$sha, [scriptblock]$progress, [scriptblock]$status) {
+    if ((Test-Path $dst) -and (Get-Item $dst).Length -eq $bytes -and (Get-Sha256 $dst $progress) -eq $sha) { return }
+    & $status (T "Downloading the card image..." "Téléchargement de l'image de la carte...")
+    $req = [Net.HttpWebRequest]::Create($url); $req.UserAgent = 'Jooki-SD-card'; $req.Timeout = 60000
+    $resp = $req.GetResponse(); $in = $resp.GetResponseStream()
+    $out = New-Object IO.FileStream("$dst.part", 'Create', 'Write')
+    $h = [Security.Cryptography.SHA256]::Create(); $buf = New-Object byte[] 1MB; [long]$done = 0
+    try {
+        while (($n = $in.Read($buf, 0, $buf.Length)) -gt 0) { $out.Write($buf, 0, $n); $h.TransformBlock($buf, 0, $n, $null, 0) | Out-Null; $done += $n; & $progress $done $bytes }
+        $h.TransformFinalBlock((New-Object byte[] 0), 0, 0) | Out-Null
+    } finally { $out.Dispose(); $in.Dispose(); $resp.Dispose() }
+    $got = ([BitConverter]::ToString($h.Hash) -replace '-', '').ToLower()
+    if ($done -ne $bytes -or $got -ne $sha) { Remove-Item "$dst.part" -Force; throw (T "The download is not the published file (size or SHA-256): try again." "Le téléchargement n'est pas le fichier publié (taille ou SHA-256) : réessaie.") }
+    Move-Item "$dst.part" $dst -Force
+}
+
+# .gz -> the raw card image, checked (size and SHA-256). An image already there and good is kept.
+function Expand-Image([string]$gz, [string]$img, [long]$bytes, [string]$sha, [scriptblock]$progress, [scriptblock]$status) {
+    if ((Test-Path $img) -and (Get-Item $img).Length -eq $bytes -and (Get-Sha256 $img $progress) -eq $sha) { return }
+    & $status (T "Unpacking the card image..." "Décompression de l'image de la carte...")
+    $fin = [IO.File]::OpenRead($gz); $z = New-Object IO.Compression.GZipStream($fin, [IO.Compression.CompressionMode]::Decompress)
+    $out = New-Object IO.FileStream("$img.part", 'Create', 'Write')
+    $h = [Security.Cryptography.SHA256]::Create(); $buf = New-Object byte[] $Chunk; [long]$done = 0
+    try {
+        while (($n = $z.Read($buf, 0, $buf.Length)) -gt 0) { $out.Write($buf, 0, $n); $h.TransformBlock($buf, 0, $n, $null, 0) | Out-Null; $done += $n; & $progress $done $bytes }
+        $h.TransformFinalBlock((New-Object byte[] 0), 0, 0) | Out-Null
+    } finally { $out.Dispose(); $z.Dispose(); $fin.Dispose() }
+    $got = ([BitConverter]::ToString($h.Hash) -replace '-', '').ToLower()
+    if ($done -ne $bytes -or $got -ne $sha) { Remove-Item "$img.part" -Force; throw (T "The unpacked image is not the published one (size or SHA-256)." "L'image décompressée n'est pas celle publiée (taille ou SHA-256).") }
+    Move-Item "$img.part" $img -Force
+}
+
+# The complete card image, ready to write: fetched into $dir, checked, unpacked, checked. Returns its path.
+function Get-NewCardImage([string]$dir, [scriptblock]$progress, [scriptblock]$status) {
+    & $status (T "Looking up the card image..." "Recherche de l'image de la carte...")
+    $m = Get-Manifest
+    $gz = Join-Path $dir ("Jooki-new-card-{0}.img.gz" -f $m.version)
+    $img = Join-Path $dir ("Jooki-new-card-{0}.img" -f $m.version)
+    # room for what is not there yet (a previous run's files are reused)
+    $need = 200MB
+    if (-not ((Test-Path $gz) -and (Get-Item $gz).Length -eq [long]$m.bytes)) { $need += [long]$m.bytes }
+    if (-not ((Test-Path $img) -and (Get-Item $img).Length -eq [long]$m.image_bytes)) { $need += [long]$m.image_bytes }
+    $free = (New-Object IO.DriveInfo ([IO.Path]::GetPathRoot($dir))).AvailableFreeSpace
+    if ($free -lt $need) { throw (Fmt (T "Not enough free space in Documents: {0:N1} GB needed." "Pas assez de place dans Documents : il faut {0:N1} Go.") ($need / 1e9)) }
+    Download-File $m.url $gz ([long]$m.bytes) $m.sha256 $progress $status
+    Expand-Image $gz $img ([long]$m.image_bytes) $m.image_sha256 $progress $status
+    return $img
+}
+
 # ---------------------------------------------------------------- bench mode (files, no window)
 if ($env:JOOKI_SD_TEST) {
     $a = $env:JOOKI_SD_TEST.Split('|')
     $say = { param($m) Write-Host $m }
+    $nop = { param($d, $t) }
     if ($a[0] -eq 'clone') {
         $t = [JookiSd]::Open($a[2], $true)
         try { $n = Write-Card $a[1] $t $t.Length $null $say } finally { $t.Dispose() }
+    } elseif ($a[0] -eq 'new') {         # "new|<card.img.gz>|<dst.img>": unpack (unchecked here) then the same write
+        $img = $a[1] -replace '\.gz$', ''
+        if (-not (Test-Path $img)) {
+            $fin = [IO.File]::OpenRead($a[1]); $z = New-Object IO.Compression.GZipStream($fin, [IO.Compression.CompressionMode]::Decompress)
+            $out = New-Object IO.FileStream($img, 'Create', 'Write'); try { $z.CopyTo($out, $Chunk) } finally { $out.Dispose(); $z.Dispose(); $fin.Dispose() }
+        }
+        $t = [JookiSd]::Open($a[2], $true)
+        try { $n = Write-Card $img $t $t.Length $null $say } finally { $t.Dispose() }
+    } elseif ($a[0] -eq 'fetch') {       # "fetch|<dir>": download + unpack + check only
+        $img = Get-NewCardImage $a[1] $nop $say
+        Write-Host "OK image $img ($((Get-Item $img).Length) bytes)"; return
     } elseif ($a[0] -eq 'disks') {       # "disks|<source disk>|<target disk>|<image file>": the window's own two steps
         $sd = Get-Disk -Number ([int]$a[1]); $td = Get-Disk -Number ([int]$a[2])
         Read-Card $sd.Number $sd.Size $a[3] $null $say
@@ -290,9 +397,6 @@ function Get-Cards {
         ($_.BusType -in 'SD', 'MMC' -or ($_.BusType -eq 'USB' -and $removable -contains [int]$_.Number))
     } | Sort-Object Number
 }
-# numbers written like the interface's language (7,9 Go / 7.9 GB), whatever Windows' own settings
-$Nums = if ($fr) { [Globalization.CultureInfo]::GetCultureInfo('fr-FR') } else { [Globalization.CultureInfo]::InvariantCulture }
-function Fmt([string]$f) { [string]::Format($Nums, $f, $args) }
 function Label-Of($d) { Fmt "{0}  ·  {1:N1} {2}" $d.FriendlyName ($d.Size / 1e9) (T "GB" "Go") }
 
 $form = New-Object Windows.Forms.Form
@@ -308,17 +412,23 @@ $combo = New-Object Windows.Forms.ComboBox; $combo.Location = '20,145'; $combo.S
 $refresh = New-Object Windows.Forms.Button; $refresh.Location = '430,144'; $refresh.Size = '110,30'; $refresh.Text = T "Refresh" "Actualiser"
 $go = New-Object Windows.Forms.Button; $go.Location = '20,190'; $go.Size = '520,44'
 $go.Font = New-Object Drawing.Font('Segoe UI', 11, [Drawing.FontStyle]::Bold)
+$go2 = New-Object Windows.Forms.Button; $go2.Location = '20,244'; $go2.Size = '520,44'; $go2.Visible = $false   # the first screen's second choice
+$go2.Font = New-Object Drawing.Font('Segoe UI', 11, [Drawing.FontStyle]::Bold)
 $bar = New-Object Windows.Forms.ProgressBar; $bar.Location = '20,250'; $bar.Size = '520,22'; $bar.Maximum = 1000
 $info = New-Object Windows.Forms.Label; $info.Location = '20,280'; $info.Size = '520,40'
-$form.Controls.AddRange(@($title, $text, $combo, $refresh, $go, $bar, $info))
+$form.Controls.AddRange(@($title, $text, $combo, $refresh, $go, $go2, $bar, $info))
 
-$state = @{ step = 1; image = $null; srcBytes = 0 }
+# step 0 = the choice; 1, 2, 3 = a bigger card; 'n1' then 3 = a new card from scratch
+$state = @{ step = 0; mode = ''; image = $null; srcBytes = 0 }
+if ($env:JOOKI_SD_PREVIEW -and $env:JOOKI_SD_PREVIEW_STEP) { $state.step = if ($env:JOOKI_SD_PREVIEW_STEP -eq 'n1') { 'n1' } else { [int]$env:JOOKI_SD_PREVIEW_STEP }; $state.mode = if ($state.step -eq 'n1') { 'new' } else { 'bigger' } }
 $progress = { param($done, $total) $bar.Value = [int](1000 * $done / $total); $info.Text = Fmt "{0:N1} / {1:N1} {2}" ($done / 1e9) ($total / 1e9) (T "GB" "Go"); [Windows.Forms.Application]::DoEvents() }
 $status = { param($m) $title.Text = $m; [Windows.Forms.Application]::DoEvents() }
 
 function Fill-Cards {
     $combo.Items.Clear()
+    if ($state.step -eq 0 -or $state.step -eq 3) { return }
     $cards = if ($env:JOOKI_SD_DEMO -and $env:JOOKI_SD_PREVIEW) { @([pscustomobject]@{ FriendlyName = 'Generic SD/MMC Card Reader'; Size = 7948206080; Number = -1 }) } else { Get-Cards }   # picture for the docs
+    if ($state.step -eq 'n1') { $cards = @($cards | Where-Object { $_.Size -ge $MinNewCard }) }
     foreach ($d in $cards) { $combo.Items.Add([pscustomobject]@{ Disk = $d; Text = (Label-Of $d) }) | Out-Null }
     $combo.DisplayMember = 'Text'
     if ($combo.Items.Count) { $combo.SelectedIndex = 0 }
@@ -327,7 +437,15 @@ function Fill-Cards {
 }
 function Show-Step {
     $bar.Value = 0; $info.Text = ''
-    if ($state.step -eq 1) {
+    $choice = $state.step -eq 0
+    $combo.Visible = -not $choice; $refresh.Visible = -not $choice; $bar.Visible = -not $choice; $go2.Visible = $choice
+    if ($choice) {
+        $title.Text = T "Your Jooki" "Ton Jooki"
+        $text.Text = T "What do you want to do?" "Que veux-tu faire ?"
+        $go.Text = T "A bigger card: more room for music" "Une carte plus grande : plus de place pour la musique"
+        $go2.Text = T "A new card: my Jooki does not start any more" "Une carte neuve : mon Jooki ne démarre plus"
+        $go.Enabled = $true
+    } elseif ($state.step -eq 1) {
         $title.Text = T "1. The Jooki's card" "1. La carte du Jooki"
         $text.Text = T "Take the SD card out of the Jooki and put it in this computer (with a card reader if needed), then choose it below.`nIt is only READ: nothing is ever written on it. A copy is kept in your Documents." "Sors la carte SD du Jooki et mets-la dans cet ordinateur (avec un lecteur de cartes si besoin), puis choisis-la ci-dessous.`nElle est seulement LUE : rien n'y est jamais écrit. Une copie est gardée dans tes Documents."
         $go.Text = T "Read the Jooki's card" "Lire la carte du Jooki"
@@ -335,15 +453,25 @@ function Show-Step {
         $title.Text = T "2. The new, bigger card" "2. La nouvelle carte, plus grande"
         $text.Text = T "Take out the Jooki's card (keep it safe: it is your way back) and put the NEW card in, then click Refresh and choose it.`nEverything on the new card will be erased." "Retire la carte du Jooki (garde-la précieusement : c'est ton retour en arrière) et mets la NOUVELLE carte, puis clique sur Actualiser et choisis-la.`nTout ce qui est sur la nouvelle carte sera effacé."
         $go.Text = T "Write and enlarge the new card" "Écrire et agrandir la nouvelle carte"
+    } elseif ($state.step -eq 'n1') {
+        $title.Text = T "A new card for the Jooki" "Une carte neuve pour le Jooki"
+        $text.Text = T "Put a NEW micro SD card (4 GB or more) in this computer, then choose it below: everything on it will be erased.`nThe complete card (about 200 MB to download) is fetched, checked, written and read back: allow about ten minutes." "Mets une NOUVELLE carte micro SD (4 Go ou plus) dans cet ordinateur, puis choisis-la ci-dessous : tout ce qui est dessus sera effacé.`nLa carte complète (environ 200 Mo à télécharger) est récupérée, vérifiée, écrite puis relue : compte une dizaine de minutes."
+        $go.Text = T "Download and write the new card" "Télécharger et écrire la carte neuve"
     } else {
         $title.Text = T "3. Done!" "3. C'est prêt !"
-        $text.Text = T "Put the new card in the Jooki and switch it on. At the first start it uses all the space by itself (it can take a minute longer).`nIf anything goes wrong, just put the old card back." "Mets la nouvelle carte dans le Jooki et allume-le. Au premier démarrage, il utilise tout l'espace tout seul (ça peut prendre une minute de plus).`nEn cas de souci, remets simplement l'ancienne carte."
+        if ($state.mode -eq 'new') {
+            $text.Text = T "Put the card in the Jooki and switch it on. The first start takes a little longer (it prepares the card).`nThen open the Jooki's page as after a first install: its library is empty, ready for your music. It should find your Wi-Fi by itself; if not, set it up as for a new Jooki." "Mets la carte dans le Jooki et allume-le. Le premier démarrage prend un peu plus de temps (il prépare la carte).`nOuvre ensuite la page du Jooki comme après une première installation : sa bibliothèque est vide, prête pour ta musique. Il devrait retrouver ton Wi-Fi tout seul ; sinon, règle-le comme pour un Jooki neuf."
+        } else {
+            $text.Text = T "Put the new card in the Jooki and switch it on. At the first start it uses all the space by itself (it can take a minute longer).`nIf anything goes wrong, just put the old card back." "Mets la nouvelle carte dans le Jooki et allume-le. Au premier démarrage, il utilise tout l'espace tout seul (ça peut prendre une minute de plus).`nEn cas de souci, remets simplement l'ancienne carte."
+        }
         $go.Text = T "Close" "Fermer"; $combo.Enabled = $false; $refresh.Enabled = $false
     }
 }
 
 $refresh.Add_Click({ Fill-Cards })
+$go2.Add_Click({ $state.mode = 'new'; $state.step = 'n1'; Show-Step; Fill-Cards })
 $go.Add_Click({
+    if ($state.step -eq 0) { $state.mode = 'bigger'; $state.step = 1; Show-Step; Fill-Cards; return }
     if ($state.step -eq 3) { $form.Close(); return }
     $sel = $combo.SelectedItem
     if (-not $sel) { return }
@@ -357,6 +485,13 @@ $go.Add_Click({
             $state.image = Join-Path $dir ("Jooki-card-{0:yyyyMMdd-HHmm}.img" -f (Get-Date))
             Read-Card $d.Number $d.Size $state.image $progress $status
             $state.srcBytes = $d.Size; $state.step = 2
+        } elseif ($state.step -eq 'n1') {
+            if ($d.Size -lt $MinNewCard) { throw (T "This card is too small: the new card needs 4 GB or more." "Cette carte est trop petite : il faut 4 Go ou plus.") }
+            $ok = [Windows.Forms.MessageBox]::Show(((T "Erase EVERYTHING on this card?`n`n{0}" "Effacer TOUT le contenu de cette carte ?`n`n{0}") -f (Label-Of $d)), $form.Text, 'YesNo', 'Warning')
+            if ($ok -ne 'Yes') { return }
+            $state.image = Get-NewCardImage ([Environment]::GetFolderPath('MyDocuments')) $progress $status
+            Write-CardToDisk $d.Number $d.Size $state.image $progress $status | Out-Null
+            $state.step = 3
         } else {
             if ($d.Size -le $state.srcBytes) { throw (T "This card is not bigger than the Jooki's card. Choose the NEW card." "Cette carte n'est pas plus grande que celle du Jooki. Choisis la NOUVELLE carte.") }
             $ok = [Windows.Forms.MessageBox]::Show(((T "Erase EVERYTHING on this card?`n`n{0}" "Effacer TOUT le contenu de cette carte ?`n`n{0}") -f (Label-Of $d)), $form.Text, 'YesNo', 'Warning')
@@ -366,7 +501,8 @@ $go.Add_Click({
         }
         Show-Step
     } catch {
-        [Windows.Forms.MessageBox]::Show(((T "It did not work: {0}`n`nNothing was written on the Jooki's card." "Ça n'a pas marché : {0}`n`nRien n'a été écrit sur la carte du Jooki.") -f $_.Exception.Message), $form.Text, 'OK', 'Error') | Out-Null
+        $tail = if ($state.mode -eq 'new') { T "Nothing was written on the card yet, or it was not finished: run the tool again." "Rien n'a été écrit sur la carte, ou l'écriture n'a pas été finie : relance l'outil." } else { T "Nothing was written on the Jooki's card." "Rien n'a été écrit sur la carte du Jooki." }
+        [Windows.Forms.MessageBox]::Show(((T "It did not work: {0}`n`n{1}" "Ça n'a pas marché : {0}`n`n{1}") -f $_.Exception.Message, $tail), $form.Text, 'OK', 'Error') | Out-Null
         Show-Step
     } finally {
         if ($state.step -ne 3) { $refresh.Enabled = $true; $combo.Enabled = $true; Fill-Cards }

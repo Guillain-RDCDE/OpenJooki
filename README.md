@@ -73,6 +73,8 @@ and the tool never writes to the Jooki's own card.
   to the previous version by itself.
 - **Can anyone outside my home see my Jooki?** No. No account, no cloud, no tracking.
 - **And the Jooki 1?** It's on the way, but it's a much more closed box: it takes more work.
+- **What do the lights mean? It gets warm when charging, the battery no longer lasts?**
+  See [the lights, the battery and the USB-C port](docs/24-hardware-and-lights.md).
 
 ## How it works
 

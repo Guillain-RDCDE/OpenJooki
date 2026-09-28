@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Unreleased
+## OpenJooki 2.0.4 (28 September 2026) — any NFC tag, with its name and its photo
 - **An amiibo, a sticker, any NFC tag can start a playlist.** Put it on the
   Jooki: it shows up on the *Tokens* screen as "NFC tag", and you pick its
   playlist there like for a character. From then on, putting it on starts that

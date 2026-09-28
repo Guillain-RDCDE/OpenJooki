@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.3';
+  var VERSION = '2.0.4';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -1410,7 +1410,40 @@
   function tokenImageEditor(tag, file) {
     var SRC_MAX = 640, VIEW = 320, OUT = 128, R = VIEW / 2 - 6;
     var src = document.createElement('canvas'), cut = document.createElement('canvas'), sw = 0, sh = 0;
-    var keep = null, undo = [], rot = 0, zoom = 1, px = 0, py = 0, tol = 30, busy = false;
+    var keep = null, undo = [], rot = 0, zoom = 1, px = 0, py = 0, tol = 25, busy = false;
+    // The background is what the flood reaches from the edges without crossing a contour: a
+    // pixel is taken when its colour is close to the seed's AND the picture is flat there
+    // (luminance Sobel under EDGE). So a silver sword on white keeps its outline even though
+    // silver is within the colour tolerance of white. Then the thin anti-aliased rim left
+    // along the contour is peeled when it is close to the background colour next to it.
+    var EDGE = 28, pix = null, grad = null;
+    function buildGrad() {
+      pix = src.getContext('2d').getImageData(0, 0, sw, sh).data;
+      var L = new Float32Array(sw * sh), n = sw * sh;
+      for (var i = 0; i < n; i++) L[i] = 0.299 * pix[i * 4] + 0.587 * pix[i * 4 + 1] + 0.114 * pix[i * 4 + 2];
+      grad = new Uint8Array(n);
+      for (var y = 1; y < sh - 1; y++) for (var x = 1; x < sw - 1; x++) {
+        var j = y * sw + x;
+        var gx = (L[j - sw + 1] + 2 * L[j + 1] + L[j + sw + 1]) - (L[j - sw - 1] + 2 * L[j - 1] + L[j + sw - 1]);
+        var gy = (L[j + sw - 1] + 2 * L[j + sw] + L[j + sw + 1]) - (L[j - sw - 1] + 2 * L[j - sw] + L[j - sw + 1]);
+        grad[j] = Math.min(255, (Math.abs(gx) + Math.abs(gy)) / 4);
+      }
+    }
+    function dist(i, j) { var dr = pix[i * 4] - pix[j * 4], dg = pix[i * 4 + 1] - pix[j * 4 + 1], db = pix[i * 4 + 2] - pix[j * 4 + 2]; return Math.sqrt(dr * dr + dg * dg + db * db); }
+    function peel(lim) {
+      var n = sw * sh, changed = false;
+      for (var pass = 0; pass < 2; pass++) {
+        var drop = [];
+        for (var i = 0; i < n; i++) {
+          if (!keep[i] || grad[i] <= EDGE) continue;
+          var x = i % sw, y = (i - x) / sw, nb = [x > 0 ? i - 1 : -1, x < sw - 1 ? i + 1 : -1, y > 0 ? i - sw : -1, y < sh - 1 ? i + sw : -1];
+          for (var k = 0; k < 4; k++) { var j = nb[k]; if (j >= 0 && !keep[j] && dist(i, j) <= lim) { drop.push(i); break; } }
+        }
+        for (var q = 0; q < drop.length; q++) keep[drop[q]] = 0;
+        changed = changed || drop.length > 0;
+      }
+      return changed;
+    }
     var view = h('canvas', { class: 'edcanvas', width: VIEW, height: VIEW, 'aria-label': t('ed_title') });
     var vctx = view.getContext('2d');
     var status = h('div', { class: 'small muted', style: 'min-height:18px' }, t('ed_hint'));
@@ -1438,7 +1471,7 @@
     function pushUndo() { undo.push(keep.slice(0)); if (undo.length > 10) undo.shift(); }
     var ready = function () { return !!keep && !busy; };   // nothing works before the picture is loaded
     function flood(seeds) {   // seeds: [[x, y]]; each zone is compared with the colour under its own seed
-      var d = src.getContext('2d').getImageData(0, 0, sw, sh).data, lim = tol * 4.4, changed = false;
+      var d = pix, lim = tol * 4.4, changed = false;
       seeds.forEach(function (sd) {
         var x0 = sd[0], y0 = sd[1];
         if (x0 < 0 || y0 < 0 || x0 >= sw || y0 >= sh) return;
@@ -1447,6 +1480,7 @@
         var stack = [i0], seen = new Uint8Array(sw * sh); seen[i0] = 1;
         while (stack.length) {
           var i = stack.pop(), dr = d[i * 4] - r0, dg = d[i * 4 + 1] - g0, db = d[i * 4 + 2] - b0;
+          if (grad[i] > EDGE) continue;   // a contour: the zone stops here
           if (Math.sqrt(dr * dr + dg * dg + db * db) > lim) continue;
           keep[i] = 0; changed = true;
           var x = i % sw, y = (i - x) / sw;
@@ -1458,10 +1492,13 @@
       });
       return changed;
     }
-    function act(seeds) { if (!ready()) return; pushUndo(); if (flood(seeds)) { rebuildCut(); draw(); } else undo.pop(); }
-    function removeBackground() {
+    function act(seeds) { if (!ready()) return; pushUndo(); var f = flood(seeds); if (peel(tol * 4.4 * 0.4) || f) { rebuildCut(); draw(); } else undo.pop(); }
+    function removeBackground() {   // from a clean slate, so the tolerance slider is what you see
+      if (!ready()) return;
+      pushUndo(); keep.fill(1);
       var e = 2, mx = Math.floor(sw / 2), my = Math.floor(sh / 2);
-      act([[e, e], [sw - 1 - e, e], [e, sh - 1 - e], [sw - 1 - e, sh - 1 - e], [mx, e], [mx, sh - 1 - e], [e, my], [sw - 1 - e, my]]);
+      flood([[e, e], [sw - 1 - e, e], [e, sh - 1 - e], [sw - 1 - e, sh - 1 - e], [mx, e], [mx, sh - 1 - e], [e, my], [sw - 1 - e, my]]);
+      peel(tol * 4.4 * 0.4); rebuildCut(); draw();
     }
     // pointer: a drag moves the picture, a tap is the wand
     var down = null;
@@ -1531,7 +1568,8 @@
       src.width = cut.width = sw; src.height = cut.height = sh;
       src.getContext('2d').drawImage(img, 0, 0, sw, sh);
       keep = new Uint8Array(sw * sh); keep.fill(1);
-      rebuildCut(); draw();
+      buildGrad(); rebuildCut(); draw();
+      removeBackground();   // the usual case is done at once; the tools are there to adjust
     };
     img.onerror = function () { status.textContent = t('photo_bad'); };
     rd.readAsDataURL(file);

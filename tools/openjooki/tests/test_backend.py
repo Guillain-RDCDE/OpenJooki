@@ -57,9 +57,12 @@ if LUA == "core":   # a foreign tag (amiibo, sticker): 2.x only, the 1.x program
     check("T8 foreign tag does not claim to be on the Jooki", (j.state.get("nfc") or {}) == nf0, j.state.get("nfc"))
     j.send("PLAYLIST_UPDATE", {"playlist": {"id": p, "star": "tag." + AMIIBO}}); j.settle()
     j.send("DO_PAUSE", {}); j.settle()
-    j.nfc_foreign(AMIIBO); j.settle()
-    check("T8 foreign tag starts its playlist", j.state["audio"]["nowPlaying"].get("playlistId") == p
-          and j.state["audio"].get("playback", {}).get("state") != "paused", j.state["audio"])
+    j.nfc_foreign(AMIIBO)
+    obj = lambda v: v if isinstance(v, dict) else {}     # an empty sub-tree may come as []
+    j.wait(lambda: obj(obj(j.state.get("audio")).get("playback")).get("state") == "PLAYING", 5)
+    audio = obj(j.state.get("audio"))
+    check("T8 foreign tag starts its playlist", obj(audio.get("nowPlaying")).get("playlistId") == p
+          and obj(audio.get("playback")).get("state") != "PAUSED", audio)
     check("T8 no errors", j.errors == [], j.errors)
 j.close()
 

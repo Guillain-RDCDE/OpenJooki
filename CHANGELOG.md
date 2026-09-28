@@ -1,6 +1,18 @@
 # OpenJooki — Changelog
 
-## Unreleased
+## OpenJooki 2.0.3 (28 September 2026) — a parent code, and switches you control
+- **A parent code (optional, off by default).** In Settings, turn on a 4-digit
+  code. Once it is on, each phone or computer asks for it once, then remembers it.
+  Children and guests can still play music and change the volume, but can no
+  longer delete playlists, change the Wi-Fi or start an update without the code.
+  Forgot it? Hold the two arrows (◀ and ▶) together for ten seconds on the Jooki
+  to clear it — whoever holds the Jooki is allowed.
+- **Home automation (MQTT on the network), off by default.** For Home Assistant
+  and the like: a switch in Settings opens the message bus to your network,
+  protected by the Jooki's own password (shown right there: host, port, user,
+  password). Off, the bus stays private to the Jooki.
+- **A one-hour maintenance access (SSH), off by default.** For tinkerers: a
+  switch opens SSH for an hour, then it closes on its own.
 - **"Select all" in the library.** Above the list of tracks (all, or the unused
   ones the banner opens) a button selects every track shown, then flips to
   "Deselect all". Deleting the unused tracks no longer means ticking them one by

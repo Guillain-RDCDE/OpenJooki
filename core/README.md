@@ -18,7 +18,7 @@ main.lua    wiring only
 Rules (enforced by review and CI): a service never requires an adapter; a
 handler is `(doc, event) -> { state = {...}, commands = {...} }` and does no
 I/O; every side effect is a command executed by the kernel; every module has
-its spec; the built bundle stays under 176 KiB (`bundle.py --without
+its spec; the built bundle stays under 192 KiB (ADR-0010; `bundle.py --without
 services.streaming` builds a lean core without Spotify/Deezer, ADR-0009).
 
 ## Run

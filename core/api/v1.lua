@@ -52,7 +52,8 @@ function PARTS.device(doc)
   local h = doc.health or {}
   return { flags = flags_list(doc.flags), toy_safe = d.toy_safe, id = d.id, hostname = d.hostname, ip = (doc.net or {}).ip or d.ip,
            wifi_mac = d.wifi_mac, machine = d.machine, firmware = d.firmware, openjooki = d.openjooki or d.core,
-           diskUsage = d.diskUsage, usage = d.usage, core = d.core, rss_kb = h.rss_kb, boot = h.boot, esp32_up = d.esp32_up }
+           diskUsage = d.diskUsage, usage = d.usage, core = d.core, rss_kb = h.rss_kb, boot = h.boot, esp32_up = d.esp32_up,
+           airplane = d.airplane }
 end
 function PARTS.nfc(doc) return doc.nfc or {} end
 function PARTS.power(doc) return doc.power or {} end
@@ -241,6 +242,8 @@ end
 H.OJ_UPDATE_CHECK = function() return { commands = { { kind = "emit", event = { type = "update.check" } } } } end
 H.OJ_SET_NAME = function(doc, p) return device.on_set_name(doc, p.name) end
 H.OJ_UPDATE_START = function() return { commands = { { kind = "emit", event = { type = "update.start" } } } } end
+-- airplane mode from the page, always bounded (minutes, and at most until the next start)
+H.OJ_AIRPLANE = function(doc, p, ev) return device.on_airplane(doc, { minutes = p.minutes, cancel = p.cancel == true }, ev) end
 -- security switches (docs/adr/0007)
 H.OJ_SSH_ON = function(doc, _, ev) return security.on_ssh(doc, { on = true, wall = ev.wall }) end
 H.OJ_SSH_OFF = function(doc) return security.on_ssh(doc, { on = false }) end
@@ -260,7 +263,7 @@ local PROTECTED = {
   SET_CFG = true, SET_TOY_SAFE = true, SET_WIFI = true, SHUTDOWN = true,
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
-  OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_MQTT_LAN = true,
+  OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,
 }
 v1.PROTECTED = PROTECTED
 

@@ -1,5 +1,22 @@
 # OpenJooki — Changelog
 
+## Next release — airplane mode from the page
+- **Airplane mode, the way parents asked for it, without the trap.** Settings →
+  *Airplane mode* switches the Jooki's Wi-Fi and Bluetooth off (no radio next to
+  the bed, or on a plane). You choose for how long: a few hours, until the morning
+  (the end of night mode), or until the Jooki is switched off and on again. The
+  Jooki switches them back on by itself at that time, and in every case its next
+  start brings the Wi-Fi back: a tap on the page can never leave a Jooki with its
+  two side dots orange for good, which the knob gesture can (the chip remembers
+  it across restarts, and the way back is a trick few owners know).
+- **The page says what is going on.** While the Jooki is in airplane mode the page
+  cannot reach it, on purpose. Instead of "the Jooki is not answering", it tells
+  you the Jooki is in airplane mode and when the Wi-Fi returns. Tokens and music
+  carry on the whole time. Protected by the parent code when one is set.
+- For the tinkerers: message `OJ_AIRPLANE {minutes}` (1–1440, none = until the next
+  start, `cancel: true` = back now), state `device.airplane`, flag
+  `/data/mode/OJ_AIRPLANE`, v2 command `device.airplane`. Details in docs/24.
+
 ## OpenJooki 2.0.4 (28 September 2026) — any NFC tag, with its name and its photo
 - **An amiibo, a sticker, any NFC tag can start a playlist.** Put it on the
   Jooki: it shows up on the *Tokens* screen as "NFC tag", and you pick its

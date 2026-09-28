@@ -54,6 +54,9 @@ web instead.
   open `http://jooki.local`, whatever the address.
 - **Add it to your home screen**: on iPhone, Share → *Add to Home Screen*; on Android,
   menu ⋮ → *Add to Home screen*.
+- **Airplane mode**: Settings → *Airplane mode* switches the Wi-Fi and Bluetooth off for
+  the time you choose (a few hours, until the morning, or until the next start). The
+  Jooki brings them back by itself; tokens and music work the whole time.
 
 ## More room for music: a bigger SD card
 

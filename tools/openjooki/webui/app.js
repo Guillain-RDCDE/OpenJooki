@@ -109,7 +109,9 @@
       night_clock: 'L\'heure du Jooki vient d\'Internet (heure d\'été comprise).',
       resume_at: function (c, s) { return 'Reprendra au chapitre ' + c + (s ? ' · ' + s : ''); },
       resume_restart: 'Recommencer au début', resume_done: 'Reprendra au chapitre 1',
-      sort_tracks: 'Remettre dans l\'ordre (1, 2, 3…)', sorted: 'Pistes remises dans l\'ordre'
+      sort_tracks: 'Remettre dans l\'ordre (1, 2, 3…)', sorted: 'Pistes remises dans l\'ordre',
+      my_jooki: 'Mon Jooki', bytes: ['o', 'Ko', 'Mo', 'Go'],
+      n_tokens: function (n) { return n + ' jeton' + (n > 1 ? 's' : ''); }
     },
     en: {
       playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
@@ -211,13 +213,121 @@
       night_clock: 'The Jooki gets its time from the Internet (summer time included).',
       resume_at: function (c, s) { return 'Will resume at chapter ' + c + (s ? ' · ' + s : ''); },
       resume_restart: 'Start again from the beginning', resume_done: 'Will resume at chapter 1',
-      sort_tracks: 'Put back in order (1, 2, 3…)', sorted: 'Tracks put back in order'
+      sort_tracks: 'Put back in order (1, 2, 3…)', sorted: 'Tracks put back in order',
+      my_jooki: 'My Jooki', bytes: ['B', 'KB', 'MB', 'GB'],
+      n_tokens: function (n) { return n + (n === 1 ? ' token' : ' tokens'); }
+    },
+    nl: {
+      playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
+      connecting: 'Verbinden met de Jooki…', connected: 'Verbonden', offline: 'Offline',
+      offline_long: 'De Jooki antwoordt niet. Controleer of hij aanstaat en op dezelfde wifi zit. Er wordt automatisch opnieuw geprobeerd…',
+      retry: 'Opnieuw proberen',
+      new_playlist: 'Nieuwe afspeellijst', create: 'Aanmaken', cancel: 'Annuleren', save: 'Opslaan', close: 'Sluiten',
+      name: 'Naam', playlist_name_ph: 'Bijv. Slaapliedjes',
+      n_tracks: function (n) { return n + (n === 1 ? ' nummer' : ' nummers'); },
+      audiobook: 'Luisterboek', audiobook_help: 'Gaat altijd verder waar het gestopt is, nooit in willekeurige volgorde.',
+      no_token: 'Geen figuurtje', choose_token: 'Kies het personage', token_for: 'Personage dat deze afspeellijst start',
+      token_help: 'Elk figuurtje van hetzelfde personage start deze afspeellijst (bijv. alle zwarte draken).',
+      used_by: function (t) { return 'bij “' + t + '”'; },
+      token_moved: function (t) { return 'Dit personage startte “' + t + '”. Voortaan start het deze afspeellijst.'; },
+      play: 'Afspelen', pause: 'Pauze', next: 'Volgende', prev: 'Vorige',
+      add_files: 'Bestanden toevoegen', from_library: 'Uit de bibliotheek', web_radio: 'Webradio',
+      delete_playlist: 'Afspeellijst verwijderen',
+      delete_playlist_q: function (t) { return '“' + t + '” verwijderen?'; },
+      delete_playlist_text: 'De afspeellijst wordt verwijderd. De nummers blijven op de Jooki (onder “Ongebruikt”).',
+      delete: 'Verwijderen', rename: 'Hernoemen',
+      empty_playlist: 'Deze afspeellijst is leeg.', empty_playlist_hint: 'Voeg bestanden toe vanaf je telefoon of computer, of nummers die al op de Jooki staan.',
+      drop_here: 'Sleep audiobestanden hierheen', removed_from: 'Uit de afspeellijst gehaald', undo: 'Ongedaan maken',
+      playlist_missing: 'Deze afspeellijst bestaat niet meer.', back: 'Terug',
+      no_playlists: 'Nog geen afspeellijst.',
+      unused_banner: function (n) { return n + (n === 1 ? ' nummer staat' : ' nummers staan') + ' in geen enkele afspeellijst.'; },
+      see: 'Bekijken',
+      all: 'Alles', unused: 'Ongebruikt', search: 'Zoeken', in_playlists: 'In: ', in_none: 'In geen enkele afspeellijst',
+      add_to: 'Toevoegen aan…', selected: function (n) { return n + ' geselecteerd'; },
+      select_all: 'Alles selecteren', select_none: 'Selectie opheffen',
+      delete_forever: 'Van de Jooki verwijderen',
+      delete_forever_q: function (n) { return n + (n === 1 ? ' nummer' : ' nummers') + ' definitief verwijderen?'; },
+      delete_forever_text: 'De bestanden worden van de Jooki gewist. Dit kan niet ongedaan worden gemaakt.',
+      deleted: 'Verwijderd', choose_playlist: 'Kies een afspeellijst', added: function (n) { return n + (n === 1 ? ' nummer toegevoegd' : ' nummers toegevoegd'); },
+      already_in: 'zit er al in', add: 'Toevoegen', add_n: function (n) { return n + ' toevoegen'; },
+      library_empty: 'Geen nummers op de Jooki.', unused_empty: 'Elk nummer zit in een afspeellijst.',
+      radio: 'Radio', radio_title: 'Een webradio toevoegen', radio_name: 'Naam van de radio', radio_url: 'Streamadres (http:// of https://)',
+      radio_url_bad: 'Het adres moet beginnen met http:// of https://',
+      tokens_intro: 'Elk personage start één afspeellijst. Alle figuurtjes van hetzelfde personage (bijv. al je zwarte draken) doen precies hetzelfde.',
+      tokens_hint: 'Zet een figuurtje op de Jooki om het hier te zien.',
+      launches: 'Start', none_dash: '— Geen afspeellijst —',
+      token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)',
+      seen_n: function (n) { return n + ' keer gebruikt'; }, on_jooki: 'Op de Jooki',
+      forget: 'Vergeten', forget_q: 'Dit figuurtje vergeten?',
+      forget_text: 'Het verdwijnt uit de lijst en komt terug zodra het weer gebruikt wordt. De afspeellijst van het personage verandert niet.',
+      saved: 'Opgeslagen', no_tokens: 'Nog geen bekend figuurtje.',
+      other_chars: 'Personages zonder bekend figuurtje',
+      device: 'Apparaat', device_name: 'Naam', battery: 'Batterij', charging: 'aan het opladen', plugged: 'aangesloten',
+      name_title: 'Naam van de Jooki op het netwerk',
+      name_help: function (f) { return 'Kleine letters, cijfers en koppeltekens. De pagina wordt bereikbaar op naam.local. Laat leeg om terug te gaan naar de oorspronkelijke naam (' + f + ').'; },
+      name_invalid: 'Alleen kleine letters, cijfers en koppeltekens (maximaal 32), geen koppelteken aan het begin of einde.',
+      name_done: function (n) { return 'De Jooki heet nu ' + n; },
+      name_text: function (u) { return 'De pagina staat nu op ' + u + ' — het oude adres antwoordt niet meer. Sla deze link op als bladwijzer. Spotify toont de nieuwe naam na de volgende herstart.'; },
+      name_open: 'Het nieuwe adres openen',
+      wifi: 'Wifi', ip: 'IP-adres', storage: 'Opslag', free: 'vrij', version: 'Versie',
+      playback: 'Afspelen', toy_safe: 'Begrensd volume (kindermodus)', shuffle: 'Willekeurig', repeat: 'Herhalen',
+      language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
+      power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
+      nothing_playing: 'Er speelt niets', nothing_hint: 'Zet een figuurtje neer of kies een afspeellijst',
+      live: 'Live', volume: 'Volume',
+      uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
+      up_too_small: 'Leeg of te klein bestand', up_no_space: 'Niet genoeg ruimte over op de Jooki',
+      up_net: 'Upload mislukt (verbinding verbroken?)', up_type: 'Dit bestand is geen ondersteund audioformaat',
+      up_fail: 'De Jooki kon dit bestand niet toevoegen', up_timeout: 'Geen antwoord van de Jooki',
+      uploads_running: 'Er zijn uploads bezig. Als je de pagina verlaat, stoppen ze.',
+      clear_done: 'Voltooide uploads verbergen',
+      up_retrying: function (n, m) { return 'Verbinding verbroken, opnieuw proberen (' + n + '/' + m + ')…'; }, up_retry: 'Opnieuw',
+      wifi_good: 'Goed signaal', wifi_fair: 'Matig signaal', wifi_weak: 'Zwak signaal',
+      wifi_drops: function (n) { return n + (n === 1 ? ' onderbreking' : ' onderbrekingen') + ' sinds het opstarten'; },
+      wifi_advice: 'Zet de Jooki dichter bij een wifi-toegangspunt. Muziek werkt zonder wifi: alleen deze pagina en uploads hebben het nodig.',
+      err_readonly: 'Niet mogelijk bij ongebruikte nummers.',
+      err_internal: 'De Jooki liep tegen een fout aan. Probeer het opnieuw.',
+      err_empty_title: 'De naam mag niet leeg zijn.',
+      err_radio: 'Ongeldig radioadres.',
+      err_gone: 'Dit item bestaat niet meer.',
+      err_generic: 'De Jooki heeft de actie geweigerd.',
+      err_unknown_char: 'Onbekend personage.',
+      duration_total: function (s) { return s; },
+      mute_unsupported: '',
+      files_hint: 'MP3, M4A, OGG, FLAC, WAV…',
+      open_player: 'De speler openen',
+      web_page: 'pagina', upd_check: 'Controleren op updates', upd_checking: 'Controleren…',
+      upd_uptodate: 'Je Jooki is up-to-date.', upd_offline: 'GitHub is niet bereikbaar (is de Jooki online?).',
+      upd_available: function (v) { return 'Nieuwe versie ' + v + ' beschikbaar'; }, upd_now: 'Nu bijwerken',
+      upd_q: function (v) { return 'Bijwerken naar OpenJooki ' + v + '?'; },
+      upd_text: 'De Jooki downloadt de nieuwe versie en start vanzelf opnieuw: tot 10 minuten. Laat hem aangesloten. Je muziek en figuurtjes blijven bewaard, en hij gaat vanzelf terug naar de vorige versie als er iets misgaat.',
+      upd_running: 'Bijwerken…', upd_keep: 'Laat de Jooki aangesloten. Deze pagina maakt vanzelf opnieuw verbinding.',
+      upd_rebooting: 'De Jooki start opnieuw op met de nieuwe versie…', upd_done: function (v) { return 'Jooki bijgewerkt: OpenJooki ' + v; },
+      upd_failed: 'De update is niet gelukt. Je Jooki is niet veranderd.', upd_banner: function (v) { return 'Update ' + v + ' beschikbaar'; },
+      upd_see: 'Bekijken',
+      upd_steps: ['Nieuwe versie zoeken', 'Downloaden', 'Download controleren', 'Installeren (laat de Jooki aangesloten)', 'Installatie controleren', 'Opnieuw opstarten met de nieuwe versie'],
+      bedtime: 'Bedtijd', sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
+      sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk',
+      sleep_left: function (s) { return 'Stopt over ' + s; }, sleep_at_end: 'Stopt aan het einde van dit nummer',
+      sleep_auto: 'automatisch (nachtmodus)', sleep_cancel: 'Timer annuleren',
+      night_mode: 'Nachtmodus', night_help: 'In deze uren stopt elke luisterbeurt vanzelf, is het volume begrensd en zijn de lampjes gedimd.',
+      night_from: 'Van', night_to: 'Tot', night_timer: 'Automatische timer', night_timer_none: 'Geen',
+      night_maxvol: 'Maximaal volume', night_nolimit: 'geen limiet', night_dim: 'Gedimde lampjes',
+      night_now: 'Nachtmodus is nu actief', night_next: function (h) { return 'Begint om ' + h; },
+      night_clock: 'De Jooki haalt de tijd van het internet (inclusief zomertijd).',
+      resume_at: function (c, s) { return 'Gaat verder bij hoofdstuk ' + c + (s ? ' · ' + s : ''); },
+      resume_restart: 'Opnieuw vanaf het begin', resume_done: 'Gaat verder bij hoofdstuk 1',
+      sort_tracks: 'Terug op volgorde zetten (1, 2, 3…)', sorted: 'Nummers terug op volgorde gezet',
+      my_jooki: 'Mijn Jooki', bytes: ['B', 'kB', 'MB', 'GB'],
+      n_tokens: function (n) { return n + (n === 1 ? ' figuurtje' : ' figuurtjes'); }
     }
   };
+  var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands']];
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  var lang = lsGet('oj.lang') || ((navigator.language || 'fr').slice(0, 2) === 'fr' ? 'fr' : 'en');
-  if (!T[lang]) lang = 'fr';
+  // English by default; French or Dutch only when the browser itself is set to that language
+  var lang = lsGet('oj.lang') || (navigator.language || 'en').slice(0, 2).toLowerCase();
+  if (!T[lang]) lang = 'en';
   function t(k) {
     var v = T[lang][k];
     if (v === undefined) v = T.fr[k];
@@ -341,7 +451,7 @@
   }
   function fmtBytes(b) {
     b = Number(b) || 0;
-    var u = lang === 'fr' ? ['o', 'Ko', 'Mo', 'Go'] : ['B', 'KB', 'MB', 'GB'];
+    var u = t('bytes');
     var i = 0;
     while (b >= 1000 && i < u.length - 1) { b /= 1000; i++; }
     return (i ? b.toFixed(b < 10 ? 1 : 0) : b) + ' ' + u[i];
@@ -1118,7 +1228,7 @@
       return h('div', { class: 'card', style: 'padding:14px 16px;margin-bottom:12px', 'data-char': sid },
         h('div', { class: 'row' }, tokVisual(sid, '', S.nfc.starId === sid),
           h('div', { class: 'grow' }, h('div', { class: 'title', style: 'font-weight:700;font-size:17px' }, charName(sid)),
-            h('div', { class: 'small muted' }, tags.length ? tags.length + ' × ' + (lang === 'fr' ? 'jeton' + (tags.length > 1 ? 's' : '') : 'token' + (tags.length > 1 ? 's' : '')) : ''))),
+            h('div', { class: 'small muted' }, tags.length ? t('n_tokens', tags.length) : ''))),
         h('label', { class: 'field' }, h('span', null, t('launches')), sel),
         tags.map(function (tag, i) {
           var tk = S.db.tokens[tag] || {};
@@ -1307,8 +1417,7 @@
       bedtimeCard(),
       h('div', { class: 'section-title' }, t('language')),
       h('div', { class: 'card', style: 'padding:12px 16px' }, h('div', { class: 'seg', role: 'group', 'aria-label': t('language') },
-        h('button', { class: lang === 'fr' ? 'on' : '', onclick: function () { setLang('fr'); } }, 'Français'),
-        h('button', { class: lang === 'en' ? 'on' : '', onclick: function () { setLang('en'); } }, 'English'))),
+        LANGS.map(function (l) { return h('button', { class: lang === l[0] ? 'on' : '', lang: l[0], onclick: function () { setLang(l[0]); } }, l[1]); }))),
       h('div', { class: 'actions', style: 'margin-top:24px' }, h('button', { class: 'btn danger', onclick: function () {
         confirmBox(t('power_off_q'), t('power_off_text'), t('power_off'), true).then(function (ok) {
           if (!ok) return;
@@ -1557,7 +1666,7 @@
         h('div', null, online || !everOnline ? t('connecting') : t('offline')),
         !online && retryDelay > 1600 ? h('p', { class: 'small muted' }, t('offline_long')) : null,
         !online && retryDelay > 1600 ? h('button', { class: 'btn', onclick: function () { retryDelay = 1000; connect(); } }, t('retry')) : null);
-      title = lang === 'fr' ? 'Mon Jooki' : 'My Jooki';
+      title = t('my_jooki');
     } else if (r.name === 'p') {
       var p = pls()[r.arg];
       title = p ? (p.title || '—') : t('playlists');

@@ -68,7 +68,7 @@ at boot (if the character is free).
 
 Plain HTML/CSS/JS served by the Jooki, no framework, no build step, **no external
 request at all** (no Google Fonts, no analytics, no tracking pixel, no link to the
-dead `jooki.rocks` domain). French or English (automatic, switchable).
+dead `jooki.rocks` domain). English by default; French or Dutch when the browser is set to that language (switchable in Settings).
 
 - **Playlists**: create, rename (Enter/Escape), delete (with confirmation),
   play, choose the character (with a warning when it moves from another

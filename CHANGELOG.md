@@ -5,6 +5,10 @@
   ones the banner opens) a button selects every track shown, then flips to
   "Deselect all". Deleting the unused tracks no longer means ticking them one by
   one. It follows the search box: with a search typed, it selects only the matches.
+- **The page speaks English first, and now Dutch.** English is the default; the
+  page switches to French or Dutch on its own when the phone or computer is set
+  to that language, and Settings has the three of them. A language chosen by hand
+  is remembered.
 
 ## OpenJooki 2.0.2 (28 September 2026) — the page is the only way in
 - **A booby-trapped website can no longer command your Jooki.** Until now any

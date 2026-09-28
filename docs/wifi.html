@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenJooki · connect to Wi-Fi</title>
+<meta name="description" content="Moved house, new box, new password? Give your Jooki its Wi-Fi network over Bluetooth, from a phone or a computer. Nothing to install.">
+<style>
+  :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a;--okbg:#e8f6ec;--bad:#c0392b;--badbg:#fbeaea}
+  @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333;--okbg:#12301c;--badbg:#3a1a1a}}
+  *{box-sizing:border-box}
+  body{margin:0;font:17px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:0 20px 60px}
+  main{max-width:620px;margin:0 auto}
+  h1{color:var(--accent);font-size:1.8em;margin:.8em 0 .05em;text-align:center}
+  .sub{color:var(--muted);margin:0 0 1.4em;text-align:center}
+  h2{font-size:1.15em;margin:1.6em 0 .4em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .card.ok{background:var(--okbg);border-color:var(--ok)}
+  .card.bad{background:var(--badbg);border-color:var(--bad)}
+  .btn{display:block;width:100%;text-decoration:none;text-align:center;background:var(--accent);color:#fff;padding:15px;border:none;border-radius:12px;font-weight:700;margin:14px 0 4px;font-size:1.1em;font-family:inherit;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-size:1em}
+  .btn.small{display:inline-block;width:auto;padding:7px 12px;font-size:.9em;margin:0}
+  .btn:disabled{opacity:.35;cursor:default}
+  .tiny{color:var(--muted);font-size:.85em;margin:4px 0 0}
+  label{font-weight:600;display:block;margin:14px 0 6px}
+  input[type=text],input[type=password]{width:100%;padding:13px;font-size:1.1em;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font-family:inherit}
+  .pwrow{display:flex;gap:8px;align-items:center}
+  .pwrow input{flex:1}
+  .net{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;font:inherit;color:inherit;cursor:pointer}
+  .net.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(242,107,33,.25)}
+  .net .name{flex:1;font-weight:600;word-break:break-all}
+  .net .sig{color:var(--muted);font-size:.85em;white-space:nowrap}
+  .bars{display:inline-flex;align-items:flex-end;gap:2px;height:14px;margin-right:6px;vertical-align:-1px}
+  .bars i{width:4px;background:var(--line);border-radius:1px}
+  .bars i:nth-child(1){height:5px}.bars i:nth-child(2){height:8px}.bars i:nth-child(3){height:11px}.bars i:nth-child(4){height:14px}
+  .bars.b1 i:nth-child(-n+1),.bars.b2 i:nth-child(-n+2),.bars.b3 i:nth-child(-n+3),.bars.b4 i:nth-child(-n+4){background:var(--accent)}
+  .known{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+  .known:first-child{border-top:none}
+  .known .name{flex:1;word-break:break-all}
+  .spinner{width:48px;height:48px;border:5px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:6px auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation:spin 2.4s linear infinite}}
+  .center{text-align:center}
+  .big{font-size:2.4em;line-height:1;margin:4px 0 10px}
+  code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:.88em}
+  a{color:var(--accent)}
+  .muted{color:var(--muted)}
+  details{margin:14px 0}summary{cursor:pointer;color:var(--accent)}
+  ul{padding-left:1.3em}li{margin:.35em 0}
+  footer{color:var(--muted);font-size:.78em;text-align:center;margin-top:40px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>Connect the Jooki to Wi-Fi</h1>
+  <p class="sub">Moved house, new internet box, new Wi-Fi password? The Jooki only learnt its network from the old app. This page gives it a new one over Bluetooth. Nothing to install.</p>
+
+  <div class="card bad" id="nobt" hidden>
+    <b>This browser cannot talk Bluetooth.</b>
+    <p>Open this page in <b>Chrome</b> (or Edge) on an <b>Android phone</b>, a <b>Windows PC</b>, a <b>Mac</b> or <b>Linux</b>.
+    An iPhone or iPad cannot do it: use a computer or an Android phone instead.</p>
+    <p class="tiny">No Chrome at hand? <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/wifi">A small program for the computer</a> does the same.</p>
+  </div>
+
+  <div id="step1">
+    <div class="card">
+      <b>1. Put the Jooki next to this device, switched on.</b>
+      <p class="muted" style="margin:.4em 0 0">Its lights may be red or blinking: that is the Jooki looking for Wi-Fi. Bluetooth must be on here.</p>
+      <button class="btn" id="find" type="button">Find my Jooki</button>
+      <p class="tiny center">A list opens: pick <b>JOOKI2_…</b> then <b>Pair</b> (or <b>Connect</b>).</p>
+    </div>
+  </div>
+
+  <div id="step2" hidden>
+    <div class="card">
+      <b>2. Choose the network</b> <span class="muted" id="who"></span>
+      <div id="scanning" class="center" style="margin:14px 0"><div class="spinner"></div><span class="muted">Asking the Jooki which networks it can see…</span></div>
+      <div id="nets"></div>
+      <p class="tiny" id="netnote" hidden>Only 2.4 GHz networks show: the Jooki cannot use 5 GHz. If yours is missing, come closer to the box, or check the box offers a 2.4 GHz network.</p>
+      <p class="tiny"><button class="btn ghost small" id="rescan" type="button">Look again</button>
+        <button class="btn ghost small" id="hiddenbtn" type="button">Hidden network</button></p>
+      <div id="hiddenrow" hidden>
+        <label for="ssid">Network name</label>
+        <input id="ssid" type="text" autocomplete="off" autocapitalize="none" placeholder="exactly as on the box">
+      </div>
+      <label for="pw" id="pwlabel">Password</label>
+      <div class="pwrow">
+        <input id="pw" type="password" autocomplete="off" autocapitalize="none" placeholder="the Wi-Fi password">
+        <button class="btn ghost small" id="showpw" type="button">Show</button>
+      </div>
+      <p class="tiny" id="pwhint">Exactly as written on the box or in its app: capitals, spaces and symbols count.</p>
+      <button class="btn" id="connect" type="button" disabled>Connect the Jooki</button>
+    </div>
+  </div>
+
+  <div id="progress" class="card center" hidden>
+    <div class="spinner"></div>
+    <p id="ptitle" style="font-weight:700;margin:0">Sending the network to the Jooki…</p>
+    <p id="psub" class="muted" style="margin:.4em 0 0">It takes about ten seconds.</p>
+  </div>
+
+  <div id="result" class="card" hidden>
+    <div class="center big" id="rico"></div>
+    <p id="rtitle" style="font-weight:700;margin:0;text-align:center"></p>
+    <p id="rtext" style="margin:.5em 0 0"></p>
+    <a class="btn" id="openpage" href="http://jooki.local/" hidden>Open my Jooki's page</a>
+    <button class="btn ghost" id="again" type="button">Try another network</button>
+  </div>
+
+  <div id="knownbox" class="card" hidden>
+    <b>Networks the Jooki remembers</b>
+    <p class="tiny" style="margin-bottom:8px">It joins any of them it can see, by itself. Adding one never removes another. Forget the ones you no longer have.</p>
+    <div id="known"></div>
+  </div>
+
+  <div class="card bad" id="err" hidden><b id="etitle"></b><p id="etext" style="margin:.4em 0 0"></p></div>
+
+  <details>
+    <summary>How it works, and what it cannot do</summary>
+    <ul>
+      <li>The Jooki's Wi-Fi chip also speaks Bluetooth, and it always offers the same set-up the old app used at the first start. This page speaks it, straight from the browser: nothing is sent anywhere else.</li>
+      <li>The password travels over Bluetooth, over a few metres, without encryption (that is how the Jooki was built). Do it at home.</li>
+      <li>The Jooki only does <b>2.4 GHz</b> Wi-Fi. If your box only shows a 5 GHz network, turn its 2.4 GHz one on.</li>
+      <li>Once connected, the Jooki's page is at <code>http://jooki.local</code> (or the address your box shows for it), from any phone or computer on that Wi-Fi.</li>
+      <li>Prefer a terminal? <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/wifi">jooki_wifi.py</a> does the same on Windows, Mac and Linux.</li>
+    </ul>
+  </details>
+
+  <footer><a href="./">OpenJooki</a> · community firmware for the Jooki v2 · not affiliated with the original maker</footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  /* ---- the Jooki's Bluetooth set-up (Espressif provisioning, no security, protocol v1.1; Muuselabs' network list next to it) */
+  var PROV = 'b3562d79-1a6f-6c59-368a-599ca5481a90', WCM = '5bf49f8c-3491-218c-ae4f-db0580debd00';
+  var CH = { scan: 'b356ff50-1a6f-6c59-368a-599ca5481a90', session: 'b356ff51-1a6f-6c59-368a-599ca5481a90',
+             config: 'b356ff52-1a6f-6c59-368a-599ca5481a90', version: 'b356ff53-1a6f-6c59-368a-599ca5481a90',
+             remove: '5bf49f8c-3491-218c-ae4f-db0580debd02', list: '5bf49f8c-3491-218c-ae4f-db0580debd03' };
+  var $ = function (id) { return document.getElementById(id); };
+  var enc = new TextEncoder(), dec = new TextDecoder();
+
+  /* ---- protobuf, just enough: varints and length-delimited fields */
+  function varint(n) { var out = []; n = Number(n); do { var b = n % 128; n = Math.floor(n / 128); out.push(n ? b | 0x80 : b); } while (n); return out; }
+  function fv(num, v) { return varint(num * 8).concat(varint(v)); }
+  function fb(num, bytes) { bytes = Array.from(bytes); return varint(num * 8 + 2).concat(varint(bytes.length), bytes); }
+  function cat() { var out = []; for (var i = 0; i < arguments.length; i++) out = out.concat(Array.from(arguments[i])); return new Uint8Array(out); }
+  function rv(b, i) { var n = 0n, s = 0n, x; do { x = b[i++]; n |= BigInt(x & 0x7f) << s; s += 7n; } while (x & 0x80); if (n >= (1n << 63n)) n -= 1n << 64n; return [n, i]; }
+  function decode(b) {                       // -> { field: [values] }, numbers as Number, bytes as Uint8Array
+    var i = 0, out = {}, r, key, num, wt, v, ln;
+    while (i < b.length) {
+      r = rv(b, i); key = Number(r[0]); i = r[1]; num = key >> 3; wt = key & 7;
+      if (wt === 0) { r = rv(b, i); v = Number(r[0]); i = r[1]; }
+      else if (wt === 2) { r = rv(b, i); ln = Number(r[0]); i = r[1]; v = b.slice(i, i + ln); i += ln; }
+      else if (wt === 5) { v = b.slice(i, i + 4); i += 4; }
+      else if (wt === 1) { v = b.slice(i, i + 8); i += 8; }
+      else throw new Error('wire type ' + wt);
+      (out[num] = out[num] || []).push(v);
+    }
+    return out;
+  }
+  function one(m, f, d) { return m && m[f] && m[f].length ? m[f][0] : d; }
+  function sub(m, f) { var v = one(m, f); return v ? decode(v) : {}; }
+
+  /* ---- the link */
+  var device = null, chars = {}, busy = false;
+  function have() { return !!(device && device.gatt && device.gatt.connected); }
+  async function link() {
+    if (have()) return;
+    if (!device) throw new Error('nodevice');
+    // The Jooki serves one talker at a time: right after another one dropped (a tab closed),
+    // connecting or the handshake can fail for a few seconds, so we try again for a while.
+    for (var round = 0; ; round++) {
+      try { await link1(); return; }
+      catch (e) { try { device.gatt.disconnect(); } catch (x) {} if (round >= 8) throw e; await sleep(2500); }
+    }
+  }
+  async function link1() {
+    var server = await device.gatt.connect();
+    var prov = await server.getPrimaryService(PROV), wcm = await server.getPrimaryService(WCM);
+    chars.scan = await prov.getCharacteristic(CH.scan); chars.session = await prov.getCharacteristic(CH.session);
+    chars.config = await prov.getCharacteristic(CH.config); chars.version = await prov.getCharacteristic(CH.version);
+    chars.list = await wcm.getCharacteristic(CH.list); chars.remove = await wcm.getCharacteristic(CH.remove);
+    // the handshake every talker does first: proto-ver ("ESP" -> {"prov":{"ver":"v1.1",...}}), then a
+    // security-0 session (SessionData{ sec0{ sc{} } }). Without proto-ver first, the session is refused.
+    await handshake();
+  }
+  // Done once per link, and again before every request that changes something: after a connection
+  // attempt the Jooki refuses a new set-up (status "invalid session") until a new session is opened.
+  async function handshake() {
+    var ver = dec.decode(await xfer(chars.version, enc.encode('ESP')));
+    if (ver.indexOf('prov') < 0) throw new Error('not a Jooki set-up service');
+    var r = decode(await xfer(chars.session, fb(10, fb(20, []))));
+    if (one(sub(sub(r, 10), 21), 1, 0) !== 0) throw new Error('session refused');
+  }
+  var TRACE = window.OJ_TRACE = [];   // every exchange, as hex, when the page is opened with #trace (support)
+  function hex(a) { return Array.from(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  async function xfer(ch, bytes) {
+    var buf = new Uint8Array(bytes);
+    if (ch.writeValueWithResponse) await ch.writeValueWithResponse(buf); else await ch.writeValue(buf);
+    var dv = await ch.readValue();
+    var out = new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength);
+    if (location.hash === '#trace') TRACE.push(ch.uuid.slice(4, 8) + ' > ' + hex(buf) + ' < ' + hex(out));
+    return out;
+  }
+  async function readText(ch) { var dv = await ch.readValue(); return dec.decode(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength)); }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  /* ---- what the Jooki can see: WiFiScanPayload */
+  async function scanNetworks() {
+    var ch = chars.scan, i, st, n, got = 0, k, r, entries = [], e, seen = {};
+    await xfer(ch, fb(10, fv(1, 1).concat(fv(4, 120))));           // CmdScanStart{ blocking, period_ms }
+    for (i = 0; i < 40; i++) {                                        // CmdScanStatus until finished
+      st = sub(decode(await xfer(ch, fv(1, 2).concat(fb(12, [])))), 13);
+      if (one(st, 1, 0)) break;
+      await sleep(400);
+    }
+    n = one(st, 2, 0);
+    while (got < n) {                                                 // CmdScanResult{ start_index, count } four at a time
+      k = Math.min(4, n - got);
+      r = sub(decode(await xfer(ch, fv(1, 4).concat(fb(14, fv(1, got).concat(fv(2, k)))))), 15);
+      (r[1] || []).forEach(function (raw) {
+        e = decode(raw);
+        var ssid = dec.decode(one(e, 1, new Uint8Array(0)));
+        if (!ssid) return;
+        var net = { ssid: ssid, rssi: one(e, 3, -100), channel: one(e, 2, 0), auth: one(e, 5, 0) };
+        if (!seen[ssid] || seen[ssid].rssi < net.rssi) { seen[ssid] = net; }   // the same name on two boxes: keep the strongest
+      });
+      got += k;
+    }
+    for (var s in seen) entries.push(seen[s]);
+    entries.sort(function (a, b) { return b.rssi - a.rssi; });
+    return entries;
+  }
+  /* ---- the networks it remembers: "a","b" (Muuselabs) */
+  async function knownNetworks() {
+    var txt = await readText(chars.list), out = [], m, re = /"((?:[^"\\]|\\.)*)"/g;
+    while ((m = re.exec(txt))) out.push(m[1].replace(/\\(.)/g, '$1'));
+    return out;
+  }
+  async function forget(ssid) {
+    var buf = cat(enc.encode('"'), enc.encode(ssid.replace(/(["\\])/g, '\\$1')), enc.encode('"'));
+    if (chars.remove.writeValueWithResponse) await chars.remove.writeValueWithResponse(buf); else await chars.remove.writeValue(buf);
+  }
+  /* ---- give it a network: WiFiConfigPayload set, apply, then status until it is on it */
+  var STATE = ['connected', 'connecting', 'disconnected', 'failed'];
+  async function status() {
+    var s = sub(decode(await xfer(chars.config, fb(10, []))), 11);   // CmdGetStatus -> RespGetStatus
+    var c = sub(s, 11);
+    return { state: STATE[one(s, 2, 0)] || 'unknown', reason: one(s, 10, null), ssid: c[3] ? dec.decode(one(c, 3)) : null };
+  }
+  function dropLink() { try { if (device && device.gatt) device.gatt.disconnect(); } catch (e) {} chars = {}; }
+  async function giveNetwork(ssid, pw, onstep) {
+    var r;
+    // Right after a previous attempt the link can answer a GATT error to the first requests:
+    // then the link is dropped and made again, up to three times.
+    for (var round = 0; ; round++) {
+      try {
+        await link(); await handshake();
+        r = sub(decode(await xfer(chars.config, fv(1, 2).concat(fb(12, fb(1, enc.encode(ssid)).concat(fb(2, enc.encode(pw))))))), 13);
+        if (one(r, 1, 0) !== 0) throw new Error('refused');
+        r = sub(decode(await xfer(chars.config, fv(1, 4).concat(fb(14, [])))), 15);
+        if (one(r, 1, 0) !== 0) throw new Error('refused');
+        break;
+      } catch (e) { TRACE.push('retry set-up: ' + (e && e.message)); dropLink(); if (round >= 2) throw e; await sleep(2000); }
+    }
+    // The status is the chip's last event: a failure is believed only once the attempt has had time
+    // to run (3 s) and it is reported twice in a row, so a stale answer never ends a real attempt.
+    // While the chip switches network, a Bluetooth read can fail or the link can drop for a moment:
+    // that is not the verdict, so the polling carries on (and links again) unless it keeps failing.
+    var t0 = Date.now(), st = { state: 'connecting' }, failures = 0, errors = 0, limit = window.OJ_TIMEOUT || 45000;
+    while (Date.now() - t0 < limit) {
+      await sleep(1500);
+      try { if (!have()) await link(); st = await status(); errors = 0; }
+      catch (e) { if (++errors >= 6) throw e; TRACE.push('retry ' + (e && e.message)); if (errors >= 2) dropLink(); continue; }
+      onstep(Math.round((Date.now() - t0) / 1000), st);
+      if (st.state === 'connected' && st.ssid === ssid) return st;
+      failures = st.state === 'failed' ? failures + 1 : 0;
+      if (failures >= 2 && Date.now() - t0 >= 3000) return st;
+    }
+    st.state = 'timeout'; return st;
+  }
+
+  /* ---- the page */
+  var chosen = null, nets = [];
+  function show(id, on) { $(id).hidden = !on; }
+  function err(title, text) { $('etitle').textContent = title; $('etext').textContent = text || ''; show('err', true); }
+  function noerr() { show('err', false); }
+  function bars(rssi) { return rssi >= -55 ? 4 : rssi >= -65 ? 3 : rssi >= -75 ? 2 : 1; }
+  function words(rssi) { return rssi >= -65 ? 'good signal' : rssi >= -75 ? 'fair signal' : 'weak signal'; }
+  function explain(e) {
+    var m = String(e && e.message || e);
+    if (e && e.name === 'NotFoundError') return null;                 // the list was closed without a choice
+    if (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(m)) return 'The Bluetooth link dropped. Bring the Jooki closer and try again.';
+    if (/nodevice/.test(m)) return 'Find the Jooki first.';
+    if (/refused|session/.test(m)) return 'The Jooki refused the request. Switch it off and on, then try again.';
+    return 'Bluetooth error: ' + m;
+  }
+  function renderNets() {
+    var box = $('nets'); box.innerHTML = '';
+    nets.forEach(function (n) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'net' + (chosen === n.ssid ? ' on' : ''); b.setAttribute('data-ssid', n.ssid);
+      b.innerHTML = '<span class="name"></span><span class="sig"><span class="bars b' + bars(n.rssi) + '"><i></i><i></i><i></i><i></i></span>' + words(n.rssi) + (n.auth ? '' : ' · open') + '</span>';
+      b.querySelector('.name').textContent = n.ssid;
+      b.onclick = function () { chosen = n.ssid; $('ssid').value = ''; show('hiddenrow', false); renderNets(); pwFor(n); };
+      box.appendChild(b);
+    });
+    show('netnote', true);
+    $('connect').disabled = !chosen;
+  }
+  function pwFor(n) {
+    var open = n && n.auth === 0;
+    $('pw').disabled = open; $('pw').placeholder = open ? 'no password (open network)' : 'the Wi-Fi password';
+    $('pwlabel').textContent = open ? 'Password (none)' : 'Password for ' + n.ssid;
+    if (!open) $('pw').focus();
+  }
+  async function renderKnown() {
+    try {
+      var list = await knownNetworks(), box = $('known'); box.innerHTML = '';
+      list.forEach(function (ssid) {
+        var row = document.createElement('div'); row.className = 'known';
+        var name = document.createElement('span'); name.className = 'name'; name.textContent = ssid;
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost small'; b.textContent = 'Forget'; b.setAttribute('data-forget', ssid);
+        b.onclick = async function () {
+          if (!confirm('Forget "' + ssid + '"?\nIf the Jooki is on it right now, it will drop off it.')) return;
+          try { await link(); await forget(ssid); await renderKnown(); } catch (e) { err('Could not forget it', explain(e)); }
+        };
+        row.appendChild(name); row.appendChild(b); box.appendChild(row);
+      });
+      if (!list.length) box.innerHTML = '<span class="muted">none yet</span>';
+      show('knownbox', true);
+    } catch (e) { show('knownbox', false); }
+  }
+  async function doScan() {
+    show('scanning', true); $('nets').innerHTML = ''; show('netnote', false); $('rescan').disabled = true;
+    try { await link(); nets = await scanNetworks(); }
+    catch (e) { err('Could not look for networks', explain(e)); nets = []; }
+    show('scanning', false); $('rescan').disabled = false;
+    renderNets();
+    if (!nets.length && $('err').hidden) $('nets').innerHTML = '<p class="muted" data-k="nonet">The Jooki sees no 2.4 GHz network from here. Bring it closer to the box, or type a hidden network name.</p>';
+  }
+  $('find').onclick = async function () {
+    noerr();
+    if (!navigator.bluetooth) return;
+    try {
+      device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'JOOKI2_' }], optionalServices: [PROV, WCM] });
+    } catch (e) { var x = explain(e); if (x) err('No Jooki found', x); return; }
+    device.addEventListener('gattserverdisconnected', function () { chars = {}; });
+    $('who').textContent = '· ' + (device.name || 'Jooki');
+    show('step1', false); show('step2', true); show('result', false);
+    chosen = null; $('pw').value = ''; $('connect').disabled = true;
+    await doScan();
+    await renderKnown();
+  };
+  $('rescan').onclick = function () { noerr(); doScan(); };
+  $('hiddenbtn').onclick = function () { show('hiddenrow', true); chosen = null; renderNets(); $('ssid').focus(); pwFor({ ssid: '', auth: 3 }); };
+  $('ssid').oninput = function () { chosen = $('ssid').value.trim() || null; $('pwlabel').textContent = chosen ? 'Password for ' + chosen : 'Password'; renderNets(); };
+  $('showpw').onclick = function () { var p = $('pw'); p.type = p.type === 'password' ? 'text' : 'password'; this.textContent = p.type === 'password' ? 'Show' : 'Hide'; };
+  $('pw').onkeydown = function (e) { if (e.key === 'Enter' && !$('connect').disabled) $('connect').click(); };
+  $('connect').onclick = async function () {
+    if (!chosen || busy) return;
+    var ssid = chosen, pw = $('pw').disabled ? '' : $('pw').value;
+    var net = nets.filter(function (n) { return n.ssid === ssid; })[0];
+    if (net && net.auth !== 0 && pw.length < 8) { err('Password too short', 'A Wi-Fi password has at least 8 characters.'); return; }
+    noerr(); busy = true;
+    show('step2', false); show('progress', true); $('ptitle').textContent = 'Sending the network to the Jooki…'; $('psub').textContent = 'It takes about ten seconds.';
+    var st;
+    try {
+      await link();
+      st = await giveNetwork(ssid, pw, function (secs, s) {
+        $('ptitle').textContent = 'The Jooki is connecting to "' + ssid + '"…'; $('psub').textContent = secs + ' s';
+      });
+    } catch (e) { st = { state: 'error', message: explain(e) }; TRACE.push('error ' + (e && e.name) + ': ' + (e && e.message)); }
+    busy = false;
+    show('progress', false); show('result', true);
+    var ok = st.state === 'connected';
+    $('result').className = 'card ' + (ok ? 'ok' : 'bad');
+    $('rico').textContent = ok ? '✅' : '❌';
+    show('openpage', ok);
+    if (ok) {
+      $('rtitle').textContent = 'Your Jooki is on "' + ssid + '"';
+      $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://jooki.local</code> (with the <code>http://</code>), or the address your box shows for it. The Jooki remembers this network from now on.';
+      $('again').textContent = 'Give it another network';
+    } else {
+      var why = st.state === 'failed' ? (st.reason === 0 ? 'The Jooki says the password is wrong. Check capitals, spaces and symbols, then try again: until then it stays off Wi-Fi.'
+                                        : st.reason === 1 ? 'The Jooki cannot find that network. Bring it closer to the box, and check the network is 2.4 GHz.'
+                                        : 'The Jooki could not join it.')
+              : st.state === 'timeout' ? 'The Jooki could not join it in 45 seconds. Most often the password is wrong (capitals, spaces and symbols count), or the network is out of reach or 5 GHz only. Until it joins a network it stays off Wi-Fi: try again.'
+              : st.message || 'Something went wrong.';
+      $('rtitle').textContent = 'Not connected';
+      $('rtext').textContent = why;
+      $('again').textContent = 'Try again';
+    }
+    renderKnown();
+  };
+  $('again').onclick = function () { noerr(); show('result', false); show('step2', true); if (have()) return; show('step2', false); show('step1', true); };
+
+  if (!navigator.bluetooth) { show('nobt', true); $('find').disabled = true; }
+  else if (navigator.bluetooth.getAvailability) {
+    navigator.bluetooth.getAvailability().then(function (ok) { if (!ok) err('Bluetooth is off, or this device has none', 'Turn Bluetooth on, then tap "Find my Jooki".'); });
+  }
+})();
+</script>
+</body>
+</html>

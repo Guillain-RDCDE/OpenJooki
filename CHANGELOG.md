@@ -11,6 +11,8 @@
   it), check the preview, then *Keep this order*. It replaces the old *Put back
   in order (1, 2, 3…)* button, which sorted by the title inside the file and so
   did nothing useful when the number was only in the file name.
+- **Each playlist card shows its total length** next to the number of tracks
+  (for example "6 tracks · 42 min").
 - **The page speaks English first, and now Dutch.** English is the default; the
   page switches to French or Dutch on its own when the phone or computer is set
   to that language, and Settings has the three of them. A language chosen by hand

@@ -902,12 +902,13 @@
     var un = unusedIds().length;
     var cards = list.map(function (p) {
       var n = arr(p.tracks).length;
+      var total = arr(p.tracks).reduce(function (s, x) { var tr = S.db.tracks[x]; return s + (tr && !tr.isUrl ? Number(tr.duration) || 0 : 0); }, 0);
       var card = h('div', { class: 'card pl' + (np.playlistId === p.id ? ' active' : ''), role: 'link', tabindex: '0', 'data-pl': p.id,
         onclick: function () { go('#/p/' + encodeURIComponent(p.id)); },
         onkeydown: function (e) { if (e.key === 'Enter') go('#/p/' + encodeURIComponent(p.id)); } },
         h('div', { class: 'ph' }, tokVisual(p.star, 'sm', S.nfc.starId && S.nfc.starId === p.star)),
         h('div', { class: 'name' }, p.title || '—'),
-        h('div', { class: 'meta' }, t('n_tracks', n) + (p.audiobook ? ' · ' + t('audiobook') : '')),
+        h('div', { class: 'meta' }, t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
         n ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
           e.stopPropagation(); send('PLAYLIST_PLAY', { playlistId: p.id }); } }, icon('play')) : null);
       return card;

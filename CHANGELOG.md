@@ -1,5 +1,11 @@
 # OpenJooki — Changelog
 
+## Unreleased
+- **"Select all" in the library.** Above the list of tracks (all, or the unused
+  ones the banner opens) a button selects every track shown, then flips to
+  "Deselect all". Deleting the unused tracks no longer means ticking them one by
+  one. It follows the search box: with a search typed, it selects only the matches.
+
 ## OpenJooki 2.0.2 (28 September 2026) — the page is the only way in
 - **A booby-trapped website can no longer command your Jooki.** Until now any
   program on your Wi-Fi, including a web page open in a browser on a phone or

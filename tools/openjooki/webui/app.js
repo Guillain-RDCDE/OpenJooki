@@ -36,6 +36,7 @@
       see: 'Voir',
       all: 'Tous', unused: 'Non utilisés', search: 'Rechercher', in_playlists: 'Dans : ', in_none: 'Dans aucune playlist',
       add_to: 'Ajouter à…', selected: function (n) { return n + (n > 1 ? ' sélectionnés' : ' sélectionné'); },
+      select_all: 'Tout sélectionner', select_none: 'Tout désélectionner',
       delete_forever: 'Supprimer du Jooki',
       delete_forever_q: function (n) { return 'Supprimer définitivement ' + n + (n > 1 ? ' morceaux' : ' morceau') + ' ?'; },
       delete_forever_text: 'Les fichiers seront effacés du Jooki. Cette action est irréversible.',
@@ -137,6 +138,7 @@
       see: 'Show',
       all: 'All', unused: 'Unused', search: 'Search', in_playlists: 'In: ', in_none: 'In no playlist',
       add_to: 'Add to…', selected: function (n) { return n + ' selected'; },
+      select_all: 'Select all', select_none: 'Deselect all',
       delete_forever: 'Delete from Jooki',
       delete_forever_q: function (n) { return 'Permanently delete ' + n + (n === 1 ? ' track' : ' tracks') + '?'; },
       delete_forever_text: 'The files will be erased from the Jooki. This cannot be undone.',
@@ -1037,11 +1039,16 @@
     Object.keys(ui.sel).forEach(function (k) { if (all.indexOf(k) < 0) delete ui.sel[k]; });
     var chosen = all.filter(function (k) { return ui.sel[k]; });
     var nAll = Object.keys(S.db.tracks).length;
+    var allChosen = all.length > 0 && chosen.length === all.length;
     return [
       h('div', { class: 'tabs', role: 'tablist' },
         h('button', { class: tab === 'all' ? 'on' : '', role: 'tab', 'aria-selected': String(tab === 'all'), onclick: function () { go('#/library'); } }, t('all') + ' (' + nAll + ')'),
         h('button', { class: tab === 'unused' ? 'on' : '', role: 'tab', 'aria-selected': String(tab === 'unused'), onclick: function () { go('#/library/unused'); } }, t('unused') + ' (' + un.length + ')')),
-      h('div', { class: 'actions' }, fileButton(t('add_files'), null, false)),
+      h('div', { class: 'actions' }, fileButton(t('add_files'), null, false),
+        // select / deselect every track currently listed (this tab, after the search filter)
+        all.length ? h('button', { class: 'btn', 'data-k': 'selall', 'aria-pressed': String(allChosen), onclick: function () {
+          all.forEach(function (k) { ui.sel[k] = !allChosen; }); render();
+        } }, allChosen ? t('select_none') : t('select_all')) : null),
       uploadsBlock(null),
       h('div', { class: 'search' }, icon('search'), h('input', { class: 'input', 'data-k': 'libsearch', placeholder: t('search'), value: ui.search,
         oninput: function (e) { ui.search = e.target.value; render(); } })),

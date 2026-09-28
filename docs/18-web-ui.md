@@ -85,7 +85,9 @@ dead `jooki.rocks` domain). English by default; French or Dutch when the browser
 - **Player**: now playing, play/pause/previous/next, seek, volume,
   shuffle/repeat.
 - **Settings**: battery, Wi-Fi, IP, storage, versions, limited volume (kids
-  mode), language, turn off (with confirmation).
+  mode), language, turn off (with confirmation). Since OpenJooki 2: airplane
+  mode for a chosen time (Wi-Fi and Bluetooth off; the Jooki brings them back
+  by itself, and at its next start in any case — [24-hardware-and-lights.md](24-hardware-and-lights.md)).
 - **Updates** (since 1.2.0): Settings shows the installed OpenJooki version and
   checks GitHub for a newer release (also once when the page opens). If there
   is one, a banner appears on the home page and **Update now** installs it from

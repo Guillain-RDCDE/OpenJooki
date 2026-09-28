@@ -72,6 +72,16 @@
       playback: 'Lecture', toy_safe: 'Volume limité (mode enfant)', shuffle: 'Aléatoire', repeat: 'Répéter',
       language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
       power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
+      air_title: 'Mode avion',
+      air_help: 'Coupe le Wi-Fi et le Bluetooth du Jooki pour un temps donné. Les jetons et la musique marchent comme d\'habitude. Pendant ce temps, cette page ne peut plus le joindre.',
+      air_for: 'Pendant combien de temps ?', air_h: function (n) { return n + ' h'; },
+      air_morning: function (h) { return 'Jusqu\'au matin (' + h + ')'; }, air_boot: 'Jusqu\'à ce qu\'on l\'éteigne et le rallume',
+      air_btn: 'Couper le Wi-Fi et le Bluetooth', air_q: 'Passer le Jooki en mode avion ?',
+      air_text: function (w) { return 'Le Wi-Fi et le Bluetooth se rallumeront ' + w + '. Et dans tous les cas, éteindre puis rallumer le Jooki remet le Wi-Fi. En attendant, cette page ne peut plus joindre le Jooki ; les jetons et la musique continuent.'; },
+      air_at: function (h) { return 'à ' + h; }, air_next_start: 'au prochain allumage',
+      air_sent: 'Le Jooki passe en mode avion…',
+      air_offline: function (w) { return 'Le Jooki est en mode avion : le Wi-Fi reviendra ' + w + '. Les jetons et la musique marchent. Pour le retrouver plus tôt, éteins le Jooki puis rallume-le.'; },
+      air_back: 'Le Jooki est de retour sur le Wi-Fi.',
       nothing_playing: 'Rien en lecture', nothing_hint: 'Pose un jeton ou choisis une playlist',
       live: 'En direct', volume: 'Volume',
       uploading: 'Envoi', processing: 'Analyse sur le Jooki…', done: 'Ajouté', queued: 'En attente',
@@ -194,6 +204,16 @@
       playback: 'Playback', toy_safe: 'Limited volume (kids mode)', shuffle: 'Shuffle', repeat: 'Repeat',
       language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
       power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
+      air_title: 'Airplane mode',
+      air_help: 'Switches the Jooki\'s Wi-Fi and Bluetooth off for a while. Tokens and music work as usual. Meanwhile this page cannot reach it.',
+      air_for: 'For how long?', air_h: function (n) { return n + ' h'; },
+      air_morning: function (h) { return 'Until the morning (' + h + ')'; }, air_boot: 'Until it is switched off and on again',
+      air_btn: 'Switch Wi-Fi and Bluetooth off', air_q: 'Put the Jooki in airplane mode?',
+      air_text: function (w) { return 'Wi-Fi and Bluetooth will come back ' + w + '. And in any case, switching the Jooki off and on again brings the Wi-Fi back. Meanwhile this page cannot reach the Jooki; tokens and music carry on.'; },
+      air_at: function (h) { return 'at ' + h; }, air_next_start: 'at the next start',
+      air_sent: 'The Jooki is going into airplane mode…',
+      air_offline: function (w) { return 'The Jooki is in airplane mode: the Wi-Fi will be back ' + w + '. Tokens and music work. To get it back sooner, switch the Jooki off and on again.'; },
+      air_back: 'The Jooki is back on the Wi-Fi.',
       nothing_playing: 'Nothing playing', nothing_hint: 'Put a token or pick a playlist',
       live: 'Live', volume: 'Volume',
       uploading: 'Uploading', processing: 'Processing on the Jooki…', done: 'Added', queued: 'Waiting',
@@ -316,6 +336,16 @@
       playback: 'Afspelen', toy_safe: 'Begrensd volume (kindermodus)', shuffle: 'Willekeurig', repeat: 'Herhalen',
       language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
       power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
+      air_title: 'Vliegtuigmodus',
+      air_help: 'Zet de wifi en bluetooth van de Jooki een tijdje uit. Figuurtjes en muziek werken gewoon. Ondertussen kan deze pagina hem niet bereiken.',
+      air_for: 'Hoe lang?', air_h: function (n) { return n + ' u'; },
+      air_morning: function (h) { return 'Tot de ochtend (' + h + ')'; }, air_boot: 'Tot hij uit- en weer aangezet wordt',
+      air_btn: 'Wifi en bluetooth uitzetten', air_q: 'De Jooki in vliegtuigmodus zetten?',
+      air_text: function (w) { return 'Wifi en bluetooth komen terug ' + w + '. En hoe dan ook: de Jooki uit- en weer aanzetten brengt de wifi terug. Ondertussen kan deze pagina de Jooki niet bereiken; figuurtjes en muziek gaan gewoon door.'; },
+      air_at: function (h) { return 'om ' + h; }, air_next_start: 'bij de volgende start',
+      air_sent: 'De Jooki gaat in vliegtuigmodus…',
+      air_offline: function (w) { return 'De Jooki staat in vliegtuigmodus: de wifi komt terug ' + w + '. Figuurtjes en muziek werken. Wil je hem eerder terug, zet de Jooki dan uit en weer aan.'; },
+      air_back: 'De Jooki is terug op de wifi.',
       nothing_playing: 'Er speelt niets', nothing_hint: 'Zet een figuurtje neer of kies een afspeellijst',
       live: 'Live', volume: 'Volume',
       uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
@@ -480,6 +510,7 @@
     repeat: '<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
     vol: '<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
     power: '<path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>',
+    plane: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
     note: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
     link0: '<path d="M8 12h8"/>',
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
@@ -614,6 +645,8 @@
     client = new window.MiniMqtt(url, { username: CFG.mqttUser, password: CFG.mqttPass, keepalive: 20 });
     client.onconnect = function () {
       online = true; everOnline = true; retryDelay = 1000;
+      // back after an airplane mode (not a hiccup right after asking for it)
+      if (airplane && Date.now() - airplane.sent > 15000) { setAirplane(null); toast(t('air_back')); }
       client.subscribe('/j/web/output/#');
       send('GET_STATE', {});
       render();
@@ -628,6 +661,21 @@
       retryDelay = Math.min(retryDelay * 1.6, 8000);
     };
     client.connect();
+  }
+  // airplane mode started from the page (docs/24): the Jooki leaves the Wi-Fi on purpose, so this
+  // browser remembers until when and says so, instead of "the Jooki is not answering".
+  var airplane = null;
+  try { airplane = JSON.parse(lsGet('oj.airplane') || 'null'); } catch (e) { airplane = null; }
+  function setAirplane(v) { airplane = v; lsSet('oj.airplane', v ? JSON.stringify(v) : ''); }
+  function airplaneNow() {
+    if (!airplane) return null;
+    if (airplane.ends && Date.now() > airplane.ends + 5 * 60000) { setAirplane(null); return null; }   // long over: back to normal
+    return airplane;
+  }
+  function airplaneWhen(a) {
+    if (!a.ends) return t('air_next_start');
+    var e = new Date(a.ends);
+    return t('air_at', hm(e.getHours() * 60 + e.getMinutes()));
   }
   // parent code (docs/adr/0007): remembered once per device, sent with every command;
   // the Jooki only checks it on the actions it protects. Playing music never needs it.
@@ -1731,6 +1779,7 @@
         h('label', { class: 'switch' }, h('span', null, t('repeat')), h('input', { type: 'checkbox', role: 'switch', checked: cfg.repeat_mode === 1 || cfg.repeat_mode === true, 'data-k': 'repeat',
           onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }))),
       bedtimeCard(),
+      airplaneCard(),
       h('div', { class: 'section-title' }, t('language')),
       h('div', { class: 'card', style: 'padding:12px 16px' }, h('div', { class: 'seg', role: 'group', 'aria-label': t('language') },
         LANGS.map(function (l) { return h('button', { class: lang === l[0] ? 'on' : '', lang: l[0], onclick: function () { setLang(l[0]); } }, l[1]); }))),
@@ -1742,6 +1791,34 @@
         });
       } }, icon('power'), t('power_off')))
     ];
+  }
+  // Airplane mode (docs/24), only on a core that offers it. Always bounded: the Jooki switches its
+  // radios back on by itself at the chosen time, and in any case at its next start.
+  var airChoice = '2';   // hours, or 'morning' (the night mode's end) or 'boot'
+  function airplaneCard() {
+    if (S.device.airplane === undefined) return null;
+    var stop = Number(S.bedtime.cfg.stop); if (isNaN(stop)) stop = 420;
+    var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+    var toMorning = (stop - nowMin + 1440) % 1440;
+    if (toMorning < 15) toMorning += 1440;
+    if (toMorning > 1440) toMorning = 1440;
+    var opts = [['1', t('air_h', 1)], ['2', t('air_h', 2)], ['4', t('air_h', 4)], ['8', t('air_h', 8)], ['morning', t('air_morning', hm(stop))], ['boot', t('air_boot')]];
+    function go() {
+      var minutes = airChoice === 'boot' ? null : airChoice === 'morning' ? toMorning : Number(airChoice) * 60;
+      var a = { sent: Date.now(), ends: minutes ? Date.now() + minutes * 60000 : 0 };
+      confirmBox(t('air_q'), t('air_text', airplaneWhen(a)), t('air_btn'), true).then(function (ok) {
+        if (!ok) return;
+        a.sent = Date.now();
+        if (send('OJ_AIRPLANE', minutes ? { minutes: minutes } : {}) !== false) { setAirplane(a); toast(t('air_sent')); }
+      });
+    }
+    return [h('div', { class: 'section-title' }, t('air_title')),
+      h('div', { class: 'card' },
+        h('p', { class: 'small muted pad', style: 'margin:12px 0 4px' }, t('air_help')),
+        h('label', { class: 'field pad' }, h('span', null, t('air_for')),
+          h('select', { class: 'input', 'data-k': 'airfor', onchange: function (e) { airChoice = e.target.value; e.target.blur(); } },
+            opts.map(function (o) { return h('option', { value: o[0], selected: airChoice === o[0] ? 'selected' : null }, o[1]); }))),
+        h('div', { class: 'actions pad' }, h('button', { class: 'btn', 'data-k': 'airgo', onclick: go }, icon('plane'), t('air_btn'))))];
   }
   // Security switches (docs/adr/0007): only shown on a core that offers them.
   function securityCard() {
@@ -2104,10 +2181,14 @@
     var keep = captureFocus(root);
     var r = route();
     var title, body, back = null;
+    // an airplane mode asked from this browser: the Jooki is away on purpose (and if it is still
+    // here half a minute later, the request did not go through: forget it)
+    if (online && gotState && airplane && Date.now() - airplane.sent > 30000) setAirplane(null);
+    var air = !online ? airplaneNow() : null;
     if (!gotState) {
       body = h('div', { class: 'connect-screen' }, h('div', { class: 'spinner' }),
-        h('div', null, online || !everOnline ? t('connecting') : t('offline')),
-        !online && retryDelay > 1600 ? h('p', { class: 'small muted' }, t('offline_long')) : null,
+        h('div', null, air ? t('air_title') : online || !everOnline ? t('connecting') : t('offline')),
+        air ? h('p', { class: 'small muted' }, t('air_offline', airplaneWhen(air))) : !online && retryDelay > 1600 ? h('p', { class: 'small muted' }, t('offline_long')) : null,
         !online && retryDelay > 1600 ? h('button', { class: 'btn', onclick: function () { retryDelay = 1000; connect(); } }, t('retry')) : null);
       title = t('my_jooki');
     } else if (r.name === 'p') {
@@ -2127,7 +2208,7 @@
         h('div', { class: 'titles' },
           h('a', { class: 'wordmark', href: '#/', 'aria-label': 'OpenJooki' }, 'Open', h('span', null, 'Jooki')),
           h('h1', null, title)), conn),
-      !online && gotState ? h('div', { class: 'banner danger', style: 'margin:12px 16px 0' }, t('offline_long')) : null,
+      !online && gotState ? h('div', { class: 'banner' + (air ? '' : ' danger'), style: 'margin:12px 16px 0' }, air ? t('air_offline', airplaneWhen(air)) : t('offline_long')) : null,
       h('main', { id: 'main' }, body),
       h('nav', { class: 'nav', 'aria-label': 'Navigation' },
         h('a', { class: 'nav-brand', href: '#/', 'aria-hidden': 'true', tabindex: '-1' }, h('span', { class: 'dot' }, 'J'), h('span', null, 'Open', h('b', null, 'Jooki'))),

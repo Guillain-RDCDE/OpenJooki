@@ -22,7 +22,7 @@ jobs:
       - name: Lint (no globals, no unused)
         run: luacheck core
       - name: Build (size budget)
-        run: python3 tools/build/bundle.py --max-kib 176 && python3 tools/build/bundle.py --without services.streaming --out /tmp/lean
+        run: python3 tools/build/bundle.py --max-kib 192 && python3 tools/build/bundle.py --without services.streaming --out /tmp/lean
       - name: Broker
         run: |
           sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)

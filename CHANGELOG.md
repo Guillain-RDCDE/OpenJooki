@@ -7,6 +7,9 @@
   playlist. Two limits come from the Jooki's own NFC chip: taking the tag off
   does not pause (use the button), and the same tag twice in a row needs
   something else put on in between. Details in docs/23-nfc-tags.md.
+- **Name your tags.** A tag's card is named by the end of its id until you type
+  a name in its field ("Name this tag"); that name is then what the whole page
+  shows for it, on the playlist cards too. With many tags, name them.
 
 ## OpenJooki 2.0.3 (28 September 2026) — a parent code, and switches you control
 - **A parent code (optional, off by default).** In Settings, turn on a 4-digit

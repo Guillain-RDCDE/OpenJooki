@@ -49,7 +49,7 @@
       tokens_hint: 'Pose un jeton sur le Jooki pour le faire apparaître ici.',
       nfc_tag: 'Tag NFC', foreign_hint: 'Un autre objet NFC (un amiibo, un autocollant) apparaît aussi ici quand tu le poses : il lance sa playlist, mais le retirer ne met pas en pause, et il faut poser autre chose entre deux poses. Utilise le bouton pour la pause.',
       launches: 'Lance', none_dash: '— Aucune playlist —',
-      token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)',
+      token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)', tag_name_ph: 'Nom de ce tag (pour t\'y retrouver)',
       seen_n: function (n) { return 'posé ' + n + ' fois'; }, on_jooki: 'Sur le Jooki',
       forget: 'Oublier', forget_q: 'Oublier ce jeton ?',
       forget_text: 'Il disparaît de la liste et réapparaîtra la prochaine fois qu\'il sera posé. La playlist du personnage ne change pas.',
@@ -165,7 +165,7 @@
       tokens_hint: 'Put a token on the Jooki to see it here.',
       nfc_tag: 'NFC tag', foreign_hint: 'Another NFC object (an amiibo, a sticker) also shows up here when you put it on: it starts its playlist, but taking it off does not pause, and something else has to be put on between two taps. Use the button to pause.',
       launches: 'Starts', none_dash: '— No playlist —',
-      token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)',
+      token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)', tag_name_ph: 'Name this tag (to tell them apart)',
       seen_n: function (n) { return 'used ' + n + (n === 1 ? ' time' : ' times'); }, on_jooki: 'On the Jooki',
       forget: 'Forget', forget_q: 'Forget this token?',
       forget_text: 'It leaves the list and comes back next time it is used. The character\'s playlist does not change.',
@@ -281,7 +281,7 @@
       tokens_hint: 'Zet een figuurtje op de Jooki om het hier te zien.',
       nfc_tag: 'NFC-tag', foreign_hint: 'Een ander NFC-voorwerp (een amiibo, een sticker) verschijnt hier ook als je het erop zet: het start zijn afspeellijst, maar eraf halen pauzeert niet, en er moet iets anders op tussen twee keer. Gebruik de knop om te pauzeren.',
       launches: 'Start', none_dash: '— Geen afspeellijst —',
-      token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)',
+      token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)', tag_name_ph: 'Naam van deze tag (om ze uit elkaar te houden)',
       seen_n: function (n) { return n + ' keer gebruikt'; }, on_jooki: 'Op de Jooki',
       forget: 'Vergeten', forget_q: 'Dit figuurtje vergeten?',
       forget_text: 'Het verdwijnt uit de lijst en komt terug zodra het weer gebruikt wordt. De afspeellijst van het personage verandert niet.',
@@ -1291,9 +1291,11 @@
             delete nameDraft[tag];
             if (v !== (tk.name || '')) { send('TOKEN_EDIT', { tagId: tag, name: v }); toast(t('saved')); }
           }
+          // a foreign tag is its own character: its name IS the card's title, so the field says so
+          var foreign = !!foreignUid(sid);
           return h('div', { class: 'physical', 'data-tag': tag },
-            h('span', { class: 'badge' + (live ? ' accent' : '') }, live ? t('on_jooki') : t('token_n', i + 1)),
-            h('input', { class: 'input grow', 'data-k': key, value: val, maxlength: '60', placeholder: t('token_name_ph'), 'aria-label': t('token_n', i + 1),
+            h('span', { class: 'badge' + (live ? ' accent' : '') }, live ? t('on_jooki') : foreign ? t('nfc_tag') : t('token_n', i + 1)),
+            h('input', { class: 'input grow', 'data-k': key, value: val, maxlength: '60', placeholder: foreign ? t('tag_name_ph') : t('token_name_ph'), 'aria-label': foreign ? t('tag_name_ph') : t('token_n', i + 1),
               oninput: function (e) { nameDraft[tag] = e.target.value; },
               onblur: commit, onkeydown: function (e) { if (e.key === 'Enter') { e.target.blur(); } } }),
             h('button', { class: 'icon-btn', 'aria-label': t('forget'), title: t('forget'), onclick: function () {

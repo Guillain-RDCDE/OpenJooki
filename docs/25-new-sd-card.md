@@ -69,9 +69,30 @@ it with the reference tools: `sgdisk -v` finds no problem, `e2fsck -fn` is clean
 on every ext4 partition, `fsck.vfat` on the FAT one, `blkid` sees the swap, p1, p2,
 p3 and the bootloader read back identical to their sources, the settings are at
 rest in both copies, and the forbidden strings are absent. It writes the `.img.gz`
-and `sdcard.json` (name, sizes and SHA-256 of both the archive and the raw image),
-the two files attached to the GitHub release; the tools read `sdcard.json` from the
-newest release, and fall back to the 2.0.4 release if a newer one has no card image.
+and `sdcard.json` (name, sizes and SHA-256 of both the archive and the raw image).
+
+## Where it lives, and when it changes
+
+The two files are attached to a GitHub release of their own, **`sdcard`**, on purpose
+not the "latest" one (the Jooki's updater reads `latest`). The tools read
+`https://github.com/Guillain-RDCDE/OpenJooki/releases/download/sdcard/sdcard.json`
+and nothing else, so someone whose Jooki died a year from now lands on the page, runs
+the tool and gets a card that starts, whatever firmware releases happened meanwhile.
+
+The card is a starting point, not the newest OpenJooki: once the Jooki starts on it
+and finds its Wi-Fi, its own page offers the newest version and installs it, by the
+update path every Jooki already uses. So the card image is **not** rebuilt at each
+release. It is rebuilt only when the card itself has to change:
+
+- the bootloader, the partition layout, the factory partition or the files of `/data`
+  it carries (has not happened since the Jooki 2 exists);
+- the system it embeds becomes too old to update itself (only if the update mechanism
+  changes shape: `version.json` and the scripts on the Pages site);
+- optionally, now and then, so that a first start does not begin too far behind.
+
+To rebuild: `make_card_image.py` with the same three pieces (kept off the repository)
+and the newest release image, then `gh release upload sdcard <the .gz> sdcard.json --clobber`,
+and a line in the `sdcard` release notes saying which OpenJooki is inside.
 
 The tools then do what they already did for a bigger card: write, read back and
 compare, grow the last partition, verify both GPT headers. What has been tested is

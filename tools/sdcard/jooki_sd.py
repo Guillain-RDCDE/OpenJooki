@@ -22,7 +22,7 @@ the Jooki's layout, the target must be bigger and is confirmed.
 
 A new card from scratch (`new`): the same write, but the source is OpenJooki's complete card
 image (tools/sdcard/make_card_image.py: 7 partitions, no family data, about 2.4 GB) fetched from
-the GitHub release, checked (SHA-256) and unpacked in the Documents folder first.
+the "sdcard" GitHub release, checked (SHA-256) and unpacked in the Documents folder first.
 """
 import argparse, gzip, hashlib, http.server, json, os, platform, plistlib, secrets, shutil
 import struct, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser, zlib
@@ -31,10 +31,10 @@ SECTOR = 512
 CHUNK = 4 << 20
 MAX_CARD = 512 * 10**9
 BENCH = os.environ.get("JOOKI_SD_BENCH") == "1"     # tests: any block device given by path
-# the complete card image, published with each release (sdcard.json says its name, sizes and SHA-256);
-# the pinned address is the fallback when the newest release has no card image yet
+# the complete card image lives in its own GitHub release, "sdcard", independent of the firmware
+# releases (the Jooki updates itself once it starts); sdcard.json says its name, sizes and SHA-256
 RELEASES = "https://github.com/Guillain-RDCDE/OpenJooki/releases"
-MANIFESTS = [RELEASES + "/latest/download/sdcard.json", RELEASES + "/download/v2.0.4/sdcard.json"]
+MANIFESTS = [RELEASES + "/download/sdcard/sdcard.json"]
 MIN_NEW_CARD = 3 * 10**9                            # a new card must hold the image and then some
 
 

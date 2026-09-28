@@ -23,8 +23,10 @@
   a choice, *a bigger card* or *a new card*. The second downloads OpenJooki's complete
   card image (seven partitions, the Jooki's own bootloader and factory system, the
   2.0.4 release on both system slots, empty data and music), checks it, writes it,
-  reads it back and grows the music partition to the card. Published with the 2.0.4
-  release (`openjooki-sdcard-2.0.4.img.gz` + `sdcard.json`); built by
+  reads it back and grows the music partition to the card. The image lives in a GitHub
+  release of its own, `sdcard` (`openjooki-sdcard-2.0.4.img.gz` + `sdcard.json`),
+  independent of the firmware releases: a card is a starting point, the Jooki updates
+  itself once it starts, so the image changes only when the card itself must. Built by
   `tools/sdcard/make_card_image.py`. Plain-words guide: docs/25-new-sd-card.md and
   https://guillain-rdcde.github.io/OpenJooki/sdcard.html
 - Fixed in the Windows tool: copying more than 2 GB stopped with a number-too-large

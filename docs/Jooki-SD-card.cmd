@@ -26,7 +26,7 @@ exit /b
 #
 # A NEW card from scratch (the Jooki's card is dead): the same write, but the source is
 # OpenJooki's complete card image (7 partitions, no family data, about 2.4 GB unpacked), fetched
-# from the GitHub release (sdcard.json names it), checked (SHA-256) and unpacked in Documents.
+# from the "sdcard" GitHub release (sdcard.json names it), checked (SHA-256) and unpacked in Documents.
 #
 # Bench: JOOKI_SD_TEST="clone|<src.img>|<dst.img>" or "grow|<dst.img>" runs on files, no window;
 # "disks|<source disk>|<target disk>|<image>" runs the window's two steps on real disks (admin);
@@ -38,9 +38,9 @@ exit /b
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $Releases = 'https://github.com/Guillain-RDCDE/OpenJooki/releases'
-# the complete card image's description, published with each release; the pinned address is the
-# fallback when the newest release has no card image yet
-$Manifests = @("$Releases/latest/download/sdcard.json", "$Releases/download/v2.0.4/sdcard.json")
+# the complete card image lives in its own release, "sdcard", independent of the firmware releases
+# (the Jooki updates itself once it starts); sdcard.json describes it
+$Manifests = @("$Releases/download/sdcard/sdcard.json")
 if ($env:JOOKI_SD_MANIFEST) { $Manifests = @($env:JOOKI_SD_MANIFEST) }
 $MinNewCard = 3000000000
 

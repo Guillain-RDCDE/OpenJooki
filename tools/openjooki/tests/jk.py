@@ -54,4 +54,7 @@ class Jooki:
     def nfc(s, tag, star_hex):
         s.c.publish("/j/nfc/input/tag", "%s,%s"%(tag, star_hex))
     def nfc_off(s): s.c.publish("/j/nfc/input/tag_removed", "")
+    def nfc_foreign(s, tag):
+        # what syslog-ng publishes when the ESP32 rejects a tag that is not a Jooki token (2.x only)
+        s.c.publish("/j/nfc/input/foreign", "\x1b[0;33mW (3031532) [1:0x3ffd356c] NFC: EVT_BAD_TAG: tagId=%s - missing prefix\x1b[0m" % tag)
     def close(s): s.c.loop_stop(); s.c.disconnect()

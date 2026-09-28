@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## Unreleased
+- **An amiibo, a sticker, any NFC tag can start a playlist.** Put it on the
+  Jooki: it shows up on the *Tokens* screen as "NFC tag", and you pick its
+  playlist there like for a character. From then on, putting it on starts that
+  playlist. Two limits come from the Jooki's own NFC chip: taking the tag off
+  does not pause (use the button), and the same tag twice in a row needs
+  something else put on in between. Details in docs/23-nfc-tags.md.
+
 ## OpenJooki 2.0.3 (28 September 2026) — a parent code, and switches you control
 - **A parent code (optional, off by default).** In Settings, turn on a 4-digit
   code. Once it is on, each phone or computer asks for it once, then remembers it.

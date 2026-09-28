@@ -22,6 +22,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki. For the **Jooki 2
 - **The old bugs fixed**: every token of the same character does the same thing, uploads
   survive a weak Wi‑Fi, a failed upload leaves no mess, and odd messages no longer
   crash the Jooki.
+- **Your own tags**: an amiibo or an NFC sticker can start a playlist too, like a
+  Jooki token (taking it off does not pause).
 - **Nothing leaves your home**: no account, no cloud, no tracking.
 - **Updates in one tap**, from the Jooki's own page.
 

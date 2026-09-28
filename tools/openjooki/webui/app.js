@@ -47,6 +47,7 @@
       radio_url_bad: 'L\'adresse doit commencer par http:// ou https://',
       tokens_intro: 'Chaque personnage lance une playlist. Tous les jetons d\'un même personnage (par exemple tous tes dragons noirs) font exactement la même chose.',
       tokens_hint: 'Pose un jeton sur le Jooki pour le faire apparaître ici.',
+      nfc_tag: 'Tag NFC', foreign_hint: 'Un autre objet NFC (un amiibo, un autocollant) apparaît aussi ici quand tu le poses : il lance sa playlist, mais le retirer ne met pas en pause, et il faut poser autre chose entre deux poses. Utilise le bouton pour la pause.',
       launches: 'Lance', none_dash: '— Aucune playlist —',
       token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)',
       seen_n: function (n) { return 'posé ' + n + ' fois'; }, on_jooki: 'Sur le Jooki',
@@ -162,6 +163,7 @@
       radio_url_bad: 'The address must start with http:// or https://',
       tokens_intro: 'Each character starts one playlist. All tokens of the same character (e.g. all your black dragons) do exactly the same thing.',
       tokens_hint: 'Put a token on the Jooki to see it here.',
+      nfc_tag: 'NFC tag', foreign_hint: 'Another NFC object (an amiibo, a sticker) also shows up here when you put it on: it starts its playlist, but taking it off does not pause, and something else has to be put on between two taps. Use the button to pause.',
       launches: 'Starts', none_dash: '— No playlist —',
       token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)',
       seen_n: function (n) { return 'used ' + n + (n === 1 ? ' time' : ' times'); }, on_jooki: 'On the Jooki',
@@ -277,6 +279,7 @@
       radio_url_bad: 'Het adres moet beginnen met http:// of https://',
       tokens_intro: 'Elk personage start één afspeellijst. Alle figuurtjes van hetzelfde personage (bijv. al je zwarte draken) doen precies hetzelfde.',
       tokens_hint: 'Zet een figuurtje op de Jooki om het hier te zien.',
+      nfc_tag: 'NFC-tag', foreign_hint: 'Een ander NFC-voorwerp (een amiibo, een sticker) verschijnt hier ook als je het erop zet: het start zijn afspeellijst, maar eraf halen pauzeert niet, en er moet iets anders op tussen twee keer. Gebruik de knop om te pauzeren.',
       launches: 'Start', none_dash: '— Geen afspeellijst —',
       token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)',
       seen_n: function (n) { return n + ' keer gebruikt'; }, on_jooki: 'Op de Jooki',
@@ -401,7 +404,13 @@
     if (CHAR[id]) return CHAR[id];
     return { id: id, fr: id || '?', en: id || '?', art: null, order: 999 };
   }
-  function charName(id) { var c = charInfo(id); return c[lang] || c.fr; }
+  // a foreign NFC tag (amiibo, sticker) is its own character "tag.<uid>": named by its nickname, else "NFC tag" + the end of its id
+  function foreignUid(id) { return id && id.indexOf('tag.') === 0 ? id.slice(4) : null; }
+  function charName(id) {
+    var uid = foreignUid(id);
+    if (uid) { var tk = S.db.tokens[uid]; return (tk && tk.name) || (t('nfc_tag') + ' ' + uid.slice(-4)); }
+    var c = charInfo(id); return c[lang] || c.fr;
+  }
   function isUserChar(id) { return !!id && id.indexOf('sys.') !== 0 && id.indexOf('test.') !== 0; }
 
   /* ------------------------------------------------------------------ helpers */
@@ -1296,7 +1305,8 @@
       h('p', { class: 'muted', style: 'margin-top:0' }, t('tokens_intro')),
       ids.length ? ids.map(charCard) : h('div', { class: 'card empty' }, h('div', { class: 'big' }, '🐉'), t('no_tokens')),
       linkedOnly.length ? [h('div', { class: 'section-title' }, t('other_chars')), linkedOnly.map(charCard)] : null,
-      h('p', { class: 'small muted', style: 'text-align:center' }, t('tokens_hint'))
+      h('p', { class: 'small muted', style: 'text-align:center' }, t('tokens_hint')),
+      ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null
     ];
   }
 

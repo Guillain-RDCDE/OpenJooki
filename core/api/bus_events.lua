@@ -29,6 +29,13 @@ function bus_events.translate(topic, payload)
     if not uid then return { type = "nfc.tag", bad = true, raw = payload } end
     return { type = "nfc.tag", uid = uid:upper(), star_code = tonumber(star, 16) }
   end
+  -- any other NFC tag (an amiibo, a sticker): the ESP32 rejects it and only logs it; syslog-ng
+  -- publishes that log line here (tools/openjooki/system/syslog-ng.conf). Its removal is never reported.
+  if topic == "/j/nfc/input/foreign" then
+    local uid = tostring(payload):match("tagId=(%x+)")
+    if not uid then return { type = "nfc.tag", bad = true, raw = payload } end
+    return { type = "nfc.tag", uid = uid:upper(), foreign = true }
+  end
   if topic == "/j/nfc/input/tag_removed" then return { type = "nfc.removed" } end
   if topic == "/j/nfc/input/tag_written" then return { type = "nfc.written", uid = tostring(payload) } end
   local btn = topic:match("^/j/gpio/input/([%w_]+)$")

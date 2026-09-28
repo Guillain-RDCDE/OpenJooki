@@ -49,6 +49,18 @@ check("T6 forgetting a token keeps the playlist link", j.pls[p].get("star") == "
 j.send("TOKEN_EDIT", {"tagId": BD2, "name": "X"}); j.send("TOKEN_EDIT", {"tagId": BD2, "name": ""}); j.settle()
 check("T1b clearing a name", "name" not in j.tokens[BD2], j.tokens[BD2])
 check("T1c no errors so far", j.errors == [], j.errors)
+if LUA == "core":   # a foreign tag (amiibo, sticker): 2.x only, the 1.x program ignores it
+    AMIIBO = "046158B2661290"
+    j.nfc_off(); j.settle(); nf0 = dict(j.state.get("nfc") or {})
+    j.nfc_foreign(AMIIBO); j.settle()
+    check("T8 foreign tag learned as its own character", (j.tokens.get(AMIIBO) or {}).get("starId") == "tag." + AMIIBO, j.tokens.get(AMIIBO))
+    check("T8 foreign tag does not claim to be on the Jooki", (j.state.get("nfc") or {}) == nf0, j.state.get("nfc"))
+    j.send("PLAYLIST_UPDATE", {"playlist": {"id": p, "star": "tag." + AMIIBO}}); j.settle()
+    j.send("DO_PAUSE", {}); j.settle()
+    j.nfc_foreign(AMIIBO); j.settle()
+    check("T8 foreign tag starts its playlist", j.state["audio"]["nowPlaying"].get("playlistId") == p
+          and j.state["audio"].get("playback", {}).get("state") != "paused", j.state["audio"])
+    check("T8 no errors", j.errors == [], j.errors)
 j.close()
 
 # ---------- migration at boot + image preserved

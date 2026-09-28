@@ -13,6 +13,10 @@ describe("api.bus_events", function()
     assert_eq(T("/j/nfc/input/tag", "0433366ae74c81,106"), { type = "nfc.tag", uid = "0433366AE74C81", star_code = 262 })
     assert_eq(T("/j/nfc/input/tag", "garbage"), { type = "nfc.tag", bad = true, raw = "garbage" })
     assert_eq(T("/j/nfc/input/tag_removed", ""), { type = "nfc.removed" })
+    -- a foreign tag: the ESP32's log line, as syslog-ng publishes it
+    assert_eq(T("/j/nfc/input/foreign", "\27[0;33mW (3031532) [1:0x3ffd356c] NFC: EVT_BAD_TAG: tagId=046158b2661290 - missing prefix\27[0m"),
+      { type = "nfc.tag", uid = "046158B2661290", foreign = true })
+    assert_eq(T("/j/nfc/input/foreign", "no id here"), { type = "nfc.tag", bad = true, raw = "no id here" })
     assert_eq(T("/j/nfc/input/tag_written", "04AA"), { type = "nfc.written", uid = "04AA" })
   end)
 

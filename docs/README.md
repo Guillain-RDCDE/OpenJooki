@@ -79,6 +79,8 @@ a token does, how playback works, what the lights mean, when it turns itself off
   by function, with measurements taken on a live Jooki, and what it does that a
   good program should not.
 - [08-system-mqtt-map.md](08-system-mqtt-map.md): the internal bus.
+- [23-nfc-tags.md](23-nfc-tags.md): what the NFC reader reports, the format of a
+  Jooki token, and how OpenJooki uses any other tag.
 - [09-internals-deep-dive.md](09-internals-deep-dive.md): ESP32 protocol, boot, partitions.
 - [12-firmware-audit.md](12-firmware-audit.md): the security audit and its fixes.
 - [06-root-access.md](06-root-access.md): getting root over SSH.

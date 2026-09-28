@@ -138,6 +138,16 @@ with sync_playwright() as p:
     pg.locator("[data-tag='04000000B00002'] button").click(); pg.click("[data-k=ok]")
     J.wait(lambda: "04000000B00002" not in J.tokens)
     check("E11 forget a token keeps the character's playlist", "04000000B00002" not in J.tokens and J.pls[tri].get("star") == "Jooki.Black.Whale", J.pls[tri])
+    # E11b a foreign NFC tag (an amiibo): its own card, linked like a character, then it plays
+    amiibo = "046158B2661290"; fch = "tag." + amiibo
+    J.nfc_foreign(amiibo); J.wait(lambda: amiibo in J.tokens)
+    pg.wait_for_selector("[data-char='%s']" % fch)
+    card = pg.locator("[data-char='%s'] .title" % fch).inner_text()
+    check("E11b a foreign tag gets its own card, named by the end of its id", card.strip().endswith("1290"), card)
+    pg.select_option("[data-char-select='%s']" % fch, tri)
+    J.wait(lambda: J.pls[tri].get("star") == fch)
+    J.nfc_foreign(amiibo); J.wait(lambda: J.state["audio"]["nowPlaying"].get("playlistId") == tri)
+    check("E11b the linked foreign tag starts its playlist", J.pls[tri].get("star") == fch and J.state["audio"]["nowPlaying"].get("playlistId") == tri, (J.pls[tri], J.state["audio"].get("nowPlaying")))
     # E12 settings
     pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=shuffle]")
     pg.click("[data-k=shuffle]"); J.wait(lambda: J.state["audio"]["config"].get("shuffle_mode") is True)

@@ -29,6 +29,7 @@ The Ingenic X1000 SoC has no radio: **the ESP32 provides WiFi/BT/NFC** to Linux
 ### NFC (tokens) — the core
 - `/j/nfc/input/tag` → **token placed** (contains the UID)
 - `/j/nfc/input/tag_removed` → token removed
+- `/j/nfc/input/foreign` → (OpenJooki 2.x) any other NFC tag, rejected by the ESP32: its log line `EVT_BAD_TAG: tagId=<UID> …`, published by syslog-ng (docs/23)
 - `/j/esp32/output/nfc/tag/get`, `/j/esp32/output/nfc/mode/{get,set}`
 
 ### Audio (`player` daemon, ALSA)

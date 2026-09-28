@@ -1,6 +1,10 @@
 -- services.tokens: a token on the Jooki -> a character -> a playlist.
 -- Owns state.nfc = { starId, tagId } (what is on the Jooki right now).
--- Events in:  nfc.tag { uid, star_code }, nfc.removed, nfc.written { uid }
+-- Events in:  nfc.tag { uid, star_code | foreign }, nfc.removed, nfc.written { uid }
+-- A foreign tag (not a Jooki token: an amiibo, a sticker) is its own character "tag.<uid>":
+-- it is learned and starts its playlist like a token, but the ESP32 never reports its
+-- removal, so it does not claim state.nfc (the page would show it on the Jooki forever)
+-- and taking it off does not pause.
 -- Emits:      playback.request { playlist, source = "token" }
 --             playback.pause_request { source = "token" }
 --             system.tag { name }            (sys.* tags: device handles them)
@@ -36,9 +40,13 @@ local function is_system(name) return name and (name:sub(1, 4) == "sys." or name
 
 function tokens.on_tag(doc, ev)
   if ev.bad then return { commands = { { kind = "log", level = "warn", key = "tokens.bad_tag", fields = { raw = tostring(ev.raw) } } } } end
-  local star = tokens.star_name(ev.star_code)
+  local star = ev.foreign and ("tag." .. ev.uid) or tokens.star_name(ev.star_code)
   if not star then return { commands = { { kind = "log", level = "warn", key = "tokens.no_star", fields = { uid = ev.uid } } } } end
   local result = { state = { nfc = { starId = star, tagId = ev.uid } }, commands = {} }
+  if ev.foreign then
+    result.state.nfc = nil
+    result.commands[1] = { kind = "log", level = "info", key = "tokens.foreign", fields = { uid = ev.uid } }
+  end
   if is_system(star) then
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "system.tag", name = star, uid = ev.uid } }
     return result

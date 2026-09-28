@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.0.2 (28 September 2026) — the page is the only way in
+- **A booby-trapped website can no longer command your Jooki.** Until now any
+  program on your Wi-Fi, including a web page open in a browser on a phone or
+  computer at home, could reach the Jooki's message bus and, for example, delete
+  playlists. The bus now listens only on the Jooki itself; over the network it is
+  reached only through the page, and only with a password unique to your Jooki.
+- **The password is created on the Jooki at first start and never leaves it.** The
+  page reads it at the Jooki's own address; another website cannot read it and so
+  cannot open the connection. Nothing changes for you: the page just works.
+- No new setting, no account, no cloud. Your music, playlists and tokens are
+  untouched. Checked on a family Jooki: the bus is refused from the network, the
+  page connects with its password, a wrong password is refused.
+
 ## OpenJooki 2.0.1 (27 September 2026) — an update you can follow
 - **While updating from the Jooki's page**: the steps in plain words under the
   spinner (looking for the new version, downloading with its percentage, checking,

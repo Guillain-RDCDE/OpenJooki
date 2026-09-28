@@ -466,10 +466,15 @@ SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf",   # logs stay
 # inittab, whose last sysinit line set the factory name again after rcS (now: that script, --name-only).
 CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh",
                      "/jooki/bin/ml-jooki-hostname.sh": "ml-jooki-hostname.sh",
-                     "/etc/inittab": "inittab"}
+                     "/etc/inittab": "inittab",
+                     # the broker: page's WebSocket needs a per-Jooki password (docs/adr/0007)
+                     "/etc/mosquitto/mosquitto.conf": "mosquitto.conf",
+                     # generates that password before the broker starts (S58) and serves it to the page
+                     "/etc/rcS.d/S57_oj-security.sh": "oj-security.sh"}
 def system_files(core=None): return dict(SYSTEM_FILES, **(CORE_SYSTEM_FILES if core else {}))
 # Files that must stay executable (init runs rcS directly: without +x the Jooki would not start).
-SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755", "/jooki/bin/ml-jooki-hostname.sh": "755"}
+SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755", "/jooki/bin/ml-jooki-hostname.sh": "755",
+                "/etc/rcS.d/S57_oj-security.sh": "755"}
 def file_mode(path): return SYSTEM_MODES.get(path, "644")
 
 def ssh_bytes(host, remote_cmd, data=None, timeout=120):
@@ -480,11 +485,39 @@ def ssh_bytes(host, remote_cmd, data=None, timeout=120):
 def _md5(b): return hashlib.md5(b).hexdigest()
 
 def mqtt_get_state(host, timeout=8):
-    """Ask the Jooki app for its state (proves the patched application runs)."""
+    """Ask the Jooki app for its state (proves the patched application runs).
+    OpenJooki 2.1 binds the broker to 127.0.0.1 (docs/adr/0007), so 1883 is no
+    longer reachable from the network: try it directly (1.x / un-hardened), then
+    through an SSH tunnel to the Jooki's own localhost."""
+    st = _mqtt_state_at(host, MQTT_PORT, timeout)
+    if st is not None:
+        return st
+    return _mqtt_state_tunneled(host, timeout)
+
+def _mqtt_state_tunneled(host, timeout=8):
+    """Query the broker on the Jooki's 127.0.0.1:1883 through an SSH local forward."""
+    lport = 21883
+    tun = ["ssh","-p",SSH_PORT,"-i",KEY]+SSH_OPTS+["-N","-L","127.0.0.1:%d:127.0.0.1:%d" % (lport, MQTT_PORT),"root@"+host]
+    p = subprocess.Popen(tun, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        deadline = time.time() + 6
+        while time.time() < deadline:
+            try:
+                socket.create_connection(("127.0.0.1", lport), timeout=1).close(); break
+            except Exception: time.sleep(0.3)
+        return _mqtt_state_at("127.0.0.1", lport, timeout)
+    finally:
+        try: p.terminate()
+        except Exception: pass
+
+def _mqtt_state_at(host, port, timeout=8):
     cid = ("openjooki%d" % random.randint(0, 99999)).encode()
     vh = struct.pack("!H",4)+b"MQTT"+bytes([4,2])+struct.pack("!H",30)
     pl = struct.pack("!H",len(cid))+cid
-    s = socket.create_connection((host, MQTT_PORT), timeout=timeout)
+    try:
+        s = socket.create_connection((host, port), timeout=timeout)
+    except Exception:
+        return None
     try:
         s.sendall(bytes([0x10])+_mqtt_remlen(len(vh)+len(pl))+vh+pl)
         if s.recv(4)[:1] != b"\x20": return None
@@ -592,7 +625,8 @@ def ab_webui(host, dry_run=False, core=None):
     for o in WEBUI_STALE:
         prep += "rm -f $R%s/%s; " % (WWW_PUBLIC, o)
     for path in system_files(core):
-        prep += "test -f $R%s.openjooki-orig || cp -a $R%s $R%s.openjooki-orig; " % (path, path, path)
+        # keep the original once; a file OpenJooki adds (no original on the base image) has none
+        prep += "if [ -e $R%s ] && [ ! -e $R%s.openjooki-orig ]; then cp -a $R%s $R%s.openjooki-orig; fi; " % (path, path, path, path)
     prep += "sync; echo PREP_OK"
     r = ssh(host, prep, timeout=60)
     if "PREP_OK" not in r.stdout: log("prepare failed -> aborting (boot unchanged): %s" % (r.stdout+r.stderr)[-300:]); return 1

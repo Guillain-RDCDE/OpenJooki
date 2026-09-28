@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.1';
+  var VERSION = '2.0.2';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -414,6 +414,27 @@
   /* ------------------------------------------------------------------ MQTT connection */
   var client = null, online = false, everOnline = false, retryDelay = 1000, retryTimer = null, lastCmd = 0;
   var wsHost = location.hostname || '127.0.0.1';
+  // The broker's WebSocket needs a per-Jooki password (docs/adr/0007). It is served
+  // at the page's own origin: readable here, not by a booby-trapped website (no CORS,
+  // and JSON is not runnable as a <script>). Fetched once at boot; if it is absent
+  // (an older or un-hardened Jooki), we connect anonymously as before. Reconnects
+  // reuse CFG, so this runs only at startup.
+  function loadAuth(then) {
+    if (!window.fetch) { then(); return; }
+    var done = false, cont = function () { if (!done) { done = true; then(); } };
+    setTimeout(cont, 4000);
+    fetch('oj-auth.json', { cache: 'no-store', credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (c) {
+        if (c && typeof c === 'object') {
+          if (c.mqttUser != null) CFG.mqttUser = c.mqttUser;
+          if (c.mqttPass != null) CFG.mqttPass = c.mqttPass;
+          if (c.wsPort != null) CFG.wsPort = c.wsPort;
+        }
+        cont();
+      })
+      .catch(cont);
+  }
   function connect() {
     clearTimeout(retryTimer);
     if (client) { try { client.onclose = function () {}; client.close(); } catch (e) {} }
@@ -1580,7 +1601,7 @@
       navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); }).catch(function () {});
     }
     render();
-    connect();
+    loadAuth(connect);
   }
   window.OJ = { state: S, send: send, version: VERSION };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

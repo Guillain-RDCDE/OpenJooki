@@ -5,6 +5,12 @@
   ones the banner opens) a button selects every track shown, then flips to
   "Deselect all". Deleting the unused tracks no longer means ticking them one by
   one. It follows the search box: with a search typed, it selects only the matches.
+- **Sort a playlist by file name, title, artist, album or duration.** Files
+  numbered 1 to 6 land in a playlist in the order the uploads finish. The
+  playlist page now has a *Sort* button: pick a criterion (a second tap reverses
+  it), check the preview, then *Keep this order*. It replaces the old *Put back
+  in order (1, 2, 3…)* button, which sorted by the title inside the file and so
+  did nothing useful when the number was only in the file name.
 - **The page speaks English first, and now Dutch.** English is the default; the
   page switches to French or Dutch on its own when the phone or computer is set
   to that language, and Settings has the three of them. A language chosen by hand

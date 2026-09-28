@@ -41,9 +41,11 @@ family's time zone the first time it is opened; for Europe the summer-time rule
 stays right all year. If the clock is not set (no Internet since boot), night
 mode stays off.
 
-**Put back in order.** Uploads arrive in the order they finish, not in the order
-of the files. When a playlist is not in title order, its page offers *Put back in
-order (1, 2, 3…)* (natural order: 2 before 10).
+**Sort.** Uploads arrive in the order they finish, not in the order of the
+files. The playlist page has a *Sort* button: file name (1, 2, 3…, natural
+order: 2 before 10), title, artist, album or duration, a second tap reverses,
+a preview shows the result and *Keep this order* saves it. Web radios stay at
+the end.
 
 ## How it is built
 

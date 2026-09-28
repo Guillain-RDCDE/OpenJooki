@@ -266,6 +266,11 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
 .kv b { font-weight: 600; text-align: right; word-break: break-word; }
 .meter { height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; margin: 4px 16px 14px; }
 .meter > i { display: block; height: 100%; background: var(--accent); }
+.sortopts { display: flex; flex-direction: column; gap: 6px; }
+.sortopts .btn { display: flex; width: 100%; text-align: left; }
+.sortopts .btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.sortpreview { margin: 6px 0 0; padding-left: 26px; font-size: 14px; }
+.sortpreview li { padding: 2px 0; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .seg button { border: 0; background: var(--panel); padding: 8px 14px; min-height: 40px; }
 .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }

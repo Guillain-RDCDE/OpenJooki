@@ -109,9 +109,20 @@
       night_clock: 'L\'heure du Jooki vient d\'Internet (heure d\'été comprise).',
       resume_at: function (c, s) { return 'Reprendra au chapitre ' + c + (s ? ' · ' + s : ''); },
       resume_restart: 'Recommencer au début', resume_done: 'Reprendra au chapitre 1',
-      sort_tracks: 'Remettre dans l\'ordre (1, 2, 3…)', sorted: 'Pistes remises dans l\'ordre',
+      sort: 'Trier', sort_title: 'Ranger la playlist', sorted: 'Pistes remises dans l\'ordre',
+      sort_by_name: 'Nom de fichier (1, 2, 3…)', sort_by_title: 'Titre', sort_by_artist: 'Artiste', sort_by_album: 'Album', sort_by_duration: 'Durée',
+      sort_again: 'Un second appui sur le même critère inverse l\'ordre.', sort_preview: 'Aperçu du nouvel ordre',
+      sort_apply: 'Fixer cet ordre', sort_same: 'La playlist est déjà dans cet ordre',
       my_jooki: 'Mon Jooki', bytes: ['o', 'Ko', 'Mo', 'Go'],
-      n_tokens: function (n) { return n + ' jeton' + (n > 1 ? 's' : ''); }
+      n_tokens: function (n) { return n + ' jeton' + (n > 1 ? 's' : ''); },
+      sec_title: 'Sécurité',
+      ssh_label: 'Accès de maintenance (SSH)', ssh_help: 'Pour les bricoleurs. S\'éteint tout seul au bout d\'une heure.', ssh_on: 'activé (1 h)',
+      mqtt_label: 'Domotique (MQTT sur le réseau)', mqtt_help: 'Pour Home Assistant. Désactivée par défaut.',
+      mqtt_host_l: 'Hôte', mqtt_port_l: 'Port', mqtt_user_l: 'Utilisateur', mqtt_pass_l: 'Mot de passe',
+      parent_label: 'Code parent', parent_help: 'Un code à 4 chiffres empêche enfants et invités de changer les réglages (supprimer une playlist, le Wi-Fi, lancer une mise à jour).',
+      parent_set: 'Définir un code', parent_change: 'Changer le code', parent_off: 'Désactiver',
+      parent_prompt: 'Entre le code parent', parent_new: 'Code à 4 chiffres', parent_cur: 'Code actuel', parent_bad: 'Code incorrect',
+      parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.'
     },
     en: {
       playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
@@ -213,9 +224,20 @@
       night_clock: 'The Jooki gets its time from the Internet (summer time included).',
       resume_at: function (c, s) { return 'Will resume at chapter ' + c + (s ? ' · ' + s : ''); },
       resume_restart: 'Start again from the beginning', resume_done: 'Will resume at chapter 1',
-      sort_tracks: 'Put back in order (1, 2, 3…)', sorted: 'Tracks put back in order',
+      sort: 'Sort', sort_title: 'Put the playlist in order', sorted: 'Tracks put back in order',
+      sort_by_name: 'File name (1, 2, 3…)', sort_by_title: 'Title', sort_by_artist: 'Artist', sort_by_album: 'Album', sort_by_duration: 'Duration',
+      sort_again: 'Tap the same criterion again to reverse the order.', sort_preview: 'Preview of the new order',
+      sort_apply: 'Keep this order', sort_same: 'The playlist is already in this order',
       my_jooki: 'My Jooki', bytes: ['B', 'KB', 'MB', 'GB'],
-      n_tokens: function (n) { return n + (n === 1 ? ' token' : ' tokens'); }
+      n_tokens: function (n) { return n + (n === 1 ? ' token' : ' tokens'); },
+      sec_title: 'Security',
+      ssh_label: 'Maintenance access (SSH)', ssh_help: 'For tinkerers. Turns itself off after an hour.', ssh_on: 'on (1 h)',
+      mqtt_label: 'Home automation (MQTT on the network)', mqtt_help: 'For Home Assistant. Off by default.',
+      mqtt_host_l: 'Host', mqtt_port_l: 'Port', mqtt_user_l: 'User', mqtt_pass_l: 'Password',
+      parent_label: 'Parent code', parent_help: 'A 4-digit code stops children and guests from changing settings (deleting a playlist, Wi-Fi, starting an update).',
+      parent_set: 'Set a code', parent_change: 'Change the code', parent_off: 'Turn off',
+      parent_prompt: 'Enter the parent code', parent_new: '4-digit code', parent_cur: 'Current code', parent_bad: 'Wrong code',
+      parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.'
     },
     nl: {
       playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
@@ -317,9 +339,20 @@
       night_clock: 'De Jooki haalt de tijd van het internet (inclusief zomertijd).',
       resume_at: function (c, s) { return 'Gaat verder bij hoofdstuk ' + c + (s ? ' · ' + s : ''); },
       resume_restart: 'Opnieuw vanaf het begin', resume_done: 'Gaat verder bij hoofdstuk 1',
-      sort_tracks: 'Terug op volgorde zetten (1, 2, 3…)', sorted: 'Nummers terug op volgorde gezet',
+      sort: 'Sorteren', sort_title: 'De afspeellijst op volgorde zetten', sorted: 'Nummers terug op volgorde gezet',
+      sort_by_name: 'Bestandsnaam (1, 2, 3…)', sort_by_title: 'Titel', sort_by_artist: 'Artiest', sort_by_album: 'Album', sort_by_duration: 'Duur',
+      sort_again: 'Tik nog eens op hetzelfde criterium om de volgorde om te keren.', sort_preview: 'Voorbeeld van de nieuwe volgorde',
+      sort_apply: 'Deze volgorde vastleggen', sort_same: 'De afspeellijst staat al in deze volgorde',
       my_jooki: 'Mijn Jooki', bytes: ['B', 'kB', 'MB', 'GB'],
-      n_tokens: function (n) { return n + (n === 1 ? ' figuurtje' : ' figuurtjes'); }
+      n_tokens: function (n) { return n + (n === 1 ? ' figuurtje' : ' figuurtjes'); },
+      sec_title: 'Beveiliging',
+      ssh_label: 'Onderhoudstoegang (SSH)', ssh_help: 'Voor knutselaars. Gaat na een uur vanzelf uit.', ssh_on: 'aan (1 u)',
+      mqtt_label: 'Domotica (MQTT op het netwerk)', mqtt_help: 'Voor Home Assistant. Standaard uit.',
+      mqtt_host_l: 'Host', mqtt_port_l: 'Poort', mqtt_user_l: 'Gebruiker', mqtt_pass_l: 'Wachtwoord',
+      parent_label: 'Oudercode', parent_help: 'Een 4-cijferige code voorkomt dat kinderen en gasten instellingen wijzigen (afspeellijst verwijderen, wifi, een update starten).',
+      parent_set: 'Code instellen', parent_change: 'Code wijzigen', parent_off: 'Uitschakelen',
+      parent_prompt: 'Voer de oudercode in', parent_new: '4-cijferige code', parent_cur: 'Huidige code', parent_bad: 'Onjuiste code',
+      parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.'
     }
   };
   var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands']];
@@ -462,7 +495,7 @@
   function collator() { try { return new Intl.Collator(lang, { numeric: true, sensitivity: 'base' }); } catch (e) { return { compare: function (a, b) { return a < b ? -1 : a > b ? 1 : 0; } }; } }
 
   /* ------------------------------------------------------------------ state */
-  var S = { db: { playlists: {}, tracks: {}, tokens: {} }, audio: { config: {}, playback: {}, nowPlaying: {} }, nfc: {}, device: {}, power: {}, wifi: {}, userMessages: [], bedtime: {} };
+  var S = { db: { playlists: {}, tracks: {}, tokens: {} }, audio: { config: {}, playback: {}, nowPlaying: {} }, nfc: {}, device: {}, power: {}, wifi: {}, userMessages: [], bedtime: {}, maintenance: {} };
   var gotState = false;
   function normalize() {
     S.db = obj(S.db);
@@ -569,10 +602,17 @@
     };
     client.connect();
   }
+  // parent code (docs/adr/0007): remembered once per device, sent with every command;
+  // the Jooki only checks it on the actions it protects. Playing music never needs it.
+  var parentCode = lsGet('oj.parent') || '';
+  var pendingCmd = null;
   function send(type, payload) {
     lastCmd = Date.now();
     if (!client || !online) { toast(t('offline'), 'error'); return false; }
-    return client.publish('/j/web/input/' + type, JSON.stringify(payload || {}));
+    payload = payload || {};
+    if (parentCode) payload.code = parentCode;
+    pendingCmd = { type: type, payload: payload };
+    return client.publish('/j/web/input/' + type, JSON.stringify(payload));
   }
   var waiters = [], autoChecked = false;
   function onMessage(topic, text) {
@@ -589,6 +629,12 @@
       handleUserMessages();
       scheduleRender();
     } else if (topic === '/j/web/output/error') {
+      if (data && data.msg === 'PARENT_CODE_REQUIRED') {
+        var bad = !!parentCode;                       // a stored code that no longer matches
+        if (bad) { parentCode = ''; lsSet('oj.parent', ''); }
+        askParent(bad);
+        return;
+      }
       if (Date.now() - lastCmd < 4000) toast(errorText(data && data.msg), 'error');
     }
   }
@@ -973,7 +1019,8 @@
       tracks.length ? h('button', { class: 'btn primary', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play')) : null,
       fileButton(t('add_files'), id, !tracks.length),
       h('button', { class: 'btn', onclick: function () { libraryPickerModal(p); } }, icon('lib'), t('from_library')),
-      h('button', { class: 'btn', onclick: function () { radioModal(p); } }, icon('radio'), t('web_radio')));
+      h('button', { class: 'btn', onclick: function () { radioModal(p); } }, icon('radio'), t('web_radio')),
+      tracks.length > 1 ? h('button', { class: 'btn', 'data-k': 'sortbtn', onclick: function () { sortModal(p); } }, icon('sort'), t('sort')) : null);
     var list;
     if (!tracks.length) {
       list = h('div', { class: 'card empty' }, h('div', { class: 'big' }, '🎶'), h('div', null, t('empty_playlist')), h('div', { class: 'small' }, t('empty_playlist_hint')));
@@ -997,19 +1044,12 @@
     }
     var rs = p.audiobook ? S.bedtime.resume[id] : null;
     var ri = rs ? tracks.indexOf(rs.id) : -1;
-    var sorted = sortedTracks(tracks);
-    var unsorted = tracks.length > 1 && sorted.join('|') !== tracks.join('|');
     var more = h('div', { class: 'card', style: 'margin-top:16px' },
       h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('audiobook_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
-        ri >= 0 ? h('button', { class: 'btn ghost', 'data-k': 'resumereset', onclick: function () { send('OJ_RESUME_RESET', { playlistId: id }); } }, t('resume_restart')) : null) : null,
-      unsorted ? h('div', { class: 'kv' }, h('button', { class: 'btn ghost block', 'data-k': 'sorttracks', onclick: function () {
-        optimisticTracks(id, sorted);
-        send('PLAYLIST_UPDATE', { playlist: { id: id, tracks: sorted } });
-        toast(t('sorted'));
-      } }, icon('sort'), t('sort_tracks'))) : null);
+        ri >= 0 ? h('button', { class: 'btn ghost', 'data-k': 'resumereset', onclick: function () { send('OJ_RESUME_RESET', { playlistId: id }); } }, t('resume_restart')) : null) : null);
     var del = h('div', { class: 'actions' }, h('button', { class: 'btn danger', onclick: function () {
       confirmBox(t('delete_playlist_q', p.title || '—'), t('delete_playlist_text'), t('delete'), true).then(function (ok) {
         if (!ok) return;
@@ -1418,6 +1458,7 @@
       h('div', { class: 'section-title' }, t('language')),
       h('div', { class: 'card', style: 'padding:12px 16px' }, h('div', { class: 'seg', role: 'group', 'aria-label': t('language') },
         LANGS.map(function (l) { return h('button', { class: lang === l[0] ? 'on' : '', lang: l[0], onclick: function () { setLang(l[0]); } }, l[1]); }))),
+      securityCard(),
       h('div', { class: 'actions', style: 'margin-top:24px' }, h('button', { class: 'btn danger', onclick: function () {
         confirmBox(t('power_off_q'), t('power_off_text'), t('power_off'), true).then(function (ok) {
           if (!ok) return;
@@ -1425,6 +1466,77 @@
         });
       } }, icon('power'), t('power_off')))
     ];
+  }
+  // Security switches (docs/adr/0007): only shown on a core that offers them.
+  function securityCard() {
+    var m = obj(S.maintenance);
+    if (typeof m.ssh !== 'boolean' && typeof m.parent !== 'boolean') return null;
+    var rows = [
+      h('label', { class: 'switch' }, h('span', null, t('ssh_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('ssh_help'))),
+        h('input', { type: 'checkbox', role: 'switch', checked: !!m.ssh, 'data-k': 'ssh',
+          onchange: function (e) { send(e.target.checked ? 'OJ_SSH_ON' : 'OJ_SSH_OFF', {}); } })),
+      h('label', { class: 'switch' }, h('span', null, t('mqtt_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('mqtt_help'))),
+        h('input', { type: 'checkbox', role: 'switch', checked: !!m.mqtt_lan, 'data-k': 'mqttlan',
+          onchange: function (e) { send('OJ_MQTT_LAN', { on: e.target.checked }); } }))
+    ];
+    if (m.mqtt_lan) {
+      var host = (S.net && S.net.name ? String(S.net.name).replace(/\.local$/, '.local') : null) || (S.device && S.device.hostname) || location.hostname;
+      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_host_l')), h('b', null, host)));
+      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_port_l')), h('b', null, '1883')));
+      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_user_l')), h('b', null, 'jooki')));
+      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_pass_l')), h('b', { style: 'user-select:all;word-break:break-all' }, CFG.mqttPass || '—')));
+    }
+    rows.push(h('label', { class: 'switch' }, h('span', null, t('parent_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('parent_help'))),
+      h('input', { type: 'checkbox', role: 'switch', checked: !!m.parent, 'data-k': 'parent',
+        onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })));
+    if (m.parent) {
+      rows.push(h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap;margin-top:4px' },
+        h('button', { class: 'btn ghost', 'data-k': 'pchange', onclick: function () { parentModal('change'); } }, t('parent_change'))));
+      rows.push(h('p', { class: 'small muted' }, t('parent_reset')));
+    }
+    return [h('div', { class: 'section-title' }, t('sec_title')), h('div', { class: 'card' }, rows)];
+  }
+  // Ask for the parent code when the Jooki refuses a protected action, then retry it.
+  function askParent(bad) {
+    var code = '';
+    function go() { if (!/^\d{4}$/.test(code)) return; parentCode = code; lsSet('oj.parent', code); closeModal();
+      if (pendingCmd) { var pc = pendingCmd; pc.payload.code = code; send(pc.type, pc.payload); } }
+    openModal({ autofocus: 'pask', render: function () {
+      return [h('h3', null, t('parent_prompt')),
+        h('label', { class: 'field' }, h('span', null, t('parent_label')),
+          h('input', { class: 'input', 'data-k': 'pask', inputmode: 'numeric', maxlength: '4', value: code, autocomplete: 'off',
+            oninput: function (e) { code = e.target.value.replace(/\D/g, ''); }, onkeydown: function (e) { if (e.key === 'Enter') go(); } })),
+        bad ? h('p', { class: 'small accent-text' }, t('parent_bad')) : null,
+        h('p', { class: 'small muted' }, t('parent_reset')),
+        h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, t('cancel')),
+          h('button', { class: 'btn primary', onclick: go }, t('save')))];
+    } });
+  }
+  // Set, change or turn off the parent code.
+  function parentModal(mode) {
+    var cur = '', neu = '', bad = false;
+    function submit() {
+      if (mode === 'off') {
+        if (!/^\d{4}$/.test(cur)) { bad = true; renderModal(); return; }
+        send('OJ_PARENT_CLEAR', { current: cur }); closeModal(); return;
+      }
+      if (!/^\d{4}$/.test(neu) || (mode === 'change' && !/^\d{4}$/.test(cur))) { bad = true; renderModal(); return; }
+      send('OJ_PARENT_SET', mode === 'change' ? { code: neu, current: cur } : { code: neu });
+      parentCode = neu; lsSet('oj.parent', neu); closeModal();
+    }
+    openModal({ autofocus: (mode === 'set') ? 'pnew' : 'pcur', render: function () {
+      var rows = [h('h3', null, t('parent_label'))];
+      if (mode !== 'set') rows.push(h('label', { class: 'field' }, h('span', null, t('parent_cur')),
+        h('input', { class: 'input', 'data-k': 'pcur', inputmode: 'numeric', maxlength: '4', value: cur, autocomplete: 'off',
+          oninput: function (e) { cur = e.target.value.replace(/\D/g, ''); }, onkeydown: function (e) { if (e.key === 'Enter') submit(); } })));
+      if (mode !== 'off') rows.push(h('label', { class: 'field' }, h('span', null, t('parent_new')),
+        h('input', { class: 'input', 'data-k': 'pnew', inputmode: 'numeric', maxlength: '4', value: neu, autocomplete: 'off',
+          oninput: function (e) { neu = e.target.value.replace(/\D/g, ''); }, onkeydown: function (e) { if (e.key === 'Enter') submit(); } })));
+      if (bad) rows.push(h('p', { class: 'small accent-text' }, t('parent_bad')));
+      rows.push(h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, t('cancel')),
+        h('button', { class: 'btn primary', onclick: submit }, t('save'))));
+      return rows;
+    } });
   }
   // The Jooki's network name (2.0 core only). The Jooki's web server answers only to its own name,
   // so after a rename the page lives at the new address and the old one stops answering.
@@ -1543,9 +1655,64 @@
           h('p', { class: 'small muted pad', style: 'margin:4px 0 14px' }, t('night_clock'))
         ] : null)];
   }
-  function sortedTracks(list) {
+  /* sort a playlist by one criterion; web radios keep their relative order at the end */
+  var SORT_KEYS = ['name', 'title', 'artist', 'album', 'duration'];
+  function fileName(tr) {
+    var f = tr.userFilename || String(tr.filename || '').split('/').pop();
+    return cleanTitle(f || tr.title || '');
+  }
+  function sortedTracks(list, by, desc) {
     var c = collator();
-    return list.slice().sort(function (a, b) { return c.compare(trackTitle(a), trackTitle(b)) || (a < b ? -1 : a > b ? 1 : 0); });
+    function txt(id, k) {
+      var tr = S.db.tracks[id] || {};
+      if (k === 'name') return fileName(tr);
+      if (k === 'title') return trackTitle(id);
+      var v = tr[k]; return v && v !== 'unknown' ? String(v) : '';
+    }
+    function cmp(a, b) {
+      var r;
+      if (by === 'duration') r = (Number((S.db.tracks[a] || {}).duration) || 0) - (Number((S.db.tracks[b] || {}).duration) || 0);
+      else r = c.compare(txt(a, by), txt(b, by));
+      if (r === 0 && by !== 'title') r = c.compare(trackTitle(a), trackTitle(b));
+      return r || (a < b ? -1 : a > b ? 1 : 0);
+    }
+    var files = list.filter(function (x) { return !(S.db.tracks[x] || {}).isUrl; }).sort(cmp);
+    if (desc) files.reverse();
+    return files.concat(list.filter(function (x) { return (S.db.tracks[x] || {}).isUrl; }));
+  }
+  function sortModal(p) {
+    var by = 'name', desc = false;
+    var cur = arr(p.tracks);
+    function result() { return sortedTracks(cur, by, desc); }
+    function apply() {
+      var nt = result();
+      closeModal();
+      if (nt.join('|') === cur.join('|')) { toast(t('sort_same')); return; }
+      optimisticTracks(p.id, nt);
+      send('PLAYLIST_UPDATE', { playlist: { id: p.id, tracks: nt } });
+      toast(t('sorted'));
+    }
+    openModal({
+      autofocus: 'sortok',
+      render: function () {
+        var nt = result(), same = nt.join('|') === cur.join('|');
+        var shown = nt.slice(0, 8);
+        return [h('h3', null, t('sort_title')),
+          h('div', { class: 'sortopts', role: 'group', 'aria-label': t('sort_title') }, SORT_KEYS.map(function (k) {
+            var on = by === k;
+            return h('button', { class: 'btn' + (on ? ' on' : ''), 'data-k': 'sortby-' + k, 'aria-pressed': String(on), onclick: function () {
+              if (on) desc = !desc; else { by = k; desc = false; }
+              renderModal();
+            } }, h('span', { class: 'grow' }, t('sort_by_' + k)), h('span', { 'aria-hidden': 'true' }, on ? (desc ? '↓' : '↑') : ''));
+          })),
+          h('p', { class: 'small muted' }, t('sort_again')),
+          h('div', { class: 'small muted', style: 'margin-top:10px' }, t('sort_preview')),
+          h('ol', { class: 'sortpreview' }, shown.map(function (id) { var tr = S.db.tracks[id] || {}; return h('li', { class: 'ellipsis' }, (by === 'name' ? fileName(tr) : trackTitle(id)) + (by === 'duration' && tr.duration ? ' · ' + fmtTime(tr.duration) : '')); }),
+            nt.length > shown.length ? h('li', { class: 'muted' }, '… +' + (nt.length - shown.length)) : null),
+          h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, t('cancel')),
+            h('button', { class: 'btn primary', 'data-k': 'sortok', disabled: same ? 'disabled' : null, onclick: apply }, same ? t('sort_same') : t('sort_apply')))];
+      }
+    });
   }
 
   /* ------------------------------------------------------------------ player */

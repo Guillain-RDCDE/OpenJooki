@@ -32,7 +32,11 @@
   the new-card bench; the bigger-card path benefits too.
 - Release images: the build now removes the run-time leftovers of the Jooki an image is
   made from (`/tmp`, `/start`, stray files, authorized SSH keys) and zeroes the free
-  blocks, and can be told strings that must not remain (`--forget`).
+  blocks, and can be told strings that must not remain (`--forget`). **The 2.0.4 image
+  was republished the same evening, scrubbed this way** (same program, new SHA-256 in
+  `version.json`): the images from 1.3.0 to 2.0.4 carried the name and MAC address of
+  the Jooki they were made from, and an authorized SSH key. A Jooki already on 2.0.4
+  has nothing to do; its next update removes them.
 - Not part of the firmware: nothing changes on a Jooki that works.
 
 ## OpenJooki 2.0.4 (28 September 2026) — any NFC tag, with its name and its photo

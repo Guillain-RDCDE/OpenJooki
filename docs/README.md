@@ -90,6 +90,8 @@ a token does, how playback works, what the lights mean, when it turns itself off
 - [24-hardware-and-lights.md](24-hardware-and-lights.md): what every light means,
   the battery (the cell, its thermal sensor, replacing it), the USB-C port and
   Muuselabs' charging notice, and a Jooki that no longer lights up.
+- [26-bluetooth-speaker.md](26-bluetooth-speaker.md): Bluetooth speakers and
+  headphones, and the ESP32's own protocol for them, measured on a live Jooki.
 - [09-internals-deep-dive.md](09-internals-deep-dive.md): ESP32 protocol, boot, partitions.
 - [12-firmware-audit.md](12-firmware-audit.md): the security audit and its fixes.
 - [06-root-access.md](06-root-access.md): getting root over SSH.

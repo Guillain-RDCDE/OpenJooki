@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release — airplane mode from the page
+## OpenJooki 2.0.5 (29 September 2026) — Bluetooth speakers, airplane mode, Wi-Fi without the app
 - **Airplane mode, the way parents asked for it, without the trap.** Settings →
   *Airplane mode* switches the Jooki's Wi-Fi and Bluetooth off (no radio next to
   the bed, or on a plane). You choose for how long: a few hours, until the morning

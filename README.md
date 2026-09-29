@@ -17,6 +17,16 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki. For the **Jooki 2
   from web pages ([why](#questions)).
 - **A question about the lights, the battery, the charger** → [the lights, the battery and the USB-C port](docs/24-hardware-and-lights.md).
 
+## New in 2.0.5
+
+- **Bluetooth speakers and headphones.** Jooki had built them into the Jooki 2 and never
+  put the button in the app. Settings → *Bluetooth speaker or headphones*.
+- **Airplane mode from the page**, always for a set time: no radio next to the bed.
+- **Wi-Fi without the app**: a Jooki that lost its network gets it back over Bluetooth.
+- **A dead Jooki starts again**: a complete new SD card, made in ten minutes.
+
+Already on OpenJooki: open the Jooki's page, tap **Update now**. All the details: [CHANGELOG](CHANGELOG.md).
+
 ![The OpenJooki page on a phone](docs/img/openjooki-web.png)
 
 ## What you get
@@ -35,6 +45,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki. For the **Jooki 2
   crash the Jooki.
 - **Your own tags**: an amiibo or an NFC sticker can start a playlist too, like a
   Jooki token (taking it off does not pause).
+- **Bluetooth speakers and headphones**: the sound goes to your speaker, and comes back
+  to the Jooki when the speaker is switched off.
 - **Nothing leaves your home**: no account, no cloud, no tracking.
 - **Updates in one tap**, from the Jooki's own page.
 
@@ -68,6 +80,9 @@ web instead.
 - **Airplane mode**: Settings → *Airplane mode* switches the Wi-Fi and Bluetooth off for
   the time you choose (a few hours, until the morning, or until the next start). The
   Jooki brings them back by itself; tokens and music work the whole time.
+- **A Bluetooth speaker or headphones**: put them in pairing mode, then Settings →
+  *Bluetooth speaker or headphones* → **Search** → **Connect**. Next time, just switch
+  the speaker on: the Jooki reconnects by itself.
 
 ## The SD card: more room, or a Jooki brought back to life
 

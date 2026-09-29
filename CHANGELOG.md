@@ -27,6 +27,16 @@
   once. The Jooki's page now says so under *Settings → Wi-Fi*, with the name the Jooki
   shows in a Bluetooth list (`JOOKI2_…`). For a terminal: `tools/wifi/jooki_wifi.py`.
   Proven on a real Jooki, moved between two networks, wrong password reported.
+- **Bluetooth speakers and headphones.** Jooki had built them into the Jooki 2
+  (late 2022) and never put the button in the app. Settings → *Bluetooth speaker or
+  headphones*: put the speaker in pairing mode, tap *Search*, then *Connect*. The
+  sound moves to the speaker; if it switches off, the sound comes back to the Jooki,
+  and when it is switched on again the Jooki reconnects by itself. *Stop using this
+  speaker* forgets it. Connecting and forgetting are protected by the parent code.
+  Proven on a real Jooki with a Sony SRS-X11. A connected speaker no longer keeps an
+  idle Jooki awake (it used to), so the battery still switches off after 15 minutes.
+  For the tinkerers: messages `OJ_BT_SCAN`, `OJ_BT_CONNECT {mac}`, `OJ_BT_FORGET {mac}`,
+  state `bluetooth`; the ESP32's own protocol is in docs/26.
 
 ## SD card tools (28 September 2026) — a new card from scratch
 - **A Jooki that no longer starts because its card died gets a new card**, with

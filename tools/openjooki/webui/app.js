@@ -82,6 +82,17 @@
       air_sent: 'Le Jooki passe en mode avion…',
       air_offline: function (w) { return 'Le Jooki est en mode avion : le Wi-Fi reviendra ' + w + '. Les jetons et la musique marchent. Pour le retrouver plus tôt, éteins le Jooki puis rallume-le.'; },
       air_back: 'Le Jooki est de retour sur le Wi-Fi.',
+      bt_title: 'Enceinte ou casque Bluetooth',
+      bt_help: 'Allumez l\'enceinte ou le casque et mettez-le en mode appairage (en général : garder le bouton Bluetooth appuyé jusqu\'à ce que le voyant clignote vite). Puis cherchez.',
+      bt_search: 'Chercher', bt_searching: 'Recherche… (15 secondes)', bt_connect: 'Connecter', bt_connecting: 'Connexion…',
+      bt_none: 'Rien trouvé. Vérifiez que l\'enceinte clignote en mode appairage, puis cherchez encore.',
+      bt_failed: 'La connexion n\'a pas marché. Remettez l\'enceinte en mode appairage et réessayez.',
+      bt_on: function (n) { return 'Le son sort de : ' + n; },
+      bt_on_help: 'Si l\'enceinte s\'éteint, le son revient sur le Jooki. Quand vous la rallumez, le Jooki s\'y reconnecte tout seul.',
+      bt_off_btn: 'Ne plus utiliser cette enceinte', bt_off_q: 'Ne plus utiliser cette enceinte ?',
+      bt_off_text: 'Le son reviendra sur le Jooki et il ne s\'y reconnectera plus tout seul.',
+      bt_air: 'Le Bluetooth est coupé pendant le mode avion.', bt_unnamed: 'Appareil sans nom',
+      bt_known: 'Déjà utilisée : allumez-la simplement, pas besoin du mode appairage',
       nothing_playing: 'Rien en lecture', nothing_hint: 'Pose un jeton ou choisis une playlist',
       live: 'En direct', volume: 'Volume',
       uploading: 'Envoi', processing: 'Analyse sur le Jooki…', done: 'Ajouté', queued: 'En attente',
@@ -216,6 +227,17 @@
       air_sent: 'The Jooki is going into airplane mode…',
       air_offline: function (w) { return 'The Jooki is in airplane mode: the Wi-Fi will be back ' + w + '. Tokens and music work. To get it back sooner, switch the Jooki off and on again.'; },
       air_back: 'The Jooki is back on the Wi-Fi.',
+      bt_title: 'Bluetooth speaker or headphones',
+      bt_help: 'Switch the speaker or headphones on and put them in pairing mode (usually: hold the Bluetooth button until the light blinks fast). Then search.',
+      bt_search: 'Search', bt_searching: 'Searching… (15 seconds)', bt_connect: 'Connect', bt_connecting: 'Connecting…',
+      bt_none: 'Nothing found. Check that the speaker blinks in pairing mode, then search again.',
+      bt_failed: 'The connection did not work. Put the speaker in pairing mode again and retry.',
+      bt_on: function (n) { return 'Sound plays on: ' + n; },
+      bt_on_help: 'If the speaker switches off, the sound comes back to the Jooki. When you switch it on again, the Jooki reconnects by itself.',
+      bt_off_btn: 'Stop using this speaker', bt_off_q: 'Stop using this speaker?',
+      bt_off_text: 'The sound will come back to the Jooki and it will no longer reconnect to it by itself.',
+      bt_air: 'Bluetooth is off during airplane mode.', bt_unnamed: 'Unnamed device',
+      bt_known: 'Used before: just switch it on, no pairing mode needed',
       nothing_playing: 'Nothing playing', nothing_hint: 'Put a token or pick a playlist',
       live: 'Live', volume: 'Volume',
       uploading: 'Uploading', processing: 'Processing on the Jooki…', done: 'Added', queued: 'Waiting',
@@ -350,6 +372,17 @@
       air_sent: 'De Jooki gaat in vliegtuigmodus…',
       air_offline: function (w) { return 'De Jooki staat in vliegtuigmodus: de wifi komt terug ' + w + '. Figuurtjes en muziek werken. Wil je hem eerder terug, zet de Jooki dan uit en weer aan.'; },
       air_back: 'De Jooki is terug op de wifi.',
+      bt_title: 'Bluetooth-speaker of koptelefoon',
+      bt_help: 'Zet de speaker of koptelefoon aan en in koppelmodus (meestal: de bluetoothknop ingedrukt houden tot het lampje snel knippert). Zoek dan.',
+      bt_search: 'Zoeken', bt_searching: 'Zoeken… (15 seconden)', bt_connect: 'Verbinden', bt_connecting: 'Verbinden…',
+      bt_none: 'Niets gevonden. Kijk of de speaker knippert in koppelmodus en zoek opnieuw.',
+      bt_failed: 'Verbinden is niet gelukt. Zet de speaker opnieuw in koppelmodus en probeer het nog eens.',
+      bt_on: function (n) { return 'Het geluid speelt op: ' + n; },
+      bt_on_help: 'Gaat de speaker uit, dan komt het geluid terug op de Jooki. Zet je hem weer aan, dan verbindt de Jooki vanzelf opnieuw.',
+      bt_off_btn: 'Deze speaker niet meer gebruiken', bt_off_q: 'Deze speaker niet meer gebruiken?',
+      bt_off_text: 'Het geluid komt terug op de Jooki en hij verbindt niet meer vanzelf met deze speaker.',
+      bt_air: 'Bluetooth staat uit tijdens de vliegtuigmodus.', bt_unnamed: 'Apparaat zonder naam',
+      bt_known: 'Eerder gebruikt: gewoon aanzetten, koppelmodus is niet nodig',
       nothing_playing: 'Er speelt niets', nothing_hint: 'Zet een figuurtje neer of kies een afspeellijst',
       live: 'Live', volume: 'Volume',
       uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
@@ -1784,6 +1817,7 @@
           onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } })),
         h('label', { class: 'switch' }, h('span', null, t('repeat')), h('input', { type: 'checkbox', role: 'switch', checked: cfg.repeat_mode === 1 || cfg.repeat_mode === true, 'data-k': 'repeat',
           onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }))),
+      bluetoothCard(),
       bedtimeCard(),
       airplaneCard(),
       h('div', { class: 'section-title' }, t('language')),
@@ -1797,6 +1831,43 @@
         });
       } }, icon('power'), t('power_off')))
     ];
+  }
+  // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
+  // speaker by itself once connected, and reconnects to it when it comes back.
+  var btTried = null;   // the device this page asked to connect, to tell a failure from "nothing connected"
+  function bluetoothCard() {
+    var b = obj(S.bluetooth);
+    if (typeof b.state !== 'number') return null;
+    var st = b.state, devs = arr(b.devices), con = obj(b.connected), rows = [];
+    function name(d) { return d.name || t('bt_unnamed'); }
+    if (arr(S.device.flags).indexOf('BT_OFF') >= 0) {
+      rows.push(h('p', { class: 'small muted pad', 'data-k': 'btair' }, t('bt_air')));
+    } else if (con.mac) {
+      btTried = null;
+      rows.push(h('div', { class: 'kv' }, h('b', { 'data-k': 'bton' }, t('bt_on', name(con)))));
+      rows.push(h('p', { class: 'small muted pad', style: 'margin:0 0 8px' }, t('bt_on_help')));
+      rows.push(h('div', { class: 'actions pad' }, h('button', { class: 'btn', 'data-k': 'btforget', onclick: function () {
+        confirmBox(t('bt_off_q'), t('bt_off_text'), t('bt_off_btn'), false).then(function (ok) { if (ok) send('OJ_BT_FORGET', { mac: con.mac }); });
+      } }, t('bt_off_btn'))));
+    } else {
+      rows.push(h('p', { class: 'small muted pad', style: 'margin:12px 0 4px' }, t('bt_help')));
+      // the speakers the Jooki already knows: reconnecting needs no pairing mode, and a paired
+      // speaker does not show in a search, so they come first, whatever the search finds
+      var known = arr(b.known).map(function (k) { return Object.assign({ known: true }, k); });
+      devs = known.concat(devs.filter(function (d) { return !known.some(function (k) { return k.mac === d.mac; }); }));
+      devs.forEach(function (d) {
+        var busy = st === 4 && btTried === d.mac;
+        rows.push(h('div', { class: 'kv' }, h('span', null, name(d), d.known ? h('div', { class: 'small muted', style: 'font-weight:400' }, t('bt_known')) : null),
+          h('button', { class: 'btn ghost', 'data-k': 'btdev-' + d.mac, disabled: st === 4 ? 'disabled' : null, onclick: function () {
+            if (send('OJ_BT_CONNECT', { mac: d.mac }) !== false) { btTried = d.mac; }
+          } }, busy ? t('bt_connecting') : t('bt_connect'))));
+      });
+      if (st === 6 && btTried) rows.push(h('p', { class: 'small accent-text pad', 'data-k': 'btfail' }, t('bt_failed')));
+      else if (st === 2 && !devs.length) rows.push(h('p', { class: 'small muted pad', 'data-k': 'btnone' }, t('bt_none')));
+      rows.push(h('div', { class: 'actions pad' }, h('button', { class: 'btn', 'data-k': 'btscan', disabled: st === 1 || st === 4 ? 'disabled' : null,
+        onclick: function () { btTried = null; send('OJ_BT_SCAN', {}); } }, st === 1 ? t('bt_searching') : t('bt_search'))));
+    }
+    return [h('div', { class: 'section-title' }, t('bt_title')), h('div', { class: 'card', 'data-k': 'btcard' }, rows)];
   }
   // Airplane mode (docs/24), only on a core that offers it. Always bounded: the Jooki switches its
   // radios back on by itself at the chosen time, and in any case at its next start.

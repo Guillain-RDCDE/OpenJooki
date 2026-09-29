@@ -102,6 +102,7 @@ end
 v1.install(dispatch)
 
 require("services.network").install(api, dispatch)
+require("services.bluetooth").install(api, dispatch)
 mark("services")
 
 -- health: every 60 s, memory and bus statistics into the state

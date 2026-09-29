@@ -63,9 +63,13 @@ function bus_events.translate(topic, payload)
     local d = jsonish(payload) or {}
     return { type = "knobs", volume = tonumber(d.volume), headphones = tonumber(d.hp_state) == 1, control = tonumber(d.control) }
   end
-  if topic == "/j/esp32/input/bt/device_connected" then
+  -- Bluetooth speakers and headphones (docs/26): the ESP32 speaks A2DP itself
+  local bt = topic:match("^/j/esp32/input/bt/device_(%w+)$")
+  if bt == "connected" or bt == "discovered" or bt == "saved" then
     local d = jsonish(payload) or {}
-    return { type = "bt.connected", mac = d.mac }
+    if type(d.mac) ~= "string" then return { type = "bt." .. bt, bad = true, raw = payload } end
+    return { type = "bt." .. bt, mac = d.mac:upper(), name = type(d.name) == "string" and d.name or "",
+             cod = tonumber(tostring(d.cod or "")), rssi = tonumber(d.rssi) }
   end
   if topic == "/j/esp32/input/bt/state" then return { type = "bt.state", code = tonumber(payload) } end
   local sp = topic:match("^/j/spotify/input/([%w_]+)$")

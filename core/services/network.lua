@@ -2,7 +2,7 @@
 -- Jooki's name on the network (docs/20). The Wi-Fi manager (safe switch,
 -- preferred networks) is 2.1.
 -- Owns state.net = { ssid, bssid, channel, signal, connected, ip, ap, drops, beacons, name, since }
---      state.bluetooth = { connected_mac, devices }
+-- (state.bluetooth belongs to services.bluetooth)
 -- Reads /tmp/oj-wifi.log (Wi-Fi events copied there by syslog-ng, see
 -- tools/openjooki/system/syslog-ng.conf) every 20 s; cleans the logs the
 -- original system piled up, once at boot.
@@ -63,22 +63,11 @@ function network.on_wifi_log(doc, ev)
   return { state = { net = net } }
 end
 
-function network.on_bt_connected(doc, ev)
-  return { state = { bluetooth = { connected_mac = ev.mac, devices = (doc.bluetooth or {}).devices } } }
-end
-
-function network.on_bt_state(doc, ev)
-  if ev.code ~= 9 then return nil end
-  return { state = { bluetooth = { connected_mac = nil, devices = (doc.bluetooth or {}).devices } } }
-end
-
 function network.install(_, dispatch)
   dispatch.on("boot", "network", network.on_boot)
   dispatch.on("net.status", "network", network.on_status)
   dispatch.on("timer", "network", network.on_timer)
   dispatch.on("network.wifi_log", "network", network.on_wifi_log)
-  dispatch.on("bt.connected", "network", network.on_bt_connected)
-  dispatch.on("bt.state", "network", network.on_bt_state)
 end
 
 return network

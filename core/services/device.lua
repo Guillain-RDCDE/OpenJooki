@@ -237,9 +237,10 @@ function device.on_inactivity(doc, ev)
   local act = doc.activity or {}
   local pb = doc.playback or {}
   local playing = pb.state == "playing" or pb.state == "starting"
-  local bt = doc.bluetooth and doc.bluetooth.connected_mac
+  -- a connected Bluetooth speaker no longer keeps it awake (1.x did): the chip reconnects it
+  -- by itself, so a Jooki idle next to its speaker would never switch off (docs/26)
   local plugged = doc.power and doc.power.connected
-  if playing or bt or plugged then
+  if playing or plugged then
     if act.last ~= ev.now then
       local a2 = activity_of(doc); a2.last = ev.now
       return { state = { activity = a2 } }

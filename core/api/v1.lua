@@ -12,6 +12,7 @@ local device = require("services.device")
 local uploads = require("services.uploads")
 local bedtime = require("services.bedtime")
 local security = require("services.security")
+local bluetooth = require("services.bluetooth")
 -- optional module (ADR-0009): absent from a `--without services.streaming` build
 local has_streaming, streaming = pcall(require, "services.streaming")
 if not has_streaming then
@@ -244,6 +245,10 @@ H.OJ_SET_NAME = function(doc, p) return device.on_set_name(doc, p.name) end
 H.OJ_UPDATE_START = function() return { commands = { { kind = "emit", event = { type = "update.start" } } } } end
 -- airplane mode from the page, always bounded (minutes, and at most until the next start)
 H.OJ_AIRPLANE = function(doc, p, ev) return device.on_airplane(doc, { minutes = p.minutes, cancel = p.cancel == true }, ev) end
+-- Bluetooth speaker or headphones (docs/26)
+H.OJ_BT_SCAN = function(doc) return bluetooth.on_scan(doc) end
+H.OJ_BT_CONNECT = function(doc, p) return bluetooth.on_connect(doc, p) end
+H.OJ_BT_FORGET = function(doc, p) return bluetooth.on_forget(doc, p) end
 -- security switches (docs/adr/0007)
 H.OJ_SSH_ON = function(doc, _, ev) return security.on_ssh(doc, { on = true, wall = ev.wall }) end
 H.OJ_SSH_OFF = function(doc) return security.on_ssh(doc, { on = false }) end
@@ -264,6 +269,7 @@ local PROTECTED = {
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,
+  OJ_BT_CONNECT = true, OJ_BT_FORGET = true,
 }
 v1.PROTECTED = PROTECTED
 

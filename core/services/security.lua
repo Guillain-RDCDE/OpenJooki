@@ -11,6 +11,7 @@ local security = {}
 local SSH_SECONDS = 60 * 60           -- maintenance SSH lifetime: one hour
 local PARENT_FILE = "/data/openjooki/parent_code"
 local LAN_FLAG = "/data/openjooki/mqtt_lan"
+local KEYS_FILE = "/data/openjooki/authorized_keys"
 
 -- the parent code, kept in memory only (never published in the state document).
 -- Loaded from PARENT_FILE at boot; set/cleared by the commands below.
@@ -41,6 +42,40 @@ function security.on_ssh(doc, ev)
     { kind = "shell", action = "ssh_off" },
     { kind = "timer.cancel", name = "security.ssh_off" },
     { kind = "log", level = "info", key = "security.ssh_off" } } }
+end
+
+--- A public key for the maintenance access, kept on /data so that updates no longer lose it
+--- (they rewrite /home). Only while the access is open (the owner opened it in the last hour),
+--- and behind the parent code when one is set (api.v1). { key } adds one, { clear = true } forgets all.
+local KEYS_MAX = 5
+-- the saved keys, in memory like the file (loaded at boot): the count the page shows is the file's
+local ssh_keys = {}
+function security._set_ssh_keys(list) ssh_keys = list or {} end   -- tests only
+function security.on_ssh_key(doc, ev)
+  local m = maint(doc)
+  if not m.ssh then
+    return nil, { code = "forbidden", field = "", message = "SSH_CLOSED" }
+  end
+  if ev.clear then
+    ssh_keys = {}
+    m.ssh_keys = 0
+    return { state = { maintenance = m }, commands = {
+      { kind = "shell", action = "ssh_key_clear" }, { kind = "log", level = "info", key = "security.ssh_keys_cleared" } } }
+  end
+  local key = type(ev.key) == "string" and ev.key:gsub("^%s+", ""):gsub("%s+$", "") or nil
+  if not require("adapters.shell").is_pubkey(key) then
+    return nil, { code = "invalid_argument", field = "key", message = "SSH_KEY_INVALID" }
+  end
+  -- same rule as the shell action: once each, the last five kept
+  local kept = {}
+  for _, k in ipairs(ssh_keys) do if k ~= key then kept[#kept + 1] = k end end
+  kept[#kept + 1] = key
+  while #kept > KEYS_MAX do table.remove(kept, 1) end
+  ssh_keys = kept
+  m.ssh_keys = #kept
+  return { state = { maintenance = m }, commands = {
+    { kind = "shell", action = "ssh_key_add", args = { key = key } },
+    { kind = "log", level = "info", key = "security.ssh_key_added", fields = { kind = key:match("^(%S+)") } } } }
 end
 
 -- ---------------------------------------------------------------- MQTT on the LAN
@@ -96,6 +131,11 @@ function security.on_boot(doc)
   m.ssh = false            -- dropbear on 2222 never survives a reboot
   m.ssh_until = nil
   m.mqtt_lan = files and files.exists(LAN_FLAG) or false
+  ssh_keys = {}
+  for line in ((files and files.read_text and files.read_text(KEYS_FILE)) or ""):gmatch("[^\n]+") do
+    if line:match("%S") then ssh_keys[#ssh_keys + 1] = line end
+  end
+  m.ssh_keys = #ssh_keys
   local code = files and files.read_text and files.read_text(PARENT_FILE) or nil
   parent_code = code and code:match("^(%d%d%d%d)") or nil
   m.parent = parent_code ~= nil
@@ -117,6 +157,7 @@ function security.install(_, dispatch)
   dispatch.on("boot", "security", security.on_boot)
   dispatch.on("timer", "security", security.on_timer)
   dispatch.on("security.ssh", "security", security.on_ssh)
+  dispatch.on("security.ssh_key", "security", security.on_ssh_key)
   dispatch.on("security.mqtt_lan", "security", security.on_mqtt_lan)
   dispatch.on("security.parent_set", "security", security.on_parent_set)
   dispatch.on("security.parent_clear", "security", security.on_parent_clear)

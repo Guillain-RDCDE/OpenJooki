@@ -466,8 +466,14 @@ function device.on_boot(doc, ev)
     { kind = "timer.every", name = "device.inactivity", seconds = 30 },
     { kind = "timer.every", name = "device.tick", seconds = 0.5 },
     { kind = "timer.every", name = "device.knobs", seconds = 10 },
-    emit("system.event", { name = "Evt.Jooki.Ready" }),
   }) do cmds[#cmds + 1] = c end
+  if ev.quiet_boot then
+    -- restarted by the Wi-Fi watchdog (services.network): no chime, maybe in the middle of the night
+    cmds[#cmds + 1] = { kind = "files.remove", path = require("kernel.config").get("quiet_boot_file") }
+    cmds[#cmds + 1] = { kind = "log", level = "info", key = "device.quiet_boot" }
+  else
+    cmds[#cmds + 1] = emit("system.event", { name = "Evt.Jooki.Ready" })
+  end
   -- plugged at start (1.x did the same): known from the first second, so no cable sound either
   local connected
   if ev.plugged == "1" then connected = true elseif ev.plugged == "0" then connected = false end

@@ -32,7 +32,9 @@ end
 function network.on_boot(doc, ev)
   local host = ((doc.device or {}).hostname or ""):lower():gsub("%.local$", "")
   local net = { drops = 0, beacons = 0, since = ev.now or 0, name = host ~= "" and (host .. ".local") or nil }
-  return { state = { net = net },
+  -- restarts in a row the Wi-Fi watchdog already made (read by main from /data)
+  local count = tonumber(tostring(ev.wifi_watchdog or ""):match("%d+")) or 0
+  return { state = { net = net, net_watch = { count = count } },
            commands = { { kind = "shell", action = "log_cleanup" },
                         { kind = "timer.every", name = "network.wifi_log", seconds = 20 },
                         { kind = "timer.every", name = "network.status", seconds = 30 },   -- 1.x asked every 10 s
@@ -46,9 +48,61 @@ function network.on_status(doc, ev)
   return { state = { net = net } }
 end
 
-function network.on_timer(_, ev)
+-- ------------------------------------------------------------------ Wi-Fi watchdog
+-- The Wi-Fi chip can stay stuck ("connecting" for good, 28/09/2026) and nothing on the original
+-- system starts it again: the Jooki stays unreachable until someone restarts it. A restart is what
+-- brings it back, so the core does it itself, only when it is safe:
+--   * offline for wifi_watchdog_s (10 min) in a row, radios supposed on (no airplane mode);
+--   * nothing playing, on the charger (on battery the Jooki switches itself off after 15 min anyway,
+--     and its next start is a fresh one);
+--   * at most wifi_watchdog_max (2) restarts in a row without Wi-Fi: then it stops trying (moved
+--     house, box gone: the Bluetooth page is the way). The count lives on /data and goes back to 0
+--     as soon as the Wi-Fi is back. The restart is silent (no "ready" chime at night).
+local function online(net) return net and net.connected and type(net.ip) == "string" and net.ip ~= "" end
+local function radios_off(doc)
+  local f, d = doc.flags or {}, doc.device or {}
+  return f.WIFI_OFF or f.OJ_AIRPLANE or type(d.airplane) == "table"
+end
+
+function network.watchdog(doc, now)
+  local config = require("kernel.config")
+  local limit, max = config.get("wifi_watchdog_s"), config.get("wifi_watchdog_max")
+  local w = copy(doc.net_watch or { count = 0 })
+  if online(doc.net) then
+    if not w.since and (w.count or 0) == 0 then return nil end
+    local cmds = {}
+    if (w.count or 0) > 0 then
+      cmds[#cmds + 1] = { kind = "files.write_text", path = config.get("wifi_watchdog_file"), text = "0\n" }
+      cmds[#cmds + 1] = { kind = "log", level = "info", key = "network.watchdog_ok", fields = { after_restarts = w.count } }
+    end
+    w.since, w.count = nil, 0
+    return { state = { net_watch = w }, commands = cmds }
+  end
+  if radios_off(doc) or limit <= 0 then
+    if w.since then w.since = nil return { state = { net_watch = w } } end
+    return nil
+  end
+  if not w.since then w.since = now return { state = { net_watch = w } } end
+  if now - w.since < limit then return nil end
+  local pb = doc.playback or {}
+  local busy = pb.state == "playing" or pb.state == "starting" or (pb.sys and pb.sys.name)
+  local plugged = doc.power and doc.power.connected
+  if busy or not plugged or (w.count or 0) >= max then return nil end
+  w.count = (w.count or 0) + 1
+  w.since = nil
+  return { state = { net_watch = w }, commands = {
+    { kind = "log", level = "warn", key = "network.watchdog_restart", fields = { offline_s = math.floor(now - (doc.net_watch.since or now)), restart = w.count } },
+    { kind = "files.write_text", path = config.get("wifi_watchdog_file"), text = w.count .. "\n" },
+    { kind = "files.write_text", path = config.get("quiet_boot_file"), text = "wifi watchdog\n" },
+    { kind = "shell", action = "watchdog_reboot" } } }
+end
+
+function network.on_timer(doc, ev)
   if ev.name == "network.status" then
-    return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/net/sta/status", payload = "" } } }
+    local r = network.watchdog(doc, ev.now or 0) or { commands = {} }
+    r.commands = r.commands or {}
+    table.insert(r.commands, 1, { kind = "bus.publish", topic = "/j/esp32/output/net/sta/status", payload = "" })
+    return r
   end
   if ev.name ~= "network.wifi_log" then return nil end
   return { commands = { { kind = "files.read_text", path = WIFI_LOG, reply = "network.wifi_log" } } }

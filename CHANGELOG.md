@@ -1,5 +1,28 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.0.8 (29 September 2026) — a safer start
+- **The Jooki gets its Wi-Fi back by itself.** Its Wi-Fi chip can stay stuck on
+  "connecting" and nothing on the original system woke it up again: the Jooki stayed
+  out of reach until someone restarted it. Now, after ten minutes without Wi-Fi, on the
+  charger and with nothing playing, the Jooki restarts itself, silently. Twice at most
+  in a row: if the Wi-Fi is really gone (moved house, new box), the Bluetooth page is
+  the way. Never in airplane mode, never during an update.
+- **No more factory network.** At every start, the original system gave the Wi-Fi chip
+  Muuselabs' own factory network again, a network no home has, and the chip wasted its
+  tries on it. It is no longer added, and it is removed when the chip knows your
+  network. The chip also gets 30 seconds to start instead of 10, and a slow start no
+  longer leaves a "factory mode" mark behind for good.
+- **The Jooki's message hub keeps running.** Tokens, knobs and the page all go through
+  one small program on the Jooki (the broker). Nothing restarted it if it stopped: the
+  Jooki went deaf. The Jooki now starts it again by itself, and no longer burns its
+  processor (and battery) while it waits for it.
+- **A card that cannot change the Jooki's security.** A settings file dropped on the SD
+  card's computer-readable part used to replace the Jooki's own message-hub settings,
+  password included. It is ignored now.
+- For the tinkerers: the maintenance access (Settings, one hour) takes an SSH public
+  key, kept on the Jooki across updates (updates used to wipe it). Only while the
+  access is open, and behind the parent code when one is set.
+
 ## OpenJooki 2.0.7 (29 September 2026) — a character for your Spotify playlist
 - **Spotify connects again after a restart.** After some restarts, the phone saw the
   Jooki in its list of devices but could not connect to it. The Jooki told Spotify

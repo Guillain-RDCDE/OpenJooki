@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.7';
+  var VERSION = '2.0.8';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -154,6 +154,10 @@
       n_tokens: function (n) { return n + ' jeton' + (n > 1 ? 's' : ''); },
       sec_title: 'Sécurité',
       ssh_label: 'Accès de maintenance (SSH)', ssh_help: 'Pour les bricoleurs. S\'éteint tout seul au bout d\'une heure.', ssh_on: 'activé (1 h)',
+      ssh_key_l: 'Clé publique SSH', ssh_key_help: 'Colle ta clé publique (une ligne qui commence par ssh-ed25519 ou ssh-rsa). Le Jooki la garde, même après une mise à jour.',
+      ssh_key_add: 'Ajouter la clé', ssh_key_clear: 'Oublier les clés', ssh_key_added: 'Clé ajoutée',
+      ssh_keys_n: function (n) { return n ? (n + (n > 1 ? ' clés enregistrées' : ' clé enregistrée')) : 'Aucune clé enregistrée'; },
+      err_ssh_key: 'Ce n\'est pas une clé publique SSH (une ligne ssh-ed25519… ou ssh-rsa…).', err_ssh_closed: 'Ouvre d\'abord l\'accès de maintenance.',
       mqtt_label: 'Domotique (MQTT sur le réseau)', mqtt_help: 'Pour Home Assistant. Désactivée par défaut.',
       mqtt_host_l: 'Hôte', mqtt_port_l: 'Port', mqtt_user_l: 'Utilisateur', mqtt_pass_l: 'Mot de passe',
       parent_label: 'Code parent', parent_help: 'Un code à 4 chiffres empêche enfants et invités de changer les réglages (supprimer une playlist, le Wi-Fi, lancer une mise à jour).',
@@ -306,6 +310,10 @@
       n_tokens: function (n) { return n + (n === 1 ? ' token' : ' tokens'); },
       sec_title: 'Security',
       ssh_label: 'Maintenance access (SSH)', ssh_help: 'For tinkerers. Turns itself off after an hour.', ssh_on: 'on (1 h)',
+      ssh_key_l: 'SSH public key', ssh_key_help: 'Paste your public key (one line starting with ssh-ed25519 or ssh-rsa). The Jooki keeps it, even after an update.',
+      ssh_key_add: 'Add the key', ssh_key_clear: 'Forget the keys', ssh_key_added: 'Key added',
+      ssh_keys_n: function (n) { return n ? (n + (n > 1 ? ' keys saved' : ' key saved')) : 'No key saved'; },
+      err_ssh_key: 'This is not an SSH public key (one line ssh-ed25519… or ssh-rsa…).', err_ssh_closed: 'Open the maintenance access first.',
       mqtt_label: 'Home automation (MQTT on the network)', mqtt_help: 'For Home Assistant. Off by default.',
       mqtt_host_l: 'Host', mqtt_port_l: 'Port', mqtt_user_l: 'User', mqtt_pass_l: 'Password',
       parent_label: 'Parent code', parent_help: 'A 4-digit code stops children and guests from changing settings (deleting a playlist, Wi-Fi, starting an update).',
@@ -458,6 +466,10 @@
       n_tokens: function (n) { return n + (n === 1 ? ' figuurtje' : ' figuurtjes'); },
       sec_title: 'Beveiliging',
       ssh_label: 'Onderhoudstoegang (SSH)', ssh_help: 'Voor knutselaars. Gaat na een uur vanzelf uit.', ssh_on: 'aan (1 u)',
+      ssh_key_l: 'Openbare SSH-sleutel', ssh_key_help: 'Plak je openbare sleutel (één regel die begint met ssh-ed25519 of ssh-rsa). De Jooki bewaart hem, ook na een update.',
+      ssh_key_add: 'Sleutel toevoegen', ssh_key_clear: 'Sleutels vergeten', ssh_key_added: 'Sleutel toegevoegd',
+      ssh_keys_n: function (n) { return n ? (n + (n > 1 ? ' sleutels bewaard' : ' sleutel bewaard')) : 'Geen sleutel bewaard'; },
+      err_ssh_key: 'Dit is geen openbare SSH-sleutel (één regel ssh-ed25519… of ssh-rsa…).', err_ssh_closed: 'Open eerst de onderhoudstoegang.',
       mqtt_label: 'Domotica (MQTT op het netwerk)', mqtt_help: 'Voor Home Assistant. Standaard uit.',
       mqtt_host_l: 'Host', mqtt_port_l: 'Poort', mqtt_user_l: 'Gebruiker', mqtt_pass_l: 'Wachtwoord',
       parent_label: 'Oudercode', parent_help: 'Een 4-cijferige code voorkomt dat kinderen en gasten instellingen wijzigen (afspeellijst verwijderen, wifi, een update starten).',
@@ -793,6 +805,8 @@
     if (msg === 'invalid stream url') return t('err_radio');
     if (msg === 'invalid token type') return t('err_unknown_char');
     if (msg === 'Not playing spotify right now') return t('err_sp_not_playing');
+    if (msg === 'SSH_KEY_INVALID') return t('err_ssh_key');
+    if (msg === 'SSH_CLOSED') return t('err_ssh_closed');
     if (/does not exist|invalid:|nil playlistId|unknown token/.test(msg)) return t('err_gone');
     return t('err_generic');
   }
@@ -2001,6 +2015,26 @@
       h('label', { class: 'switch' }, h('span', null, t('ssh_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('ssh_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!m.ssh, 'data-k': 'ssh',
           onchange: function (e) { send(e.target.checked ? 'OJ_SSH_ON' : 'OJ_SSH_OFF', {}); } })),
+      // while the access is open: a public key, kept on the Jooki across updates
+      m.ssh ? h('div', { class: 'field', style: 'padding:0 16px 12px' },
+        h('span', null, t('ssh_key_l') + ' · ' + t('ssh_keys_n', Number(m.ssh_keys) || 0)),
+        h('div', { class: 'small muted' }, t('ssh_key_help')),
+        h('textarea', { class: 'input', rows: '3', 'data-k': 'sshkey', spellcheck: 'false', autocomplete: 'off', style: 'font-family:monospace;font-size:12px',
+          oninput: function (e) { ui.sshKey = e.target.value; } }, ui.sshKey || ''),
+        h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap;margin-top:8px' },
+          h('button', { class: 'btn', 'data-k': 'sshkeyadd', onclick: function () {
+            var k = String(ui.sshKey || '').trim();
+            if (!k) return;
+            var before = Number(m.ssh_keys) || 0, done = false;
+            waiters.push(function (partial) {
+              if (done) return true;
+              if (!partial.maintenance || !(Number(obj(S.maintenance).ssh_keys) > before || before >= 5)) return false;
+              done = true; ui.sshKey = ''; toast(t('ssh_key_added')); render(); return true;
+            });
+            onCmdError = function () { done = true; };     // refused: the usual error toast says why
+            send('OJ_SSH_KEY', { key: k });
+          } }, t('ssh_key_add')),
+          Number(m.ssh_keys) ? h('button', { class: 'btn ghost', 'data-k': 'sshkeyclear', onclick: function () { send('OJ_SSH_KEY', { clear: true }); } }, t('ssh_key_clear')) : null)) : null,
       h('label', { class: 'switch' }, h('span', null, t('mqtt_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('mqtt_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!m.mqtt_lan, 'data-k': 'mqttlan',
           onchange: function (e) { send('OJ_MQTT_LAN', { on: e.target.checked }); } }))

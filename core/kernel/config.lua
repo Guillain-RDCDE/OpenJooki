@@ -10,6 +10,8 @@ config.defaults = {
   scratch_dir = "/run/openjooki",             -- tmpfs scratch (never the flash)
   version_file = "/etc/openjooki-version",
   plugged_file = "/sys/kernel/htdrv/plugged",  -- "1" when the charger is in (read once at boot, like 1.x)
+  wifi_watchdog_file = "/data/openjooki/wifi_watchdog",   -- restarts in a row made by the Wi-Fi watchdog
+  quiet_boot_file = "/data/openjooki/quiet_boot",         -- present: the next start plays no "ready" chime
   -- bus
   mqtt_host = "127.0.0.1",
   mqtt_port = 1883,
@@ -17,6 +19,10 @@ config.defaults = {
   mqtt_keepalive_s = 30,
   mqtt_reconnect_min_s = 1,
   mqtt_reconnect_max_s = 30,
+  broker_watch_s = 20,                        -- broker unreachable this long -> start it again (0 = never)
+  -- Wi-Fi watchdog (services.network): offline this long, radios on, nothing playing -> restart the Jooki
+  wifi_watchdog_s = 10 * 60,                  -- 0 = never
+  wifi_watchdog_max = 2,                      -- restarts in a row without Wi-Fi, then it stops trying
   -- loop
   tick_s = 0.5,                               -- longest wait when nothing is due
   state_publish_min_interval_s = 0.25,        -- coalescing window for state patches

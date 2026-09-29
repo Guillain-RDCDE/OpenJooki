@@ -25,6 +25,87 @@ describe("services.network", function()
   end)
 end)
 
+describe("services.network — Wi-Fi watchdog", function()
+  local function kinds(r)
+    local out = {}
+    for _, c in ipairs((r and r.commands) or {}) do out[#out + 1] = c.kind .. (c.action and (" " .. c.action) or "") .. (c.path and (" " .. c.path) or "") end
+    return out
+  end
+  local function apply(doc, r) for k, v in pairs((r and r.state) or {}) do doc[k] = v end return r end
+  local function offline_doc(extra)
+    local doc = { net = { connected = false, ip = "" }, net_watch = { count = 0 }, flags = {}, device = { airplane = false },
+                  playback = { state = "idle" }, power = { connected = true } }
+    for k, v in pairs(extra or {}) do doc[k] = v end
+    return doc
+  end
+  local function has(r, s) for _, k in ipairs(kinds(r)) do if k == s then return true end end return false end
+
+  it("offline 10 minutes on the charger, nothing playing: a silent restart, counted on /data", function()
+    local doc = offline_doc()
+    apply(doc, network.on_timer(doc, { name = "network.status", now = 100 }))
+    assert_eq(doc.net_watch.since, 100)
+    local r = network.on_timer(doc, { name = "network.status", now = 100 + 599 })
+    assert_false(has(r, "shell watchdog_reboot"))
+    r = apply(doc, network.on_timer(doc, { name = "network.status", now = 100 + 600 }))
+    assert_true(has(r, "shell watchdog_reboot"))
+    assert_true(has(r, "files.write_text /data/openjooki/wifi_watchdog"))
+    assert_true(has(r, "files.write_text /data/openjooki/quiet_boot"))
+    assert_eq(doc.net_watch.count, 1)
+    -- still asks the chip for its state first, as before
+    assert_eq(r.commands[1].topic, "/j/esp32/output/net/sta/status")
+  end)
+
+  it("never while playing, on battery, in airplane mode, or after two restarts in a row", function()
+    local cases = {
+      { playback = { state = "playing" } }, { playback = { state = "idle", sys = { name = "Evt.X" } } },
+      { power = { connected = false } }, { flags = { WIFI_OFF = true } }, { flags = { OJ_AIRPLANE = true } },
+      { device = { airplane = { ends = 1 } } }, { net_watch = { count = 2 } },
+    }
+    for i, extra in ipairs(cases) do
+      local doc = offline_doc(extra)
+      doc.net_watch = extra.net_watch or { count = 0 }
+      apply(doc, network.on_timer(doc, { name = "network.status", now = 0 }))
+      local r = network.on_timer(doc, { name = "network.status", now = 5000 })
+      assert_false(has(r, "shell watchdog_reboot"), "case " .. i)
+    end
+  end)
+
+  it("the Wi-Fi back: the count goes back to 0 on /data; a short drop starts the 10 minutes again", function()
+    local doc = offline_doc({ net_watch = { count = 1 } })
+    apply(doc, network.on_timer(doc, { name = "network.status", now = 0 }))
+    doc.net = { connected = true, ip = "192.168.1.19" }
+    local r = apply(doc, network.on_timer(doc, { name = "network.status", now = 30 }))
+    assert_true(has(r, "files.write_text /data/openjooki/wifi_watchdog"))
+    assert_eq(doc.net_watch.count, 0); assert_nil(doc.net_watch.since)
+    assert_eq(kinds(network.on_timer(doc, { name = "network.status", now = 60 })), { "bus.publish" })   -- online: nothing more
+    doc.net = { connected = false }
+    apply(doc, network.on_timer(doc, { name = "network.status", now = 90 }))
+    assert_eq(doc.net_watch.since, 90)
+  end)
+
+  it("boot reads the restarts already made", function()
+    assert_eq(network.on_boot({ device = {} }, { now = 1, wifi_watchdog = "2\n" }).state.net_watch, { count = 2 })
+    assert_eq(network.on_boot({ device = {} }, { now = 1 }).state.net_watch, { count = 0 })
+  end)
+end)
+
+describe("adapters.broker_watch", function()
+  it("starts the broker after 20 s without it, then at most once a minute; quiet again once back", function()
+    local calls = {}
+    local w = require("adapters.broker_watch").new({ shell = { run = function(name) calls[#calls + 1] = name return "started", 0 end }, after_s = 20, every_s = 60 })
+    assert_nil(w:check(true, 0))
+    assert_nil(w:check(false, 1))
+    assert_nil(w:check(false, 20.9))
+    assert_eq(w:check(false, 21), "restart")
+    assert_nil(w:check(false, 50))
+    assert_eq(w:check(false, 81), "restart")
+    assert_eq(calls, { "broker_start", "broker_start" })
+    assert_nil(w:check(true, 82))
+    assert_nil(w:check(false, 83))           -- a new outage waits its 20 s again
+    assert_eq(w:check(false, 103), "restart")
+  end)
+end)
+
 describe("adapters.mdns packets", function()
   local function query(name, qtype, id)
     local q = ""

@@ -241,6 +241,10 @@ describe("services.device — lights and toy safe", function()
     local r = device.on_boot(doc_with(), { audiocfg = { volume = 70 }, flags = { TOY_SAFE_OFF = true }, now = 5 })
     assert_eq(r.state.audiocfg.volume, 70); assert_false(r.state.device.toy_safe)
     assert_eq(kinds(r)[1], "vol 70"); assert_eq(kinds(r)[#kinds(r)], "emit system.event Evt.Jooki.Ready")
+    -- after a restart by the Wi-Fi watchdog: no chime, and the marker file goes
+    r = device.on_boot(doc_with(), { audiocfg = {}, flags = {}, now = 5, quiet_boot = true })
+    local k = table.concat(kinds(r), "|")
+    assert_nil(k:find("Evt.Jooki.Ready", 1, true))
   end)
 
   it("boot tells the ESP32 at once, again at 1 and 3 s, until esp32_ctrl has answered once", function()

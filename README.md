@@ -19,7 +19,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.0.7:** put your Spotify music on a character, and Spotify connects again after a restart.
+**New in 2.0.8:** a safer start: the Jooki gets its Wi-Fi back by itself.
 [All the changes](CHANGELOG.md)
 
 ---

@@ -69,7 +69,8 @@ jobs:
             && python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py \
             && python3 test_security_backend.py && python3 e2e.py \
             && python3 test_security.py && python3 test_spotify.py \
-            && python3 ../../../core/spec/integration/endurance.py 3'
+            && python3 ../../../core/spec/integration/endurance.py 3 \
+            && python3 test_robustness.py'
       - name: "The Wi-Fi page (docs/wifi.html) against a scripted Jooki"
         run: cd tools/openjooki/tests && sudo -E python3 test_wifi_page.py
       - name: Bench logs (on failure)

@@ -8,6 +8,15 @@ local function is_ssid(s) return type(s) == "string" and #s >= 1 and #s <= 32 an
 local function is_lang(s) return type(s) == "string" and s:match("^[A-Z][A-Z]$") ~= nil end
 local function is_path(s) return type(s) == "string" and s:sub(1, 1) == "/" and not s:find("[%c'\"\\]") and not s:find("%.%.") end
 -- a network name: lower-case letters, digits, inner hyphens, 1-32 characters ("" = back to the factory name)
+-- an SSH public key on one line: its type, the base64 blob, an optional plain comment
+local function is_pubkey(s)
+  if type(s) ~= "string" or #s > 1000 then return false end
+  local kind, blob, rest = s:match("^(%S+) ([A-Za-z0-9+/]+=?=?)(.*)$")
+  if not (kind == "ssh-ed25519" or kind == "ssh-rsa" or (kind and kind:match("^ecdsa%-sha2%-nistp%d+$"))) then return false end
+  if #blob < 60 then return false end
+  return rest == "" or rest:match("^ [%w@%.%-_]+$") ~= nil
+end
+shell.is_pubkey = is_pubkey
 local function is_hostname(s) return type(s) == "string" and #s <= 32 and (s:match("^[a-z0-9]$") or s:match("^[a-z0-9][a-z0-9%-]*[a-z0-9]$")) ~= nil end
 
 -- name -> { argv = function(args) -> list | nil, err ; background = bool }
@@ -27,11 +36,37 @@ shell.ACTIONS = {
                              return { "/jooki/app/services/wifi_add_network.sh", "", a.ssid, a.password or "", a.lang or "EN" } end },
   power_overheat = { argv = function() return { "/jooki/app/services/power_overheat.sh" } end, background = true },
   factory_reset  = { argv = function() return { "/jooki/app/services/factory_reset.sh" } end },
+  -- the broker, when the core cannot reach it (adapters.broker_watch): started again only if it is not
+  -- running, exactly as /etc/rcS.d/S58_mosquitto.sh starts it at boot
+  broker_start   = { argv = function() return { "sh", "-c", [[
+if ps 2>/dev/null | grep -q '[m]osquitto -c'; then echo running; exit 0; fi
+rm -f /var/run/mosquitto.pid
+# detached from our pipe: a daemon holding it would keep the core waiting for its output for good
+/usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf -d </dev/null >/dev/null 2>&1 && echo started || echo failed]] } end },
   poweroff       = { argv = function() return { "/sbin/poweroff" } end },
   reboot         = { argv = function() return { "/sbin/reboot" } end },
+  -- the Wi-Fi watchdog's restart (services.network): never during an OpenJooki update
+  watchdog_reboot = { argv = function() return { "sh", "-c", [[
+if [ -e /tmp/oj-updating ]; then rm -f /data/openjooki/quiet_boot; echo updating; exit 0; fi
+logger -t openjooki-core "warn network.watchdog: restarting the Jooki to bring the Wi-Fi back"
+sync; sleep 1; /sbin/reboot]] } end, background = true },
   -- maintenance SSH (docs/adr/0007): a second dropbear on 2222 (the factory one on 22 keeps root off);
   -- turned off after an hour by the core. Killing targets only the 2222 instance, never port 22.
-  ssh_on         = { argv = function() return { "sh", "-c", "dropbear -p 2222 -R >/dev/null 2>&1; echo on" } end, background = true },
+  -- The keys live on /data (kept across A/B updates, which rewrite /home): put back before dropbear starts.
+  ssh_on         = { argv = function() return { "sh", "-c", [[
+K=/data/openjooki/authorized_keys; H=/home/root/.ssh
+if [ -s "$K" ]; then mkdir -p "$H" && chmod 700 "$H" && cp "$K" "$H/authorized_keys" && chmod 600 "$H/authorized_keys"; fi
+dropbear -p 2222 -R >/dev/null 2>&1; echo on]] } end, background = true },
+  -- a public key for the maintenance access (checked by the core: type, base64, comment), at most five kept
+  ssh_key_add    = { argv = function(a) if not is_pubkey(a.key) then return nil, "bad key" end
+                             return { "sh", "-c", [[
+K=/data/openjooki/authorized_keys; H=/home/root/.ssh
+mkdir -p /data/openjooki || exit 1
+touch "$K"; grep -qxF "$1" "$K" || printf '%s\n' "$1" >> "$K"
+tail -n 5 "$K" > "$K.tmp" && mv "$K.tmp" "$K" && chmod 600 "$K"
+mkdir -p "$H" && chmod 700 "$H" && cp "$K" "$H/authorized_keys" && chmod 600 "$H/authorized_keys"
+sync; echo ok]], "ssh_key_add", a.key } end },
+  ssh_key_clear  = { argv = function() return { "sh", "-c", "rm -f /data/openjooki/authorized_keys /home/root/.ssh/authorized_keys; sync; echo ok" } end },
   ssh_off        = { argv = function() return { "sh", "-c",
                              "for p in $(ps 2>/dev/null | grep 'dropbear -p 2222' | grep -v grep | awk '{print $1}'); do kill $p 2>/dev/null; done; echo off" } end },
   -- MQTT on the LAN for home automation: flip the flag, then let the boot script rebuild the

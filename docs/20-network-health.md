@@ -79,6 +79,35 @@ port could not be shared the Jooki simply works without the name.
 - Never remove the network that works before the new one is proven: the Jooki
   cannot be reached remotely without Wi-Fi.
 
+## A safer start (29/09/2026, after the next release)
+
+- **The chip can stay stuck** on "connecting" (28/09: unreachable, 18 drops since the
+  start, back only through the Bluetooth page). Nothing on the original system wakes
+  it: the core only read its state every 30 s. Since `disconnect` is refused, a
+  restart is the way back, so the core does it (`services.network` watchdog): ten
+  minutes offline in a row (`wifi_watchdog_s`), radios supposed on (no airplane mode),
+  nothing playing, on the charger (on battery the Jooki switches itself off after
+  15 min anyway). At most two restarts in a row (`wifi_watchdog_max`, the count in
+  `/data/openjooki/wifi_watchdog`, back to 0 once online), none during an update
+  (`/tmp/oj-updating`), and silent (`/data/openjooki/quiet_boot`: no ready chime).
+- **The factory network came back at every start.** The original
+  `S55_ml-start-wifi.sh` ran `esp32_cmd add_ap mnet2 muuselabs256` at every boot:
+  forgotten on 28/09, our Jooki remembered it again on 29/09. Since the chip tries
+  the others after the last one, it spent tries on a network no home has. OpenJooki's
+  S55 no longer adds it and removes it when a real network is known too. It also
+  waits 30 s for the chip instead of 10, and no longer writes `/data/mode/FACTORY`
+  (for good) when the chip is slow: it logs instead.
+- **The broker had no keeper**: if mosquitto failed to start or stopped, every
+  daemon went deaf and nothing restarted it. The core starts it again after 20 s
+  without it (`adapters.broker_watch`, only if it is not running), and no longer
+  spins while it waits (the bus sleeps its turn when there is no broker).
+- `S58_mosquitto.sh` no longer takes `/mnt/config/mosquitto.conf` (the card's FAT
+  partition, writable from any computer) over the broker's own settings.
+- **Trap for anyone replacing a start script**: the original is kept next to it
+  (`/etc/rcS.d/S55_ml-start-wifi.sh.openjooki-orig`), and the boot loop runs every
+  `S??*` file of that folder. OpenJooki's `rcS` skips `*.openjooki-orig`, or both the
+  new and the original script would run (checked by `tests/test_robustness.py` R5).
+
 ## Tests
 
 - `tests/test_net.py` (13): log cleanup, Wi-Fi state, access point without log

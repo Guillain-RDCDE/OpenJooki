@@ -109,7 +109,11 @@ end
 --- Read what is available (waiting at most `timeout` seconds) and return the messages.
 function bus:poll(timeout, now)
   local out = {}
-  if not self.up then return out end
+  if not self.up then
+    -- no broker: still wait the turn's time, or the loop would spin and burn the CPU (and the battery)
+    if (timeout or 0) > 0 and self.socket_lib.sleep then self.socket_lib.sleep(timeout) end
+    return out
+  end
   local sel = self.socket_lib.select({ self.sock }, nil, timeout or 0)
   if #sel == 0 then return out end
   local data, err, partial = self.sock:receive(4096)

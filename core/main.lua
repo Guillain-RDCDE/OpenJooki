@@ -44,6 +44,14 @@ if cfg_path then
     if ok and type(t) == "table" then overrides = t end
   end
 end
+-- a real Jooki (its hardware driver), not the bench: the bench harness gives the C host's four
+-- functions too, so they do not tell. The two watchdogs act on the machine: never off a Jooki,
+-- unless a test sets them on purpose.
+local ON_JOOKI = (function() local f = io.open("/sys/kernel/htdrv/mac", "r") if f then f:close() return true end return false end)()
+if not ON_JOOKI then
+  if overrides.wifi_watchdog_s == nil then overrides.wifi_watchdog_s = 0 end
+  if overrides.broker_watch_s == nil then overrides.broker_watch_s = 0 end
+end
 config.load(overrides)
 
 -- adapters
@@ -60,6 +68,9 @@ local bus = require("adapters.bus").new({
              "/j/spotify/input/#", "/j/deezer/input/#" },
 })
 local mdns = require("adapters.mdns").new()
+-- the broker has no other keeper (on a Jooki; on the bench only when a test asks for it)
+local broker_watch = config.get("broker_watch_s") > 0
+  and require("adapters.broker_watch").new({ shell = shell, after_s = config.get("broker_watch_s") }) or nil
 local adapters = { bus = bus, files = files, clock = clock, host = host, shell = shell, mdns = mdns }
 mark("adapters")
 
@@ -143,6 +154,7 @@ end
 
 loop.init(adapters, { translate = translate_with_time, publisher = publisher,
   each_turn = function(doc)   -- the name on the network, answered from the loop (no handler involved)
+    if broker_watch then broker_watch:check(bus:connected(), clock.now()) end
     if mdns:available() and doc.net then
       -- only its own name: web_ctrl (closed) redirects any other Host, jooki.local included, to
       -- Muuselabs' dead setup site (docs/20). Names are kept lower case by the adapter.
@@ -185,6 +197,9 @@ local boot_event = {
   -- the power controller only reports a cable change: without this a Jooki plugged in at boot
   -- would believe it runs on battery and power itself off after 15 min of silence
   plugged = (files.read_text(config.get("plugged_file")) or ""):match("^%s*([01])"),
+  -- the Wi-Fi watchdog (services.network): restarts it already made in a row, and a silent start after one
+  wifi_watchdog = files.read_text(config.get("wifi_watchdog_file")),
+  quiet_boot = files.exists(config.get("quiet_boot_file")),
 }
 mark("files")
 loop.emit(boot_event)

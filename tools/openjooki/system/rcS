@@ -9,6 +9,9 @@ for i in /etc/rcS.d/S??* /etc/rc5.d/S??* ;do
 
      # Ignore dangling symlinks (if any).
      [ ! -f "$i" ] && continue
+     # OpenJooki: the originals of the start scripts it replaces are kept next to them
+     # (S55_ml-start-wifi.sh.openjooki-orig...): never run them as well
+     case "$i" in *.openjooki-orig) continue ;; esac
      # OpenJooki: timestamp each script in the kernel log (dmesg), to measure the boot
      if [ -w /dev/kmsg ]; then echo "openjooki-boot: $i" > /dev/kmsg; fi
 

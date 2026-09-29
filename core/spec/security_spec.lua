@@ -12,6 +12,7 @@ local function has_shell(cmds, action) return find(cmds, "shell", "action", acti
 describe("services.security", function()
   before_each(function()
     security._set_parent_code(nil)
+    security._set_ssh_keys({})
     security._files = nil
   end)
 
@@ -30,6 +31,30 @@ describe("services.security", function()
     assert_nil(r.state.maintenance.ssh_until)
     assert_true(has_shell(r.commands, "ssh_off"))
     assert_eq(find(r.commands, "timer.cancel").name, "security.ssh_off")
+  end)
+
+  it("an SSH public key is accepted only while the access is open, and only a real one", function()
+    local KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGq7T1kq0rQw0Yl2m1nV4p9ZxKqvB0cVd7mH3sJk2LtR owner@mac.local"
+    local _, err = security.on_ssh_key({ maintenance = { ssh = false } }, { key = KEY })
+    assert_eq(err.message, "SSH_CLOSED")
+    local open = { maintenance = { ssh = true, ssh_keys = 0 } }
+    for _, bad in ipairs({ "hello", "ssh-ed25519 short", "ssh-rsa AAAA; rm -rf /", KEY .. "\nssh-rsa AAAA", "ssh-dss " .. KEY:sub(13), KEY .. " 'quoted'" }) do
+      local _, e = security.on_ssh_key(open, { key = bad })
+      assert_eq(e and e.message, "SSH_KEY_INVALID", bad)
+    end
+    local r = security.on_ssh_key(open, { key = "  " .. KEY .. "\n" })
+    local c = find(r.commands, "shell", "action", "ssh_key_add")
+    assert_eq(c.args.key, KEY); assert_eq(r.state.maintenance.ssh_keys, 1)
+    -- the same key again: still one (the page shows the file's count)
+    assert_eq(security.on_ssh_key(open, { key = KEY }).state.maintenance.ssh_keys, 1)
+    for i = 1, 6 do security.on_ssh_key(open, { key = "ssh-ed25519 " .. string.rep("B", 60 + i) }) end
+    assert_eq(security.on_ssh_key(open, { key = KEY }).state.maintenance.ssh_keys, 5)
+    assert_true(require("adapters.shell").is_pubkey("ssh-rsa " .. string.rep("A", 300) .. "== guillain@Mac-mini.local"))
+    r = security.on_ssh_key({ maintenance = { ssh = true, ssh_keys = 2 } }, { clear = true })
+    assert_true(has_shell(r.commands, "ssh_key_clear")); assert_eq(r.state.maintenance.ssh_keys, 0)
+    -- the shell action gets the key as one argument, never inside the script text
+    local argv = require("adapters.shell")._argv("ssh_key_add", { key = KEY })
+    assert_eq(argv[#argv], KEY); assert_nil(argv[3]:find(KEY, 1, true))
   end)
 
   it("the one-hour timer turns SSH off", function()

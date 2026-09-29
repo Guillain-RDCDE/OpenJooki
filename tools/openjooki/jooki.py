@@ -470,11 +470,16 @@ CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh",
                      # the broker: page's WebSocket needs a per-Jooki password (docs/adr/0007)
                      "/etc/mosquitto/mosquitto.conf": "mosquitto.conf",
                      # generates that password before the broker starts (S58) and serves it to the page
-                     "/etc/rcS.d/S57_oj-security.sh": "oj-security.sh"}
+                     "/etc/rcS.d/S57_oj-security.sh": "oj-security.sh",
+                     # Wi-Fi start: no factory network added at every start, 30 s for the chip, no sticky factory flag
+                     "/etc/rcS.d/S55_ml-start-wifi.sh": "S55_ml-start-wifi.sh",
+                     # the broker always starts from its own settings, never from the card's FAT partition
+                     "/etc/rcS.d/S58_mosquitto.sh": "S58_mosquitto.sh"}
 def system_files(core=None): return dict(SYSTEM_FILES, **(CORE_SYSTEM_FILES if core else {}))
 # Files that must stay executable (init runs rcS directly: without +x the Jooki would not start).
 SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755", "/jooki/bin/ml-jooki-hostname.sh": "755",
-                "/etc/rcS.d/S57_oj-security.sh": "755"}
+                "/etc/rcS.d/S57_oj-security.sh": "755", "/etc/rcS.d/S55_ml-start-wifi.sh": "755",
+                "/etc/rcS.d/S58_mosquitto.sh": "755"}
 def file_mode(path): return SYSTEM_MODES.get(path, "644")
 
 def ssh_bytes(host, remote_cmd, data=None, timeout=120):

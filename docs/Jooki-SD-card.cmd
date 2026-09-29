@@ -42,6 +42,9 @@ $Releases = 'https://github.com/Guillain-RDCDE/OpenJooki/releases'
 # (the Jooki updates itself once it starts); sdcard.json describes it
 $Manifests = @("$Releases/download/sdcard/sdcard.json")
 if ($env:JOOKI_SD_MANIFEST) { $Manifests = @($env:JOOKI_SD_MANIFEST) }
+# the original Jooki card (docs/27): the Muuselabs system of December 2022, rebuilt byte for byte, no OpenJooki
+$OriginalManifests = @("$Releases/download/original/original.json")
+if ($env:JOOKI_SD_ORIGINAL_MANIFEST) { $OriginalManifests = @($env:JOOKI_SD_ORIGINAL_MANIFEST) }
 $MinNewCard = 3000000000
 
 Add-Type -TypeDefinition @'
@@ -275,9 +278,9 @@ function Write-CardToDisk([int]$num, [long]$size, [string]$image, [scriptblock]$
 
 # ---------------------------------------------------------------- a new card from scratch
 # sdcard.json of the release: version, file, sha256, bytes (the .gz), image_bytes, image_sha256 (unpacked)
-function Get-Manifest {
+function Get-Manifest($urls = $Manifests) {
     $last = $null
-    foreach ($u in $Manifests) {
+    foreach ($u in $urls) {
         try {
             $wc = New-Object Net.WebClient; $wc.Headers['User-Agent'] = 'Jooki-SD-card'
             $m = $wc.DownloadString($u) | ConvertFrom-Json
@@ -335,9 +338,9 @@ function Expand-Image([string]$gz, [string]$img, [long]$bytes, [string]$sha, [sc
 }
 
 # The complete card image, ready to write: fetched into $dir, checked, unpacked, checked. Returns its path.
-function Get-NewCardImage([string]$dir, [scriptblock]$progress, [scriptblock]$status) {
+function Get-NewCardImage([string]$dir, [scriptblock]$progress, [scriptblock]$status, [bool]$original = $false) {
     & $status (T "Looking up the card image..." "Recherche de l'image de la carte...")
-    $m = Get-Manifest
+    $m = if ($original) { Get-Manifest $OriginalManifests } else { Get-Manifest }
     $gz = Join-Path $dir ("Jooki-new-card-{0}.img.gz" -f $m.version)
     $img = Join-Path $dir ("Jooki-new-card-{0}.img" -f $m.version)
     # room for what is not there yet (a previous run's files are reused)
@@ -367,8 +370,8 @@ if ($env:JOOKI_SD_TEST) {
         }
         $t = [JookiSd]::Open($a[2], $true)
         try { $n = Write-Card $img $t $t.Length $null $say } finally { $t.Dispose() }
-    } elseif ($a[0] -eq 'fetch') {       # "fetch|<dir>": download + unpack + check only
-        $img = Get-NewCardImage $a[1] $nop $say
+    } elseif ($a[0] -eq 'fetch') {       # "fetch|<dir>[|original]": download + unpack + check only
+        $img = Get-NewCardImage $a[1] $nop $say ($a[2] -eq 'original')
         Write-Host "OK image $img ($((Get-Item $img).Length) bytes)"; return
     } elseif ($a[0] -eq 'disks') {       # "disks|<source disk>|<target disk>|<image file>": the window's own two steps
         $sd = Get-Disk -Number ([int]$a[1]); $td = Get-Disk -Number ([int]$a[2])
@@ -401,7 +404,7 @@ function Label-Of($d) { Fmt "{0}  ·  {1:N1} {2}" $d.FriendlyName ($d.Size / 1e9
 
 $form = New-Object Windows.Forms.Form
 $form.Text = T "Jooki: move to a bigger SD card" "Jooki : passer à une plus grande carte SD"
-$form.ClientSize = New-Object Drawing.Size(560, 330); $form.StartPosition = 'CenterScreen'
+$form.ClientSize = New-Object Drawing.Size(560, 352); $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'; $form.MaximizeBox = $false
 $form.Font = New-Object Drawing.Font('Segoe UI', 10)
 
@@ -414,13 +417,15 @@ $go = New-Object Windows.Forms.Button; $go.Location = '20,190'; $go.Size = '520,
 $go.Font = New-Object Drawing.Font('Segoe UI', 11, [Drawing.FontStyle]::Bold)
 $go2 = New-Object Windows.Forms.Button; $go2.Location = '20,244'; $go2.Size = '520,44'; $go2.Visible = $false   # the first screen's second choice
 $go2.Font = New-Object Drawing.Font('Segoe UI', 11, [Drawing.FontStyle]::Bold)
+$go3 = New-Object Windows.Forms.Button; $go3.Location = '20,298'; $go3.Size = '520,44'; $go3.Visible = $false   # the first screen's third choice
+$go3.Font = New-Object Drawing.Font('Segoe UI', 10)
 $bar = New-Object Windows.Forms.ProgressBar; $bar.Location = '20,250'; $bar.Size = '520,22'; $bar.Maximum = 1000
 $info = New-Object Windows.Forms.Label; $info.Location = '20,280'; $info.Size = '520,40'
-$form.Controls.AddRange(@($title, $text, $combo, $refresh, $go, $go2, $bar, $info))
+$form.Controls.AddRange(@($title, $text, $combo, $refresh, $go, $go2, $go3, $bar, $info))
 
-# step 0 = the choice; 1, 2, 3 = a bigger card; 'n1' then 3 = a new card from scratch
+# step 0 = the choice; 1, 2, 3 = a bigger card; 'n1' then 3 = a new card from scratch; 'o1' then 3 = the original Jooki
 $state = @{ step = 0; mode = ''; image = $null; srcBytes = 0 }
-if ($env:JOOKI_SD_PREVIEW -and $env:JOOKI_SD_PREVIEW_STEP) { $state.step = if ($env:JOOKI_SD_PREVIEW_STEP -eq 'n1') { 'n1' } else { [int]$env:JOOKI_SD_PREVIEW_STEP }; $state.mode = if ($state.step -eq 'n1') { 'new' } else { 'bigger' } }
+if ($env:JOOKI_SD_PREVIEW -and $env:JOOKI_SD_PREVIEW_STEP) { $state.step = if ($env:JOOKI_SD_PREVIEW_STEP -in 'n1', 'o1') { $env:JOOKI_SD_PREVIEW_STEP } else { [int]$env:JOOKI_SD_PREVIEW_STEP }; $state.mode = @{ n1 = 'new'; o1 = 'original' }[[string]$state.step]; if (-not $state.mode) { $state.mode = 'bigger' } }
 $progress = { param($done, $total) $bar.Value = [int](1000 * $done / $total); $info.Text = Fmt "{0:N1} / {1:N1} {2}" ($done / 1e9) ($total / 1e9) (T "GB" "Go"); [Windows.Forms.Application]::DoEvents() }
 $status = { param($m) $title.Text = $m; [Windows.Forms.Application]::DoEvents() }
 
@@ -428,7 +433,7 @@ function Fill-Cards {
     $combo.Items.Clear()
     if ($state.step -eq 0 -or $state.step -eq 3) { return }
     $cards = if ($env:JOOKI_SD_DEMO -and $env:JOOKI_SD_PREVIEW) { @([pscustomobject]@{ FriendlyName = 'Generic SD/MMC Card Reader'; Size = 7948206080; Number = -1 }) } else { Get-Cards }   # picture for the docs
-    if ($state.step -eq 'n1') { $cards = @($cards | Where-Object { $_.Size -ge $MinNewCard }) }
+    if ($state.step -eq 'n1' -or $state.step -eq 'o1') { $cards = @($cards | Where-Object { $_.Size -ge $MinNewCard }) }
     foreach ($d in $cards) { $combo.Items.Add([pscustomobject]@{ Disk = $d; Text = (Label-Of $d) }) | Out-Null }
     $combo.DisplayMember = 'Text'
     if ($combo.Items.Count) { $combo.SelectedIndex = 0 }
@@ -438,12 +443,13 @@ function Fill-Cards {
 function Show-Step {
     $bar.Value = 0; $info.Text = ''
     $choice = $state.step -eq 0
-    $combo.Visible = -not $choice; $refresh.Visible = -not $choice; $bar.Visible = -not $choice; $go2.Visible = $choice
+    $combo.Visible = -not $choice; $refresh.Visible = -not $choice; $bar.Visible = -not $choice; $info.Visible = -not $choice; $go2.Visible = $choice; $go3.Visible = $choice
     if ($choice) {
         $title.Text = T "Your Jooki" "Ton Jooki"
         $text.Text = T "What do you want to do?" "Que veux-tu faire ?"
         $go.Text = T "A bigger card: more room for music" "Une carte plus grande : plus de place pour la musique"
         $go2.Text = T "A new card: my Jooki does not start any more" "Une carte neuve : mon Jooki ne démarre plus"
+        $go3.Text = T "The original Jooki: back to the program it was sold with" "Le Jooki d'origine : revenir au programme d'usine"
         $go.Enabled = $true
     } elseif ($state.step -eq 1) {
         $title.Text = T "1. The Jooki's card" "1. La carte du Jooki"
@@ -457,9 +463,15 @@ function Show-Step {
         $title.Text = T "A new card for the Jooki" "Une carte neuve pour le Jooki"
         $text.Text = T "Put a NEW micro SD card (4 GB or more) in this computer, then choose it below: everything on it will be erased.`nThe complete card (about 200 MB to download) is fetched, checked, written and read back: allow about ten minutes." "Mets une NOUVELLE carte micro SD (4 Go ou plus) dans cet ordinateur, puis choisis-la ci-dessous : tout ce qui est dessus sera effacé.`nLa carte complète (environ 200 Mo à télécharger) est récupérée, vérifiée, écrite puis relue : compte une dizaine de minutes."
         $go.Text = T "Download and write the new card" "Télécharger et écrire la carte neuve"
+    } elseif ($state.step -eq 'o1') {
+        $title.Text = T "The original Jooki" "Le Jooki d'origine"
+        $text.Text = T "The Jooki as it was sold, without OpenJooki. Choose a micro SD card of 4 GB or more: everything on it will be erased. Keep the Jooki's own card: it is your way back.`nWithout the official app, now gone, it can no longer be set up from a phone." "Le Jooki tel qu'il était vendu, sans OpenJooki. Choisis une carte micro SD de 4 Go ou plus : tout ce qui est dessus sera effacé. Garde la carte du Jooki : c'est ton retour en arrière.`nSans l'appli officielle, disparue, il ne se règle plus depuis un téléphone."
+        $go.Text = T "Download and write the original card" "Télécharger et écrire la carte d'origine"
     } else {
         $title.Text = T "3. Done!" "3. C'est prêt !"
-        if ($state.mode -eq 'new') {
+        if ($state.mode -eq 'original') {
+            $text.Text = T "Put the card in the Jooki and switch it on: it starts as it did out of the box.`nTo come back to OpenJooki, put the Jooki's own card back, or install OpenJooki again from its page." "Mets la carte dans le Jooki et allume-le : il démarre comme à la sortie de sa boîte.`nPour revenir à OpenJooki, remets la carte du Jooki, ou réinstalle OpenJooki depuis sa page."
+        } elseif ($state.mode -eq 'new') {
             $text.Text = T "Put the card in the Jooki and switch it on. The first start takes a little longer (it prepares the card).`nThen open the Jooki's page as after a first install: its library is empty, ready for your music. It should find your Wi-Fi by itself; if not, set it up as for a new Jooki." "Mets la carte dans le Jooki et allume-le. Le premier démarrage prend un peu plus de temps (il prépare la carte).`nOuvre ensuite la page du Jooki comme après une première installation : sa bibliothèque est vide, prête pour ta musique. Il devrait retrouver ton Wi-Fi tout seul ; sinon, règle-le comme pour un Jooki neuf."
         } else {
             $text.Text = T "Put the new card in the Jooki and switch it on. At the first start it uses all the space by itself (it can take a minute longer).`nIf anything goes wrong, just put the old card back." "Mets la nouvelle carte dans le Jooki et allume-le. Au premier démarrage, il utilise tout l'espace tout seul (ça peut prendre une minute de plus).`nEn cas de souci, remets simplement l'ancienne carte."
@@ -470,6 +482,7 @@ function Show-Step {
 
 $refresh.Add_Click({ Fill-Cards })
 $go2.Add_Click({ $state.mode = 'new'; $state.step = 'n1'; Show-Step; Fill-Cards })
+$go3.Add_Click({ $state.mode = 'original'; $state.step = 'o1'; Show-Step; Fill-Cards })
 $go.Add_Click({
     if ($state.step -eq 0) { $state.mode = 'bigger'; $state.step = 1; Show-Step; Fill-Cards; return }
     if ($state.step -eq 3) { $form.Close(); return }
@@ -485,11 +498,11 @@ $go.Add_Click({
             $state.image = Join-Path $dir ("Jooki-card-{0:yyyyMMdd-HHmm}.img" -f (Get-Date))
             Read-Card $d.Number $d.Size $state.image $progress $status
             $state.srcBytes = $d.Size; $state.step = 2
-        } elseif ($state.step -eq 'n1') {
+        } elseif ($state.step -eq 'n1' -or $state.step -eq 'o1') {
             if ($d.Size -lt $MinNewCard) { throw (T "This card is too small: the new card needs 4 GB or more." "Cette carte est trop petite : il faut 4 Go ou plus.") }
             $ok = [Windows.Forms.MessageBox]::Show(((T "Erase EVERYTHING on this card?`n`n{0}" "Effacer TOUT le contenu de cette carte ?`n`n{0}") -f (Label-Of $d)), $form.Text, 'YesNo', 'Warning')
             if ($ok -ne 'Yes') { return }
-            $state.image = Get-NewCardImage ([Environment]::GetFolderPath('MyDocuments')) $progress $status
+            $state.image = Get-NewCardImage ([Environment]::GetFolderPath('MyDocuments')) $progress $status ($state.step -eq 'o1')
             Write-CardToDisk $d.Number $d.Size $state.image $progress $status | Out-Null
             $state.step = 3
         } else {
@@ -501,7 +514,7 @@ $go.Add_Click({
         }
         Show-Step
     } catch {
-        $tail = if ($state.mode -eq 'new') { T "Nothing was written on the card yet, or it was not finished: run the tool again." "Rien n'a été écrit sur la carte, ou l'écriture n'a pas été finie : relance l'outil." } else { T "Nothing was written on the Jooki's card." "Rien n'a été écrit sur la carte du Jooki." }
+        $tail = if ($state.mode -eq 'new' -or $state.mode -eq 'original') { T "Nothing was written on the card yet, or it was not finished: run the tool again." "Rien n'a été écrit sur la carte, ou l'écriture n'a pas été finie : relance l'outil." } else { T "Nothing was written on the Jooki's card." "Rien n'a été écrit sur la carte du Jooki." }
         [Windows.Forms.MessageBox]::Show(((T "It did not work: {0}`n`n{1}" "Ça n'a pas marché : {0}`n`n{1}") -f $_.Exception.Message, $tail), $form.Text, 'OK', 'Error') | Out-Null
         Show-Step
     } finally {

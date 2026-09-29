@@ -35,6 +35,8 @@ BENCH = os.environ.get("JOOKI_SD_BENCH") == "1"     # tests: any block device gi
 # releases (the Jooki updates itself once it starts); sdcard.json says its name, sizes and SHA-256
 RELEASES = "https://github.com/Guillain-RDCDE/OpenJooki/releases"
 MANIFESTS = [RELEASES + "/download/sdcard/sdcard.json"]
+# the original Jooki card (docs/27): the Muuselabs system of December 2022, rebuilt byte for byte, no OpenJooki
+ORIGINAL_MANIFESTS = [RELEASES + "/download/original/original.json"]
 MIN_NEW_CARD = 3 * 10**9                            # a new card must hold the image and then some
 
 
@@ -476,6 +478,7 @@ def main(argv=None):
     p = sub.add_parser("grow"); p.add_argument("card")
     p = sub.add_parser("new"); p.add_argument("card"); p.add_argument("--image", help="a card image already downloaded (.img or .img.gz)")
     p.add_argument("--yes", action="store_true"); p.add_argument("--folder", help="where the image is downloaded (default: ~/Documents)")
+    p.add_argument("--original", action="store_true", help="the original Jooki (as sold, without OpenJooki) instead of OpenJooki")
     p = sub.add_parser("web"); p.add_argument("--port", type=int, default=0); p.add_argument("--token")
     p.add_argument("--no-browser", action="store_true")
     a = ap.parse_args(argv)
@@ -491,8 +494,9 @@ def main(argv=None):
             else:
                 folder = a.folder or os.path.join(os.path.expanduser("~" + (os.environ.get("SUDO_USER") or "")), "Documents")
                 folder = folder if os.path.isdir(folder) else os.getcwd()
-                image, m = new_card_image(folder, _cli_progress, _cli_status)
-                print("card image: OpenJooki %s (%s)" % (m["version"], image))
+                man = fetch_manifest(ORIGINAL_MANIFESTS if a.original else None)
+                image, m = new_card_image(folder, _cli_progress, _cli_status, man)
+                print("card image: %s %s (%s)" % ("the original Jooki," if a.original else "OpenJooki", m["version"], image))
             n = write_card_to_disk(image, card, _cli_progress, _cli_status)
             print("OK: a new Jooki card, music partition = %d sectors (%.1f GB). Put it in the Jooki and switch it on." % (n, n * SECTOR / 1e9))
         elif a.cmd == "list":
@@ -538,11 +542,14 @@ button{background:var(--accent);color:#fff;border:0;font-weight:700;margin-top:1
 .ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-weight:600}
 .bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin:18px 0 6px}.bar i{display:block;height:100%;width:0;background:var(--accent)}
 .muted{color:var(--muted);font-size:.9em}.err{color:#c43a2f;font-weight:600}</style></head><body><main>
-<h1 id="t"></h1><p id="x"></p><select id="s"></select><button class="ghost" id="r"></button><button id="g"></button><button class="ghost" id="h"></button>
+<h1 id="t"></h1><p id="x"></p><select id="s"></select><button class="ghost" id="r"></button><button id="g"></button><button class="ghost" id="h"></button><button class="ghost" id="o"></button>
 <div class="bar"><i id="b"></i></div><div class="muted" id="i"></div></main><script>
 var TOKEN=%TOKEN%, fr=(navigator.language||'').slice(0,2)=='fr';
 var T={t0:['Your Jooki','Ton Jooki'],x0:['What do you want to do?','Que veux-tu faire ?'],
 g0:['A bigger card: more room for music','Une carte plus grande : plus de place pour la musique'],h0:['A new card: my Jooki does not start any more','Une carte neuve : mon Jooki ne démarre plus'],
+o0:['The original Jooki: back to the program it was sold with','Le Jooki d'origine : revenir au programme d'usine'],
+to1:['The original Jooki','Le Jooki d'origine'],xo1:['This card holds the Jooki exactly as it was sold (its program of December 2022), without OpenJooki. Put a micro SD card (4 GB or more) in this computer, then choose it below: everything on it will be erased. Keep the Jooki's own card safe: it is your way back to OpenJooki and your music. Note: the official app and Jooki's servers are gone, so the original program can no longer be managed from a phone.','Cette carte contient le Jooki exactement tel qu'il était vendu (son programme de décembre 2022), sans OpenJooki. Mets une carte micro SD (4 Go ou plus) dans cet ordinateur, puis choisis-la ci-dessous : tout ce qui est dessus sera effacé. Garde précieusement la carte du Jooki : c'est ton retour vers OpenJooki et ta musique. À savoir : l'appli officielle et les serveurs de Jooki n'existent plus, le programme d'origine ne peut donc plus être réglé depuis un téléphone.'],
+go1:['Download and write the original card','Télécharger et écrire la carte d'origine'],x3o:['Put the card in the Jooki and switch it on: it starts as it did out of the box. To come back to OpenJooki, put the Jooki's own card back, or install OpenJooki again from its page.','Mets la carte dans le Jooki et allume-le : il démarre comme à la sortie de sa boîte. Pour revenir à OpenJooki, remets la carte du Jooki, ou réinstalle OpenJooki depuis sa page.'],
 t1:['1. The Jooki\'s card','1. La carte du Jooki'],x1:['Take the SD card out of the Jooki and put it in this computer (with a card reader if needed), then choose it below. It is only READ: nothing is ever written on it. A copy is kept in your Documents.','Sors la carte SD du Jooki et mets-la dans cet ordinateur (avec un lecteur de cartes si besoin), puis choisis-la ci-dessous. Elle est seulement LUE : rien n\'y est jamais écrit. Une copie est gardée dans tes Documents.'],
 g1:['Read the Jooki\'s card','Lire la carte du Jooki'],t2:['2. The new, bigger card','2. La nouvelle carte, plus grande'],x2:['Take out the Jooki\'s card (keep it safe: it is your way back) and put the NEW card in, then click Refresh and choose it. Everything on the new card will be erased.','Retire la carte du Jooki (garde-la précieusement : c\'est ton retour en arrière) et mets la NOUVELLE carte, puis clique sur Actualiser et choisis-la. Tout ce qui est sur la nouvelle carte sera effacé.'],
 g2:['Write and enlarge the new card','Écrire et agrandir la nouvelle carte'],t3:['3. Done!','3. C\'est prêt !'],x3:['Put the new card in the Jooki and switch it on. At the first start it uses all the space by itself. If anything goes wrong, just put the old card back.','Mets la nouvelle carte dans le Jooki et allume-le. Au premier démarrage, il utilise tout l\'espace tout seul. En cas de souci, remets simplement l\'ancienne carte.'],
@@ -557,8 +564,8 @@ function t(k){return T[k][fr?1:0]}function $(i){return document.getElementById(i
 function gb(n){return (n/1e9).toLocaleString(fr?'fr-FR':'en-US',{minimumFractionDigits:1,maximumFractionDigits:1})+' '+t('GB')}
 function api(p,body){return fetch(p+'?token='+TOKEN,{method:body?'POST':'GET',body:body?JSON.stringify(body):null}).then(function(r){return r.json()})}
 var step=0,mode='',busy=false;
-function show(){ var x=(step==3&&mode=='new')?'3n':step; $('t').textContent=t('t'+step); $('x').textContent=t('x'+x); $('g').textContent=t('g'+step); $('h').textContent=t('h0'); $('r').textContent=t('r');
-  $('s').style.display=$('r').style.display=(step==3||step==0)?'none':''; $('h').style.display=step==0?'':'none'; $('g').disabled=false; }
+function show(){ var x=(step==3&&mode=='new')?'3n':(step==3&&mode=='original')?'3o':step; $('t').textContent=t('t'+step); $('x').textContent=t('x'+x); $('g').textContent=t('g'+step); $('h').textContent=t('h0'); $('o').textContent=t('o0'); $('r').textContent=t('r');
+  $('s').style.display=$('r').style.display=(step==3||step==0)?'none':''; $('h').style.display=$('o').style.display=step==0?'':'none'; $('g').disabled=false; }
 function cards(){ if(step==0||step==3)return; api('/cards').then(function(c){ var s=$('s'); s.innerHTML='';
   c.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.dataset.size=d.size;o.textContent=d.name+'  ·  '+gb(d.size);s.appendChild(o)});
   $('g').disabled=!c.length; $('i').textContent=c.length?'':t('none'); }); }
@@ -568,11 +575,12 @@ function poll(){ api('/status').then(function(st){ if(st.key){$('t').textContent
   step=st.step; mode=st.mode||mode; $('b').style.width='0'; show(); cards(); $('g').disabled=false; }); }
 $('r').onclick=cards;
 $('h').onclick=function(){ if(busy)return; mode='new'; step='n1'; api('/mode',{mode:mode}).then(function(){show();cards()}); };
+$('o').onclick=function(){ if(busy)return; mode='original'; step='o1'; api('/mode',{mode:mode}).then(function(){show();cards()}); };
 $('g').onclick=function(){ if(busy)return; if(step==0){mode='bigger'; step=1; api('/mode',{mode:mode}).then(function(){show();cards()}); return}
   if(step==3){api('/quit',{}).then(function(){document.body.innerHTML='<main><p>'+t('bye')+'</p></main>'});return}
   var o=$('s').selectedOptions[0]; if(!o)return;
-  if((step==2||step=='n1')&&!confirm(t('confirm')+'\n\n'+o.textContent))return;
-  busy=true; $('g').disabled=true; api(step==1?'/read':step==2?'/write':'/new',{card:o.value}).then(function(){poll()}); };
+  if((step==2||step=='n1'||step=='o1')&&!confirm(t('confirm')+'\n\n'+o.textContent))return;
+  busy=true; $('g').disabled=true; api(step==1?'/read':step==2?'/write':'/new',{card:o.value,original:step=='o1'}).then(function(){poll()}); };
 show(); cards();
 </script></body></html>"""
 
@@ -644,7 +652,7 @@ def web(port, token, browser):
             elif path == "/cards":
                 with job.lock:
                     step = job.state["step"]
-                cards = [c for c in list_cards() if (step != 2 or c["size"] > job.src_size) and (step != "n1" or c["size"] >= MIN_NEW_CARD)]
+                cards = [c for c in list_cards() if (step != 2 or c["size"] > job.src_size) and (step not in ("n1", "o1") or c["size"] >= MIN_NEW_CARD)]
                 self._ok([{"id": c["id"], "name": c["name"], "size": c["size"]} for c in cards])
             elif path == "/status":
                 with job.lock:
@@ -666,8 +674,8 @@ def web(port, token, browser):
                 self._ok({"ok": False, "error": "busy"}); return
             if path == "/mode":                                   # the first screen's choice
                 with job.lock:
-                    if job.state["step"] in (0, 1, "n1") and body.get("mode") in ("bigger", "new"):
-                        job.state.update(mode=body["mode"], step=1 if body["mode"] == "bigger" else "n1")
+                    if job.state["step"] in (0, 1, "n1", "o1") and body.get("mode") in ("bigger", "new", "original"):
+                        job.state.update(mode=body["mode"], step={"bigger": 1, "new": "n1", "original": "o1"}[body["mode"]])
                 self._ok({"ok": True}); return
             card = next((c for c in list_cards() if c["id"] == body.get("card") and c["path"]), None)
             if not card:
@@ -695,14 +703,17 @@ def web(port, token, browser):
                 if card["size"] < MIN_NEW_CARD:
                     self._ok({"ok": False, "error": "too small"}); return
 
+                original = body.get("original") is True
+
                 def step_new():
-                    image, m = new_card_image(docs, job.progress, job.status)
+                    image, m = new_card_image(docs, job.progress, job.status,
+                                              fetch_manifest(ORIGINAL_MANIFESTS) if original else None)
                     for f in (image, image + ".gz"):
                         if os.path.exists(f):
                             os.chown(f, who.pw_uid, who.pw_gid)          # the downloads belong to the person
                     write_card_to_disk(image, card, job.progress, job.status)
                     with job.lock:
-                        job.state.update(step=3, mode="new")
+                        job.state.update(step=3, mode="original" if original else "new")
                 job.run(step_new)
             else:
                 self.send_error(404); return

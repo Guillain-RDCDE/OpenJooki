@@ -196,18 +196,23 @@ def scrub_rootfs(img, forget=()):
     return removed
 
 
-def check_rootfs(img, version, forget=()):
+def check_rootfs(img, version, forget=(), original=False):
     want = (PARTS[2][1] - PARTS[2][0] + 1) * SECTOR
     if os.path.getsize(img) != want:
         raise SystemExit("the release image is %d bytes, a system partition is %d" % (os.path.getsize(img), want))
-    v = debugfs_cat(img, "/etc/openjooki-version").decode().strip()
-    if v != version:
-        raise SystemExit("the release image says version %r, not %r" % (v, version))
+    if original:                                   # make_original_rootfs.py: no OpenJooki left
+        if debugfs_exists(img, "/etc/openjooki-version"):
+            raise SystemExit("--original: this system still has OpenJooki in it")
+        v = debugfs_cat(img, "/etc/mender/artifact_info").decode().strip()
+    else:
+        v = debugfs_cat(img, "/etc/openjooki-version").decode().strip()
+        if v != version:
+            raise SystemExit("the release image says version %r, not %r" % (v, version))
     if debugfs_cat(img, "/etc/hostname") != b"jooki\n" or debugfs_cat(img, "/etc/mac") != b"":
         raise SystemExit("the release image is not neutral (/etc/hostname, /etc/mac)")
     removed = scrub_rootfs(img, forget)
-    print("release image: OpenJooki %s, neutral, e2fsck clean; removed %s, free blocks zeroed"
-          % (v, ", ".join(removed) if removed else "nothing"))
+    print("release image: %s %s, neutral, e2fsck clean; removed %s, free blocks zeroed"
+          % ("original system" if original else "OpenJooki", v, ", ".join(removed) if removed else "nothing"))
 
 
 def check_factory(img):
@@ -239,7 +244,7 @@ def mk_ext4(path, size_bytes, staging, label=""):
     run(["e2fsck", "-fn", path])
 
 
-def build_data(work, generic_tar):
+def build_data(work, generic_tar, original=False):
     """p5: only the files every Jooki has (bootloader settings path, device model, update hooks)
     and the flag that says the radio chip is already programmed. Nothing personal."""
     st = os.path.join(work, "data"); os.makedirs(st)
@@ -258,7 +263,8 @@ def build_data(work, generic_tar):
             raise SystemExit("the generic data tar holds a per-device file: " + bad)
     os.makedirs(os.path.join(st, "mode"), exist_ok=True)
     open(os.path.join(st, "mode", "ESP32_FIRMWARE_LOADED"), "w").close()
-    os.makedirs(os.path.join(st, "openjooki"), exist_ok=True)
+    if not original:
+        os.makedirs(os.path.join(st, "openjooki"), exist_ok=True)
     for root, dirs, files in os.walk(st):
         for n in dirs + files:
             os.chown(os.path.join(root, n), 0, 0)
@@ -373,6 +379,8 @@ def main():
     ap.add_argument("--data-tar", help="tar.gz of /data/u-boot, /data/mender/{device_type,mender.conf,scripts} from a Jooki")
     ap.add_argument("--forget", action="append", default=[], help="a string that must not appear in the image (repeatable)")
     ap.add_argument("--keep-work", action="store_true")
+    ap.add_argument("--original", action="store_true",
+                    help="the original Jooki card: --rootfs comes from make_original_rootfs.py; writes original.json")
     a = ap.parse_args()
     if os.geteuid() != 0:
         raise SystemExit("run as root (mke2fs -d keeps owners, losetup checks the result)")
@@ -390,14 +398,14 @@ def main():
             ungz(a.rootfs, rootfs)
         else:
             shutil.copyfile(a.rootfs, rootfs)
-        check_rootfs(rootfs, a.version, a.forget)
+        check_rootfs(rootfs, a.version, a.forget, a.original)
         factory = os.path.join(work, "p1.img")                # a working copy: e2fsck may repair it
         if a.factory.endswith(".gz"):
             ungz(a.factory, factory)
         else:
             shutil.copyfile(a.factory, factory)
         check_factory(factory)
-        p4 = build_swap(work); p5 = build_data(work, a.data_tar); p6 = build_config(work); p7 = build_content(work)
+        p4 = build_swap(work); p5 = build_data(work, a.data_tar, a.original); p6 = build_config(work); p7 = build_content(work)
 
         # --- assemble (sparse) ---
         if os.path.exists(out):
@@ -465,9 +473,10 @@ def main():
         man = {"version": a.version, "file": os.path.basename(gz), "sha256": sha256_file(gz), "bytes": os.path.getsize(gz),
                "image_bytes": TOTAL * SECTOR, "image_sha256": sha256_file(out), "layout": "jooki-v2-gpt7",
                "min_card_bytes": TOTAL * SECTOR + 1, "date": time.strftime("%Y-%m-%d")}
-        json.dump(man, open(os.path.join(os.path.dirname(out), "sdcard.json"), "w"), indent=2)
-        print("release files: %s (%.0f MB, sha256 %s) + sdcard.json   [%d s]"
-              % (os.path.basename(gz), man["bytes"] / 1e6, man["sha256"][:16], time.time() - t0))
+        mname = "original.json" if a.original else "sdcard.json"
+        json.dump(man, open(os.path.join(os.path.dirname(out), mname), "w"), indent=2)
+        print("release files: %s (%.0f MB, sha256 %s) + %s   [%d s]"
+              % (os.path.basename(gz), man["bytes"] / 1e6, man["sha256"][:16], mname, time.time() - t0))
     finally:
         if not a.keep_work:
             shutil.rmtree(work, ignore_errors=True)

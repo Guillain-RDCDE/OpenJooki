@@ -78,6 +78,15 @@ formats Windows cannot read.
   reused as is.
 - Only cards of 3 GB or more are offered for a new card.
 
+### The original Jooki
+
+- The third choice writes the same kind of complete card, but with the Jooki's own program
+  of December 2022 on both system slots, without OpenJooki: rebuilt from a release image by
+  [`make_original_rootfs.py`](make_original_rootfs.py), then `make_card_image.py --original`.
+  Its own GitHub release, `original` (`original.json`), read the same way. Command line:
+  `sudo python3 jooki_sd.py new <card> --original`. How it is rebuilt and checked:
+  [docs/27-original-card.md](../../docs/27-original-card.md).
+
 ## Tested
 
 - On disk images: a card with the Jooki's layout copied to a bigger one, checked with

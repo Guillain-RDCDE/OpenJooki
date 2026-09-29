@@ -1,5 +1,17 @@
 # OpenJooki — Changelog
 
+## SD card tools (29 September 2026) — back to the original Jooki
+- **The original Jooki, on a card.** The SD card tool (Windows, Mac, Linux) has a third
+  choice, *The original Jooki: back to the program it was sold with*: a complete card with
+  Muuselabs' own program of December 2022, without OpenJooki and without anyone's music. For
+  whoever wants a Jooki back exactly as it was sold. The Jooki's own card stays the way back.
+  Honest note shown in the tool: the official app and Jooki's servers are gone, so the
+  original program can no longer be set up from a phone.
+- It is rebuilt from an OpenJooki image, which keeps every file it replaced
+  (`tools/sdcard/make_original_rootfs.py`), then checked against a Jooki backed up before
+  OpenJooki: every system file identical, nothing extra. It lives in its own GitHub release,
+  `original`. Not yet started in a real Jooki. Details in docs/27.
+
 ## OpenJooki 2.0.5 (29 September 2026) — Bluetooth speakers, airplane mode, Wi-Fi without the app
 - **Airplane mode, the way parents asked for it, without the trap.** Settings →
   *Airplane mode* switches the Jooki's Wi-Fi and Bluetooth off (no radio next to

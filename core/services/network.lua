@@ -58,7 +58,16 @@ end
 --   * at most wifi_watchdog_max (2) restarts in a row without Wi-Fi: then it stops trying (moved
 --     house, box gone: the Bluetooth page is the way). The count lives on /data and goes back to 0
 --     as soon as the Wi-Fi is back. The restart is silent (no "ready" chime at night).
-local function online(net) return net and net.connected and type(net.ip) == "string" and net.ip ~= "" end
+-- online = the chip says so AND Linux has a default route: on 29/09 the chip reported its address
+-- while Linux had never set the interface up (unreachable 40 min, and the watchdog believed the chip)
+local function online(net) return net and net.connected and type(net.ip) == "string" and net.ip ~= "" and net.route ~= false end
+local ROUTES = "/proc/net/route"
+function network.on_route(doc, ev)
+  local has = (ev.text or ""):find("\n%S+\t00000000\t") ~= nil
+  if doc.net and doc.net.route == has then return nil end
+  local net = copy(doc.net or {}); net.route = has
+  return { state = { net = net } }
+end
 local function radios_off(doc)
   local f, d = doc.flags or {}, doc.device or {}
   return f.WIFI_OFF or f.OJ_AIRPLANE or type(d.airplane) == "table"
@@ -69,8 +78,17 @@ function network.watchdog(doc, now)
   local limit, max = config.get("wifi_watchdog_s"), config.get("wifi_watchdog_max")
   local w = copy(doc.net_watch or { count = 0 })
   if online(doc.net) then
-    if not w.since and (w.count or 0) == 0 then return nil end
     local cmds = {}
+    -- once per start, a minute after the Wi-Fi is up: forget the factory network (never at start:
+    -- writing the chip's list while it connects disturbs it)
+    if not w.factory_done then
+      w.online_at = w.online_at or now
+      if now - w.online_at >= 60 then
+        w.factory_done = true
+        cmds[#cmds + 1] = { kind = "shell", action = "wifi_forget_factory" }
+      end
+    end
+    if not w.since and (w.count or 0) == 0 then return { state = { net_watch = w }, commands = cmds } end
     if (w.count or 0) > 0 then
       cmds[#cmds + 1] = { kind = "files.write_text", path = config.get("wifi_watchdog_file"), text = "0\n" }
       cmds[#cmds + 1] = { kind = "log", level = "info", key = "network.watchdog_ok", fields = { after_restarts = w.count } }
@@ -78,16 +96,20 @@ function network.watchdog(doc, now)
     w.since, w.count = nil, 0
     return { state = { net_watch = w }, commands = cmds }
   end
+  -- the minute before forgetting the factory network counts from a stable Wi-Fi
+  local dropped = w.online_at ~= nil
+  w.online_at = nil
+  local keep = dropped and { state = { net_watch = w } } or nil
   if radios_off(doc) or limit <= 0 then
     if w.since then w.since = nil return { state = { net_watch = w } } end
-    return nil
+    return keep
   end
   if not w.since then w.since = now return { state = { net_watch = w } } end
-  if now - w.since < limit then return nil end
+  if now - w.since < limit then return keep end
   local pb = doc.playback or {}
   local busy = pb.state == "playing" or pb.state == "starting" or (pb.sys and pb.sys.name)
   local plugged = doc.power and doc.power.connected
-  if busy or not plugged or (w.count or 0) >= max then return nil end
+  if busy or not plugged or (w.count or 0) >= max then return keep end
   w.count = (w.count or 0) + 1
   w.since = nil
   return { state = { net_watch = w }, commands = {
@@ -102,6 +124,7 @@ function network.on_timer(doc, ev)
     local r = network.watchdog(doc, ev.now or 0) or { commands = {} }
     r.commands = r.commands or {}
     table.insert(r.commands, 1, { kind = "bus.publish", topic = "/j/esp32/output/net/sta/status", payload = "" })
+    table.insert(r.commands, 2, { kind = "files.read_text", path = ROUTES, reply = "network.route" })
     return r
   end
   if ev.name ~= "network.wifi_log" then return nil end
@@ -122,6 +145,7 @@ function network.install(_, dispatch)
   dispatch.on("net.status", "network", network.on_status)
   dispatch.on("timer", "network", network.on_timer)
   dispatch.on("network.wifi_log", "network", network.on_wifi_log)
+  dispatch.on("network.route", "network", network.on_route)
 end
 
 return network

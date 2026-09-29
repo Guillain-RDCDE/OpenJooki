@@ -247,6 +247,18 @@ describe("services.device — lights and toy safe", function()
     assert_nil(k:find("Evt.Jooki.Ready", 1, true))
   end)
 
+  it("the bus back (broker restarted): the ESP32 hears the boot orders again, until it answers", function()
+    local doc = doc_with(); doc.device.esp32_up = true
+    local r = device.on_bus_up(doc)
+    assert_false(r.state.device.esp32_up)
+    local k = table.concat(kinds(r), "|")
+    assert_true(k:find("esp32/output/nfc/mode/set 1", 1, true) ~= nil)
+    assert_true(k:find("esp32/output/device/send_all_notifications", 1, true) ~= nil)
+    local timers = 0
+    for _, c in ipairs(r.commands) do if c.kind == "timer.once" and c.name:match("^device%.esp32_init%.%d$") then timers = timers + 1 end end
+    assert_eq(timers, 3)
+  end)
+
   it("boot tells the ESP32 at once, again at 1 and 3 s, until esp32_ctrl has answered once", function()
     local r = device.on_boot(doc_with(), { audiocfg = {}, flags = {}, now = 5 })
     local k = table.concat(kinds(r), "|")

@@ -76,10 +76,14 @@
   <div id="step2" hidden>
     <div class="card">
       <b>2. Choose the network</b> <span class="muted" id="who"></span>
-      <div id="scanning" class="center" style="margin:14px 0"><div class="spinner"></div><span class="muted">Asking the Jooki which networks it can see…</span></div>
+      <div id="scanstart">
+        <button class="btn" id="scanbtn" type="button">Look for Wi-Fi networks</button>
+        <p class="tiny" id="scanwarn">While it looks, the Jooki leaves its Wi-Fi, until you give it a network here. If you stop halfway, it goes back to its Wi-Fi by itself within about ten minutes when it is on the charger, or switch it off and on.</p>
+      </div>
+      <div id="scanning" class="center" style="margin:14px 0" hidden><div class="spinner"></div><span class="muted">Asking the Jooki which networks it can see…</span></div>
       <div id="nets"></div>
       <p class="tiny" id="netnote" hidden>Only 2.4 GHz networks show: the Jooki cannot use 5 GHz. If yours is missing, come closer to the box, or check the box offers a 2.4 GHz network.</p>
-      <p class="tiny"><button class="btn ghost small" id="rescan" type="button">Look again</button>
+      <p class="tiny" id="scanrow" hidden><button class="btn ghost small" id="rescan" type="button">Look again</button>
         <button class="btn ghost small" id="hiddenbtn" type="button">Hidden network</button></p>
       <div id="hiddenrow" hidden>
         <label for="ssid">Network name</label>
@@ -111,7 +115,7 @@
 
   <div id="knownbox" class="card" hidden>
     <b>Networks the Jooki remembers</b>
-    <p class="tiny" style="margin-bottom:8px">It joins any of them it can see, by itself. Adding one never removes another. Forget the ones you no longer have.</p>
+    <p class="tiny" style="margin-bottom:8px">It does not pick the strongest one: after a short cut it can move to another one it knows, even a far one, and stay there. So keep only the network next to the Jooki, and forget the others (reading and forgetting here do not take it off its Wi-Fi).</p>
     <div id="known"></div>
   </div>
 
@@ -183,12 +187,14 @@
     chars.scan = await prov.getCharacteristic(CH.scan); chars.session = await prov.getCharacteristic(CH.session);
     chars.config = await prov.getCharacteristic(CH.config); chars.version = await prov.getCharacteristic(CH.version);
     chars.list = await wcm.getCharacteristic(CH.list); chars.remove = await wcm.getCharacteristic(CH.remove);
-    // the handshake every talker does first: proto-ver ("ESP" -> {"prov":{"ver":"v1.1",...}}), then a
-    // security-0 session (SessionData{ sec0{ sc{} } }). Without proto-ver first, the session is refused.
-    await handshake();
+    // No set-up session here: opening one makes the Wi-Fi chip leave its network until it is given
+    // one (seen on a Jooki on 29/09/2026). The list and "forget" need none; looking for networks and
+    // giving one open it themselves (handshake), when the parent asked for it.
   }
-  // Done once per link, and again before every request that changes something: after a connection
-  // attempt the Jooki refuses a new set-up (status "invalid session") until a new session is opened.
+  // The handshake the set-up needs: proto-ver ("ESP" -> {"prov":{"ver":"v1.1",...}}), then a security-0
+  // session (SessionData{ sec0{ sc{} } }); without proto-ver first, the session is refused. Done before
+  // looking for networks and before every set-up: after a connection attempt the Jooki refuses a new
+  // set-up (status "invalid session") until a new session is opened.
   async function handshake() {
     var ver = dec.decode(await xfer(chars.version, enc.encode('ESP')));
     if (ver.indexOf('prov') < 0) throw new Error('not a Jooki set-up service');
@@ -211,6 +217,7 @@
   /* ---- what the Jooki can see: WiFiScanPayload */
   async function scanNetworks() {
     var ch = chars.scan, i, st, n, got = 0, k, r, entries = [], e, seen = {};
+    await handshake();                                                // from here the Jooki leaves its Wi-Fi
     await xfer(ch, fb(10, fv(1, 1).concat(fv(4, 120))));           // CmdScanStart{ blocking, period_ms }
     for (i = 0; i < 40; i++) {                                        // CmdScanStatus until finished
       st = sub(decode(await xfer(ch, fv(1, 2).concat(fb(12, [])))), 13);
@@ -334,6 +341,7 @@
     } catch (e) { show('knownbox', false); }
   }
   async function doScan() {
+    show('scanstart', false); show('scanrow', true);
     show('scanning', true); $('nets').innerHTML = ''; show('netnote', false); $('rescan').disabled = true;
     try { await link(); nets = await scanNetworks(); }
     catch (e) { err('Could not look for networks', explain(e)); nets = []; }
@@ -351,9 +359,12 @@
     $('who').textContent = '· ' + (device.name || 'Jooki');
     show('step1', false); show('step2', true); show('result', false);
     chosen = null; $('pw').value = ''; $('connect').disabled = true;
-    await doScan();
+    // first what it remembers (no set-up session: the Jooki stays on its Wi-Fi), then the parent chooses to look
+    show('scanstart', true); show('scanrow', false); $('nets').innerHTML = ''; show('netnote', false);
+    try { await link(); } catch (e) { err('Could not reach the Jooki', explain(e)); return; }
     await renderKnown();
   };
+  $('scanbtn').onclick = function () { noerr(); doScan(); };
   $('rescan').onclick = function () { noerr(); doScan(); };
   $('hiddenbtn').onclick = function () { show('hiddenrow', true); chosen = null; renderNets(); $('ssid').focus(); pwFor({ ssid: '', auth: 3 }); };
   $('ssid').oninput = function () { chosen = $('ssid').value.trim() || null; $('pwlabel').textContent = chosen ? 'Password for ' + chosen : 'Password'; renderNets(); };

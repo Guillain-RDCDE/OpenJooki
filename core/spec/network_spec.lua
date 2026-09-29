@@ -77,10 +77,47 @@ describe("services.network — Wi-Fi watchdog", function()
     local r = apply(doc, network.on_timer(doc, { name = "network.status", now = 30 }))
     assert_true(has(r, "files.write_text /data/openjooki/wifi_watchdog"))
     assert_eq(doc.net_watch.count, 0); assert_nil(doc.net_watch.since)
-    assert_eq(kinds(network.on_timer(doc, { name = "network.status", now = 60 })), { "bus.publish" })   -- online: nothing more
+    assert_eq(kinds(network.on_timer(doc, { name = "network.status", now = 60 })), { "bus.publish", "files.read_text /proc/net/route" })   -- online: nothing more
     doc.net = { connected = false }
     apply(doc, network.on_timer(doc, { name = "network.status", now = 90 }))
     assert_eq(doc.net_watch.since, 90)
+  end)
+
+  it("the factory network is forgotten once per start, a minute after the Wi-Fi is up, never before", function()
+    local doc = offline_doc(); doc.net = { connected = true, ip = "192.168.1.19" }
+    apply(doc, network.on_timer(doc, { name = "network.status", now = 5 }))
+    assert_false(has(network.on_timer(doc, { name = "network.status", now = 64 }), "shell wifi_forget_factory"))
+    local r = apply(doc, network.on_timer(doc, { name = "network.status", now = 65 }))
+    assert_true(has(r, "shell wifi_forget_factory"))
+    assert_false(has(apply(doc, network.on_timer(doc, { name = "network.status", now = 200 })), "shell wifi_forget_factory"))
+    -- a Wi-Fi that drops before the minute starts the minute again
+    doc = offline_doc(); doc.net = { connected = true, ip = "x" }
+    apply(doc, network.on_timer(doc, { name = "network.status", now = 0 }))
+    doc.net = { connected = false }; apply(doc, network.on_timer(doc, { name = "network.status", now = 30 }))
+    doc.net = { connected = true, ip = "x" }; apply(doc, network.on_timer(doc, { name = "network.status", now = 61 }))
+    assert_false(has(network.on_timer(doc, { name = "network.status", now = 90 }), "shell wifi_forget_factory"))
+    assert_true(has(network.on_timer(doc, { name = "network.status", now = 121 }), "shell wifi_forget_factory"))
+  end)
+
+  it("the chip saying 'connected' is not enough: Linux must have a default route (29/09: 40 min unreachable)", function()
+    local ROUTE_OK = "Iface\tDestination\tGateway\nethsta0\t00000000\t0101A8C0\t0003\nethsta0\t0001A8C0\t00000000\t0001\n"
+    local ROUTE_NONE = "Iface\tDestination\tGateway\n"
+    local doc = offline_doc(); doc.net = { connected = true, ip = "192.168.1.19" }
+    apply(doc, network.on_route(doc, { text = ROUTE_NONE }))
+    assert_false(doc.net.route)
+    apply(doc, network.on_timer(doc, { name = "network.status", now = 0 }))
+    assert_eq(doc.net_watch.since, 0)                     -- counted offline
+    local r = apply(doc, network.on_timer(doc, { name = "network.status", now = 600 }))
+    assert_true(has(r, "shell watchdog_reboot"))
+    -- the route back: online again, nothing more
+    doc = offline_doc(); doc.net = { connected = true, ip = "192.168.1.19" }
+    apply(doc, network.on_route(doc, { text = ROUTE_OK }))
+    assert_true(doc.net.route)
+    assert_nil(network.on_route(doc, { text = ROUTE_OK }))  -- unchanged: no state change
+    assert_false(has(network.on_timer(doc, { name = "network.status", now = 5000 }), "shell watchdog_reboot"))
+    -- and the route file is read at every status tick
+    local k = kinds(network.on_timer(doc, { name = "network.status", now = 5030 }))
+    assert_true(table.concat(k, "|"):find("files.read_text /proc/net/route", 1, true) ~= nil)
   end)
 
   it("boot reads the restarts already made", function()

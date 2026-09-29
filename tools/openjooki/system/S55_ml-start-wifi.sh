@@ -1,9 +1,13 @@
 #!/bin/ash
 # OpenJooki: the original Muuselabs Wi-Fi start script (kept as S55_ml-start-wifi.sh.openjooki-orig),
 # with three changes for a safer start:
-#  - the Muuselabs factory network ("mnet2", a network no home has) is no longer added to the Wi-Fi
-#    chip at every start; it is removed when the chip also remembers a real network, so the chip
-#    does not spend its tries on it;
+#  - the chip's list of networks is never written at start. The original ran
+#    `esp32_cmd add_ap mnet2 muuselabs256` (Muuselabs' factory network) at every start, and
+#    `esp32_cmd add_ap` CRASHES the Wi-Fi chip ("stack overflow in task pc_serial", then it
+#    reboots: seen on a Jooki on 29/09/2026). So at every start the chip rebooted in the middle of
+#    its first connection: Wi-Fi 70-80 s late, tokens and sound re-initialised, and on the way back
+#    it could settle on another network it knows and remember that one. The factory network is
+#    forgotten later by the core, once the Wi-Fi is up (`esp32_cmd remove_ap` is safe);
 #  - the chip gets 30 s to answer instead of 10 (a slow start is not a broken chip);
 #  - a slow or failed chip no longer writes the "factory mode" flag, which stayed for good.
 #    It is logged instead; the core retries the chip's set-up by itself.
@@ -163,14 +167,8 @@ mkdir -p /run/esp32 || true
 
 /jooki/bin/esp32_cmd set_versions
 
-# OpenJooki: the factory network is not added any more. The chip keeps what it had: remove it,
-# but only when a real network is remembered too (never leave the chip with no network at all).
-KNOWN_APS=$(/jooki/bin/esp32_cmd list_configured_ap 2>/dev/null)
-if echo "$KNOWN_APS" | grep -qw "$JOOKI_WIFI_DEFAULT_SSID" \
-   && echo "$KNOWN_APS" | tr ',' '\n' | grep -v -w "$JOOKI_WIFI_DEFAULT_SSID" | grep -q '[^[:space:]"]'; then
-  logger -s "OpenJooki: forgetting the factory network $JOOKI_WIFI_DEFAULT_SSID"
-  /jooki/bin/esp32_cmd remove_ap "$JOOKI_WIFI_DEFAULT_SSID" > /dev/null 2>&1 || true
-fi
+# OpenJooki: no `add_ap` of the factory network here any more (it crashed the chip, see the top),
+# and no other write to the chip's list while it connects.
 
 
 airplane_mode=$(/jooki/bin/esp32_cmd get_airplane_mode)
@@ -199,6 +197,8 @@ if [ -r /mnt/config/jooki.conf ]; then
 		if [ "$WIFI_CONFIGURATION_PASSWORD" != "" ] && [ "$WIFI_CONFIGURATION_PASSWORD" != "no_password" ]; then
 			FOUND_WIFI_SSID=$(/jooki/bin/esp32_cmd list_configured_ap | grep -w "$WIFI_CONFIGURATION_SSID")
 			if [ -z "$FOUND_WIFI_SSID" ]; then
+				# (original, kept: a network written on the card by hand, once. add_ap crashes the chip,
+				#  which comes back by itself; the lines are then removed from jooki.conf)
 				logger -s "Adding legacy WiFi access point configuration from jooki.conf to ESP32 NVS."
 				/jooki/bin/esp32_cmd add_ap "$WIFI_CONFIGURATION_SSID" "$WIFI_CONFIGURATION_PASSWORD"
 				sed -i -e '/ESP_SSID/d' -e '/ESP_PWD/d' /mnt/config/jooki.conf

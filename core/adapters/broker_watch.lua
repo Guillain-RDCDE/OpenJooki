@@ -28,7 +28,8 @@ function watch:check(up, now)
   if self.last_try and now - self.last_try < self.every_s then return nil end
   self.last_try, self.tries = now, self.tries + 1
   local out = self.shell and self.shell.run("broker_start", {}) or ""
-  log.warn("broker.start", { down_s = math.floor(now - self.down_since), try = self.tries, result = tostring(out):match("%S+") })
+  log.warn("broker.start", { down_s = math.floor(now - self.down_since), try = self.tries,
+                             result = (tostring(out):gsub("%s+$", ""):sub(1, 60)) })
   return "restart"
 end
 

@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.8';
+  var VERSION = '2.0.9';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {

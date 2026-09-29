@@ -36,6 +36,10 @@ CH_LIST = "5bf49f8c-3491-218c-ae4f-db0580debd03"
 NAME_PREFIX = "JOOKI2_"
 STATES = ["connected", "connecting", "disconnected", "failed"]
 AUTH = ["open", "WEP", "WPA", "WPA2", "WPA/WPA2", "WPA2 enterprise", "WPA3", "WPA2/WPA3"]
+LEAVES_WIFI = ("Note: while the Jooki talks to this computer it leaves its Wi-Fi, until it is given a network.")
+COMES_BACK = ("The Jooki has left its Wi-Fi. It goes back to it once you give it a network (connect), or by\n"
+              "itself within about 10 minutes if it is on the charger (OpenJooki 2.0.8 or later); or switch\n"
+              "it off and on again.")
 
 
 # ---------------------------------------------------------------- protobuf, just enough
@@ -268,14 +272,20 @@ async def run(a):
     print("found %s." % name)
     async with BleakClient(dev, timeout=30) as c:
         j = Jooki(c)
-        await j.session(lambda n: print("  the Jooki did not answer the handshake, trying again…", flush=True))
-        if a.cmd == "status":
-            st = await j.status()
-            print("Wi-Fi: %s%s" % (st["state"], (' to "%s"' % st["ssid"]) if st["ssid"] else ""))
-            return 0
+        # The list and "forget" are Muuselabs' own endpoints: no set-up session needed, and none is
+        # opened, because opening one makes the Wi-Fi chip leave its network until it is given one
+        # (seen on a Jooki on 29/09/2026: one "list" with a session left it offline for good).
         if a.cmd == "list":
             k = await j.known()
             print("The Jooki remembers: %s" % (", ".join('"%s"' % s for s in k) if k else "no network"))
+            return 0
+        if a.cmd != "forget":
+            print(LEAVES_WIFI, flush=True)
+            await j.session(lambda n: print("  the Jooki did not answer the handshake, trying again…", flush=True))
+        if a.cmd == "status":
+            st = await j.status()
+            print("Wi-Fi: %s%s" % (st["state"], (' to "%s"' % st["ssid"]) if st["ssid"] else ""))
+            print(COMES_BACK)
             return 0
         if a.cmd == "forget":
             k = await j.known()
@@ -296,10 +306,12 @@ async def run(a):
             k = await j.known()
             print("It remembers: %s" % (", ".join('"%s"' % s for s in k) if k else "no network"))
             if a.cmd == "scan":
+                print(COMES_BACK)
                 return 0
             # guided
             choice = input("\nWhich network? (number, or type a hidden network's name; empty = quit) ").strip()
             if not choice:
+                print(COMES_BACK)
                 return 0
             if choice.isdigit() and 1 <= int(choice) <= len(nets):
                 net = nets[int(choice) - 1]; ssid = net["ssid"]

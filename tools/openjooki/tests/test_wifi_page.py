@@ -112,6 +112,16 @@ with sync_playwright() as p:
     pg.goto(URL)
     check("W1 with Web Bluetooth the button is offered", pg.locator("#find").is_enabled() and pg.locator("#nobt").is_hidden())
     pg.click("#find")
+    # first what the Jooki remembers, with no set-up session: a Jooki on its Wi-Fi stays on it (29/09/2026)
+    pg.wait_for_selector("[data-forget]")
+    check("W14 finding the Jooki shows what it remembers and opens no set-up session (it stays on its Wi-Fi)",
+          pg.evaluate("window.__jooki.sessions") == 0 and pg.locator("#scanbtn").is_visible() and pg.locator(".net[data-ssid]").count() == 0,
+          (pg.evaluate("window.__jooki.sessions"), pg.locator("#scanbtn").is_visible()))
+    check("W14 ... and says that looking for networks takes it off its Wi-Fi until it gets one",
+          "leaves its Wi-Fi" in pg.locator("#scanwarn").inner_text() and "ten minutes" in pg.locator("#scanwarn").inner_text())
+    check("W14 the remembered list says the Jooki does not pick the strongest network (keep only the near one)",
+          "does not pick the strongest" in pg.locator("#knownbox").inner_text())
+    pg.click("#scanbtn")
     try: pg.wait_for_selector(".net[data-ssid]")
     except Exception:
         print("W1 the page never listed the networks\n  err:", pg.locator("#etitle").inner_text(), "/", pg.locator("#etext").inner_text(), "\n  console:", errs, "\n  mock log:", pg.evaluate("window.__jooki.log"), flush=True); raise

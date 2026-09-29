@@ -38,11 +38,37 @@ shell.ACTIONS = {
   factory_reset  = { argv = function() return { "/jooki/app/services/factory_reset.sh" } end },
   -- the broker, when the core cannot reach it (adapters.broker_watch): started again only if it is not
   -- running, exactly as /etc/rcS.d/S58_mosquitto.sh starts it at boot
+  -- The hardware controllers stop "cleanly" (exit 0) when the broker goes, and their launcher only
+  -- restarts a crash: without them tokens, buttons and power are deaf (seen on a Jooki, 29/09).
+  -- Started again as ml-start-app.sh starts them (same launcher, same nice level), if missing.
   broker_start   = { argv = function() return { "sh", "-c", [[
 if ps 2>/dev/null | grep -q '[m]osquitto -c'; then echo running; exit 0; fi
 rm -f /var/run/mosquitto.pid
 # detached from our pipe: a daemon holding it would keep the core waiting for its output for good
-/usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf -d </dev/null >/dev/null 2>&1 && echo started || echo failed]] } end },
+/usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf -d </dev/null >/dev/null 2>&1 || { echo failed; exit 0; }
+sleep 1
+L=/jooki/bin/ml-launch-controller.sh; n=0
+for c in "gpio_ctrl -5" "ht_ctrl -1" "esp32_ctrl -5"; do
+  set -- $c
+  if [ -x "$L" ] && [ -x "/jooki/bin/$1" ] && ! pidof "$1" >/dev/null 2>&1; then
+    "$L" "/jooki/bin/$1" "$2" </dev/null >/dev/null 2>&1 &
+    n=$((n+1))
+  fi
+done
+echo "started controllers=$n"]] } end },
+  -- Muuselabs' factory network ("mnet2", no home has it), forgotten once the Wi-Fi is up
+  -- (services.network): only if a real network is known too and the chip is not on it.
+  -- remove_ap is safe while connected (add_ap is not: it crashes the chip, S55 comments).
+  wifi_forget_factory = { argv = function() return { "sh", "-c", [[
+C=/jooki/bin/esp32_cmd; [ -x "$C" ] || { echo "no esp32_cmd"; exit 0; }
+L=$($C list_configured_ap 2>/dev/null | tail -n 1)
+R=kept
+if ! echo "$L" | grep -q '"ssid":"mnet2"'; then R=absent
+elif ! echo "$L" | grep -o '"ssid":"[^"]*"' | grep -qv '"ssid":"mnet2"'; then R="kept (the only network)"
+elif $C get_ap_status 2>/dev/null | grep -q 'ssid mnet2'; then R="kept (in use)"
+elif $C remove_ap mnet2 >/dev/null 2>&1; then R=removed; fi
+logger -t openjooki-core "info network.factory_network result=\"$R\""
+echo "$R"]] } end, background = true },
   poweroff       = { argv = function() return { "/sbin/poweroff" } end },
   reboot         = { argv = function() return { "/sbin/reboot" } end },
   -- the Wi-Fi watchdog's restart (services.network): never during an OpenJooki update

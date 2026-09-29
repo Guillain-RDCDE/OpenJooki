@@ -1,5 +1,33 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.0.9 (29 September 2026) — the message hub brings everything back, and a Wi-Fi that stays put
+- **The Wi-Fi chip no longer crashes at every start.** Found on a family Jooki: the
+  original start gave the chip Muuselabs' factory network again at every start, and the
+  command it used makes the chip crash and restart. So at every start the Wi-Fi came
+  more than a minute late, and the chip could come back on another network it knew,
+  even a far one. 2.0.8 stopped adding it; now nothing touches the chip's networks
+  while it starts, and the factory network is forgotten later, once the Wi-Fi is up.
+  Checked on our Jooki over ten restarts: no crash, always on the network next to it,
+  its page back about 80 seconds after a restart.
+- **The Wi-Fi watchdog checks the real network.** Seen once while testing: the chip said
+  it was connected, but the Jooki itself had no network, and stayed out of reach. The
+  watchdog now also checks that the Jooki really has a way out, and restarts it if not
+  (tried on the Jooki: back ten minutes later, by itself).
+- **The Wi-Fi page no longer takes a working Jooki off its Wi-Fi.** Just finding the
+  Jooki, reading the networks it remembers or forgetting one used to disconnect it until
+  it was given a network. Now only *Look for Wi-Fi networks* does, and the page says so.
+  Same for the `jooki_wifi.py` tool.
+- **Keep only the network next to the Jooki.** Checked on the Jooki: its chip does not
+  pick the strongest network it knows; after a short cut it moves to the next one, even
+  a far one, and stays there. The page now says so next to the list, where forgetting
+  the others is safe.
+- **Tokens and buttons come back too.** Tried on a family Jooki: when the message hub
+  stopped, the programs that read the tokens, the buttons and the battery stopped with
+  it, and 2.0.8 only brought the hub back. The Jooki now starts them again as well,
+  then tells the Wi-Fi chip again what it tells it at every start (the token reader on).
+  Checked on the Jooki: hub back after 20 s, the three programs a second later, the
+  chip answering.
+
 ## OpenJooki 2.0.8 (29 September 2026) — a safer start
 - **The Jooki gets its Wi-Fi back by itself.** Its Wi-Fi chip can stay stuck on
   "connecting" and nothing on the original system woke it up again: the Jooki stayed

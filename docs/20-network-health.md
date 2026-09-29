@@ -68,8 +68,22 @@ port could not be shared the Jooki simply works without the name.
 - It runs in **maximum power-save mode** (`ps:2`, asleep ~76 % of the time, DTIM 3),
   which makes a weak link worse (beacon timeouts). No command exposed by the
   firmware changes it.
-- `esp32_cmd remove_ap`/`add_ap` reuse the same memory slot, so they do not
-  change the order; `esp32_cmd disconnect` is refused by this firmware.
+- `esp32_cmd disconnect` is refused by this firmware. **`esp32_cmd add_ap`
+  crashes the chip** ("stack overflow in task pc_serial", then it reboots; 29/09),
+  so a network is only ever given over Bluetooth. `esp32_cmd remove_ap` is safe,
+  even for the network in use (the chip stays on it, "Already connected").
+- What the chip remembers as its **last network** (`WCM_NVS: saving N ... as last
+  connection`) is written only when it reconnects **by itself**; a network given
+  over Bluetooth does not change it. At start it goes to that one; after a cut it
+  tries the **next one in its list**, not the strongest, and that one becomes the
+  last. So a Jooki that knows two networks can end up on the far one for good after
+  one hiccup (ours: 29/09, the Livebox at -70 dBm instead of the mesh at -40).
+  No command sets the preferred network: keep only the network near the Jooki.
+- **Opening a Bluetooth set-up session takes the chip off its Wi-Fi** until it is
+  given a network (29/09: one read of the list with a session left our Jooki offline
+  until the watchdog restarted it; "apply" alone is refused). Reading the list and
+  forgetting a network need no session. Since the next release the page and
+  `jooki_wifi.py` open one only to look for networks or to give one, and say so.
 - **Rescue without any Wi-Fi**: when it cannot connect, the chip advertises over
   Bluetooth as `JOOKI2_<id>` with Espressif's standard provisioning service
   (`b3562d79-…`, no security, protocol v1.1): a computer with Bluetooth can scan
@@ -90,13 +104,18 @@ port could not be shared the Jooki simply works without the name.
   15 min anyway). At most two restarts in a row (`wifi_watchdog_max`, the count in
   `/data/openjooki/wifi_watchdog`, back to 0 once online), none during an update
   (`/tmp/oj-updating`), and silent (`/data/openjooki/quiet_boot`: no ready chime).
-- **The factory network came back at every start.** The original
-  `S55_ml-start-wifi.sh` ran `esp32_cmd add_ap mnet2 muuselabs256` at every boot:
-  forgotten on 28/09, our Jooki remembered it again on 29/09. Since the chip tries
-  the others after the last one, it spent tries on a network no home has. OpenJooki's
-  S55 no longer adds it and removes it when a real network is known too. It also
-  waits 30 s for the chip instead of 10, and no longer writes `/data/mode/FACTORY`
-  (for good) when the chip is slow: it logs instead.
+- **The original start crashed the Wi-Fi chip at every boot.** The original
+  `S55_ml-start-wifi.sh` ran `esp32_cmd add_ap mnet2 muuselabs256` (Muuselabs'
+  factory network) at every boot, and `add_ap` crashes the chip: it rebooted in the
+  middle of its first connection, the Wi-Fi came 70-80 s late (logs: `reconnecting
+  to idx 1` at ~72 s, the network at ~81 s), tokens and sound were re-initialised,
+  and on the way back it could settle on another network it knows. Since 2.0.8 S55
+  no longer adds it (page back ~35 s after a restart on our Jooki); since the next
+  release it writes nothing to the chip's list at start at all (2.0.8 removed mnet2
+  there, while the chip connected), and the core forgets mnet2 a minute after the
+  Wi-Fi is up (`wifi_forget_factory`: only if another network is known and the chip
+  is not on it). S55 also waits 30 s for the chip instead of 10, and no longer writes
+  `/data/mode/FACTORY` (for good) when the chip is slow: it logs instead.
 - **The broker had no keeper**: if mosquitto failed to start or stopped, every
   daemon went deaf and nothing restarted it. The core starts it again after 20 s
   without it (`adapters.broker_watch`, only if it is not running), and no longer

@@ -433,6 +433,11 @@ function device.on_df(doc, ev)
   return { state = { device = d } }
 end
 
+--- The bus is back (a reconnect, or the broker started again by adapters.broker_watch): the
+--- ESP32's controller may have been restarted with it and knows nothing (NFC reader off: tokens
+--- deaf). Say the boot orders again, until it answers; they are idempotent.
+local on_bus_up   -- defined with the boot orders below
+
 -- ------------------------------------------------------------------ boot / api
 -- What the ESP32 must hear at boot: every notification once, the NFC reader on, the knobs.
 -- All three are idempotent. The core may start before esp32_ctrl listens (the original start
@@ -446,6 +451,14 @@ local function esp32_init()
     { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" },
   }
 end
+on_bus_up = function(doc)
+  local d = copy(doc.device or {})
+  d.esp32_up = false
+  local cmds = esp32_init()
+  for i, s in ipairs({ 2, 5, 9 }) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
+  return { state = { device = d }, commands = cmds }
+end
+device.on_bus_up = function(doc) return on_bus_up(doc) end
 
 function device.on_boot(doc, ev)
   local a = audiocfg_of({ audiocfg = ev.audiocfg })
@@ -530,6 +543,7 @@ device.schemas = S
 
 function device.install(api, dispatch)
   dispatch.on("boot", "device", device.on_boot)
+  dispatch.on("bus.up", "device", device.on_bus_up)
   dispatch.on("timer", "device", device.on_timer)
   dispatch.on("gpio.volume", "device", device.on_gpio_volume)
   dispatch.on("gpio.button", "device", device.on_button)

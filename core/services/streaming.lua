@@ -68,6 +68,34 @@ end
 -- ------------------------------------------------------------------ Spotify events
 local function pb_of(doc) local pb = copy(doc.playback or {}); pb.state = pb.state or "idle"; return pb end
 local function active(doc, service) return doc.playback and doc.playback.now and doc.playback.now.service == service end
+local function local_busy(pb)
+  return pb.now and (pb.now.service == "FILE" or pb.now.service == "STREAM")
+    and (pb.state == "playing" or pb.state == "starting" or pb.state == "paused")
+end
+
+--- The now-playing record of a Spotify track (`d` = the daemon's now_playing payload).
+local function sp_now(d, playlist)
+  d = d or {}
+  return { playlist = playlist, service = "SPOTIFY", uri = d.source_uri, source = d.source, title = d.track, album = d.album,
+           artist = d.artist, image = d.image, duration_ms = tonumber(d.duration_ms), has_next = d.hasNext ~= false,
+           has_prev = d.hasPrev ~= false, audiobook = type(d.source_uri) == "string" and d.source_uri:find(":show:", 1, true) ~= nil }
+end
+
+--- Spotify started playing on the Jooki from the phone: it becomes what plays, the local
+--- music stops (the last one to start wins). The daemon's two messages, "playing" and
+--- "now_playing", may come in either order: `sp.playing` and `sp.track` remember each.
+local function take_over(doc, sp)
+  local pb = pb_of(doc)
+  local cmds = {}
+  if local_busy(pb) then cmds[#cmds + 1] = pub("/j/audio/out/stop", "7") end
+  pb.now = sp_now(sp.track)
+  pb.state = sp.playing and "playing" or "idle"
+  pb.position_ms = 0
+  pb.paused_by, pb.paused_at, pb.resume_ms = nil, nil, nil
+  cmds[#cmds + 1] = emit("playback.changed", { state = pb.state })
+  cmds[#cmds + 1] = { kind = "log", level = "info", key = "streaming.spotify_took_over" }
+  return { state = { spotify = sp, playback = pb }, commands = cmds }
+end
 
 function streaming.on_spotify(doc, ev)
   local kind = ev.type:sub(9)     -- after "spotify."
@@ -76,7 +104,7 @@ function streaming.on_spotify(doc, ev)
     sp.username = ev.username
     return { state = { spotify = sp }, commands = { emit("volume.apply", {}) } }
   elseif kind == "logout" then
-    sp.username = nil
+    sp.username, sp.playing, sp.track = nil, nil, nil
     local r = { state = { spotify = sp }, commands = {} }
     if active(doc, "SPOTIFY") then local pb = pb_of(doc); pb.now, pb.state = nil, "idle"; r.state.playback = pb; r.commands[1] = emit("playback.changed", { state = "idle" }) end
     return r
@@ -90,22 +118,24 @@ function streaming.on_spotify(doc, ev)
   elseif kind == "status" then
     return { commands = { pub(SP .. "connection_state", (doc.net and doc.net.connected) and 2 or 0) } }
   elseif kind == "now_playing" then
-    local pb = pb_of(doc)
-    local d = ev.data or {}
-    local was_local = pb.now and pb.now.service == "FILE" and (pb.state == "playing" or pb.state == "starting")
-    local cmds = {}
-    if was_local then cmds[#cmds + 1] = pub("/j/audio/out/stop", "7") end   -- Spotify took over: stop the local file
-    pb.now = { playlist = (pb.now and pb.now.service == "SPOTIFY") and pb.now.playlist or nil, service = "SPOTIFY",
-               uri = d.source_uri, source = d.source, title = d.track, album = d.album, artist = d.artist, image = d.image,
-               duration_ms = tonumber(d.duration_ms), has_next = d.hasNext ~= false, has_prev = d.hasPrev ~= false,
-               audiobook = type(d.source_uri) == "string" and d.source_uri:find(":show:", 1, true) ~= nil }
-    if was_local then pb.state = "idle" end
-    return { state = { playback = pb }, commands = cmds }
+    sp.track = copy(ev.data or {})
+    if active(doc, "SPOTIFY") then
+      local pb = pb_of(doc)
+      pb.now = sp_now(sp.track, pb.now.playlist)
+      return { state = { spotify = sp, playback = pb } }
+    end
+    -- local music loaded: wait for "playing" (the phone may only have changed the track of a paused Spotify)
+    if local_busy(pb_of(doc)) then return { state = { spotify = sp } } end
+    return take_over(doc, sp)
   elseif kind == "playing" or kind == "paused" then
-    if not active(doc, "SPOTIFY") then return nil end
+    sp.playing = kind == "playing"
+    if not active(doc, "SPOTIFY") then
+      if kind == "playing" then return take_over(doc, sp) end
+      return { state = { spotify = sp } }
+    end
     local pb = pb_of(doc)
     pb.state = kind
-    return { state = { playback = pb }, commands = { emit("playback.changed", { state = kind }) } }
+    return { state = { spotify = sp, playback = pb }, commands = { emit("playback.changed", { state = kind }) } }
   elseif kind == "position" then
     if not active(doc, "SPOTIFY") or (doc.playback or {}).state ~= "playing" then return nil end
     local pb = pb_of(doc); pb.position_ms = tonumber(ev.ms) or 0

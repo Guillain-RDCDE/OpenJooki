@@ -44,13 +44,71 @@ describe("services.streaming — starting and transport through playback", funct
     assert_eq(r.state.playback.state, "idle"); assert_nil(r.state.playback.now)
   end)
 
-  it("Spotify taking over from the app stops the local file", function()
+  it("Spotify taking over from the app stops the local file (on 'playing', the last one to start wins)", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "loc" }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    -- the track alone does not take over: the phone may only have changed the track of a paused Spotify
     local r = streaming.on_spotify(doc, { type = "spotify.now_playing", data = { source_uri = "spotify:album:9", track = "X" } })
-    assert_eq(topics(r), { "audio/out/stop 7" })
-    assert_eq(r.state.playback.state, "idle"); assert_eq(r.state.playback.now.service, "SPOTIFY")
+    assert_eq(topics(r), {}); assert_nil(r.state.playback)
+    apply(doc, r)
+    r = streaming.on_spotify(doc, { type = "spotify.playing" })
+    assert_eq(topics(r), { "audio/out/stop 7", "emit playback.changed playing" })
+    assert_eq(r.state.playback.state, "playing"); assert_eq(r.state.playback.now.service, "SPOTIFY"); assert_eq(r.state.playback.now.title, "X")
+    apply(doc, r)
+    -- the local engine's late "stopped" must not touch Spotify's state
+    assert_nil(playback.on_audio(doc, { type = "audio.stopped", id = 7 }))
+    assert_nil(playback.on_audio(doc, { type = "audio.position", id = 7, ms = 10 }))
+    assert_eq(doc.playback.state, "playing")
+  end)
+
+  it("Spotify started from the phone is what plays, whatever the order of the daemon's two messages", function()
+    local track = { source_uri = "spotify:playlist:5", source = "Chill", track = "Song", artist = "Band", duration_ms = "180000", image = "http://i" }
+    for _, order in ipairs({ { "now_playing", "playing" }, { "playing", "now_playing" } }) do
+      local doc = doc_with()
+      for _, kind in ipairs(order) do
+        apply(doc, streaming.on_spotify(doc, { type = "spotify." .. kind, data = kind == "now_playing" and track or nil }))
+      end
+      local now = doc.playback.now
+      assert_eq(doc.playback.state, "playing", order[1] .. " first")
+      assert_eq(now.service, "SPOTIFY"); assert_nil(now.playlist)
+      assert_eq(now.title, "Song"); assert_eq(now.artist, "Band"); assert_eq(now.source, "Chill"); assert_eq(now.duration_ms, 180000)
+      apply(doc, streaming.on_spotify(doc, { type = "spotify.position", ms = 3000 }))
+      assert_eq(doc.playback.position_ms, 3000)
+      -- taking a token off does not pause the phone's Spotify; the sleep timer does
+      assert_nil(playback.on_pause(doc, { source = "token" }))
+      assert_eq(topics(playback.on_pause(doc, { source = "sleep_timer" })), { "spotify/output/pauz " })
+      -- the page's pause and play reach the daemon, even without a playlist of ours
+      assert_eq(topics(playback.on_pause(doc, { source = "page" })), { "spotify/output/pauz " })
+      apply(doc, streaming.on_spotify(doc, { type = "spotify.paused" }))
+      assert_eq(doc.playback.state, "paused")
+      assert_eq(topics(playback.on_toggle(doc, { now = 9 })), { "spotify/output/cont " })
+    end
+  end)
+
+  it("a token put on while Spotify plays pauses Spotify and plays alone", function()
+    local doc = doc_with()
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.playing" }))
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.now_playing", data = { source_uri = "spotify:album:9", track = "X" } }))
+    assert_eq(doc.playback.state, "playing")
+    local r = playback.on_request(doc, { playlist = "loc" })
+    assert_eq(topics(r), { "spotify/output/pauz ", "audio/out/play 7\tfile:///d/uploads/a", "emit playback.changed starting" })
+    apply(doc, r)
+    assert_eq(doc.playback.now.service, "FILE")
+    -- the daemon confirms the pause: our state stays the token's
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.paused" }))
+    assert_eq(doc.playback.now.service, "FILE"); assert_eq(doc.playback.state, "starting")
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    assert_eq(doc.playback.state, "playing")
+    -- pressing play on the phone again: Spotify takes the speaker back
+    r = streaming.on_spotify(doc, { type = "spotify.playing" })
+    assert_eq(topics(r)[1], "audio/out/stop 7"); assert_eq(r.state.playback.now.title, "X")
+  end)
+
+  it("a token put on pauses Spotify even when our state missed that it plays", function()
+    local doc = doc_with({ spotify = { active = true, playing = true } })
+    local r = playback.on_request(doc, { playlist = "loc" })
+    assert_eq(topics(r)[1], "spotify/output/pauz ")
   end)
 
   it("Deezer needs a login; then plays the media uri and follows its events", function()
@@ -74,8 +132,8 @@ describe("services.streaming — starting and transport through playback", funct
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "loc" }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
-    assert_nil(streaming.on_spotify(doc, { type = "spotify.playing" }))
     assert_nil(streaming.on_spotify(doc, { type = "spotify.position", ms = 1 }))
+    assert_nil(streaming.on_spotify(doc, { type = "spotify.paused" }).state.playback)
     assert_nil(streaming.on_deezer(doc, { type = "deezer.paused", flag = "1" }))
     assert_eq(doc.playback.state, "playing")
   end)

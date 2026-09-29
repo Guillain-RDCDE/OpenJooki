@@ -165,7 +165,12 @@ local function start(doc, pb, playlist_id, opts)
     if pb.state == "playing" or pb.state == "starting" then return { state = { playback = pb }, commands = cmds } end
     if pb.state == "paused" then return playback.resume_paused(doc, pb, opts.now_s) end
   end
-  if pb.state == "playing" or pb.state == "paused" or pb.state == "starting" then
+  local streamed = pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER")
+  if has_streaming and (streamed or (doc.spotify and doc.spotify.playing)) then
+    -- the last one to start wins: a token put on while Spotify plays pauses Spotify
+    for _, c in ipairs(streaming.transport(streamed and pb.now.service or "SPOTIFY", "stop")) do cmds[#cmds + 1] = c end
+  end
+  if not streamed and (pb.state == "playing" or pb.state == "paused" or pb.state == "starting") then
     cmds[#cmds + 1] = cmd_audio("stop", MUSIC)
   end
   pb.last[playlist_id] = index
@@ -226,7 +231,11 @@ local function stream_cmds(pb, action, arg) return { commands = require("service
 function playback.on_pause(doc, ev)
   local pb = pb_of(doc)
   if pb.state ~= "playing" and pb.state ~= "starting" then return nil end
-  if is_streaming(pb) then return stream_cmds(pb, "pause") end
+  if is_streaming(pb) then
+    -- taking a token off pauses what a token started, not Spotify started from the phone
+    if ev.source == "token" and not pb.now.playlist then return nil end
+    return stream_cmds(pb, "pause")
+  end
   pb.paused_by, pb.paused_at = ev.source, ev.now
   if pb.now and pb.now.service == "STREAM" then
     return { state = { playback = pb }, commands = { cmd_audio("stop", MUSIC) } }
@@ -237,6 +246,8 @@ end
 function playback.on_resume(doc, ev)
   local pb = pb_of(doc)
   if pb.state == "paused" and is_streaming(pb) then return stream_cmds(pb, "resume") end
+  -- Spotify started from the phone has no playlist of ours: "play" asks the daemon to continue
+  if is_streaming(pb) and not pb.now.playlist and pb.state ~= "playing" then return stream_cmds(pb, "resume") end
   if pb.state == "paused" then return playback.resume_paused(doc, pb, ev.now) end
   if (pb.state == "ended" or pb.state == "idle") and pb.now then
     return start(doc, pb, pb.now.playlist, { index = pb.now.index, restart = true, now_s = ev.now })
@@ -320,6 +331,8 @@ function playback.on_audio(doc, ev)
   if ev.id == SOUND then return playback.on_sound_audio(doc, ev, kind) end
   if ev.id ~= MUSIC then return nil end
   local pb = pb_of(doc)
+  -- Spotify/Deezer plays: late reports of the local track it stopped must not touch its state
+  if is_streaming(pb) then return nil end
   local cmds = {}
   local resume, resume_changed = nil, false
   if kind == "position" then

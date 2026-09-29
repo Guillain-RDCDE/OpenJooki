@@ -57,8 +57,8 @@ appears anywhere in the result, and the Jooki writes its own name and address at
 every boot from its radio chip anyway.
 
 Two things are not on the card and do not need to be: the Wi-Fi networks (kept in
-the radio chip's own memory) and the Spotify login (a file the family recreates
-from the page, if they use it).
+the radio chip's own memory) and the Spotify login (made again by picking the
+Jooki in the Spotify app on the phone, if the family uses it).
 
 ## How it is built and checked
 

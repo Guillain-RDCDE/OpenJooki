@@ -19,8 +19,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.0.5:** Bluetooth speakers and headphones, airplane mode, Wi-Fi without the app,
-a new card for a Jooki that no longer starts. [All the changes](CHANGELOG.md)
+**New in 2.0.6:** Spotify from the phone shows on the page, and a token put on pauses it.
+[All the changes](CHANGELOG.md)
 
 ---
 

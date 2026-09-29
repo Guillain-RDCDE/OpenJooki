@@ -1,5 +1,24 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.0.6 (29 September 2026) — Spotify from the phone
+- **Spotify still works on the Jooki.** Pick the Jooki in the Spotify app on your
+  phone (the devices button): the music comes out of the Jooki. Checked on a family
+  Jooki on 29 September 2026.
+- **The page now shows it.** While Spotify plays, the page shows the song, the artist
+  and where it plays from, instead of "Nothing playing", and its pause and play
+  buttons work.
+- **One sound at a time.** Put a token on while Spotify plays: Spotify pauses and the
+  token plays alone. Press play on the phone again: Spotify takes over and the
+  token's music stops. Before, both played at once. Taking a token off does not
+  pause Spotify started from the phone; the sleep timer does.
+- **Headphones.** Plug headphones in while Spotify plays: the sound goes to the
+  headphones, as it did before OpenJooki.
+- Checked on the bench with a stand-in for the Spotify program, in both orders its
+  messages can come in (`tools/openjooki/tests/test_spotify.py`, in CI).
+- **The page is never out of date.** After an update, a phone could keep showing the
+  old page (Settings said "OpenJooki 2.0.5, page 2.0.4", and the new settings were
+  missing). Now the page sees it and loads itself again, once, on its own.
+
 ## SD card tools (29 September 2026) — back to the original Jooki
 - **The original Jooki, on a card.** The SD card tool (Windows, Mac, Linux) has a third
   choice, *The original Jooki: back to the program it was sold with*: a complete card with

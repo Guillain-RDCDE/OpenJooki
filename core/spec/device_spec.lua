@@ -35,6 +35,7 @@ describe("services.device — volume chain", function()
     local r = device.on_knobs(doc, { volume = 55, headphones = true })
     assert_eq(r.state.audiocfg.volume, 55); assert_true(r.state.audiocfg.headphones_en)
     assert_eq(kinds(r)[1], "vol 55"); assert_eq(kinds(r)[3], "audio/out/set_output_device headphones")
+    assert_eq(kinds(r)[4], "spotify/output/set_output_device headphones")   -- Spotify follows the headphones too
   end)
 
   it("volume buttons step by 10 within 0-100", function()

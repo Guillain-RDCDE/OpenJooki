@@ -96,6 +96,7 @@ function device.on_knobs(doc, ev)
     r.state.audiocfg = a2
     local dev = ev.headphones and "headphones" or "speaker"
     r.commands[#r.commands + 1] = { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = dev }
+    r.commands[#r.commands + 1] = { kind = "bus.publish", topic = "/j/spotify/output/set_output_device", payload = dev }   -- 1.x: Spotify follows too
     r.commands[#r.commands + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/amp_en", text = ev.headphones and "0" or "1" }
   end
   if not next(r.state) and #r.commands == 0 then return nil end

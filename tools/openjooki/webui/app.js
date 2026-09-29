@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.5';
+  var VERSION = '2.0.6';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -728,7 +728,17 @@
     pendingCmd = { type: type, payload: payload };
     return client.publish('/j/web/input/' + type, JSON.stringify(payload));
   }
-  var waiters = [], autoChecked = false;
+  var waiters = [], autoChecked = false, staleReload = false;
+  // The Jooki serves index.html without cache headers: a phone may keep the old page after an
+  // update (system 2.0.5, page 2.0.4). If the Jooki is newer than this page, load it again once,
+  // under a new address so the phone cannot reuse its copy (?v= also stops any loop).
+  function reloadIfStale() {
+    var v = S.device.openjooki;
+    if (staleReload || !v || !newer(v, VERSION) || location.search.indexOf('v=' + v) >= 0) return;
+    staleReload = true;
+    var busy = upd.state === 'running' || upd.state === 'rebooting';   // just updated: let the "done" toast show first
+    setTimeout(function () { location.replace(location.pathname + '?v=' + encodeURIComponent(v) + location.hash); }, busy ? 3000 : 0);
+  }
   function onMessage(topic, text) {
     var data;
     try { data = JSON.parse(text); } catch (e) { return; }
@@ -739,6 +749,7 @@
       if (posOnly) return;
       waiters = waiters.filter(function (w) { return !w(data); });
       if (!autoChecked && S.device.openjooki) { autoChecked = true; setTimeout(checkUpdate, 1500); }
+      reloadIfStale();
       syncClock();
       handleUserMessages();
       scheduleRender();
@@ -2158,7 +2169,16 @@
 
   /* ------------------------------------------------------------------ player */
   function isPlaying() { return S.audio.playback.state === 'PLAYING' || S.audio.playback.state === 'STARTING'; }
-  function hasNow() { var np = S.audio.nowPlaying; return !!(np && np.playlistId && np.uri); }
+  // Spotify started from the phone has no playlist of ours, and its title may arrive a moment later
+  function isSpotify() { var np = S.audio.nowPlaying; return !!(np && (np.service === 'SPOTIFY' || np.service === 'DEEZER')); }
+  function hasNow() { var np = S.audio.nowPlaying; return !!(np && ((np.playlistId && np.uri) || isSpotify())); }
+  function nowTitle() {
+    var np = S.audio.nowPlaying;
+    if (isSpotify()) return cleanTitle(np.track) || (np.service === 'DEEZER' ? 'Deezer' : 'Spotify');
+    return cleanTitle(np.track || trackTitle(np.trackId));
+  }
+  // under the title: the album or playlist Spotify plays from, else our playlist's name
+  function nowSource(pl) { var np = S.audio.nowPlaying; return np.source || (pl && pl.title) || (isSpotify() ? np.artist || '' : ''); }
   function curPos() {
     var pb = S.audio.playback;
     var p = Number(pb.position_ms) || 0;
@@ -2183,9 +2203,9 @@
       cover,
       h('div', { class: 'info', role: 'button', tabindex: '0', 'aria-label': t('open_player'), onclick: function () { if (now) nowPlayingModal(); },
         onkeydown: function (e) { if (e.key === 'Enter' && now) nowPlayingModal(); } },
-        h('div', { class: 't ellipsis' }, now ? cleanTitle(np.track || trackTitle(np.trackId)) : t('nothing_playing')),
+        h('div', { class: 't ellipsis' }, now ? nowTitle() : t('nothing_playing')),
         h('div', { class: 's ellipsis' }, sleepInfo() ? h('span', { class: 'sleepmini' }, icon('moon'), h('span', { 'data-sleep-short': '1' }, sleepShort())) : null,
-          now ? (np.source || (pl && pl.title) || '') : t('nothing_hint'))),
+          now ? nowSource(pl) : t('nothing_hint'))),
       now ? h('button', { class: 'icon-btn', 'aria-label': t('prev'), onclick: function () { send('DO_PREV', {}); } }, icon('prev')) : null,
       now ? h('button', { class: 'icon-btn accent', 'aria-label': isPlaying() ? t('pause') : t('play'), 'data-k': 'pp',
         onclick: function () { send(isPlaying() ? 'DO_PAUSE' : 'DO_PLAY', {}); } }, icon(isPlaying() ? 'pause' : 'play')) : null,
@@ -2198,7 +2218,7 @@
       sig: function () {
         var np = S.audio.nowPlaying, c = S.audio.config;
         var sl = sleepInfo() || {};
-        return [np.playlistId, np.trackId, np.trackIndex, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, sl.mode, sl.total, sl.auto].join('|');
+        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];
@@ -2213,7 +2233,7 @@
         } else art.appendChild(tokVisual(pl && pl.star, ''));
         var vol = volDrag !== null ? volDrag : Number(cfg.volume) || 0;
         return h('div', { class: 'np' }, art,
-          h('div', { class: 't' }, cleanTitle(np.track || trackTitle(np.trackId)) || '—'),
+          h('div', { class: 't' }, nowTitle() || '—'),
           h('div', { class: 'muted' }, [np.artist && np.artist !== 'unknown' ? np.artist : null, np.source || (pl && pl.title)].filter(Boolean).join(' · ')),
           stream ? h('div', { class: 'badge accent', style: 'margin-top:12px' }, t('live')) : [
             h('input', { class: 'range', type: 'range', min: '0', max: String(d || 1), value: String(Math.round(curPos())), 'aria-label': 'position', 'data-k': 'seek', 'data-seek': '1',

@@ -87,14 +87,16 @@ web instead.
 ## The SD card: more room, or a Jooki brought back to life
 
 The Jooki keeps everything on a small SD card inside it (about 5 GB for music). With a
-Windows computer, a Mac or a Linux computer, one tool does two things:
+Windows computer, a Mac or a Linux computer, one tool does three things:
 
 - **a bigger card**: move everything to a bigger card in a few clicks; the tool never
   writes to the Jooki's own card;
 - **a new card from scratch**: for a Jooki that no longer starts because its card died
   (dark side dots, reset does nothing). The tool downloads a complete, clean card image
   and writes it on a blank card; the Jooki starts again, with an empty library. What is
-  on that card: [docs/25-new-sd-card.md](docs/25-new-sd-card.md).
+  on that card: [docs/25-new-sd-card.md](docs/25-new-sd-card.md);
+- **the original Jooki**: a card with the Jooki exactly as it was sold, without OpenJooki,
+  for whoever wants it back ([docs/27-original-card.md](docs/27-original-card.md)).
 
 **[→ The SD card tool](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)**
 

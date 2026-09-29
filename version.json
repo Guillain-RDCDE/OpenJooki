@@ -1,7 +1,7 @@
 {
-  "version": "2.0.6",
-  "file": "openjooki-firmware-2.0.6.img.gz",
-  "sha256": "5dc250eb2bb4ec2605e2e2fb6d43ed8e5a84543ac0d5979fe27643113b6fcfac",
+  "version": "2.0.7",
+  "file": "openjooki-firmware-2.0.7.img.gz",
+  "sha256": "ce08339a7631822163c7401d68b38f462e8b2cd946eb53aca593bf43f9ba7c14",
   "device_type": "ml-j2000",
   "date": "2026-09-29"
 }

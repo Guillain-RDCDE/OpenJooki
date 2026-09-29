@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.0.6';
+  var VERSION = '2.0.7';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -94,6 +94,13 @@
       bt_air: 'Le Bluetooth est coupé pendant le mode avion.', bt_unnamed: 'Appareil sans nom',
       bt_known: 'Déjà utilisée : allumez-la simplement, pas besoin du mode appairage',
       nothing_playing: 'Rien en lecture', nothing_hint: 'Pose un jeton ou choisis une playlist',
+      sp_save: 'Mettre sur un personnage', sp_save_title: 'Mettre cette musique Spotify sur un personnage',
+      sp_save_help: 'Pose ensuite le personnage sur le Jooki : il relancera cette playlist Spotify, même sans le téléphone. Le compte Spotify doit rester connecté au Jooki.',
+      sp_pick_char: 'Choisis un personnage', sp_saving: 'Spotify enregistre…',
+      sp_saved: function (c, n) { return 'C\'est fait : ' + c + ' lance « ' + n + ' »'; },
+      sp_timeout: 'Spotify n\'a pas répondu. Relance la musique dans l\'appli Spotify et réessaie.',
+      err_sp_not_playing: 'Lance d\'abord la musique sur le Jooki depuis l\'appli Spotify.',
+      sp_playlist: 'Playlist Spotify', sp_playlist_help: 'Cette playlist se joue depuis Spotify : on ne peut pas y ajouter de fichiers. Pour changer la musique, fais-la jouer dans Spotify et remets-la sur le personnage.',
       live: 'En direct', volume: 'Volume',
       uploading: 'Envoi', processing: 'Analyse sur le Jooki…', done: 'Ajouté', queued: 'En attente',
       up_too_small: 'Fichier vide ou trop petit', up_no_space: 'Plus assez de place sur le Jooki',
@@ -239,6 +246,13 @@
       bt_air: 'Bluetooth is off during airplane mode.', bt_unnamed: 'Unnamed device',
       bt_known: 'Used before: just switch it on, no pairing mode needed',
       nothing_playing: 'Nothing playing', nothing_hint: 'Put a token or pick a playlist',
+      sp_save: 'Put on a character', sp_save_title: 'Put this Spotify music on a character',
+      sp_save_help: 'Then put the character on the Jooki: it plays this Spotify playlist again, even without the phone. The Spotify account must stay connected to the Jooki.',
+      sp_pick_char: 'Pick a character', sp_saving: 'Spotify is saving…',
+      sp_saved: function (c, n) { return 'Done: ' + c + ' plays “' + n + '”'; },
+      sp_timeout: 'Spotify did not answer. Play the music again in the Spotify app and try again.',
+      err_sp_not_playing: 'First play the music on the Jooki from the Spotify app.',
+      sp_playlist: 'Spotify playlist', sp_playlist_help: 'This playlist plays from Spotify: files cannot be added to it. To change the music, play it in Spotify and put it on the character again.',
       live: 'Live', volume: 'Volume',
       uploading: 'Uploading', processing: 'Processing on the Jooki…', done: 'Added', queued: 'Waiting',
       up_too_small: 'Empty or too small file', up_no_space: 'Not enough space left on the Jooki',
@@ -384,6 +398,13 @@
       bt_air: 'Bluetooth staat uit tijdens de vliegtuigmodus.', bt_unnamed: 'Apparaat zonder naam',
       bt_known: 'Eerder gebruikt: gewoon aanzetten, koppelmodus is niet nodig',
       nothing_playing: 'Er speelt niets', nothing_hint: 'Zet een figuurtje neer of kies een afspeellijst',
+      sp_save: 'Op een figuurtje zetten', sp_save_title: 'Deze Spotify-muziek op een figuurtje zetten',
+      sp_save_help: 'Zet daarna het figuurtje op de Jooki: het speelt deze Spotify-afspeellijst weer af, ook zonder telefoon. Het Spotify-account moet met de Jooki verbonden blijven.',
+      sp_pick_char: 'Kies een figuurtje', sp_saving: 'Spotify slaat op…',
+      sp_saved: function (c, n) { return 'Klaar: ' + c + ' speelt „' + n + '”'; },
+      sp_timeout: 'Spotify antwoordde niet. Speel de muziek opnieuw af in de Spotify-app en probeer het nog eens.',
+      err_sp_not_playing: 'Speel eerst de muziek op de Jooki af vanuit de Spotify-app.',
+      sp_playlist: 'Spotify-afspeellijst', sp_playlist_help: 'Deze afspeellijst speelt vanuit Spotify: er kunnen geen bestanden aan worden toegevoegd. Om de muziek te veranderen, speel ze af in Spotify en zet ze opnieuw op het figuurtje.',
       live: 'Live', volume: 'Volume',
       uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
       up_too_small: 'Leeg of te klein bestand', up_no_space: 'Niet genoeg ruimte over op de Jooki',
@@ -728,7 +749,7 @@
     pendingCmd = { type: type, payload: payload };
     return client.publish('/j/web/input/' + type, JSON.stringify(payload));
   }
-  var waiters = [], autoChecked = false, staleReload = false;
+  var waiters = [], autoChecked = false, staleReload = false, onCmdError = null;
   // The Jooki serves index.html without cache headers: a phone may keep the old page after an
   // update (system 2.0.5, page 2.0.4). If the Jooki is newer than this page, load it again once,
   // under a new address so the phone cannot reuse its copy (?v= also stops any loop).
@@ -761,6 +782,7 @@
         return;
       }
       if (Date.now() - lastCmd < 4000) toast(errorText(data && data.msg), 'error');
+      if (onCmdError) { var f = onCmdError; onCmdError = null; f(data); }
     }
   }
   function errorText(msg) {
@@ -770,6 +792,7 @@
     if (msg === 'empty title') return t('err_empty_title');
     if (msg === 'invalid stream url') return t('err_radio');
     if (msg === 'invalid token type') return t('err_unknown_char');
+    if (msg === 'Not playing spotify right now') return t('err_sp_not_playing');
     if (/does not exist|invalid:|nil playlistId|unknown token/.test(msg)) return t('err_gone');
     return t('err_generic');
   }
@@ -1042,8 +1065,8 @@
         onkeydown: function (e) { if (e.key === 'Enter') go('#/p/' + encodeURIComponent(p.id)); } },
         h('div', { class: 'ph' }, tokVisual(p.star, 'sm', S.nfc.starId && S.nfc.starId === p.star)),
         h('div', { class: 'name' }, p.title || '—'),
-        h('div', { class: 'meta' }, t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
-        n ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
+        h('div', { class: 'meta' }, p.spotify ? t('sp_playlist') : t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
+        n || p.spotify ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
           e.stopPropagation(); send('PLAYLIST_PLAY', { playlistId: p.id }); } }, icon('play')) : null);
       return card;
     });
@@ -1091,32 +1114,81 @@
     });
   }
 
-  function charPickerModal(p) {
-    var chosen = p.star || null;
+  // the grid of characters to pick from (the ones seen on this Jooki first); `none` adds "no token"
+  function charGrid(chosen, selfId, pick, none) {
     var seen = {};
     Object.keys(S.db.tokens).forEach(function (k) { var s = S.db.tokens[k] && S.db.tokens[k].starId; if (isUserChar(s)) seen[s] = true; });
     function opt(id) {
       var other = id ? playlistOfChar(id) : null;
-      if (other && other.id === p.id) other = null;
+      if (other && other.id === selfId) other = null;
       return h('button', { class: 'charopt' + (chosen === id ? ' sel' : ''), 'data-char': id || 'none', 'aria-pressed': chosen === id ? 'true' : 'false',
-        onclick: function () { chosen = id; renderModal(); } },
+        onclick: function () { pick(id); renderModal(); } },
         tokVisual(id, 'sm'), h('div', null, id ? charName(id) : t('no_token')), other ? h('div', { class: 'taken' }, t('used_by', other.title || '—')) : null);
     }
     var ids = CHARS.map(function (c) { return c[0]; }).filter(function (id) { return id !== 'Jooki.ThankYou'; });
     Object.keys(seen).forEach(function (s) { if (ids.indexOf(s) < 0) ids.push(s); });
     ids.sort(function (a, b) { return (seen[b] ? 1 : 0) - (seen[a] ? 1 : 0) || charInfo(a).order - charInfo(b).order; });
+    return h('div', { class: 'chargrid' }, none ? opt(null) : null, ids.map(opt));
+  }
+  function charPickerModal(p) {
+    var chosen = p.star || null;
     openModal({
       render: function () {
         var other = chosen ? playlistOfChar(chosen) : null;
         if (other && other.id === p.id) other = null;
         return [h('h3', null, t('token_for')), h('p', { class: 'small muted' }, t('token_help')),
-          h('div', { class: 'chargrid' }, opt(null), ids.map(opt)),
+          charGrid(chosen, p.id, function (id) { chosen = id; }, true),
           other ? h('div', { class: 'banner', style: 'margin-top:12px' }, t('token_moved', other.title || '—')) : null,
           h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, t('cancel')),
             h('button', { class: 'btn primary', 'data-k': 'charsave', onclick: function () {
               if ((chosen || null) !== (p.star || null)) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: chosen || false } });
               closeModal();
             } }, t('save')))];
+      }
+    });
+  }
+
+  // What Spotify plays on the Jooki, put on a character (1.x "preset", the Muuselabs app had it):
+  // the Jooki asks Spotify for a preset of what plays, the core stores it in a new playlist.
+  function spotifySaveModal() {
+    var np = S.audio.nowPlaying;
+    var name = cleanTitle(np.source || np.track || '') || 'Spotify', chosen = null, saving = false;
+    function save() {
+      var v = name.trim();
+      if (!v || !chosen || saving) return;
+      saving = true; renderModal();
+      var before = Object.keys(pls()), star = chosen, done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true; saving = false; renderModal(); toast(t('sp_timeout'), 'error');
+      }, 20000);
+      waiters.push(function (partial) {
+        if (done) return true;
+        if (!partial.db) return false;
+        var fresh = Object.keys(pls()).filter(function (k) { return before.indexOf(k) < 0 && pls()[k] && pls()[k].spotify; })[0];
+        if (!fresh) return false;
+        done = true; clearTimeout(timer); closeModal();
+        toast(t('sp_saved', charName(star), pls()[fresh].title || v));
+        go('#/p/' + encodeURIComponent(fresh));
+        return true;
+      });
+      // an error answer (Spotify paused meanwhile) comes as the usual toast; let the parent try again
+      onCmdError = function () { if (done) return; done = true; clearTimeout(timer); saving = false; renderModal(); };
+      send('PLAYLIST_NEW_SPOTIFY', { title: v, star: star });
+    }
+    openModal({
+      autofocus: 'spname',
+      render: function () {
+        var other = chosen ? playlistOfChar(chosen) : null;
+        return [h('h3', null, t('sp_save_title')), h('p', { class: 'small muted' }, t('sp_save_help')),
+          h('label', { class: 'field' }, h('span', null, t('name')),
+            h('input', { class: 'input', 'data-k': 'spname', maxlength: '100', value: name,
+              oninput: function (e) { name = e.target.value; var b = document.querySelector('[data-k="spsaveok"]'); if (b) b.disabled = !name.trim() || !chosen; } })),
+          h('div', { class: 'small muted', style: 'margin:12px 0 6px' }, t('sp_pick_char')),
+          charGrid(chosen, null, function (id) { chosen = id; }, false),
+          other ? h('div', { class: 'banner', style: 'margin-top:12px' }, t('token_moved', other.title || '—')) : null,
+          h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, t('cancel')),
+            h('button', { class: 'btn primary', 'data-k': 'spsaveok', disabled: saving || !name.trim() || !chosen, onclick: save }, saving ? t('sp_saving') : t('save')))];
       }
     });
   }
@@ -1149,7 +1221,20 @@
           : h('h2', { class: 'row' }, h('span', { class: 'grow' }, p.title || '—'),
             h('button', { class: 'icon-btn', 'aria-label': t('rename'), 'data-k': 'renamebtn', onclick: function () { ui.editTitle = p.title || ''; render(); setTimeout(function () {
               var el = document.querySelector('[data-k="title"]'); if (el) { el.focus(); el.select(); } }, 0); } }, icon('edit'))),
-        h('div', { class: 'small muted' }, (p.star ? charName(p.star) : t('no_token')) + ' · ' + t('n_tracks', tracks.length) + (total ? ' · ' + fmtTotal(total) : ''))));
+        h('div', { class: 'small muted' }, (p.star ? charName(p.star) : t('no_token')) + ' · ' + (p.spotify ? t('sp_playlist') : t('n_tracks', tracks.length) + (total ? ' · ' + fmtTotal(total) : '')))));
+    if (p.spotify) {
+      // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
+      return [head, h('div', { class: 'actions' },
+          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
+        h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
+        h('div', { class: 'actions' }, h('button', { class: 'btn danger', onclick: function () {
+          confirmBox(t('delete_playlist_q', p.title || '—'), t('delete_playlist_text'), t('delete'), true).then(function (ok) {
+            if (!ok) return;
+            send('PLAYLIST_DELETE', { playlistId: id });
+            go('#/');
+          });
+        } }, icon('trash'), t('delete_playlist')))];
+    }
     var actions = h('div', { class: 'actions' },
       tracks.length ? h('button', { class: 'btn primary', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play')) : null,
       fileButton(t('add_files'), id, !tracks.length),
@@ -2177,8 +2262,12 @@
     if (isSpotify()) return cleanTitle(np.track) || (np.service === 'DEEZER' ? 'Deezer' : 'Spotify');
     return cleanTitle(np.track || trackTitle(np.trackId));
   }
-  // under the title: the album or playlist Spotify plays from, else our playlist's name
-  function nowSource(pl) { var np = S.audio.nowPlaying; return np.source || (pl && pl.title) || (isSpotify() ? np.artist || '' : ''); }
+  // under the title: for Spotify "artist / album" (the album, else what it plays from), else our playlist's name
+  function nowSource(pl) {
+    var np = S.audio.nowPlaying;
+    if (isSpotify()) return [np.artist, np.album || np.source].filter(function (x) { return x && x !== 'unknown'; }).join(' / ');
+    return np.source || (pl && pl.title) || '';
+  }
   function curPos() {
     var pb = S.audio.playback;
     var p = Number(pb.position_ms) || 0;
@@ -2234,7 +2323,7 @@
         var vol = volDrag !== null ? volDrag : Number(cfg.volume) || 0;
         return h('div', { class: 'np' }, art,
           h('div', { class: 't' }, nowTitle() || '—'),
-          h('div', { class: 'muted' }, [np.artist && np.artist !== 'unknown' ? np.artist : null, np.source || (pl && pl.title)].filter(Boolean).join(' · ')),
+          h('div', { class: 'muted' }, isSpotify() ? nowSource(pl) : [np.artist && np.artist !== 'unknown' ? np.artist : null, np.source || (pl && pl.title)].filter(Boolean).join(' · ')),
           stream ? h('div', { class: 'badge accent', style: 'margin-top:12px' }, t('live')) : [
             h('input', { class: 'range', type: 'range', min: '0', max: String(d || 1), value: String(Math.round(curPos())), 'aria-label': 'position', 'data-k': 'seek', 'data-seek': '1',
               oninput: function () { seeking = true; }, onchange: function (e) { seeking = false; send('SEEK', { position_ms: Math.max(1, Number(e.target.value)) }); } }),
@@ -2248,6 +2337,9 @@
           h('div', { class: 'toggles' },
             h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
             h('button', { class: 'toggle' + (cfg.repeat_mode === 1 ? ' on' : ''), 'aria-pressed': String(cfg.repeat_mode === 1), onclick: function () { send('SET_CFG', { repeat_mode: cfg.repeat_mode === 1 ? 0 : 1 }); } }, icon('repeat'), t('repeat'))),
+          // Spotify started from the phone: offer to put it on a character
+          np.service === 'SPOTIFY' && !np.playlistId ? h('div', { class: 'actions', style: 'justify-content:center;margin-top:12px' },
+            h('button', { class: 'btn primary', 'data-k': 'spsave', onclick: spotifySaveModal }, icon('plus'), t('sp_save'))) : null,
           S.bedtime.cfg.start !== undefined ? sleepPanel() : null,
           h('div', { class: 'foot' }, h('button', { class: 'btn block', onclick: closeModal }, t('close'))));
       }

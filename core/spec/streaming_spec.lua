@@ -152,6 +152,21 @@ describe("services.streaming — presets, config, login", function()
     local ev = r.commands[1].event
     assert_eq(ev.type, "library.add_playlist"); assert_eq(ev.spotify, { uri = "spotify:playlist:1", preset = "4142" }); assert_eq(ev.star, "Jooki.Fox")
     assert_eq(r.state.streaming_int, {})
+    -- an empty answer from Spotify creates nothing
+    apply(doc, streaming.on_new_spotify_playlist(doc, { title = "Soir", star = "Jooki.Fox" }))
+    r = streaming.on_spotify(doc, { type = "spotify.new_preset", raw = "" })
+    assert_eq(r.commands[1].key, "streaming.preset_empty"); assert_eq(r.state.streaming_int, {})
+  end)
+
+  it("a token linked to a Spotify preset plays it; taking it off pauses it (a token started it)", function()
+    local doc = doc_with()
+    doc.library.playlists.sp.star = "Jooki.Fox"
+    local r = playback.on_request(doc, { playlist = "sp", now = 1 })
+    assert_eq(topics(r)[1], "spotify/output/play_preset AB")
+    apply(doc, r)
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.playing" }))
+    assert_eq(doc.playback.now.playlist, "sp"); assert_eq(doc.playback.state, "playing")
+    assert_eq(topics(playback.on_pause(doc, { source = "token" })), { "spotify/output/pauz " })
   end)
 
   it("config and volume changes reach the active service only", function()
@@ -166,7 +181,12 @@ describe("services.streaming — presets, config, login", function()
     local r = streaming.on_spotify(doc, { type = "spotify.login", username = "bob" })
     assert_eq(r.state.spotify.username, "bob"); assert_eq(topics(r), { "emit volume.apply" })
     assert_eq(topics(streaming.on_spotify(doc, { type = "spotify.login_required" })), { "emit system.event Evt.Spotify.NoLoginError" })
+    assert_eq(topics(streaming.on_spotify(doc, { type = "spotify.status" })), { "spotify/output/connection_state 0" })   -- no address yet
+    doc.net.ip = "192.168.1.19"
     assert_eq(topics(streaming.on_spotify(doc, { type = "spotify.status" })), { "spotify/output/connection_state 2" })
+    -- every Wi-Fi report tells Spotify (a "no network" at boot must not stick)
+    assert_eq(topics(streaming.on_net(doc, { connected = false })), { "spotify/output/connection_state 0" })
+    assert_eq(topics(streaming.on_net(doc, { connected = true, ip = "192.168.1.19" })), { "spotify/output/connection_state 2" })
     assert_eq(streaming.hex2str("4142"), "AB"); assert_eq(streaming.str2hex("AB"), "4142")
   end)
 end)

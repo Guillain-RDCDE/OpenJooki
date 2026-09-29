@@ -352,7 +352,9 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
 @media (min-width: 1400px) {
   :root { --frame-w: 80vw; --frame-l: calc((100vw - var(--frame-w)) / 2); --outer: #ebe7e1; }
   html { background: var(--outer); }
-  body { background: linear-gradient(to right, var(--outer) var(--frame-l), var(--bg) var(--frame-l), var(--bg) calc(100vw - var(--frame-l)), var(--outer) calc(100vw - var(--frame-l))); }
+  /* the column is painted on body (html has its own colour): body grows with the page, else the
+     column stopped one screen down on long pages such as Settings */
+  body { height: auto; min-height: 100%; background: linear-gradient(to right, var(--outer) var(--frame-l), var(--bg) var(--frame-l), var(--bg) calc(100vw - var(--frame-l)), var(--outer) calc(100vw - var(--frame-l))); }
   .shell { padding-left: calc(var(--frame-l) + 220px); padding-right: var(--frame-l); }
   .nav { left: var(--frame-l); border-left: 1px solid var(--line); }
   .topbar, main { border-right: 1px solid var(--line); }

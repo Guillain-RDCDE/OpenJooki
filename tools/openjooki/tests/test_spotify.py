@@ -55,7 +55,7 @@ with sync_playwright() as p:
     except Exception: pass
     bar = pg.locator("[data-k=player]").inner_text()
     check("SP1 the page shows the Spotify track, not 'Nothing playing'", "Nuvole Bianche" in bar and "Rien en lecture" not in bar, bar)
-    check("SP1 ... with where it plays from", "Peaceful Piano" in bar, bar)
+    check("SP1 ... with 'artist / album' under it", "Ludovico Einaudi / Una Mattina" in bar, bar)
     pp = pg.locator("[data-k=pp]")
     check("SP1 the page has a pause button", pp.count() == 1 and pp.get_attribute("aria-label") == "Pause", pp.count() and pp.get_attribute("aria-label"))
 
@@ -78,7 +78,7 @@ with sync_playwright() as p:
     try: pg.wait_for_selector(".np", timeout=3000)
     except Exception: pass
     sheet = pg.locator(".np").inner_text() if pg.locator(".np").count() else ""
-    check("SP3 the now-playing sheet shows title and artist", "Nuvole Bianche" in sheet and "Ludovico Einaudi" in sheet, sheet)
+    check("SP3 the now-playing sheet shows title, artist and album", "Nuvole Bianche" in sheet and "Ludovico Einaudi / Una Mattina" in sheet, sheet)
     pg.keyboard.press("Escape"); time.sleep(0.3)
 
     # SP4 a token put on while Spotify plays: Spotify pauses, the token plays alone
@@ -103,6 +103,55 @@ with sync_playwright() as p:
     n = mark(); J.nfc_off(); time.sleep(0.6)
     check("SP5 taking the token off does not pause the phone's Spotify", not since(n, "/j/spotify/output/pauz") and pb() == "PLAYING", since(n, "/j/"))
 
+    # SP8 put what Spotify plays on a character (the Muuselabs app had it; 2.0.6 had no button)
+    WHALE = "04000000E00005"          # a whale token (tag ids are hex; the core learns it)
+    pg.locator("[data-k=player] .info").click()
+    try: pg.wait_for_selector("[data-k=spsave]", timeout=4000)
+    except Exception: pass
+    check("SP8 the now-playing sheet offers 'Put on a character'", pg.locator("[data-k=spsave]").count() == 1, pg.locator(".np").inner_text() if pg.locator(".np").count() else "")
+    pg.click("[data-k=spsave]")
+    pg.wait_for_selector("[data-k=spname]")
+    check("SP8 the name is what Spotify plays from", pg.input_value("[data-k=spname]") == "Peaceful Piano", pg.input_value("[data-k=spname]"))
+    check("SP8 'Save' waits for a character", pg.locator("[data-k=spsaveok]").is_disabled())
+    pg.click(".sheet [data-char='Jooki.Whale']")
+    moved = pg.locator(".sheet .banner").inner_text() if pg.locator(".sheet .banner").count() else ""
+    check("SP8 taking a character already used says so", "Le carnaval des animaux" in moved, moved)
+    n = mark(); pg.click("[data-k=spsaveok]")
+    J.wait(lambda: since(n, "/j/spotify/output/save_preset"))
+    check("SP8 the Jooki asks Spotify for a preset", since(n, "/j/spotify/output/save_preset"), since(n, "/j/"))
+    daemon("new_preset", "PRESET-BYTES")          # what spotify_ctrl answers (raw bytes)
+    def sp_pl():
+        for k, v in J.pls.items():
+            if v.get("spotify"): return k, v
+        return None, None
+    J.wait(lambda: sp_pl()[0])
+    pid, pl = sp_pl()
+    check("SP8 a Spotify playlist is created on the whale", pl and pl.get("title") == "Peaceful Piano" and pl.get("star") == "Jooki.Whale"
+          and pl["spotify"].get("uri") == TRACK["source_uri"] and pl["spotify"].get("preset") == "PRESET-BYTES".encode().hex().upper(), pl)
+    old = [v for v in J.pls.values() if v.get("title") == "Le carnaval des animaux"]
+    check("SP8 ... and the whale left its old playlist", old and not old[0].get("star"), old)
+    try: pg.wait_for_selector("[data-k=sphelp]", timeout=5000)
+    except Exception: pass
+    check("SP8 the page opens the new playlist and explains it plays from Spotify", pg.locator("[data-k=sphelp]").count() == 1 and "#/p/" in pg.url, pg.url)
+    toast_txt = pg.locator(".toast").all_inner_texts()
+    check("SP8 ... with a message saying which character plays it", any("Baleine" in x or "Whale" in x for x in toast_txt), toast_txt)
+    # put the whale on: the Jooki plays the preset
+    daemon("paused"); time.sleep(0.3)
+    n = mark(); J.nfc(WHALE, "105")
+    J.wait(lambda: since(n, "/j/spotify/output/play_preset"))
+    got = since(n, "/j/spotify/output/play_preset")
+    check("SP8 the whale plays the Spotify preset", got and got[0][1] == "PRESET-BYTES", got)
+    daemon("playing"); J.wait(lambda: pb() == "PLAYING")
+    check("SP8 ... and the page shows it as the whale's playlist", np().get("playlistId") == pid and np().get("service") == "SPOTIFY", np())
+    n = mark(); J.nfc_off()
+    J.wait(lambda: since(n, "/j/spotify/output/pauz"))
+    check("SP8 taking the whale off pauses Spotify (a token started it)", since(n, "/j/spotify/output/pauz"), since(n, "/j/"))
+    daemon("paused"); J.wait(lambda: pb() == "PAUSED")
+    # asking while Spotify does not play: a clear message, no playlist
+    before = len([v for v in J.pls.values() if v.get("spotify")])
+    J.send("PLAYLIST_NEW_SPOTIFY", {"title": "x"}); time.sleep(0.6)
+    check("SP8 saving while Spotify is paused is refused", len([v for v in J.pls.values() if v.get("spotify")]) == before and any("Not playing spotify" in str(e) for e in J.errors), J.errors[-2:])
+
     # SP6 the headphones: Spotify's sound follows them (1.x did it, 2.0 had lost it)
     J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 0, "control": 0})); time.sleep(0.3)
     n = mark(); J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 1, "control": 0}))
@@ -111,6 +160,14 @@ with sync_playwright() as p:
     n = mark(); J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 0, "control": 0}))
     J.wait(lambda: since(n, "/j/spotify/output/set_output_device"))
     check("SP6 headphones out -> back to the speaker", ("/j/spotify/output/set_output_device", "speaker") in since(n, "/j/spotify/output/"), since(n, "/j/"))
+
+    # SP9 each Wi-Fi report tells Spotify the Jooki is online (a "no network" at boot must not stick)
+    n = mark(); J.c.publish("/j/esp32/input/net/sta/config", json.dumps({"ssid": "Home", "stat": "fail", "ip": ""}))
+    J.wait(lambda: since(n, "/j/spotify/output/connection_state"))
+    check("SP9 Wi-Fi lost -> Spotify told offline", ("/j/spotify/output/connection_state", "0") in since(n, "/j/spotify/output/"), since(n, "/j/"))
+    n = mark(); J.c.publish("/j/esp32/input/net/sta/config", json.dumps({"ssid": "Home", "stat": "success", "ip": "192.168.1.50", "signal": -50, "ch": 6}))
+    J.wait(lambda: since(n, "/j/spotify/output/connection_state"))
+    check("SP9 Wi-Fi back -> Spotify told online", ("/j/spotify/output/connection_state", "2") in since(n, "/j/spotify/output/"), since(n, "/j/"))
 
     check("SP7 no page error", not errs, errs)
     b.close()

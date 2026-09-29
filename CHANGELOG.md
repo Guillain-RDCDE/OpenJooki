@@ -1,5 +1,21 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.0.7 (29 September 2026) — a character for your Spotify playlist
+- **Spotify connects again after a restart.** After some restarts, the phone saw the
+  Jooki in its list of devices but could not connect to it. The Jooki told Spotify
+  "no network" once while starting, before its Wi-Fi was up, and never said it again.
+  It now tells Spotify every time the Wi-Fi changes, as the original program did.
+  Found on a family Jooki after the 2.0.6 update, and checked on it.
+- **Put your Spotify music on a character.** While Spotify plays on the Jooki, open
+  the player at the bottom of the page and tap *Put on a character*: pick a name and
+  a character. Then the character plays that Spotify playlist, even without the
+  phone; taking it off pauses it. The Muuselabs app had this; OpenJooki's page did
+  not. The Spotify account must stay connected to the Jooki.
+- **Who sings it.** Under a Spotify song the page now shows the artist and the album
+  ("Albin de la Simone / Happy End"), where it showed only the album.
+- **Settings on a big screen.** On a wide screen the page background stopped halfway
+  down long pages such as Settings. It now goes to the bottom.
+
 ## OpenJooki 2.0.6 (29 September 2026) — Spotify from the phone
 - **Spotify still works on the Jooki.** Pick the Jooki in the Spotify app on your
   phone (the devices button): the music comes out of the Jooki. Checked on a family

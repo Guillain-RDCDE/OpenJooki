@@ -116,7 +116,8 @@ function streaming.on_spotify(doc, ev)
   elseif kind == "play_error" then
     return { commands = { emit("system.event", { name = "Evt.Spotify.PlayError" }) } }
   elseif kind == "status" then
-    return { commands = { pub(SP .. "connection_state", (doc.net and doc.net.connected) and 2 or 0) } }
+    local n = doc.net or {}
+    return { commands = { pub(SP .. "connection_state", (n.connected and n.ip and n.ip ~= "") and 2 or 0) } }
   elseif kind == "now_playing" then
     sp.track = copy(ev.data or {})
     if active(doc, "SPOTIFY") then
@@ -147,6 +148,9 @@ function streaming.on_spotify(doc, ev)
   elseif kind == "new_preset" then
     local pending = doc.streaming_int and doc.streaming_int.preset_for
     if not pending then return { commands = { { kind = "log", level = "warn", key = "streaming.preset_unexpected" } } } end
+    if (ev.raw or "") == "" then   -- Spotify refused: no playlist that would play nothing (the page says Spotify did not answer)
+      return { state = { streaming_int = {} }, commands = { { kind = "log", level = "warn", key = "streaming.preset_empty" } } }
+    end
     if not (active(doc, "SPOTIFY") and doc.playback.state == "playing") then
       return { state = { streaming_int = {} }, commands = { { kind = "log", level = "warn", key = "streaming.preset_not_playing" } } }
     end
@@ -214,6 +218,13 @@ function streaming.on_deezer_set_cfg(_, p)
                         { kind = "log", level = "warn", key = "streaming.deezer_restart_unavailable", fields = { note = "no deezer_ctrl / systemctl on this firmware" } } } }
 end
 
+--- Every Wi-Fi report tells Spotify whether the Jooki is online (1.x publish_wifi_state). Without
+--- it, a "no network" answered once at boot (Wi-Fi not up yet) left Spotify offline until the next
+--- restart: seen by the phone, but never connecting.
+function streaming.on_net(_, ev)
+  return { commands = { pub(SP .. "connection_state", (ev.connected and ev.ip and ev.ip ~= "") and 2 or 0) } }
+end
+
 --- audiocfg changes reach the active service (1.x SET_CFG / SET_VOL paths).
 function streaming.on_config(doc, ev)
   local cmds = {}
@@ -244,6 +255,7 @@ function streaming.install(api, dispatch)
     dispatch.on("deezer." .. k, "streaming", streaming.on_deezer)
   end
   dispatch.on("audiocfg.changed", "streaming", streaming.on_config)
+  dispatch.on("net.status", "streaming", streaming.on_net)
   dispatch.on("boot", "streaming", function() return { state = { spotify = { active = false }, deezer = {}, streaming_int = {} }, commands = { pub(SP .. "get_status") } } end)
   api.command("spotify.new_playlist", S.new_spotify, streaming.on_new_spotify_playlist)
   api.command("deezer.get_playlists", nil, streaming.on_deezer_get_playlists)

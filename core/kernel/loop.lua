@@ -16,6 +16,8 @@ local A                      -- adapters { bus, files, clock, host, shell }
 local translate              -- function(topic, payload) -> event | nil  (the api sets it)
 local publisher              -- function(doc, dirty_keys) -> commands   (the api sets it)
 local each_turn              -- optional function(doc) run once per turn (adapters that need polling)
+local io_sources             -- optional function() -> read_socks, write_socks (the web server)
+local io_ready               -- optional function(ready_read, ready_write, now) to service them
 local pending = {}           -- events queued for the next turn
 local last_publish = -1
 local dirty_pending = {}
@@ -28,6 +30,8 @@ function loop.init(adapters, opts)
   translate = opts.translate or function() return nil end
   publisher = opts.publisher or function() return {} end
   each_turn = opts.each_turn
+  io_sources = opts.io_sources
+  io_ready = opts.io_ready
   pending, dirty_pending, stopped, turns, last_publish = {}, {}, nil, 0, -1
 end
 
@@ -78,10 +82,16 @@ function loop.step(wait)
     timeout = math.min(due or config.get("tick_s"), config.get("tick_s"))
     if #events > 0 then timeout = 0 end
   end
-  local msgs = A.bus:poll(timeout, now)
+  local rsocks, wsocks
+  if io_sources then rsocks, wsocks = io_sources() end
+  local msgs, ready_r, ready_w = A.bus:poll(timeout, now, rsocks, wsocks)
   for _, m in ipairs(msgs) do
     local e = translate(m.topic, m.payload)
     if e then events[#events + 1] = e end
+  end
+  if io_ready and ((ready_r and #ready_r > 0) or (ready_w and #ready_w > 0)) then
+    local ok, err = pcall(io_ready, ready_r or {}, ready_w or {}, now)
+    if not ok then log.warn("loop.io_ready_failed", { err = tostring(err) }) end
   end
   if A.host.terminating() and not stopped then events[#events + 1] = { type = "host.terminating", now = now } end
   if each_turn then

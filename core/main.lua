@@ -52,6 +52,9 @@ if not ON_JOOKI then
   if overrides.wifi_watchdog_s == nil then overrides.wifi_watchdog_s = 0 end
   if overrides.broker_watch_s == nil then overrides.broker_watch_s = 0 end
 end
+-- bench convenience: run the web server on an unprivileged port (no root, no clash with the emulator)
+local hp = os.getenv("OJ_HTTP_PORT")
+if hp and hp ~= "" then overrides.http_port = tonumber(hp) or 0 end
 config.load(overrides)
 
 -- adapters
@@ -152,8 +155,28 @@ local function publisher(doc, keys)
   return cmds
 end
 
+-- our own web server: serves the page and /upload so web_ctrl (with /ll and /cmd) can stop (ADR-0007).
+-- Its own name, for the rebinding guard, comes from the live state (net.name). Failure to bind (e.g.
+-- not root on the bench) is not fatal: the page is simply unavailable, the core runs on.
+local httpd = nil
+if config.get("http_port") > 0 then
+  httpd = require("adapters.httpd").new({
+    port = config.get("http_port"),
+    docroot = config.get("web_public_dir"),
+    uploads_dir = data_dir .. "/uploads",
+    name = function() local d = state.doc(); return d.net and d.net.name end,
+    log = function(key, fields) log.info(key, fields) end,
+    on_upload = function(n) log.info("httpd.upload", { parts = n }) end,
+  })
+  local ok, err = httpd:start()
+  if not ok then log.warn("httpd.start_failed", { err = tostring(err) }); httpd = nil end
+end
+
 loop.init(adapters, { translate = translate_with_time, publisher = publisher,
+  io_sources = httpd and function() return httpd:read_socks(), httpd:write_socks() end or nil,
+  io_ready = httpd and function(rr, wr, now) httpd:service_read(rr, now); httpd:service_write(wr, now) end or nil,
   each_turn = function(doc)   -- the name on the network, answered from the loop (no handler involved)
+    if httpd then httpd:tick(clock.now()) end
     if broker_watch then broker_watch:check(bus:connected(), clock.now()) end
     if mdns:available() and doc.net then
       -- only its own name: web_ctrl (closed) redirects any other Host, jooki.local included, to

@@ -1,8 +1,15 @@
 # ADR-0007 — Close root execution over HTTP; bind MQTT to localhost; password on the WebSocket
 
-Status: accepted, partly built (2026-09-26; state below as of 2.0.9, 2026-09-29)
+Status: accepted, **fully built** (2026-09-26; `/ll` and `/cmd` closed 2026-09-30)
 
-## What is built (2.0.2 to 2.0.9)
+## What is built (2.0.2 to 2.1.0)
+- **`/ll` and `/cmd/*` are gone (2.1.0).** `web_ctrl` (the closed server that answered a root shell
+  and reboot/factory-reset/format to anyone on the Wi-Fi, without a password) is **no longer started**
+  (`ml-start-app.sh`). The 2.0 core serves the page and the one `POST /upload` itself
+  (`adapters.httpd`, port 80): it has no `/ll` and no `/cmd`, refuses a foreign `Host` (the
+  rebinding guard web_ctrl had), and never runs a shell from a request. Maintenance SSH is opened
+  from the page over the WebSocket (below), so closing web_ctrl does not remove the way in. The
+  factory phone-installer still uses the factory image's own web_ctrl once to install OpenJooki.
 - mosquitto: 1883 bound to `127.0.0.1`, anonymous for the daemons on the Jooki; the
   WebSocket 8000 needs a per-Jooki password, generated once in `/data/openjooki/ws_secret`
   (kept across updates, not `/mnt/config`) and served to the page at its own origin
@@ -17,9 +24,9 @@ Status: accepted, partly built (2026-09-26; state below as of 2.0.9, 2026-09-29)
 - `run_rpc_cmd.sh` (Muuselabs' signed remote commands) neutralised.
 
 ## Still open
-- **`/ll` and `/cmd/*` of `web_ctrl` still answer on the LAN** (the closed web server; no
-  firewall on the device): fencing them needs a binary patch or a replacement of
-  `web_ctrl`. Until then, the home Wi-Fi remains the trust boundary for those two.
+- Nothing. The last item — `/ll` and `/cmd/*` — was closed in 2.1.0 by replacing web_ctrl with the
+  core's own server (`adapters.httpd`) rather than a binary patch: our code, testable
+  (`tools/openjooki/tests/test_httpd.py`), and it drops the two routes by simply not having them.
 
 ## Context
 `web_ctrl` (closed) answers `GET /ll?action=<shell>` as root and `/cmd/*`
@@ -31,9 +38,10 @@ factory Jooki. 1.x documents this as a known limit.
 ## Decision
 - The phone installer keeps using `/ll` **once**, on a factory Jooki, to
   install OpenJooki; the OpenJooki image then **disables `/ll` and `/cmd/*`**
-  for the LAN (reverse proxy rule in front of `web_ctrl`, or `web_ctrl`
-  replaced by our own static server if the proxy is not possible — to be
-  settled in phase 4 with a spike).
+  for the LAN. Settled in 2.1.0: **web_ctrl is replaced by our own server**
+  (`adapters.httpd` in the core), not proxied and not binary-patched — there is
+  no firewall on the device (no iptables/nftables), and our own server is the
+  cleanest way to simply not offer those routes.
 - Updates and privileged actions become bus commands gated by a one-time code
   shown on the Jooki's page (or a physical button press within 30 s).
 - mosquitto: 1883 bound to `127.0.0.1`; WebSocket 8000 keeps serving the page
@@ -53,4 +61,8 @@ factory Jooki. 1.x documents this as a known limit.
 - Community tools that used 1883 from the LAN need the WebSocket password
   (documented; a `--legacy-open-mqtt` setting keeps the old behaviour for
   those who want it, off by default).
-- Phase 4 needs a spike on how to fence `web_ctrl` (proxy vs replacement).
+- Community tools that used `/ll` or `/cmd` no longer work; that is the point.
+  Our server offers only the page and `/upload`.
+- The core now holds an open TCP port (80). It is non-blocking, bounded (request
+  head, upload size, connection count and idle timeout all capped), streams
+  uploads to disk and files from disk, and never runs a shell from a request.

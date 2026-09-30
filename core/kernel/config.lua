@@ -23,6 +23,10 @@ config.defaults = {
   -- Wi-Fi watchdog (services.network): offline this long, radios on, nothing playing -> restart the Jooki
   wifi_watchdog_s = 10 * 60,                  -- 0 = never
   wifi_watchdog_max = 2,                      -- restarts in a row without Wi-Fi, then it stops trying
+  -- our own web server (adapters.httpd): serves the page and /upload so web_ctrl (with /ll and
+  -- /cmd) can stop (ADR-0007). 0 = off (the bench smoke, or to fall back to web_ctrl).
+  http_port = 80,
+  web_public_dir = "/tmp/web_ctrl_dirs/public",   -- what web_ctrl served, rebuilt at boot
   -- loop
   tick_s = 0.5,                               -- longest wait when nothing is due
   state_publish_min_interval_s = 0.25,        -- coalescing window for state patches

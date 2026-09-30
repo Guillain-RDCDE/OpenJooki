@@ -1,7 +1,8 @@
 -- adapters.bus: a small MQTT 3.1.1 client on LuaSocket (QoS 0 only).
 --   local bus = require("adapters.bus").new({ host, port, client_id, keepalive, topics })
 --   bus:maintain(now)  -> "up" | "down" | nil   (connects, reconnects with backoff, pings)
---   bus:poll(timeout)  -> list of { topic, payload }
+--   bus:poll(timeout, now, extra_read, extra_write) -> messages, ready_read, ready_write
+--     (extra_* are the web server's sockets, woken in the same select)
 --   bus:publish(topic, payload) -> true | nil, reason
 --   bus:socket()       -> the socket (for select) or nil
 -- The client never blocks the loop: connect() has a short timeout, reads are
@@ -107,20 +108,31 @@ function bus:maintain(now)
 end
 
 --- Read what is available (waiting at most `timeout` seconds) and return the messages.
-function bus:poll(timeout, now)
-  local out = {}
-  if not self.up then
-    -- no broker: still wait the turn's time, or the loop would spin and burn the CPU (and the battery)
+-- `extra_read` / `extra_write`: other sockets to wait on in the same select (the web server's
+-- listen and connection sockets), so the loop wakes at once on HTTP activity instead of each tick.
+-- Returns: messages, the ready extra-read sockets, the ready extra-write sockets.
+function bus:poll(timeout, now, extra_read, extra_write)
+  local out, ready_r, ready_w = {}, {}, {}
+  local read = {}
+  if self.up then read[#read + 1] = self.sock end
+  if extra_read then for _, s in ipairs(extra_read) do read[#read + 1] = s end end
+  if #read == 0 and (not extra_write or #extra_write == 0) then
+    -- nothing to wait on: still wait the turn's time, or the loop would spin and burn the CPU (and the battery)
     if (timeout or 0) > 0 and self.socket_lib.sleep then self.socket_lib.sleep(timeout) end
-    return out
+    return out, ready_r, ready_w
   end
-  local sel = self.socket_lib.select({ self.sock }, nil, timeout or 0)
-  if #sel == 0 then return out end
+  local rlist, wlist = self.socket_lib.select(read, extra_write or {}, timeout or 0)
+  local our_sock_ready = false
+  for _, s in ipairs(rlist) do
+    if s == self.sock then our_sock_ready = true else ready_r[#ready_r + 1] = s end
+  end
+  for _, s in ipairs(wlist) do ready_w[#ready_w + 1] = s end
+  if not our_sock_ready then return out, ready_r, ready_w end
   local data, err, partial = self.sock:receive(4096)
   data = data or partial
   if err == "closed" then
     if drop(self, "closed by broker") then self.next_attempt = (now or 0) + self.min_backoff end
-    return out, "down"
+    return out, ready_r, ready_w
   end
   if data and #data > 0 then
     self.buf = self.buf .. data
@@ -138,7 +150,7 @@ function bus:poll(timeout, now)
       out[#out + 1] = { topic = pkt.topic, payload = pkt.payload }
     end
   end
-  return out
+  return out, ready_r, ready_w
 end
 
 function bus:publish(topic, payload)

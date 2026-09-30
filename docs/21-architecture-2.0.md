@@ -252,7 +252,7 @@ with the breakdown (lookup, command, engine).
 ```
 core/                  the 2.0 program (readable Lua)
   kernel/  api/  services/{library,playback,tokens,bedtime,device,network,update}/
-  adapters/{bus,files,clock,host,shell,mdns}/   fakes/   vendor/ (json)
+  adapters/{bus,files,clock,host,shell,mdns,httpd,broker_watch}/   fakes/   vendor/ (json)
   spec/                unit + property tests (busted)
 tools/build/           bundle → strip → size check → core.min.lua (device core) + player.lib (loader, ADR-0011); deterministic
 tools/bench/           the integration bench (from 1.x, contract v2)

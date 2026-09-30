@@ -16,6 +16,12 @@ which runs a short root shell command and always replies just `ok` (no stdout,
 Everything else (download, verify, flash, reboot) happens on the device, detached
 — it survives the browser tab closing.
 
+**Since OpenJooki 2.1.0, `/ll` and `web_ctrl` are gone once OpenJooki is running**
+(ADR-0007): the core serves the page itself, with no root shell over HTTP. This
+install path still works because it runs against the **factory** image's web_ctrl;
+after the first install, an OpenJooki Jooki updates from its page over the WebSocket
+(the `OJ_UPDATE_*` messages), never through `/ll`.
+
 ## The hard browser constraint (why there's an "ok" tab)
 The page is HTTPS (GitHub Pages); the Jooki answers over plain HTTP. Browsers
 **block every silent cross-scheme request** (fetch/XHR/iframe/img are all

@@ -1,6 +1,9 @@
 # OpenJooki — Changelog
 
 ## Next release
+- **Spotify's album covers on the page.** While Spotify plays on the Jooki, the page showed a grey
+  disc instead of the cover: the page's own safety rules blocked pictures coming from Spotify.
+  Covers now show, in the bar at the bottom and in the big player.
 - For the tinkerers: the test bench now tests the page as the Jooki serves it since 2.1.0 (the
   core's own web server, port 8090 on the bench) instead of an emulation of the old `web_ctrl`.
   That showed the core's web server could not restart on LuaSocket 3 (reuseaddr set before the

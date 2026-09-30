@@ -78,8 +78,50 @@ def install_key(host):
         ll(host,"printf '%s' >> /home/root/.ssh/authorized_keys" % b64[i:i+24])
     ll(host,"echo >> /home/root/.ssh/authorized_keys"); ll(host,"chmod 600 /home/root/.ssh/authorized_keys")
 
+def _ws_ssh_on(host, timeout=12):
+    """Open maintenance SSH the way the Settings page does: OJ_SSH_ON over the MQTT WebSocket (8000)
+    with the per-Jooki password from /oj-auth.json. Since 2.1 web_ctrl (and /ll) is gone, this is how
+    the tool starts dropbear; the Mac's key lives on /data and survives, so no key install is needed.
+    Returns True when the device reports maintenance SSH on. Needs paho-mqtt (present on the Mac)."""
+    try:
+        import paho.mqtt.client as mqtt
+    except Exception:
+        return False
+    try:
+        auth = json.loads((http_get(host, "/oj-auth.json", timeout=6)[1]) or b"{}")
+    except Exception:
+        auth = {}
+    if not auth.get("mqttUser"):
+        return False
+    st = {}
+    def on_msg(_c, _u, m):
+        try: d = json.loads(m.payload.decode())
+        except Exception: return
+        if m.topic.endswith("/state") and isinstance(d, dict): st.update(d)
+    try:
+        cid = "ojtool-%d" % random.randint(0, 99999)
+        try: c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, cid, transport="websockets")
+        except AttributeError: c = mqtt.Client(cid, transport="websockets")
+        c.username_pw_set(auth["mqttUser"], auth["mqttPass"]); c.on_message = on_msg
+        c.connect(host, int(auth.get("wsPort", 8000))); c.subscribe("/j/web/output/#"); c.loop_start()
+        time.sleep(0.4)
+        c.publish("/j/web/input/OJ_SSH_ON", "{}")
+        end = time.time() + timeout; ok = False
+        while time.time() < end:
+            if (st.get("maintenance") or {}).get("ssh") is True: ok = True; break
+            time.sleep(0.2)
+        c.loop_stop(); c.disconnect()
+        return ok
+    except Exception:
+        return False
+
 def ensure_ssh(host):
     if ssh_ok(host): return True
+    # 2.1: no more /ll -> open dropbear over the WebSocket (the Mac's key is kept on /data)
+    if _ws_ssh_on(host):
+        time.sleep(2)
+        if ssh_ok(host): return True
+    # legacy path (a factory Jooki, or a pre-2.1 OpenJooki that still runs web_ctrl)
     for attempt in range(1,6):
         ll(host,"dropbear -p 2222 -R"); time.sleep(3)
         if ssh_ok(host): return True
@@ -676,6 +718,11 @@ def ab_webui(host, dry_run=False, core=None):
     log("[4] switch to p%s (patched)" % s)
     if ab_switch(host, s) != 0: log("switch KO -> back to p%s" % a); ab_switch(host, a); return 2
     log("[5] verification on the running Jooki")
+    # the reboot dropped the maintenance SSH; reopen it (over the WebSocket since 2.1 has no /ll)
+    for _ in range(20):
+        if is_jooki(host): break
+        time.sleep(3)
+    ensure_ssh(host)
     ok_files = webui_active_ok(host, lib, files)
     st = None
     for _ in range(20):

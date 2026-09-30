@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "..", "docs", "img", "openjooki-web.png")
-URL = "http://127.0.0.1:8080"
+URL = os.environ.get("OJ_PAGE_URL", "http://127.0.0.1:8090")   # the core's own web server (start_player.sh core)
 W, H, SCALE = 360, 720, 3
 # Roboto first for every generic family, as on an Android phone
 FONTS = """<?xml version="1.0"?><!DOCTYPE fontconfig SYSTEM "fonts.dtd"><fontconfig>

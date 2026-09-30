@@ -158,8 +158,9 @@ local function publisher(doc, keys)
 end
 
 -- our own web server: serves the page and /upload so web_ctrl (with /ll and /cmd) can stop (ADR-0007).
--- Its own name, for the rebinding guard, comes from the live state (net.name). Failure to bind (e.g.
--- not root on the bench) is not fatal: the page is simply unavailable, the core runs on.
+-- Its own name, for the rebinding guard, comes from the live state (net.name). Failure to bind (the
+-- port still held by the core before this one, or not root on the bench) is not fatal: the core runs
+-- on and the server tries again by itself (httpd:tick). Without LuaSocket there is no server at all.
 local httpd = nil
 if config.get("http_port") > 0 then
   httpd = require("adapters.httpd").new({
@@ -171,7 +172,10 @@ if config.get("http_port") > 0 then
     on_upload = function(n) log.info("httpd.upload", { parts = n }) end,
   })
   local ok, err = httpd:start()
-  if not ok then log.warn("httpd.start_failed", { err = tostring(err) }); httpd = nil end
+  if not ok then
+    log.warn("httpd.start_failed", { err = tostring(err) })
+    if httpd.socket_lib then httpd:retry_later(clock.now()) else httpd = nil end
+  end
 end
 
 loop.init(adapters, { translate = translate_with_time, publisher = publisher,

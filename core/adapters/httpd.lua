@@ -47,9 +47,13 @@ function httpd:start()
   local ok, socket = pcall(require, "socket")
   if not ok or not socket then return nil, "no socket library" end
   self.socket_lib = socket
-  local srv, err = socket.tcp()
+  -- tcp4(): LuaSocket 3 (the bench) creates the socket of a plain tcp() only at bind, so reuseaddr
+  -- set before would fail silently and a restart would find the port "in use" (TIME_WAIT).
+  -- The Jooki's LuaSocket 2.0.2 has no tcp4() and creates it at once: same behaviour on both.
+  local srv, err = (socket.tcp4 or socket.tcp)()
   if not srv then return nil, err end
-  srv:setoption("reuseaddr", true)
+  local rok, rerr = srv:setoption("reuseaddr", true)
+  if not rok then self.log("httpd.reuseaddr_failed", { err = tostring(rerr) }) end
   local bound, berr = srv:bind("0.0.0.0", self.port)
   if not bound then srv:close(); return nil, "bind " .. self.port .. ": " .. tostring(berr) end
   local lok, lerr = srv:listen(16)
@@ -373,7 +377,19 @@ function httpd:service_write(list, now)
   end
 end
 
+--- Not listening because the port was taken at start (the core before this one still closing):
+--- try again, 5 s then up to every 60 s, so the page comes back by itself instead of staying
+--- down until the next start. Only a successful start is logged (httpd.listening).
+local RETRY_FIRST_S, RETRY_MAX_S = 5, 60
+function httpd:retry_later(now)
+  self.retry_s = math.min((self.retry_s or RETRY_FIRST_S / 2) * 2, RETRY_MAX_S)
+  self.retry_at = now + self.retry_s
+end
+
 function httpd:tick(now)
+  if not self.server and self.retry_at and now >= self.retry_at then
+    if self:start() then self.retry_at, self.retry_s = nil, nil else self:retry_later(now) end
+  end
   for _, c in pairs(self.conns) do
     if now - (c.last or now) > CONN_TIMEOUT then self:close_conn(c) end
   end

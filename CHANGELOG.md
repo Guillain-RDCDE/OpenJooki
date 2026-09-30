@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## Next release
+- For the tinkerers: the test bench now tests the page as the Jooki serves it since 2.1.0 (the
+  core's own web server, port 8090 on the bench) instead of an emulation of the old `web_ctrl`.
+  That showed the core's web server could not restart on LuaSocket 3 (reuseaddr set before the
+  socket existed): fixed with `tcp4()`, and if the port is ever busy at start the server now tries
+  again by itself (5 s, then up to every 60 s) instead of staying down. The Jooki itself
+  (LuaSocket 2.0.2) was not affected.
+
 ## OpenJooki 2.1.4 (30 September 2026) — night mode away from home
 - **Night mode works away from the Internet.** The Jooki has no clock of its own: it takes the
   time from the Internet, and forgets it when switched off. On holiday, without the Internet,

@@ -4,9 +4,9 @@ without Internet) is covered by the specs and was tried on a real Jooki.   pytho
 import json, os, subprocess, time
 import paho.mqtt.client as mqtt
 from playwright.sync_api import sync_playwright
-from jk import Jooki
+from jk import Jooki, PAGE
 LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
-URL = "http://127.0.0.1:8080"
+URL = PAGE
 R = []
 def check(n, c, info=""):
     R.append((n, bool(c))); print(("PASS " if c else "FAIL ") + n + ("" if c else "  -> " + str(info)[:300]))

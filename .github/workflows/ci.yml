@@ -80,5 +80,5 @@ jobs:
         run: |
           for f in /tmp/player.log /tmp/mosq.log /tmp/webctrl.log /tmp/fakeaudio.log; do echo "=== $f"; sudo tail -n 40 $f 2>/dev/null; done
           echo "=== web dirs"; sudo ls -la /tmp/web_ctrl_dirs/ /tmp/web_ctrl_dirs/public/ 2>&1 | head -30
-          echo "=== listeners"; sudo ss -ltnp | grep -E ':(1883|8000|8080) ' || true
+          echo "=== listeners"; sudo ss -ltnp | grep -E ':(1883|8000|8080|8090) ' || true
           mosquitto -h | head -1

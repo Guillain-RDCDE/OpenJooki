@@ -6,7 +6,7 @@
 Run last in a chain: R2 leaves a broker started from /etc/mosquitto; up.sh puts the bench one back.
   python3 test_robustness.py"""
 import json, os, subprocess, sys, time
-from jk import Jooki
+from jk import Jooki, PAGE
 LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
 R = []
 def check(n, c, info=""):
@@ -61,7 +61,7 @@ try:
     with sync_playwright() as p:
         b = p.chromium.launch()
         pg = b.new_page(viewport={"width": 390, "height": 844}, locale="fr-FR")
-        pg.goto("http://127.0.0.1:8080/#/settings")
+        pg.goto(PAGE + "/#/settings")
         pg.wait_for_selector("[data-k=ssh]", timeout=15000)
         shown = pg.locator("[data-k=sshkey]").count() == 1 and "1 clé enregistrée" in pg.locator("body").inner_text()
         check("R4 the page shows the key field and the saved key while the access is open", shown, pg.locator("body").inner_text()[-600:])

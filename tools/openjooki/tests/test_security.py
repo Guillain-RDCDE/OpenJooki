@@ -3,9 +3,10 @@ WebSocket (8000) needs the per-Jooki password; local clients stay anonymous on
 1883; the page reads the password at its own origin only.  python3 test_security.py
 
 Run after e2e.py: it relies on the page files (oj-auth.json) being deployed and
-symlinked into what web_ctrl serves, which start_player.sh / the core do."""
+symlinked into what the core's web server serves (web_ctrl on the 1.x program)."""
 import sys, time, json, urllib.request
 import paho.mqtt.client as mqtt
+from jk import PAGE
 
 R = []
 def check(n, c, info=""):
@@ -50,7 +51,7 @@ ok, rc = try_connect("tcp", 1883)
 check("S4 local 1883 stays anonymous for the core and the closed daemons", ok, rc)
 
 try:
-    with urllib.request.urlopen("http://127.0.0.1:8080/oj-auth.json", timeout=5) as r:
+    with urllib.request.urlopen(PAGE + "/oj-auth.json", timeout=5) as r:
         hdr = r.headers.get("Access-Control-Allow-Origin")
         body = json.loads(r.read().decode())
 except Exception as e:

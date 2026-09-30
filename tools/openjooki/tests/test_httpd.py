@@ -25,7 +25,11 @@ local h = httpd.new({ port = port, docroot = docroot, uploads_dir = uploads,
   name = function() return "jooki" end,
   log = function(k) io.stderr:write("LOG " .. tostring(k) .. "\n") end })
 local ok, err = h:start()
-if not ok then io.stderr:write("START_FAIL " .. tostring(err) .. "\n"); os.exit(3) end
+if not ok then
+  io.stderr:write("START_FAIL " .. tostring(err) .. "\n")
+  if arg[4] ~= "retry" then os.exit(3) end
+  h:retry_later(socket.gettime())      -- what main.lua does: keep going, try again by itself
+end
 io.stdout:write("READY\n"); io.stdout:flush()
 while true do
   local r, w = h:read_socks(), h:write_socks()
@@ -60,6 +64,79 @@ def get(path, host=None, method="GET", body=None, headers=None):
     data = r.read()
     c.close()
     return r.status, data
+
+
+def port_taken_at_start():
+    """The port is still held when the server starts (the core before it still closing): the page
+    must come back by itself once the port is free, not stay down until the next start."""
+    port = PORT + 1
+    work = tempfile.mkdtemp(prefix="ojhttpd-retry-")
+    docroot = os.path.join(work, "public")
+    os.makedirs(docroot)
+    open(os.path.join(docroot, "index.html"), "wb").write(b"back")
+    drv = os.path.join(work, "driver.lua")
+    open(drv, "w", newline="\n").write(DRIVER)
+    holder = socket.socket()
+    holder.bind(("0.0.0.0", port)); holder.listen(1)
+    env = dict(os.environ, OJ_CORE=os.path.join(REPO, "core"))
+    p = subprocess.Popen(["lua5.1", drv, str(port), docroot, work, "retry"],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+    try:
+        ready = "READY" in (p.stdout.readline() or "")
+        check("port taken at start: the core keeps running", ready and p.poll() is None, p.poll())
+        holder.close()
+        t0, st = time.time(), None
+        while time.time() - t0 < 12 and st != 200:
+            time.sleep(0.5)
+            try:
+                c = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+                c.request("GET", "/"); r = c.getresponse(); st = r.status; r.read(); c.close()
+            except OSError:
+                pass
+        check("port freed: the page comes back by itself (within the 5 s retry)", st == 200, st)
+    finally:
+        p.terminate()
+        try:
+            p.wait(timeout=3)
+        except Exception:
+            p.kill()
+        holder.close()
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def restart_right_after_serving():
+    """The core restarts just after serving the page: the port has connections in TIME_WAIT.
+    The new server must bind at once (reuseaddr really set, whatever the LuaSocket version)."""
+    port = PORT + 2
+    work = tempfile.mkdtemp(prefix="ojhttpd-tw-")
+    docroot = os.path.join(work, "public")
+    os.makedirs(docroot)
+    open(os.path.join(docroot, "index.html"), "wb").write(b"page")
+    drv = os.path.join(work, "driver.lua")
+    open(drv, "w", newline="\n").write(DRIVER)
+    env = dict(os.environ, OJ_CORE=os.path.join(REPO, "core"))
+    def run():
+        return subprocess.Popen(["lua5.1", drv, str(port), docroot, work],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
+    p = run()
+    try:
+        p.stdout.readline(); time.sleep(0.2)
+        for _ in range(3):
+            c = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+            c.request("GET", "/"); c.getresponse().read(); c.close()
+        time.sleep(0.3)
+        p.terminate(); p.wait(timeout=3)
+        p = run()
+        line = p.stdout.readline()
+        err = "" if "READY" in line else p.stderr.read()
+        check("restart right after serving: the new server binds at once (no 'address in use')", "READY" in line, err)
+    finally:
+        p.terminate()
+        try:
+            p.wait(timeout=3)
+        except Exception:
+            p.kill()
+        shutil.rmtree(work, ignore_errors=True)
 
 
 def main():
@@ -165,6 +242,8 @@ def main():
             p.kill()
         shutil.rmtree(work, ignore_errors=True)
 
+    port_taken_at_start()
+    restart_right_after_serving()
     print("%d/%d passed" % (TOTAL - len(FAILS), TOTAL))
     if FAILS:
         print("FAILED: " + ", ".join(FAILS))

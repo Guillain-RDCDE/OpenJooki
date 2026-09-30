@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.1.3 (30 September 2026) — the real fix for no sound from the speaker
+- **Fully fixes the Jooki going silent** (2.1.2 only half-fixed it). The Jooki v2 has no wired
+  headphone jack, but it still reported one as "plugged" when nothing was there — so it sent the
+  sound to a jack that does not exist and switched the speaker off. A token or Spotify then looked
+  like it was playing, in silence, whatever you did with the volume, until you plugged in a cable.
+  The Jooki no longer listens to that false headphone detection: the speaker stays on. (Bluetooth
+  speakers and headphones are unaffected.) Tested on a family Jooki, on battery.
+
 ## OpenJooki 2.1.2 (30 September 2026) — sound from the speaker on battery
 - **Fixes no sound from the speaker after a start-up on battery.** The Jooki turned its
   amplifier on only when you plugged or unplugged headphones, not at start-up — so if it

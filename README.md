@@ -20,9 +20,9 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.1.2:** fixes no sound from the speaker after starting up on battery (the amplifier is
-now switched on at start-up). 2.1.1: the side lights glow left-to-right while it looks for Wi-Fi;
-2.1.0: the Jooki serves its own page, and the old hidden way to run commands over Wi-Fi is closed.
+**New in 2.1.3:** the real fix for the Jooki going silent — it no longer mistakes a missing
+headphone jack for a plugged one and switches the speaker off. 2.1.1: the side lights glow while it
+looks for Wi-Fi; 2.1.0: the Jooki serves its own page and the old hidden command channel is closed.
 [All the changes](CHANGELOG.md)
 
 ---

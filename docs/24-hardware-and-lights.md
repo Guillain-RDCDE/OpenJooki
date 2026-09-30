@@ -39,7 +39,8 @@ The Jooki 2 has four groups of lights: the **ring** around the top plate, the
 | both side dots white | connected to the Wi-Fi, with an address |
 | left dot orange | not associated to a Wi-Fi network |
 | right dot orange | associated, but no address yet (waiting for the router) |
-| **both side dots orange** | no Wi-Fi. Tokens and music still work; only the page and uploads need the network. See [20-network-health.md](20-network-health.md) (the chip is sticky and 2.4 GHz only; rescue over Bluetooth). If it stays orange on a network that used to work, it may be in **airplane mode**: see the knob trick below |
+| **both side dots orange, glowing left↔right** | **OpenJooki 2.1.1+**: waking up, looking for Wi-Fi at start-up (the chip takes ~1 min, docs/20). Tokens and music already work; the glow stops on its own once the network is found or you play something |
+| **both side dots orange, steady** | no Wi-Fi (after start-up). Tokens and music still work; only the page and uploads need the network. See [20-network-health.md](20-network-health.md) (the chip is sticky and 2.4 GHz only; rescue over Bluetooth). If it stays orange on a network that used to work, it may be in **airplane mode**: see the knob trick below |
 | side dots light blue, steady | a token was just recognised, or a track is starting |
 | side dots light blue, one pulse | a phone or computer just opened the page |
 | side dots green, eight pulses | a blank token was written (`Evt.Character.Write`) |

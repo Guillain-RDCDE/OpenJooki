@@ -20,8 +20,9 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.1.0:** the Jooki serves its own page now, and the old hidden way to run
-commands on it over Wi-Fi is closed for good.
+**New in 2.1.1:** while it looks for Wi-Fi at start-up, the two side lights glow left-to-right
+so you can see it's waking up, not stuck. (2.1.0: the Jooki serves its own page, and the old
+hidden way to run commands over Wi-Fi is closed for good.)
 [All the changes](CHANGELOG.md)
 
 ---

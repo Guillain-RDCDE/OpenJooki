@@ -230,6 +230,42 @@ describe("services.device — lights and toy safe", function()
     assert_nil(device.on_lights_event(doc, { name = "Evt.Unknown" }))
   end)
 
+  it("start-up Wi-Fi chase: refresh leaves the side dots to the chase (ring only) while waiting", function()
+    local doc = doc_with({ playback = { state = "idle" }, net = { connected = false } })
+    assert_eq(kinds(device.on_lights_refresh(doc)), { "led/output/set_raw RING,200,200,200" })
+  end)
+
+  it("start-up Wi-Fi chase: bright/dim orange ping-pongs left<->right", function()
+    local doc = doc_with({ playback = { state = "idle" }, net = { connected = false } })
+    assert_eq(kinds(device.on_wifi_anim(doc, { now = 0 })),
+              { "led/output/set_raw PREV,200,40,0", "led/output/set_raw NEXT,50,10,0" })
+    assert_eq(kinds(device.on_wifi_anim(doc, { now = 0.45 })),
+              { "led/output/set_raw PREV,50,10,0", "led/output/set_raw NEXT,200,40,0" })
+  end)
+
+  it("start-up Wi-Fi chase: stops and settles the dots once associated", function()
+    local doc = doc_with({ playback = { state = "idle" }, net = { connected = true, ip = "10.0.0.2" } })
+    local k = kinds(device.on_wifi_anim(doc, { now = 1 }))
+    assert_eq(k[#k], "timer.cancel")
+    assert_eq(k[2], "led/output/set_raw PREV,200,200,200"); assert_eq(k[3], "led/output/set_raw NEXT,200,200,200")
+  end)
+
+  it("start-up Wi-Fi chase: none in airplane mode, nor while a token plays", function()
+    local air = doc_with({ playback = { state = "idle" }, net = { connected = false } }); air.device.airplane = { boot = true }
+    local ka = kinds(device.on_wifi_anim(air, { now = 0 })); assert_eq(ka[#ka], "timer.cancel")
+    local play = doc_with({ playback = { state = "playing" }, net = { connected = false } })
+    local kp = kinds(device.on_wifi_anim(play, { now = 0 })); assert_eq(kp[#kp], "timer.cancel")
+  end)
+
+  it("boot starts the Wi-Fi chase timer", function()
+    local r = device.on_boot(doc_with(), { audiocfg = {}, flags = {}, now = 5 })
+    local found = false
+    for _, c in ipairs(r.commands) do
+      if c.kind == "timer.every" and c.name == "device.wifi_anim" then found = true end
+    end
+    assert_true(found)
+  end)
+
   it("toy safe sets the flag, the script and the ESP32", function()
     local doc = doc_with()
     local r = device.on_toy_safe(doc, { enable = false })

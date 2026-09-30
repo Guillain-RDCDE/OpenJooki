@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.1.1 (30 September 2026) — the side lights show it's waking up
+- **While the Jooki looks for its Wi-Fi after you switch it on, the two side dots now glow
+  back and forth, left then right, instead of sitting still orange.** A steady pair looked
+  like it had frozen; the little animation says plainly "I'm waking up, hold on". It takes
+  the chip about a minute to join the network at start-up (that part is inside the closed
+  Wi-Fi chip, we can't speed it up) — meanwhile your tokens and music already work. The
+  glow stops on its own the moment the Wi-Fi is found, or as soon as you play something.
+
 ## OpenJooki 2.1.0 (30 September 2026) — the Jooki serves its own page; a hidden door is closed
 - **A hidden way to control the Jooki over Wi-Fi is closed.** Until now a small built-in
   program (from the original maker) answered, to anyone on your Wi-Fi and with no password,

@@ -384,6 +384,43 @@ local function wifi_lights(doc)
   return { set(doc, "PREV", assoc and COLOURS.WHITE or COLOURS.ORANGE), set(doc, "NEXT", ip and COLOURS.WHITE or COLOURS.ORANGE) }
 end
 
+-- While the Jooki waits for its Wi-Fi at start-up, the two side dots are orange. Both at once and
+-- steady, that reads as "it crashed" (the chip only tries to join the network about a minute after
+-- power-on, docs/20). So instead of a steady pair we run a slow left<->right glow -- bright orange
+-- ping-ponging over dim orange, both dots always lit so it never looks dead -- which plainly says
+-- "something is happening, you can wait". It stops on its own the moment the Wi-Fi associates, a
+-- token is played, or airplane mode is on (where steady orange is the intended "off", docs/24).
+local ANIM_S = 0.45
+local function radios_off(doc)
+  if doc.flags and doc.flags.WIFI_OFF then return true end
+  if doc.device and doc.device.airplane then return true end
+  return false
+end
+local function playing(doc)
+  local s = (doc.playback or {}).state
+  return s == "playing" or s == "starting" or s == "paused"
+end
+-- the side dots should chase (rather than sit steady orange) while: not yet associated, radios on,
+-- nothing playing. The same test tells on_lights_refresh to leave the dots to the animation.
+local function wifi_waiting(doc)
+  return not (doc.net and doc.net.connected) and not radios_off(doc) and not playing(doc)
+end
+
+--- One frame of the start-up "waiting for Wi-Fi" chase, or its end. Driven by the device.wifi_anim
+--- timer started at boot; it cancels that timer as soon as the wait is over.
+function device.on_wifi_anim(doc, ev)
+  if not wifi_waiting(doc) then
+    local r = device.on_lights_refresh(doc)   -- let the dots settle to their real state
+    r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.wifi_anim" }
+    return r
+  end
+  local phase = math.floor((ev.now or 0) / ANIM_S) % 2
+  return { commands = {
+    set(doc, "PREV", phase == 0 and COLOURS.ORANGE or COLOURS.LO_ORANGE),
+    set(doc, "NEXT", phase == 0 and COLOURS.LO_ORANGE or COLOURS.ORANGE),
+  } }
+end
+
 --- Idle/playing ring + Wi-Fi dots, recomputed on playback and network changes.
 function device.on_lights_refresh(doc)
   local pb = doc.playback or {}
@@ -395,7 +432,10 @@ function device.on_lights_refresh(doc)
   local ring = COLOURS.WHITE
   if pb.state == "playing" and doc.nfc and doc.nfc.tagId then ring = COLOURS.BLACK end   -- 1.x: the ring goes off while a token plays
   cmds[#cmds + 1] = set(doc, "RING", ring)
-  for _, c in ipairs(wifi_lights(doc)) do cmds[#cmds + 1] = c end
+  -- while the start-up chase owns the side dots, leave them to it (it paints PREV/NEXT itself)
+  if not wifi_waiting(doc) then
+    for _, c in ipairs(wifi_lights(doc)) do cmds[#cmds + 1] = c end
+  end
   return { commands = cmds }
 end
 
@@ -479,6 +519,8 @@ function device.on_boot(doc, ev)
     { kind = "timer.every", name = "device.inactivity", seconds = 30 },
     { kind = "timer.every", name = "device.tick", seconds = 0.5 },
     { kind = "timer.every", name = "device.knobs", seconds = 10 },
+    -- the side-dot "waiting for Wi-Fi" chase; it stops itself once the network is up (or a token plays)
+    { kind = "timer.every", name = "device.wifi_anim", seconds = ANIM_S },
   }) do cmds[#cmds + 1] = c end
   if ev.quiet_boot then
     -- restarted by the Wi-Fi watchdog (services.network): no chime, maybe in the middle of the night
@@ -523,6 +565,7 @@ function device.on_timer(doc, ev)
   if ev.name == "device.inactivity" then return device.on_inactivity(doc, ev) end
   if ev.name == "device.tick" then return device.on_tick(doc, ev) end
   if ev.name == "device.knobs" then return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end
+  if ev.name == "device.wifi_anim" then return device.on_wifi_anim(doc, ev) end
   if ev.name == "device.airplane" then return device.on_airplane_end(doc, "timer") end
   if ev.name == "device.airplane_restore" then return device.on_airplane_end(doc, "boot") end
   if ev.name:match("^device%.esp32_init%.%d$") then

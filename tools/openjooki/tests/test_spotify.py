@@ -152,14 +152,13 @@ with sync_playwright() as p:
     J.send("PLAYLIST_NEW_SPOTIFY", {"title": "x"}); time.sleep(0.6)
     check("SP8 saving while Spotify is paused is refused", len([v for v in J.pls.values() if v.get("spotify")]) == before and any("Not playing spotify" in str(e) for e in J.errors), J.errors[-2:])
 
-    # SP6 the headphones: Spotify's sound follows them (1.x did it, 2.0 had lost it)
+    # SP6 the Jooki v2 has NO wired headphone jack, but its ESP32 can still report hp_state=1 with
+    # nothing there. That must be IGNORED (config headphone_jack=false), or the sound would be routed
+    # to a jack that does not exist and cut from the speaker. So a headphones report moves nothing.
     J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 0, "control": 0})); time.sleep(0.3)
-    n = mark(); J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 1, "control": 0}))
-    J.wait(lambda: since(n, "/j/spotify/output/set_output_device"))
-    check("SP6 headphones in -> Spotify goes to the headphones", ("/j/spotify/output/set_output_device", "headphones") in since(n, "/j/spotify/output/"), since(n, "/j/"))
-    n = mark(); J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 0, "control": 0}))
-    J.wait(lambda: since(n, "/j/spotify/output/set_output_device"))
-    check("SP6 headphones out -> back to the speaker", ("/j/spotify/output/set_output_device", "speaker") in since(n, "/j/spotify/output/"), since(n, "/j/"))
+    n = mark(); J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 1, "control": 0})); time.sleep(0.6)
+    check("SP6 v2 has no jack: a headphones report is ignored, Spotify stays on the speaker",
+          ("/j/spotify/output/set_output_device", "headphones") not in since(n, "/j/spotify/output/"), since(n, "/j/"))
 
     # SP9 each Wi-Fi report tells Spotify the Jooki is online (a "no network" at boot must not stick)
     n = mark(); J.c.publish("/j/esp32/input/net/sta/config", json.dumps({"ssid": "Home", "stat": "fail", "ip": ""}))

@@ -2318,6 +2318,14 @@
     var d = Number(S.audio.nowPlaying.duration_ms) || 0;
     return d ? Math.min(p, d) : p;
   }
+  // The cover of what plays. Spotify's daemon gives "spotify:image:<id>" or an address on Spotify's
+  // image servers: the phone loads it from there (the page's CSP allows *.scdn.co and
+  // *.spotifycdn.com), never through the Jooki. Local music keeps its /artwork/ file.
+  function coverSrc(u) {
+    u = String(u || '');
+    var m = /^spotify:image:([0-9a-f]{16,64})$/i.exec(u);
+    return m ? 'https://i.scdn.co/image/' + m[1] : u;
+  }
   function playerBar() {
     var np = S.audio.nowPlaying;
     var pl = pls()[np.playlistId];
@@ -2325,7 +2333,7 @@
     var cover = h('div', { class: 'cover' });
     var fallback = function () { return now && pl && pl.star ? tokVisual(pl.star, 'sm') : icon('note'); };
     if (now && np.image) {
-      var ci = h('img', { src: np.image, alt: '' });
+      var ci = h('img', { src: coverSrc(np.image), alt: '' });
       ci.onerror = function () { ci.replaceWith(fallback()); };
       cover.appendChild(ci);
     } else cover.appendChild(fallback());
@@ -2359,7 +2367,7 @@
         var stream = np.service === 'STREAM';
         var art = h('div', { class: 'art' });
         if (np.image) {
-          var ai = h('img', { src: np.image, alt: '' });
+          var ai = h('img', { src: coverSrc(np.image), alt: '' });
           ai.onerror = function () { ai.replaceWith(tokVisual(pl && pl.star, '')); };
           art.appendChild(ai);
         } else art.appendChild(tokVisual(pl && pl.star, ''));

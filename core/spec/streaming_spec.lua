@@ -86,6 +86,23 @@ describe("services.streaming — starting and transport through playback", funct
     end
   end)
 
+  it("the cover: Spotify's own spotify:image:<id> becomes the address a browser can show", function()
+    assert_eq(streaming.cover_url("spotify:image:ab67616d0000b273e8b066f70c206551210d902b"),
+              "https://i.scdn.co/image/ab67616d0000b273e8b066f70c206551210d902b")
+    assert_eq(streaming.cover_url("https://i.scdn.co/image/ab67"), "https://i.scdn.co/image/ab67")   -- already an address
+    assert_nil(streaming.cover_url("")); assert_nil(streaming.cover_url(nil))
+    assert_eq(streaming.cover_url("spotify:image:not-hex!"), "spotify:image:not-hex!")              -- unknown form: untouched
+    local doc = doc_with()
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.playing" }))
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.now_playing", data = { track = "A", image = "spotify:image:0a1b" } }))
+    assert_eq(doc.playback.now.image, "https://i.scdn.co/image/0a1b")
+    local r = streaming.on_spotify(doc, { type = "spotify.now_playing", data = { track = "B", image = "spotify:image:2c3d" } })
+    assert_eq(r.state.playback.now.image, "https://i.scdn.co/image/2c3d")
+    assert_eq(r.commands[1].key, "streaming.spotify_cover"); assert_eq(r.commands[1].fields.raw, "spotify:image:2c3d")
+    apply(doc, r)
+    assert_nil(streaming.on_spotify(doc, { type = "spotify.now_playing", data = { track = "B", image = "spotify:image:2c3d" } }).commands)
+  end)
+
   it("a token put on while Spotify plays pauses Spotify and plays alone", function()
     local doc = doc_with()
     apply(doc, streaming.on_spotify(doc, { type = "spotify.playing" }))

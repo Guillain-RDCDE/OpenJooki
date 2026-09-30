@@ -168,6 +168,29 @@ with sync_playwright() as p:
     J.wait(lambda: since(n, "/j/spotify/output/connection_state"))
     check("SP9 Wi-Fi back -> Spotify told online", ("/j/spotify/output/connection_state", "2") in since(n, "/j/spotify/output/"), since(n, "/j/"))
 
+    # SP10 the cover, in a browser that ENFORCES the page's security policy (the context above bypasses
+    # it, which is how Spotify's covers stayed blocked unseen: 30/09 the family saw the grey disc).
+    # Spotify's image server is faked by a route: the request only happens if the policy allows it.
+    import base64
+    PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
+    ctx2 = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, locale="fr-FR")
+    hits = []
+    ctx2.route("https://i.scdn.co/**", lambda r: (hits.append(r.request.url), r.fulfill(status=200, content_type="image/jpeg", body=PNG)))
+    pg2 = ctx2.new_page(); csp = []
+    pg2.on("console", lambda m: csp.append(m.text) if "Content Security Policy" in m.text else None)
+    pg2.goto(URL + "/"); pg2.wait_for_selector(".pl[data-pl]")
+    COVER = "ab67616d0000b273e8b066f70c206551210d902b"
+    daemon("playing"); time.sleep(0.2); daemon("now_playing", dict(TRACK, track="Primavera", image="spotify:image:" + COVER))
+    J.wait(lambda: np().get("track") == "Primavera")
+    check("SP10 the core turns spotify:image:<id> into Spotify's image address", np().get("image") == "https://i.scdn.co/image/" + COVER, np().get("image"))
+    try: pg2.wait_for_function("(function(){var i=document.querySelector('[data-k=player] .cover img');return i&&i.complete&&i.naturalWidth>0;})()", timeout=6000)
+    except Exception: pass
+    shown = pg2.evaluate("(function(){var i=document.querySelector('[data-k=player] .cover img');return i?[i.getAttribute('src'),i.naturalWidth]:null;})()")
+    check("SP10 the page shows Spotify's cover (security policy enforced), not the generic disc",
+          bool(shown) and shown[0] == "https://i.scdn.co/image/" + COVER and shown[1] > 0 and hits, (shown, hits, csp))
+    check("SP10 no security-policy refusal in the page", not csp, csp)
+    ctx2.close()
+
     check("SP7 no page error", not errs, errs)
     b.close()
 spy.loop_stop(); J.nfc_off(); J.close()

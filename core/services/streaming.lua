@@ -73,11 +73,20 @@ local function local_busy(pb)
     and (pb.state == "playing" or pb.state == "starting" or pb.state == "paused")
 end
 
+--- A cover a browser can show: the daemon may give Spotify's own "spotify:image:<id>", which is
+--- the file on Spotify's image server i.scdn.co. Anything else is passed on as it is.
+function streaming.cover_url(u)
+  if type(u) ~= "string" then return nil end
+  local id = u:match("^spotify:image:(%x+)$")
+  if id then return "https://i.scdn.co/image/" .. id end
+  return u ~= "" and u or nil
+end
+
 --- The now-playing record of a Spotify track (`d` = the daemon's now_playing payload).
 local function sp_now(d, playlist)
   d = d or {}
   return { playlist = playlist, service = "SPOTIFY", uri = d.source_uri, source = d.source, title = d.track, album = d.album,
-           artist = d.artist, image = d.image, duration_ms = tonumber(d.duration_ms), has_next = d.hasNext ~= false,
+           artist = d.artist, image = streaming.cover_url(d.image), duration_ms = tonumber(d.duration_ms), has_next = d.hasNext ~= false,
            has_prev = d.hasPrev ~= false, audiobook = type(d.source_uri) == "string" and d.source_uri:find(":show:", 1, true) ~= nil }
 end
 
@@ -93,7 +102,7 @@ local function take_over(doc, sp)
   pb.position_ms = 0
   pb.paused_by, pb.paused_at, pb.resume_ms = nil, nil, nil
   cmds[#cmds + 1] = emit("playback.changed", { state = pb.state })
-  cmds[#cmds + 1] = { kind = "log", level = "info", key = "streaming.spotify_took_over" }
+  cmds[#cmds + 1] = { kind = "log", level = "info", key = "streaming.spotify_took_over", fields = { cover = tostring((sp.track or {}).image or ""):sub(1, 90) } }
   return { state = { spotify = sp, playback = pb }, commands = cmds }
 end
 
@@ -122,8 +131,12 @@ function streaming.on_spotify(doc, ev)
     sp.track = copy(ev.data or {})
     if active(doc, "SPOTIFY") then
       local pb = pb_of(doc)
+      local was = pb.now and pb.now.image
       pb.now = sp_now(sp.track, pb.now.playlist)
-      return { state = { spotify = sp, playback = pb } }
+      local r = { state = { spotify = sp, playback = pb } }
+      -- what the daemon gives as a cover, once per new cover (docs: the page's covers)
+      if pb.now.image ~= was then r.commands = { { kind = "log", level = "info", key = "streaming.spotify_cover", fields = { raw = tostring(sp.track.image or ""):sub(1, 90) } } } end
+      return r
     end
     -- local music loaded: wait for "playing" (the phone may only have changed the track of a paused Spotify)
     if local_busy(pb_of(doc)) then return { state = { spotify = sp } } end

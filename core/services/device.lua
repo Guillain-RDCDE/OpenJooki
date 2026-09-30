@@ -71,6 +71,20 @@ function device.on_apply_volume(doc)
   return { commands = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } } }
 end
 
+-- Route the sound and, crucially, ENABLE THE AMPLIFIER. `/sys/kernel/htdrv/amp_en` = 1 for the
+-- speaker, 0 for headphones (1.x did exactly this). It must be set at boot AND on a headphones
+-- change: without the boot write, a Jooki that starts with no headphones plugged never turns its
+-- amplifier on, so nothing comes out of the speaker (tokens and Spotify look like they play, in
+-- silence) until some headphones transition happens to write it. 1.x set it at start-up; we must too.
+local function output_commands(headphones)
+  local dev = headphones and "headphones" or "speaker"
+  return {
+    { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = dev },
+    { kind = "bus.publish", topic = "/j/spotify/output/set_output_device", payload = dev },
+    { kind = "files.write_text", path = "/sys/kernel/htdrv/amp_en", text = headphones and "0" or "1" },
+  }
+end
+
 function device.on_gpio_volume(doc, ev)
   if ev.percent == nil then return nil end
   return set_volume(doc, ev.percent)
@@ -94,10 +108,7 @@ function device.on_knobs(doc, ev)
     local a2 = r.state.audiocfg or a
     a2.headphones_en = ev.headphones
     r.state.audiocfg = a2
-    local dev = ev.headphones and "headphones" or "speaker"
-    r.commands[#r.commands + 1] = { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = dev }
-    r.commands[#r.commands + 1] = { kind = "bus.publish", topic = "/j/spotify/output/set_output_device", payload = dev }   -- 1.x: Spotify follows too
-    r.commands[#r.commands + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/amp_en", text = ev.headphones and "0" or "1" }
+    for _, c in ipairs(output_commands(ev.headphones)) do r.commands[#r.commands + 1] = c end   -- 1.x: Spotify follows too
   end
   if not next(r.state) and #r.commands == 0 then return nil end
   return r
@@ -508,10 +519,10 @@ function device.on_boot(doc, ev)
   d.toy_safe = not flags.TOY_SAFE_OFF
   -- false = the page may offer the (bounded) airplane mode; a table = one is running (until the restore below)
   d.airplane = flags.OJ_AIRPLANE and { boot = true } or false
-  local cmds = {
-    { kind = "host.volume", percent = device.effective_volume(doc, a.volume) },
-    { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = "speaker" },
-  }
+  local cmds = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } }
+  -- route the sound and turn the amplifier on at boot (speaker unless headphones are set); without
+  -- this the speaker stays silent on battery until a headphones toggle (see output_commands)
+  for _, c in ipairs(output_commands(a.headphones_en)) do cmds[#cmds + 1] = c end
   for _, c in ipairs(esp32_init()) do cmds[#cmds + 1] = c end
   for i, s in ipairs(ESP32_RESEND_S) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
   -- an airplane mode started from the page ends at the next start, whatever the ESP32 remembers

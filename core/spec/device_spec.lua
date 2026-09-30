@@ -46,6 +46,36 @@ describe("services.device — volume chain", function()
   end)
 end)
 
+describe("services.device — audio output / amplifier", function()
+  local function amp_and_out(r)
+    local amp, out
+    for _, c in ipairs(r.commands) do
+      if c.kind == "files.write_text" and c.path == "/sys/kernel/htdrv/amp_en" then amp = c.text end
+      if c.kind == "bus.publish" and c.topic == "/j/audio/out/set_output_device" then out = c.payload end
+    end
+    return amp, out
+  end
+
+  it("boot turns the amplifier ON for the speaker (sound must work on battery, not only when plugged)", function()
+    local amp, out = amp_and_out(device.on_boot(doc_with(), { audiocfg = { volume = 50 }, flags = {}, now = 5 }))
+    assert_eq(amp, "1"); assert_eq(out, "speaker")
+  end)
+
+  it("boot with headphones set routes to headphones and leaves the amplifier off", function()
+    local amp, out = amp_and_out(device.on_boot(doc_with(), { audiocfg = { volume = 50, headphones_en = true }, flags = {}, now = 5 }))
+    assert_eq(amp, "0"); assert_eq(out, "headphones")
+  end)
+
+  it("plugging in headphones switches the amplifier off and back on when removed", function()
+    local on = doc_with({ audiocfg = { volume = 40, headphones_en = false } })
+    local amp1 = select(1, amp_and_out(device.on_knobs(on, { headphones = true })))
+    assert_eq(amp1, "0")
+    local off = doc_with({ audiocfg = { volume = 40, headphones_en = true } })
+    local amp2 = select(1, amp_and_out(device.on_knobs(off, { headphones = false })))
+    assert_eq(amp2, "1")
+  end)
+end)
+
 describe("services.device — buttons", function()
   it("next/prev on release, circle long press -> power off, four buttons -> speak info", function()
     local doc = doc_with()

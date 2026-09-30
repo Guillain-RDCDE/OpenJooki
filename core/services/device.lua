@@ -390,7 +390,8 @@ end
 -- ping-ponging over dim orange, both dots always lit so it never looks dead -- which plainly says
 -- "something is happening, you can wait". It stops on its own the moment the Wi-Fi associates, a
 -- token is played, or airplane mode is on (where steady orange is the intended "off", docs/24).
-local ANIM_S = 0.45
+local ANIM_S = 0.45   -- default frame interval; the live value comes from config (0 = off, e.g. on the bench)
+local function anim_s() local v = require("kernel.config").get("wifi_anim_s"); return (v and v > 0) and v or ANIM_S end
 local function radios_off(doc)
   if doc.flags and doc.flags.WIFI_OFF then return true end
   if doc.device and doc.device.airplane then return true end
@@ -414,7 +415,7 @@ function device.on_wifi_anim(doc, ev)
     r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.wifi_anim" }
     return r
   end
-  local phase = math.floor((ev.now or 0) / ANIM_S) % 2
+  local phase = math.floor((ev.now or 0) / anim_s()) % 2
   return { commands = {
     set(doc, "PREV", phase == 0 and COLOURS.ORANGE or COLOURS.LO_ORANGE),
     set(doc, "NEXT", phase == 0 and COLOURS.LO_ORANGE or COLOURS.ORANGE),
@@ -519,9 +520,12 @@ function device.on_boot(doc, ev)
     { kind = "timer.every", name = "device.inactivity", seconds = 30 },
     { kind = "timer.every", name = "device.tick", seconds = 0.5 },
     { kind = "timer.every", name = "device.knobs", seconds = 10 },
-    -- the side-dot "waiting for Wi-Fi" chase; it stops itself once the network is up (or a token plays)
-    { kind = "timer.every", name = "device.wifi_anim", seconds = ANIM_S },
   }) do cmds[#cmds + 1] = c end
+  -- the side-dot "waiting for Wi-Fi" chase; it stops itself once the network is up (or a token plays).
+  -- Off the real Jooki wifi_anim_s is 0 (no frames, no idle bus traffic on the bench).
+  if require("kernel.config").get("wifi_anim_s") > 0 then
+    cmds[#cmds + 1] = { kind = "timer.every", name = "device.wifi_anim", seconds = anim_s() }
+  end
   if ev.quiet_boot then
     -- restarted by the Wi-Fi watchdog (services.network): no chime, maybe in the middle of the night
     cmds[#cmds + 1] = { kind = "files.remove", path = require("kernel.config").get("quiet_boot_file") }

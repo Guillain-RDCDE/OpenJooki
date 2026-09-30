@@ -51,6 +51,8 @@ local ON_JOOKI = (function() local f = io.open("/sys/kernel/htdrv/mac", "r") if 
 if not ON_JOOKI then
   if overrides.wifi_watchdog_s == nil then overrides.wifi_watchdog_s = 0 end
   if overrides.broker_watch_s == nil then overrides.broker_watch_s = 0 end
+  -- the side-dot chase would otherwise publish LED frames forever on the bench (no Wi-Fi to end it)
+  if overrides.wifi_anim_s == nil then overrides.wifi_anim_s = 0 end
 end
 -- bench convenience: run the web server on an unprivileged port (no root, no clash with the emulator)
 local hp = os.getenv("OJ_HTTP_PORT")

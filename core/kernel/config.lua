@@ -27,6 +27,9 @@ config.defaults = {
   -- /cmd) can stop (ADR-0007). 0 = off (the bench smoke, or to fall back to web_ctrl).
   http_port = 80,
   web_public_dir = "/tmp/web_ctrl_dirs/public",   -- what web_ctrl served, rebuilt at boot
+  -- the start-up "waiting for Wi-Fi" side-dot chase (services.device): interval between frames.
+  -- 0 = off. Off the real Jooki (bench, smoke) it is set to 0 so it adds no idle bus traffic.
+  wifi_anim_s = 0.45,
   -- loop
   tick_s = 0.5,                               -- longest wait when nothing is due
   state_publish_min_interval_s = 0.25,        -- coalescing window for state patches

@@ -27,6 +27,11 @@ config.defaults = {
   -- /cmd) can stop (ADR-0007). 0 = off (the bench smoke, or to fall back to web_ctrl).
   http_port = 80,
   web_public_dir = "/tmp/web_ctrl_dirs/public",   -- what web_ctrl served, rebuilt at boot
+  -- The Jooki v2 has NO wired headphone jack. Its ESP32 still reports an `hp_state` in the knob
+  -- message, and it can read as "plugged" with nothing there -- which used to route the sound to a
+  -- jack that does not exist and switch the speaker amplifier off, leaving the Jooki silent with no
+  -- way to hear anything. So wired-headphone detection is off by default; Bluetooth is separate.
+  headphone_jack = false,
   -- the start-up "waiting for Wi-Fi" side-dot chase (services.device): interval between frames.
   -- 0 = off. Off the real Jooki (bench, smoke) it is set to 0 so it adds no idle bus traffic.
   wifi_anim_s = 0.45,

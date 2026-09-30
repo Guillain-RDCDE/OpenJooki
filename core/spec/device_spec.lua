@@ -29,13 +29,15 @@ describe("services.device — volume chain", function()
     assert_eq(kinds(device.on_apply_volume(doc)), { "vol 20" })   -- 40 * 0.5
   end)
 
-  it("knob reports change the volume and the headphones only when they differ", function()
+  it("knob reports change the volume and the headphones only when they differ (jack enabled)", function()
+    require("kernel.config").load({ headphone_jack = true })
     local doc = doc_with(); doc.device.esp32_up = true   -- the first answer only marks esp32_ctrl up (see boot spec)
     assert_nil(device.on_knobs(doc, { volume = 40, headphones = false }))
     local r = device.on_knobs(doc, { volume = 55, headphones = true })
     assert_eq(r.state.audiocfg.volume, 55); assert_true(r.state.audiocfg.headphones_en)
     assert_eq(kinds(r)[1], "vol 55"); assert_eq(kinds(r)[3], "audio/out/set_output_device headphones")
     assert_eq(kinds(r)[4], "spotify/output/set_output_device headphones")   -- Spotify follows the headphones too
+    require("kernel.config").load({})
   end)
 
   it("volume buttons step by 10 within 0-100", function()
@@ -61,18 +63,29 @@ describe("services.device — audio output / amplifier", function()
     assert_eq(amp, "1"); assert_eq(out, "speaker")
   end)
 
-  it("boot with headphones set routes to headphones and leaves the amplifier off", function()
-    local amp, out = amp_and_out(device.on_boot(doc_with(), { audiocfg = { volume = 50, headphones_en = true }, flags = {}, now = 5 }))
-    assert_eq(amp, "0"); assert_eq(out, "headphones")
+  it("v2 has no jack (default): a headphones report is ignored, the amplifier stays on the speaker", function()
+    local doc = doc_with({ audiocfg = { volume = 40, headphones_en = false } }); doc.device.esp32_up = true
+    assert_nil(device.on_knobs(doc, { headphones = true }))   -- ignored, nothing changes
+    -- and a stale "headphones on" is cleared at boot so it can never keep the speaker off
+    local r = device.on_boot(doc_with(), { audiocfg = { volume = 50, headphones_en = true }, flags = {}, now = 5 })
+    local amp, out = amp_and_out(r)
+    assert_eq(amp, "1"); assert_eq(out, "speaker"); assert_false(r.state.audiocfg.headphones_en)
   end)
 
-  it("plugging in headphones switches the amplifier off and back on when removed", function()
+  it("with a jack enabled, boot with headphones set routes to headphones and leaves the amplifier off", function()
+    require("kernel.config").load({ headphone_jack = true })
+    local amp, out = amp_and_out(device.on_boot(doc_with(), { audiocfg = { volume = 50, headphones_en = true }, flags = {}, now = 5 }))
+    assert_eq(amp, "0"); assert_eq(out, "headphones")
+    require("kernel.config").load({})
+  end)
+
+  it("with a jack enabled, plugging headphones switches the amplifier off and back on when removed", function()
+    require("kernel.config").load({ headphone_jack = true })
     local on = doc_with({ audiocfg = { volume = 40, headphones_en = false } })
-    local amp1 = select(1, amp_and_out(device.on_knobs(on, { headphones = true })))
-    assert_eq(amp1, "0")
+    assert_eq(select(1, amp_and_out(device.on_knobs(on, { headphones = true }))), "0")
     local off = doc_with({ audiocfg = { volume = 40, headphones_en = true } })
-    local amp2 = select(1, amp_and_out(device.on_knobs(off, { headphones = false })))
-    assert_eq(amp2, "1")
+    assert_eq(select(1, amp_and_out(device.on_knobs(off, { headphones = false }))), "1")
+    require("kernel.config").load({})
   end)
 end)
 

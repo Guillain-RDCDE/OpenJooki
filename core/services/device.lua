@@ -76,7 +76,11 @@ end
 -- change: without the boot write, a Jooki that starts with no headphones plugged never turns its
 -- amplifier on, so nothing comes out of the speaker (tokens and Spotify look like they play, in
 -- silence) until some headphones transition happens to write it. 1.x set it at start-up; we must too.
+-- v2 has no wired headphone jack (config headphone_jack); its ESP32 hp_state is ignored so a
+-- spurious "plugged" reading never routes to a missing jack and never mutes the speaker.
+local function has_jack() return require("kernel.config").get("headphone_jack") == true end
 local function output_commands(headphones)
+  headphones = headphones and has_jack() or false
   local dev = headphones and "headphones" or "speaker"
   return {
     { kind = "bus.publish", topic = "/j/audio/out/set_output_device", payload = dev },
@@ -104,7 +108,7 @@ function device.on_knobs(doc, ev)
     r.state.audiocfg = s.state.audiocfg
     for _, c in ipairs(s.commands) do r.commands[#r.commands + 1] = c end
   end
-  if ev.headphones ~= nil and ev.headphones ~= a.headphones_en then
+  if has_jack() and ev.headphones ~= nil and ev.headphones ~= a.headphones_en then
     local a2 = r.state.audiocfg or a
     a2.headphones_en = ev.headphones
     r.state.audiocfg = a2
@@ -521,7 +525,9 @@ function device.on_boot(doc, ev)
   d.airplane = flags.OJ_AIRPLANE and { boot = true } or false
   local cmds = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } }
   -- route the sound and turn the amplifier on at boot (speaker unless headphones are set); without
-  -- this the speaker stays silent on battery until a headphones toggle (see output_commands)
+  -- this the speaker stays silent until a headphones toggle (see output_commands). With no jack
+  -- (v2), clear any stale "headphones on" so a past spurious detection cannot keep the speaker off.
+  if not has_jack() then a.headphones_en = false end
   for _, c in ipairs(output_commands(a.headphones_en)) do cmds[#cmds + 1] = c end
   for _, c in ipairs(esp32_init()) do cmds[#cmds + 1] = c end
   for i, s in ipairs(ESP32_RESEND_S) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end

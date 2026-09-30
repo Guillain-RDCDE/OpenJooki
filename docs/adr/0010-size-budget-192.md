@@ -28,3 +28,7 @@ rewrite (docs/21 size targets).
 - The v1 layer leaving in 2.1 gives the room back; the budget may then go
   down again, by a new record.
 - The lean build (`--without services.streaming`) is unaffected (165 KiB).
+- **State at 2.0.9 (2026-09-29): 191.9 KiB, the budget is full.** Spotify from the
+  phone, the Wi-Fi watchdog and the broker keeper took the rest. The next feature needs a
+  decision first: the v1 layer leaving (14 KiB back), or a new ADR raising the budget
+  towards the host's 200 KiB.

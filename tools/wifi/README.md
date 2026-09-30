@@ -21,9 +21,13 @@ python3 jooki_wifi.py                    # guided: pick a network, type the pass
 python3 jooki_wifi.py scan               # the networks the Jooki can see, and the ones it remembers
 python3 jooki_wifi.py connect "My box"   # asks for the password (hidden)
 python3 jooki_wifi.py status             # what it is on
-python3 jooki_wifi.py list               # the networks it remembers
-python3 jooki_wifi.py forget "Old box"   # make it forget one
+python3 jooki_wifi.py list               # the networks it remembers (the Jooki stays on its Wi-Fi)
+python3 jooki_wifi.py forget "Old box"   # make it forget one (the Jooki stays on its Wi-Fi)
 ```
+
+`scan`, `status` and the guided mode **take the Jooki off its Wi-Fi** until it is given a
+network (`connect`), or until it restarts: on the charger it does so by itself after ten
+minutes (OpenJooki 2.0.8 or later). `list` and `forget` do not.
 
 Bluetooth must be on. Several Jookis around: `--name JOOKI2_XXXXXX` (the name is
 `JOOKI2_` + the end of the Jooki's serial, shown on its page under Settings).
@@ -49,6 +53,13 @@ Bluetooth must be on. Several Jookis around: `--name JOOKI2_XXXXXX` (the name is
   `apply_config`, a wrong password ends either in `failed` / `AuthError` after ~10 s
   or in "connecting" forever; the page waits 45 s and says so. A failure is believed
   only when reported twice, at least 3 s in.
+- **Opening the set-up session takes the chip off its Wi-Fi** until it is given a network
+  (29/09: one `list` with a session left our Jooki offline for good; `apply_config` alone
+  is refused, code 5). `wcm-list-config-ap` and `wcm-remove-ap` need no session, and the
+  tools no longer open one for them. `wcm-remove-ap` is safe even for the network in use.
+- The chip keeps the **last network it reconnected to by itself**, not the strongest, and
+  a network given over Bluetooth does not change that: with two networks it can stay on
+  the far one after a cut. Keep only the network next to the Jooki (docs/20).
 - **A wrong password on the network in use drops the Jooki off Wi-Fi**, and the chip
   did not come back by itself within two minutes: the tools say so and the user
   tries again. Never test with the only network that works, unless you are next to it.

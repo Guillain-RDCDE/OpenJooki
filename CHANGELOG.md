@@ -1,62 +1,47 @@
 # OpenJooki — Changelog
 
-## OpenJooki 2.0.9 (29 September 2026) — the message hub brings everything back, and a Wi-Fi that stays put
-- **The Wi-Fi chip no longer crashes at every start.** Found on a family Jooki: the
-  original start gave the chip Muuselabs' factory network again at every start, and the
-  command it used makes the chip crash and restart. So at every start the Wi-Fi came
-  more than a minute late, and the chip could come back on another network it knew,
-  even a far one. 2.0.8 stopped adding it; now nothing touches the chip's networks
-  while it starts, and the factory network is forgotten later, once the Wi-Fi is up.
-  Checked on our Jooki over ten restarts: no crash, always on the network next to it,
-  its page back about 80 seconds after a restart.
-- **The Wi-Fi watchdog checks the real network.** Seen once while testing: the chip said
-  it was connected, but the Jooki itself had no network, and stayed out of reach. The
-  watchdog now also checks that the Jooki really has a way out, and restarts it if not
-  (tried on the Jooki: back ten minutes later, by itself).
-- **The Wi-Fi page no longer takes a working Jooki off its Wi-Fi.** Just finding the
-  Jooki, reading the networks it remembers or forgetting one used to disconnect it until
-  it was given a network. Now only *Look for Wi-Fi networks* does, and the page says so.
-  Same for the `jooki_wifi.py` tool.
-- **Keep only the network next to the Jooki.** Checked on the Jooki: its chip does not
-  pick the strongest network it knows; after a short cut it moves to the next one, even
-  a far one, and stays there. The page now says so next to the list, where forgetting
-  the others is safe.
-- **Tokens and buttons come back too.** Tried on a family Jooki: when the message hub
-  stopped, the programs that read the tokens, the buttons and the battery stopped with
-  it, and 2.0.8 only brought the hub back. The Jooki now starts them again as well,
-  then tells the Wi-Fi chip again what it tells it at every start (the token reader on).
-  Checked on the Jooki: hub back after 20 s, the three programs a second later, the
-  chip answering.
+## OpenJooki 2.0.9 (29 September 2026) — a steadier Wi-Fi
+- **The Jooki stays on the Wi-Fi next to it.** Until now, every time it was switched on,
+  the Jooki's Wi-Fi chip crashed once (an old Muuselabs setting did it), and it could come
+  back on another Wi-Fi of the house, even a far one. That is gone. Tried ten times on a
+  family Jooki: always on the right Wi-Fi.
+- **About a minute and a half to get the Wi-Fi after switching it on**: that's normal.
+  Tokens and music work in the meantime.
+- **Keep only the Wi-Fi next to the Jooki.** The Jooki does not pick the strongest Wi-Fi:
+  after a short cut it can move to another one it knows and stay there. On the
+  [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), forget the others.
+- **The Wi-Fi page no longer disconnects a Jooki that works.** Finding the Jooki, seeing
+  the networks it remembers and forgetting one leave its Wi-Fi alone. Only *Look for
+  Wi-Fi networks* takes it off its Wi-Fi for a moment, and the page says so.
+- **It gets its Wi-Fi back by itself, in more cases.** It now also notices when it
+  believes it is connected but is not, and restarts quietly, as below.
+- **Tokens and buttons keep working** even when a part of the Jooki has to restart.
+- For the tinkerers: `esp32_cmd add_ap` crashes the chip (the original start script ran
+  it at every boot); a Bluetooth set-up session takes the chip off its Wi-Fi; the chip
+  keeps the last network it reconnected to by itself. Details in docs/20.
 
 ## OpenJooki 2.0.8 (29 September 2026) — a safer start
-- **The Jooki gets its Wi-Fi back by itself.** Its Wi-Fi chip can stay stuck on
-  "connecting" and nothing on the original system woke it up again: the Jooki stayed
-  out of reach until someone restarted it. Now, after ten minutes without Wi-Fi, on the
-  charger and with nothing playing, the Jooki restarts itself, silently. Twice at most
-  in a row: if the Wi-Fi is really gone (moved house, new box), the Bluetooth page is
-  the way. Never in airplane mode, never during an update.
-- **No more factory network.** At every start, the original system gave the Wi-Fi chip
-  Muuselabs' own factory network again, a network no home has, and the chip wasted its
-  tries on it. It is no longer added, and it is removed when the chip knows your
-  network. The chip also gets 30 seconds to start instead of 10, and a slow start no
-  longer leaves a "factory mode" mark behind for good.
-- **The Jooki's message hub keeps running.** Tokens, knobs and the page all go through
-  one small program on the Jooki (the broker). Nothing restarted it if it stopped: the
-  Jooki went deaf. The Jooki now starts it again by itself, and no longer burns its
-  processor (and battery) while it waits for it.
-- **A card that cannot change the Jooki's security.** A settings file dropped on the SD
-  card's computer-readable part used to replace the Jooki's own message-hub settings,
-  password included. It is ignored now.
+- **The Jooki gets its Wi-Fi back by itself.** Sometimes the Jooki stayed off its Wi-Fi
+  until someone switched it off and on. Now, after ten minutes without Wi-Fi, on the
+  charger and with nothing playing, it restarts by itself, without its chime. Twice at
+  most in a row: if the Wi-Fi is really gone (moved house, new box), the
+  [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html) is the way. Never
+  in airplane mode, never during an update.
+- **No more Muuselabs factory Wi-Fi.** The Jooki no longer tries a Wi-Fi that no home
+  has.
+- **Nothing goes deaf.** If the part of the Jooki that carries the tokens, the buttons
+  and the page stops, the Jooki starts it again by itself.
+- **Safer SD card.** A file put on the card from a computer can no longer change the
+  Jooki's security settings.
 - For the tinkerers: the maintenance access (Settings, one hour) takes an SSH public
-  key, kept on the Jooki across updates (updates used to wipe it). Only while the
-  access is open, and behind the parent code when one is set.
+  key, kept on the Jooki across updates, only while the access is open and behind the
+  parent code when one is set. The broker (mosquitto) is started again after 20 s
+  without it, with the hardware controllers. Details in docs/20.
 
 ## OpenJooki 2.0.7 (29 September 2026) — a character for your Spotify playlist
 - **Spotify connects again after a restart.** After some restarts, the phone saw the
-  Jooki in its list of devices but could not connect to it. The Jooki told Spotify
-  "no network" once while starting, before its Wi-Fi was up, and never said it again.
-  It now tells Spotify every time the Wi-Fi changes, as the original program did.
-  Found on a family Jooki after the 2.0.6 update, and checked on it.
+  Jooki in its list of devices but could not connect to it. Fixed, and checked on a
+  family Jooki.
 - **Put your Spotify music on a character.** While Spotify plays on the Jooki, open
   the player at the bottom of the page and tap *Put on a character*: pick a name and
   a character. Then the character plays that Spotify playlist, even without the
@@ -66,6 +51,8 @@
   ("Albin de la Simone / Happy End"), where it showed only the album.
 - **Settings on a big screen.** On a wide screen the page background stopped halfway
   down long pages such as Settings. It now goes to the bottom.
+- For the tinkerers: the core now tells spotify_ctrl the network state at every Wi-Fi
+  report (it answered only once, at start, sometimes before the Wi-Fi was up).
 
 ## OpenJooki 2.0.6 (29 September 2026) — Spotify from the phone
 - **Spotify still works on the Jooki.** Pick the Jooki in the Spotify app on your
@@ -80,11 +67,11 @@
   pause Spotify started from the phone; the sleep timer does.
 - **Headphones.** Plug headphones in while Spotify plays: the sound goes to the
   headphones, as it did before OpenJooki.
-- Checked on the bench with a stand-in for the Spotify program, in both orders its
-  messages can come in (`tools/openjooki/tests/test_spotify.py`, in CI).
 - **The page is never out of date.** After an update, a phone could keep showing the
   old page (Settings said "OpenJooki 2.0.5, page 2.0.4", and the new settings were
   missing). Now the page sees it and loads itself again, once, on its own.
+- For the tinkerers: checked on the bench with a stand-in for the Spotify program, in
+  both orders its messages can come in (`tools/openjooki/tests/test_spotify.py`, in CI).
 
 ## SD card tools (29 September 2026) — back to the original Jooki
 - **The original Jooki, on a card.** The SD card tool (Windows, Mac, Linux) has a third
@@ -93,7 +80,7 @@
   whoever wants a Jooki back exactly as it was sold. The Jooki's own card stays the way back.
   Honest note shown in the tool: the official app and Jooki's servers are gone, so the
   original program can no longer be set up from a phone.
-- It is rebuilt from an OpenJooki image, which keeps every file it replaced
+- For the tinkerers: it is rebuilt from an OpenJooki image, which keeps every file it replaced
   (`tools/sdcard/make_original_rootfs.py`), then checked against a Jooki backed up before
   OpenJooki: every system file identical, nothing extra. It lives in its own GitHub release,
   `original`. Not yet started in a real Jooki. Details in docs/27.

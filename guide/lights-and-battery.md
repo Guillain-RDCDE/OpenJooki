@@ -8,10 +8,10 @@
 | heart green | charging (blinking = charging, steady = full) |
 | ring off while music plays | a token is playing: normal |
 | both side dots white | on the Wi-Fi |
-| **both side dots orange** | no Wi-Fi. Tokens and music still work. Moved house or new box? [Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html). Still orange on a network that used to work: it may be in airplane mode (see below) |
+| **both side dots orange** | no Wi-Fi. Tokens and music still work. Moved house or new box? [Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html). Still orange on a network that used to work: it may be in airplane mode (see below); otherwise it tries again by itself, and on the charger it restarts on its own after ten minutes |
 | side dots light blue | a token was recognised, or a phone opened the page |
 | side dots yellow, one pulse | a warning: battery under 20 %, airplane mode on, or it will switch off in a minute |
-| side dots red, two pulses | an error: empty playlist, or memory card full |
+| side dots red, two pulses | an error: empty playlist, memory card full, or Spotify could not play |
 | heart red, then everything off | switching off (heart held two seconds, or 15 minutes unused on battery, or battery under 10 %) |
 | everything very dim | night mode |
 

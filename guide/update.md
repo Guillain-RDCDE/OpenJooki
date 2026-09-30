@@ -5,7 +5,8 @@ When a new version is out, the Jooki's page shows a message. Tap **Update now**.
 1. Keep the Jooki **plugged in**.
 2. The page shows the steps: downloading, checking, installing, restarting. About ten
    to twenty minutes.
-3. The Jooki restarts on its own, and the page comes back with the new version.
+3. The Jooki restarts on its own, and the page comes back with the new version (it
+   reloads itself; if it still shows the old one, close it and open it again).
 
 No message? Settings → **Check for updates**.
 

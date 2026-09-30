@@ -82,7 +82,7 @@ port could not be shared the Jooki simply works without the name.
 - **Opening a Bluetooth set-up session takes the chip off its Wi-Fi** until it is
   given a network (29/09: one read of the list with a session left our Jooki offline
   until the watchdog restarted it; "apply" alone is refused). Reading the list and
-  forgetting a network need no session. Since the next release the page and
+  forgetting a network need no session. Since 2.0.9 the page and
   `jooki_wifi.py` open one only to look for networks or to give one, and say so.
 - **Rescue without any Wi-Fi**: when it cannot connect, the chip advertises over
   Bluetooth as `JOOKI2_<id>` with Espressif's standard provisioning service
@@ -93,7 +93,7 @@ port could not be shared the Jooki simply works without the name.
 - Never remove the network that works before the new one is proven: the Jooki
   cannot be reached remotely without Wi-Fi.
 
-## A safer start (29/09/2026, after the next release)
+## A safer start (2.0.8 and 2.0.9, 29/09/2026)
 
 - **The chip can stay stuck** on "connecting" (28/09: unreachable, 18 drops since the
   start, back only through the Bluetooth page). Nothing on the original system wakes
@@ -110,16 +110,28 @@ port could not be shared the Jooki simply works without the name.
   middle of its first connection, the Wi-Fi came 70-80 s late (logs: `reconnecting
   to idx 1` at ~72 s, the network at ~81 s), tokens and sound were re-initialised,
   and on the way back it could settle on another network it knows. Since 2.0.8 S55
-  no longer adds it (page back ~35 s after a restart on our Jooki); since the next
-  release it writes nothing to the chip's list at start at all (2.0.8 removed mnet2
-  there, while the chip connected), and the core forgets mnet2 a minute after the
-  Wi-Fi is up (`wifi_forget_factory`: only if another network is known and the chip
-  is not on it). S55 also waits 30 s for the chip instead of 10, and no longer writes
-  `/data/mode/FACTORY` (for good) when the chip is slow: it logs instead.
+  no longer adds it; since 2.0.9 it writes nothing to the chip's list at start at all
+  (2.0.8 removed mnet2 there, while the chip connected), and the core forgets mnet2 a
+  minute after the Wi-Fi is up (`wifi_forget_factory`: only if another network is known
+  and the chip is not on it). S55 also waits 30 s for the chip instead of 10, and no
+  longer writes `/data/mode/FACTORY` (for good) when the chip is slow: it logs instead.
+- **About 80 s to the Wi-Fi after a start is normal, and needed.** The chip's first
+  connection (~4 s) is cut by the Linux start, and it tries again 60 s later
+  (`Trying to reconnect` at ~64 s); that reconnection is what runs
+  `esp32_provisioning.sh` (ethsta0 up, DHCP). Tried without S55's `ifconfig ethsta0
+  down`: still 64 s, and once the chip was associated while Linux never got its network
+  (unreachable 40 min). The line stays. Ten restarts on our Jooki: page back in ~79 s.
+- **The watchdog checks Linux, not only the chip**: "online" also needs a default route
+  in `/proc/net/route` (read every 30 s). Tried with ethsta0 cut while the chip stayed
+  associated: restarted after 600 s, back.
 - **The broker had no keeper**: if mosquitto failed to start or stopped, every
   daemon went deaf and nothing restarted it. The core starts it again after 20 s
   without it (`adapters.broker_watch`, only if it is not running), and no longer
-  spins while it waits (the bus sleeps its turn when there is no broker).
+  spins while it waits (the bus sleeps its turn when there is no broker). The hardware
+  controllers (esp32_ctrl, gpio_ctrl, ht_ctrl) exit with code 0 when the broker goes,
+  and their launcher only restarts crashes: since 2.0.9 `broker_start` starts them
+  again, and the core says the ESP32's boot orders again on every bus reconnection.
+  Tried on the Jooki: broker back after 20 s, controllers a second later.
 - `S58_mosquitto.sh` no longer takes `/mnt/config/mosquitto.conf` (the card's FAT
   partition, writable from any computer) over the broker's own settings.
 - **Trap for anyone replacing a start script**: the original is kept next to it
@@ -132,6 +144,9 @@ port could not be shared the Jooki simply works without the name.
 - `tests/test_net.py` (13): log cleanup, Wi-Fi state, access point without log
   event, `<hostname>.local` answered (any case), IPv6 query answered "IPv4 only",
   other names and record types ignored, malformed packets harmless.
+- `tests/test_robustness.py` (14): no spinning without a broker, broker started again
+  by the core, maintenance SSH key kept on /data, the boot loop never runs the kept
+  originals. `tests/test_wifi_page.py` W14: finding the Jooki opens no set-up session.
 - `tests/e2e.py` E20–E21: upload cut twice then added once, 4 failures then
   **Retry**, weak / good Wi-Fi shown, `.local` name shown.
 - On the real Jooki: data kept, Papertrail queue and big log gone, weekday log

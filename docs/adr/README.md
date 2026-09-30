@@ -12,7 +12,7 @@ change is a new record that supersedes it. Numbering is chronological.
 | [0004](0004-keep-1x-data-files.md) | Keep the 1.x data files and formats (reversibility) | proposed |
 | [0005](0005-contract-v2.md) | A versioned contract with revisioned state and typed errors; v1 kept one release | proposed |
 | [0006](0006-third-party-code.md) | Third-party code: minimal, vendored, pinned | proposed |
-| [0007](0007-security-model.md) | Close root execution over HTTP; bind MQTT to localhost; password on the WebSocket | proposed |
+| [0007](0007-security-model.md) | Close root execution over HTTP; bind MQTT to localhost; password on the WebSocket | accepted, partly built (`/ll` still open) |
 | [0008](0008-no-shell-in-the-hot-loop.md) | No shell processes or temp files in the loop | proposed |
 | [0009](0009-keep-spotify-deezer.md) | Keep Spotify Connect and Deezer as an optional module | accepted |
 | [0010](0010-size-budget-192.md) | Raise the stripped size budget from 176 to 192 KiB (host limit stays 200) | accepted |

@@ -20,6 +20,19 @@ original program can no longer be set up from a phone.
 **Can anyone outside my home see my Jooki?**
 No. No account, no cloud, no tracking.
 
+**After switching it on, the Wi-Fi takes a minute or two.**
+That's normal: about a minute and a half. Tokens and music work in the meantime.
+
+**It restarted by itself, without its little chime.**
+That's OpenJooki getting the Wi-Fi back. When the Jooki has had no Wi-Fi for ten minutes,
+is on the charger and plays nothing, it restarts quietly (twice in a row at most).
+
+**It is on the Wi-Fi at the other end of the house.**
+The Jooki does not pick the strongest Wi-Fi: after a short cut it can move to another one
+it knows and stay there. Keep only the Wi-Fi next to it: on the
+[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), find the Jooki, then
+**Forget** the others in *Networks the Jooki remembers*. This does not cut its Wi-Fi.
+
 **Why can't I reconnect the Wi-Fi from my iPhone?**
 A Jooki without Wi-Fi only listens over Bluetooth, and Apple does not let any web page use
 Bluetooth on an iPhone or iPad, in any browser. That one step takes an Android phone or a

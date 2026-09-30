@@ -11,6 +11,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 |---|---|
 | My Jooki works, but the app doesn't any more | **[Install OpenJooki](guide/install.md)** · 15 min, from your phone |
 | I have OpenJooki: playlists, tokens, bedtime, Bluetooth speaker… | **[Use it](guide/use.md)** |
+| I use Spotify on my phone | **[Spotify on the Jooki](guide/use.md#spotify)** |
 | A new version is out | **[Update it](guide/update.md)** · one tap |
 | My Jooki doesn't start any more | **[A new SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#new)** · 10 min with a computer |
 | No more room for music | **[A bigger SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#bigger)** · with a computer |
@@ -19,7 +20,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.0.9:** a Wi-Fi that stays put, and a Wi-Fi page that never takes a working Jooki off its Wi-Fi.
+**New in 2.0.9:** a steadier Wi-Fi. The Jooki stays on the network next to it, and gets its
+Wi-Fi back by itself.
 [All the changes](CHANGELOG.md)
 
 ---

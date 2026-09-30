@@ -61,6 +61,9 @@ Wi-Fi without the app: [the page](wifi.html) gives the Jooki a network over Blue
 Android, Windows, Mac, Linux) and [`tools/wifi/jooki_wifi.py`](../tools/wifi/README.md) does the same from a terminal.
 Not from an iPhone or iPad: iOS has no Web Bluetooth in any browser, and an App Store app is not planned.
 What the Jooki's chip speaks, and its traps: [tools/wifi/README.md](../tools/wifi/README.md).
+What it does at start and after a cut (the command that crashed it at every boot, the
+network it sticks to, the Wi-Fi watchdog, the broker keeper):
+[20-network-health.md](20-network-health.md), *A safer start*.
 
 ## The page and the fixes (1.x)
 

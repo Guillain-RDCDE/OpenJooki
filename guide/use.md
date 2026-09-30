@@ -21,6 +21,18 @@ the web instead.
 - **Bedtime**: audiobooks pick up where your child fell asleep, a sleep timer fades the
   music out, and a night mode keeps the volume low and the lights dim.
 
+## Spotify
+
+- **Play Spotify on the Jooki**: in the Spotify app on your phone, tap the devices button
+  and choose the Jooki. The Jooki's page shows the song and the artist, and its buttons
+  work.
+- **One sound at a time**: put a token on and Spotify pauses; press play on the phone and
+  the token's music stops.
+- **Put your Spotify music on a character**: while it plays on the Jooki, tap the player at
+  the bottom of the page, then **Put on a character**. Afterwards the character plays that
+  music by itself, even without the phone. The Spotify account must stay connected to the
+  Jooki.
+
 ## In Settings
 
 - **Bluetooth speaker or headphones**: put them in pairing mode, then **Search** →

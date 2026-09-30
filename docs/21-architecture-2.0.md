@@ -301,9 +301,9 @@ bug.
 | 1 | build pipeline, kernel, adapters + fakes, log, config, CI skeleton | boots on the bench, answers a v2 `state.get`; budgets measured | done 2026-09-26 |
 | 2 | library, tokens, playback, device (volume, lights, buttons, power), uploads | unit specs green; 1.x backend checks (38) green through the v1 layer | done 2026-09-26 |
 | 3 | bedtime, update, network (health, mDNS), api v1+v2 complete, optional `streaming` (ADR-0009) | **all 122 integration checks of the 1.x bench green on the new core** (38 + 24 + 13 + 47) + 134 unit specs; endurance run in CI; `docs/api-v2.md` generated from the code | done 2026-09-26 (24 h endurance: nightly) |
-| 4 | Wi-Fi manager + Bluetooth rescue page; security (§12) | new checks green; security review signed | → 2.1 |
+| 4 | Wi-Fi manager + Bluetooth rescue page; security (§12) | new checks green; security review signed | mostly shipped in 2.0.2–2.0.9: Bluetooth rescue page (2.0.5), security switches and parent code (2.0.2–2.0.3), Wi-Fi watchdog and broker keeper (2.0.8–2.0.9, docs/20). Left for 2.1: fencing `/ll` and `/cmd` (ADR-0007), the v1 layer leaving |
 | 5 | our Jooki: A/B install, 24 h, rollback test, family use for a week | no regression, no data change, family approval | 2026-09-27: installed (A/B, six times), boot to ready about 6.5 s on the device (1.x: 8.9 s), RSS 2.9 MB; 24 h run, forced rollback and a week of use still to come after the release |
-| 6 | release 2.0 (old core kept on the spare partition for one release) | published; installer + OTA verified | published 2026-09-27 as 2.0.0, then 2.0.1 |
+| 6 | release 2.0 (old core kept on the spare partition for one release) | published; installer + OTA verified | published 2026-09-27 as 2.0.0; 2.0.9 on 2026-09-29 (CHANGELOG) |
 
 Budgets measured on the bench at the end of phase 3: stripped bundle 160 KiB
 with streaming, 149 without (limit 176 then, 192 since ADR-0010), boot to ready 20 ms, idle bus traffic 0 message/s, no shell

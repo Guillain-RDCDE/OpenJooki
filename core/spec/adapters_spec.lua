@@ -129,9 +129,18 @@ describe("adapters.shell", function()
     assert_nil(o); assert_match(e, "bad lang")
     o, e = shell.run("probe_audio", { file = "../etc/passwd", image = "/a", out = "/b" })
     assert_nil(o); assert_match(e, "bad path")
-    o, e = shell.run("wifi_add", { ssid = "ok", password = "it's" })
-    assert_nil(o); assert_match(e, "bad password")
+    o, e = shell.run("wifi_add", { ssid = "ok", password = "pass1234" })   -- the Jooki 1's script: gone
+    assert_nil(o); assert_match(e, "unknown action")
+    for _, bad in ipairs({ "1790780000", 1790780000.5, 0, 1600000000, 4102444800, "@1790780000;reboot" }) do
+      o, e = shell.run("set_clock", { utc = bad })
+      assert_nil(o); assert_match(e, "bad time")
+    end
     assert_eq(#calls, 0); assert_eq(shell.count, 0)
+  end)
+
+  it("set_clock: busybox date, UTC, whole seconds", function()
+    assert_eq(shell.run("set_clock", { utc = 1790780000 }), "out")
+    assert_eq(calls[1].argv, { "date", "-u", "-s", "@1790780000" })
   end)
 
   it("marks background actions", function()

@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.1.3';
+  var VERSION = '2.1.4';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -721,6 +721,7 @@
       if (airplane && Date.now() - airplane.sent > 15000) { setAirplane(null); toast(t('air_back')); }
       client.subscribe('/j/web/output/#');
       send('GET_STATE', {});
+      sendTime();
       render();
     };
     client.onmessage = onMessage;
@@ -760,6 +761,14 @@
     if (parentCode) payload.code = parentCode;
     pendingCmd = { type: type, payload: payload };
     return client.publish('/j/web/input/' + type, JSON.stringify(payload));
+  }
+  // The Jooki has no clock of its own: started without Internet it believes it is 1970, and night
+  // mode stays off. This phone's time goes with every connection; the Jooki takes it only while its
+  // own clock is unset (no code needed, nothing else changes).
+  function sendTime() {
+    var utc = Math.floor(Date.now() / 1000);
+    if (!client || !online || utc < 1704067200) return;
+    client.publish('/j/web/input/OJ_TIME', JSON.stringify({ utc: utc }));
   }
   var waiters = [], autoChecked = false, staleReload = false, onCmdError = null;
   // The Jooki serves index.html without cache headers: a phone may keep the old page after an

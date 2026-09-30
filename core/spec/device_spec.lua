@@ -198,6 +198,36 @@ describe("services.device — airplane mode from the page (always bounded)", fun
   end)
 end)
 
+describe("services.device — the time from the page (no RTC, no Internet)", function()
+  local PHONE = 1790780000        -- 2026-09-30 14:53 UTC
+
+  it("clock unset (1970 after a start without Internet): the phone's time is taken, and night mode is told", function()
+    local r = device.on_clock(doc_with(), { utc = PHONE }, { wall = 75 })
+    assert_eq(kinds(r), { "shell set_clock", "log", "emit clock.set" })
+    assert_eq(r.commands[1].args.utc, PHONE)
+    assert_eq(r.commands[2].fields.from, 75); assert_eq(r.commands[2].fields.to, PHONE)
+    assert_nil(r.state)
+  end)
+
+  it("clock already set (ntpd, or a phone before): never moved, even by minutes", function()
+    for _, wall in ipairs({ PHONE, PHONE - 3600, PHONE + 86400, device.CLOCK_MIN }) do
+      local r = device.on_clock(doc_with(), { utc = PHONE }, { wall = wall })
+      assert_eq(kinds(r), {})
+    end
+  end)
+
+  it("refuses a time that is not a plausible now (before 2024, after 2099, not a number)", function()
+    for _, bad in ipairs({ 0, 1600000000, 4102444800, "x" }) do
+      local ok, err = device.on_clock(doc_with(), { utc = bad }, { wall = 75 })
+      assert_nil(ok); assert_eq(err.field, "utc")
+    end
+  end)
+
+  it("Wi-Fi from the API: refused plainly (a Jooki 2 learns a network over Bluetooth only)", function()
+    assert_eq(device.WIFI_OVER_BLUETOOTH.message, "WIFI_OVER_BLUETOOTH")
+  end)
+end)
+
 describe("services.device — power", function()
   it("battery: warning under 20 % every 5 min, shutdown under 10 %, nothing while charging", function()
     local doc = doc_with({ power = { charging = false } })

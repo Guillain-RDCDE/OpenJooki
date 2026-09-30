@@ -4,7 +4,6 @@
 -- test see how many processes the core started.
 local shell = {}
 
-local function is_ssid(s) return type(s) == "string" and #s >= 1 and #s <= 32 and not s:find("[%c'\"\\]") end
 local function is_lang(s) return type(s) == "string" and s:match("^[A-Z][A-Z]$") ~= nil end
 local function is_path(s) return type(s) == "string" and s:sub(1, 1) == "/" and not s:find("[%c'\"\\]") and not s:find("%.%.") end
 -- a network name: lower-case letters, digits, inner hyphens, 1-32 characters ("" = back to the factory name)
@@ -31,9 +30,10 @@ shell.ACTIONS = {
   errorbeep      = { argv = function() return { "/jooki/app/services/errorbeep.sh" } end },
   speak_info     = { argv = function() return { "/jooki/app/services/speak_info.sh" } end, background = true },
   radio          = { argv = function(a) return { "/jooki/app/services/radio.sh", a.wifi and "true" or "false", a.bt and "true" or "false" } end },
-  wifi_add       = { argv = function(a) if not is_ssid(a.ssid) then return nil, "bad ssid" end
-                             if a.password ~= nil and not (type(a.password) == "string" and #a.password <= 63 and not a.password:find("[%c'\"\\]")) then return nil, "bad password" end
-                             return { "/jooki/app/services/wifi_add_network.sh", "", a.ssid, a.password or "", a.lang or "EN" } end },
+  -- the phone's time while the Jooki's own clock is unset (services.device on_clock): whole UTC seconds, 2024-2099
+  set_clock      = { argv = function(a) local u = a.utc
+                             if type(u) ~= "number" or u ~= math.floor(u) or u < 1704067200 or u >= 4102444800 then return nil, "bad time" end
+                             return { "date", "-u", "-s", "@" .. string.format("%d", u) } end },
   power_overheat = { argv = function() return { "/jooki/app/services/power_overheat.sh" } end, background = true },
   factory_reset  = { argv = function() return { "/jooki/app/services/factory_reset.sh" } end },
   -- the broker, when the core cannot reach it (adapters.broker_watch): started again only if it is not

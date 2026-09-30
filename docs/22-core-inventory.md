@@ -117,7 +117,7 @@ handler is caught (`ERR_HANDLER`) instead of killing the process.
 | `SET_VOL` | `{vol}` | 0–100, clamped |
 | `SET_CFG` | `{shuffle_mode?, repeat_mode?}` | saved at once (1.3) |
 | `SET_TOY_SAFE` | `{enable}` | flag `TOY_SAFE_OFF`, `toy_safe_update.sh`, ESP32 toysafe |
-| `SET_WIFI` | `{ssid, password}` | `wifi_add_network.sh` (restarts Wi-Fi) |
+| `SET_WIFI` | `{ssid, password}` | 1.x: `wifi_add_network.sh` (restarts Wi-Fi). On a Jooki 2 that script is the Jooki 1's (wpa_supplicant, systemctl: absent) and never reaches the ESP32; it also switched the voice to English (`lang_set.sh EN`). OpenJooki 2.1.4 refuses it (`WIFI_OVER_BLUETOOTH`): a network is given over Bluetooth |
 | `SHUTDOWN` | `{src}` | save, stop, `/j/all/quit`, poweroff |
 | `OJ_UPDATE_CHECK` / `OJ_UPDATE_START` | — | OpenJooki 1.2 (curl in background, status files) |
 | `OJ_SLEEP` / `OJ_BEDTIME_SET` / `OJ_RESUME_RESET` | see docs/19 | OpenJooki 1.3 |

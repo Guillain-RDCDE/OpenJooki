@@ -72,7 +72,8 @@ switch the Jooki off, **hold the track knob turned to *Next*** (to the right)
 while switching it on, and keep it there until the start-up chime. Muuselabs'
 guide says the same in one line: "Wi-Fi can be disabled or enabled during
 start-up via the track knob while holding the heart button". On OpenJooki's
-page, Settings shows the Wi-Fi state and lets you add a network.
+page, Settings shows the Wi-Fi state; a new network is given over Bluetooth
+([wifi.html](https://guillain-rdcde.github.io/OpenJooki/wifi.html)).
 
 **Airplane mode from the page (OpenJooki 2).** Parents asked for the button the
 Muuselabs app had: no radio next to the bed, or on a plane. Settings → *Airplane

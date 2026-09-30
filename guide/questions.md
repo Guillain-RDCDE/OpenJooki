@@ -33,6 +33,10 @@ it knows and stay there. Keep only the Wi-Fi next to it: on the
 [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), find the Jooki, then
 **Forget** the others in *Networks the Jooki remembers*. This does not cut its Wi-Fi.
 
+**On holiday, night mode does nothing.**
+Without the Internet the Jooki does not know the time. Open its page once from your phone:
+it takes your phone's time. [Away from home](travel.md).
+
 **Why can't I reconnect the Wi-Fi from my iPhone?**
 A Jooki without Wi-Fi only listens over Bluetooth, and Apple does not let any web page use
 Bluetooth on an iPhone or iPad, in any browser. That one step takes an Android phone or a

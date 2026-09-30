@@ -38,8 +38,12 @@ the time left.
 The Jooki keeps UTC time from the Internet (ntpd). The page tells it the
 family's time zone the first time it is opened; for Europe the summer-time rule
 (last Sunday of March / October) is applied on the Jooki itself, so the window
-stays right all year. If the clock is not set (no Internet since boot), night
-mode stays off.
+stays right all year. The Jooki has no clock of its own (no RTC: without Internet it
+starts in 1970). Since 2.1.4 the page gives it the phone's time at every connection
+(`OJ_TIME {utc}` / v2 `device.clock`, no parent code): the core runs `date -u -s @utc`
+only while its own clock is unset (before 2024), so a clock set by NTP is never moved, and
+night mode is evaluated again at once. If the clock is still not set (no Internet and no
+page opened since boot), night mode stays off. Away from home: [guide/travel.md](../guide/travel.md).
 
 **Sort.** Uploads arrive in the order they finish, not in the order of the
 files. The playlist page has a *Sort* button: file name (1, 2, 3…, natural

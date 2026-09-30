@@ -273,6 +273,8 @@ bedtime.schemas = S
 function bedtime.install(api, dispatch)
   dispatch.on("boot", "bedtime", bedtime.on_boot)
   dispatch.on("timer", "bedtime", bedtime.on_timer)
+  -- the page just gave the Jooki its time (no Internet): night or day, now rather than in 15 s
+  dispatch.on("clock.set", "bedtime", function(doc) return bedtime.on_clock(doc, { wall = os.time() }) end)
   dispatch.on("playback.changed", "bedtime", bedtime.on_playback)
   api.command("bedtime.sleep", S.sleep, function(doc, p, ev) return bedtime.on_sleep(doc, p, ev.now) end)
   api.command("bedtime.set", S.set, function(doc, p, ev) return bedtime.on_set(doc, p, ev.wall) end)

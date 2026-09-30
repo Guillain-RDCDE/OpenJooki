@@ -1,5 +1,20 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.1.4 (30 September 2026) — night mode away from home
+- **Night mode works away from the Internet.** The Jooki has no clock of its own: it takes the
+  time from the Internet, and forgets it when switched off. On holiday, without the Internet,
+  it did not know whether it was night, so night mode (low volume, dim lights, sleep timer) did
+  nothing. Now, when you open the Jooki's page, it takes your phone's time. A Jooki that
+  already knows the time is left alone. Tested on a family Jooki.
+- **A new page: [Away from home](guide/travel.md)** — what works without Wi-Fi, what to do
+  before leaving, and how to use the page on holiday.
+- For the tinkerers: the page sends `OJ_TIME {utc}` at every connection (v2 `device.clock`, no
+  parent code); the core runs `date -u -s @utc` only while its clock is before 2024. `SET_WIFI` /
+  `device.set_wifi` are now refused with `WIFI_OVER_BLUETOOTH`: they ran the Jooki 1's
+  `wifi_add_network.sh`, which never reaches a Jooki 2's Wi-Fi chip and first switched the voice
+  to English. The page never used them. A network is given over
+  Bluetooth ([wifi.html](https://guillain-rdcde.github.io/OpenJooki/wifi.html)).
+
 ## OpenJooki 2.1.3 (30 September 2026) — the real fix for no sound from the speaker
 - **Fully fixes the Jooki going silent** (2.1.2 only half-fixed it). The Jooki v2 has no wired
   headphone jack, but it still reported one as "plugged" when nothing was there — so it sent the

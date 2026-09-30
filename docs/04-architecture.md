@@ -71,7 +71,9 @@ leaving `/data` (music) intact:
   `/mnt/config/jooki.conf` (endpoint `/config` → `/set_config`), then
   `ssh root@<ip>`.
 - Quick alternative: `/ll?action=<cmd>` (direct shell execution).
-- Factory hotspot (ESP32): SSID `mnet2`, password `muuselabs256`.
+- Factory network (ESP32): SSID `mnet2`, password `muuselabs256`. Not a hotspot of the
+  Jooki (the Jooki 2 never creates one): a workshop network the original start script added to
+  the chip's list at every boot, which crashed it (docs/20). OpenJooki forgets it.
 
 ## Useful flags (/data/mode/)
 `ESP32_FIRMWARE_LOADED`, `IN_PRODUCTION`, `FACTORY`, `NO_APP`,

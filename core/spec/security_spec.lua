@@ -156,6 +156,22 @@ describe("api.v1 parent gate", function()
     assert_false(is_code_required(cmd("PLAYLIST_PLAY", { playlistId = "x" })))
     assert_false(is_code_required(cmd("SET_VOL", { vol = 30 })))
   end)
+
+  it("the phone's time is never gated (the page sends it on its own, without the code)", function()
+    security._set_parent_code("1234")
+    local r = cmd("OJ_TIME", { utc = 1790780000 })       -- cmd() says wall = 1: the clock is unset
+    assert_false(is_code_required(r))
+    local set
+    for _, c in ipairs(r.commands) do if c.kind == "shell" and c.action == "set_clock" then set = c.args.utc end end
+    assert_eq(set, 1790780000)
+  end)
+
+  it("SET_WIFI says the Wi-Fi goes over Bluetooth, and runs nothing", function()
+    local r = cmd("SET_WIFI", { ssid = "Home", password = "pass1234" })
+    assert_eq(#r.commands, 1)
+    assert_eq(r.commands[1].topic, v1.TOPIC_ERROR); assert_eq(r.commands[1].payload.msg, "WIFI_OVER_BLUETOOTH")
+    assert_nil(r.commands[1].payload.info)       -- the password is never sent back to the pages
+  end)
 end)
 
 -- the parent code lives in a module-local: clear it so it never leaks into other spec files

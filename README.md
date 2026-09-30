@@ -17,12 +17,14 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | No more room for music | **[A bigger SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#bigger)** · with a computer |
 | It lost its Wi-Fi (moved house, new box, new password) | **[Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html)** · Android phone or computer |
 | I want the original Jooki back | **[The original Jooki card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#original)** |
+| We're going away: holiday, car, no Wi-Fi | **[Away from home](guide/travel.md)** |
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.1.3:** the real fix for the Jooki going silent — it no longer mistakes a missing
-headphone jack for a plugged one and switches the speaker off. 2.1.1: the side lights glow while it
-looks for Wi-Fi; 2.1.0: the Jooki serves its own page and the old hidden command channel is closed.
+**New in 2.1.4:** night mode works away from home — open the page once and the Jooki takes your
+phone's time ([Away from home](guide/travel.md)). 2.1.3: the real fix for the Jooki going silent;
+2.1.1: the side lights glow while it looks for Wi-Fi; 2.1.0: the Jooki serves its own page and the
+old hidden command channel is closed.
 [All the changes](CHANGELOG.md)
 
 ---

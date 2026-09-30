@@ -19,7 +19,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.
 
 `device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `system`, `config`.
 
-## Commands (35)
+## Commands (36)
 
 ### `bedtime.set`
 
@@ -157,6 +157,25 @@ Payload schema:
 }
 ```
 
+### `device.clock`
+
+The phone's time (UTC seconds). Taken only while the Jooki's clock is unset (no Internet since the start: no NTP, no RTC); the page sends it at every connection.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "utc": {
+      "type": "integer"
+    }
+  },
+  "required": ["utc"],
+  "type": "object"
+}
+```
+
 ### `device.power_off`
 
 Plays the power-off sound, then powers off.
@@ -229,7 +248,7 @@ Payload schema:
 
 ### `device.set_wifi`
 
-Adds a Wi-Fi network (the Wi-Fi restarts).
+Always refused (`unavailable`, WIFI_OVER_BLUETOOTH): a Jooki 2 learns a Wi-Fi network over Bluetooth only (docs/wifi.html).
 
 Payload schema:
 

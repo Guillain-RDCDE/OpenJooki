@@ -213,10 +213,10 @@ H.SET_CFG = function(doc, p)
                                                  { kind = "emit", event = { type = "audiocfg.changed", shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode } } } }, nil, { "audio" }
 end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
-H.SET_WIFI = function(_, p)
-  if type(p.ssid) ~= "string" then return nil, { code = "invalid_argument", field = "ssid", message = "missing ssid" } end
-  return { commands = { { kind = "shell", action = "wifi_add", args = { ssid = p.ssid, password = p.password, lang = "EN" } } } }
-end
+-- refused without echoing the payload: it holds a Wi-Fi password, and the error topic reaches every page
+H.SET_WIFI = function() return { commands = { err_cmd(device.WIFI_OVER_BLUETOOTH.message) } } end
+-- the phone's time, sent by the page at every connection (taken only while the Jooki's clock is unset)
+H.OJ_TIME = function(doc, p, ev) return device.on_clock(doc, p, ev) end
 H.SHUTDOWN = function(_, p, ev) return device.on_off_request(nil, { reason = tostring(p.src or "page"), now = ev.now }) end
 H.MESSAGE_DISMISS = function(doc, p)
   local id = tonumber(p.id)

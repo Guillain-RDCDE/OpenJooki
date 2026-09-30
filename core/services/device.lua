@@ -382,6 +382,33 @@ function device.on_airplane_end(doc, why)
   return r
 end
 
+-- ------------------------------------------------------------------ the time, from the page
+-- The Jooki has no clock of its own (no RTC): it takes the time from the Internet (ntpd). Away
+-- from the Internet (holiday Wi-Fi without Internet, a phone's hotspot) it starts in 1970, and
+-- night mode cannot tell night from day. The page gives it the phone's time at every connection;
+-- the Jooki takes it only while its own clock is unset, so a correct clock (ntpd) is never moved.
+local CLOCK_MIN, CLOCK_MAX = 1704067200, 4102444800     -- 2024-01-01, 2100-01-01 (UTC)
+device.CLOCK_MIN = CLOCK_MIN
+
+--- device.clock { utc = seconds }
+function device.on_clock(_, p, ev)
+  local utc = tonumber(p.utc)
+  if not utc or utc < CLOCK_MIN or utc >= CLOCK_MAX then
+    return nil, { code = "invalid_argument", field = "utc", message = "invalid utc" }
+  end
+  local wall = tonumber(ev.wall) or os.time()
+  if wall >= CLOCK_MIN then return {} end
+  utc = math.floor(utc)
+  return { commands = { { kind = "shell", action = "set_clock", args = { utc = utc } },
+                        { kind = "log", level = "info", key = "device.clock_set", fields = { from = wall, to = utc } },
+                        emit("clock.set", {}) } }
+end
+
+-- A Jooki 2 learns a Wi-Fi network only over Bluetooth (docs/wifi.html): the original
+-- wifi_add_network.sh is the Jooki 1's (wpa_supplicant, absent here) and never reaches the chip,
+-- and `esp32_cmd add_ap` crashes it (docs/20). Said plainly instead of pretending.
+device.WIFI_OVER_BLUETOOTH = { code = "unavailable", field = "ssid", message = "WIFI_OVER_BLUETOOTH" }
+
 -- ------------------------------------------------------------------ lights (1.x language, 1.3 dimming)
 local function dimmed(doc, c)
   local lim = doc.limits or {}
@@ -602,6 +629,7 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
 S.enable = { type = "object", required = { "enable" }, properties = { enable = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
+S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }
 S.airplane = { type = "object", properties = { minutes = { type = "integer", minimum = 1, maximum = AIRPLANE_MAX_MIN }, cancel = { type = "boolean" } }, additionalProperties = false }
 device.schemas = S
 
@@ -661,7 +689,8 @@ function device.install(api, dispatch)
   api.command("device.toy_safe", S.enable, function(doc, p) return device.on_toy_safe(doc, { enable = p.enable }) end)
   api.command("device.set_name", S.name, function(doc, p) return device.on_set_name(doc, p.name) end)
   api.command("device.power_off", nil,function(_, _, ev) return device.on_off_request(nil, { reason = "page", now = ev.now }) end)
-  api.command("device.set_wifi", S.wifi, function(_, p) return { commands = { { kind = "shell", action = "wifi_add", args = { ssid = p.ssid, password = p.password, lang = "EN" } } } } end)
+  api.command("device.set_wifi", S.wifi, function() return nil, device.WIFI_OVER_BLUETOOTH end)
+  api.command("device.clock", S.clock, function(doc, p, ev) return device.on_clock(doc, p, ev) end)
   api.command("device.speak_info", nil, function() return { commands = { { kind = "shell", action = "speak_info" }, emit("playback.pause_request", { source = "speak_info" }) } } end)
   api.command("device.airplane", S.airplane, function(doc, p, ev) return device.on_airplane(doc, p, ev) end)
 end

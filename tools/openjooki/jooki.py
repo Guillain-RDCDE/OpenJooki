@@ -10,7 +10,7 @@ Content management writes ONLY to /jooki/external — bricking is impossible.
 Python 3, standard library only.
 """
 __version__ = "0.4.0"
-import argparse, os, socket, struct, subprocess, sys, time, json, random, mimetypes, base64, glob, hashlib
+import argparse, os, re, socket, struct, subprocess, sys, time, json, random, mimetypes, base64, glob, hashlib
 import urllib.parse, urllib.request, concurrent.futures, datetime
 
 HOME = os.path.expanduser("~/.openjooki")
@@ -557,16 +557,38 @@ def _mqtt_state_at(host, port, timeout=8):
         except Exception: pass
         s.close()
 
+CORE_FILE = "/jooki/lib/core.lua"   # the real core since ADR-0011; player.lib is only the loader
+
 def load_core(path):
     """A 2.0 core built by tools/build/bundle.py (build/player.lib): same container as the
-       original program (XOR + zlib), checked here before anything is written."""
+       original program (XOR + zlib), checked here before anything is written. Since ADR-0011
+       this is the LOADER; the real core is delivered separately (see core_side_files)."""
     import lua_patches as L
     lib = open(path, "rb").read()
     try: src = L.decode(lib)
     except Exception as e: raise RuntimeError("not a player.lib: %s" % e)
     if "_OPENJOOKI_CORE=" not in src[:300]: raise RuntimeError("%s is not an OpenJooki 2.0 core" % path)
-    if len(src) >= 200 * 1024: raise RuntimeError("core too large for the host (%d B)" % len(src))
+    if len(src) >= 200 * 1024: raise RuntimeError("player.lib too large for the host (%d B)" % len(src))
     return lib
+
+def core_side_files(path):
+    """Files that must be installed next to player.lib. Since ADR-0011 a loader-style player.lib
+       needs the real core at /jooki/lib/core.lua (build/core.min.lua, sibling of `path`), and the
+       loader carries that file's exact byte length, so a stale build is caught here before install.
+       A legacy single-file player.lib returns {} (nothing extra)."""
+    import lua_patches as L
+    src = L.decode(open(path, "rb").read())
+    if "_OPENJOOKI_LOADER" not in src[:400]:
+        return {}
+    core_path = os.path.join(os.path.dirname(os.path.abspath(path)), "core.min.lua")
+    if not os.path.exists(core_path):
+        raise RuntimeError("loader player.lib but no core.min.lua next to it (%s)" % core_path)
+    data = open(core_path, "rb").read()
+    m = re.search(r"local EXPECT=(\d+)", src)
+    if m and int(m.group(1)) != len(data):
+        raise RuntimeError("core.min.lua is %d B but the loader expects %d B (stale build?)"
+                           % (len(data), int(m.group(1))))
+    return {CORE_FILE: data}
 
 def _webui_build(host, core=None):
     """Build the patched player.lib (from the ORIGINAL one) + the web files.
@@ -582,6 +604,8 @@ def _webui_build(host, core=None):
         with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[WWW_PUBLIC+"/"+f] = fh.read()
     for path, f in system_files(core).items():
         with open(os.path.join(SYSTEM_DIR, f), "rb") as fh: files[path] = fh.read()
+    if core:
+        files.update(core_side_files(core))   # /jooki/lib/core.lua for a loader player.lib (ADR-0011)
     return r.stdout, lib, files
 
 def _webui_expected(lib, files, root=""):

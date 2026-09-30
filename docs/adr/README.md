@@ -15,4 +15,5 @@ change is a new record that supersedes it. Numbering is chronological.
 | [0007](0007-security-model.md) | Close root execution over HTTP; bind MQTT to localhost; password on the WebSocket | accepted, partly built (`/ll` still open) |
 | [0008](0008-no-shell-in-the-hot-loop.md) | No shell processes or temp files in the loop | proposed |
 | [0009](0009-keep-spotify-deezer.md) | Keep Spotify Connect and Deezer as an optional module | accepted |
-| [0010](0010-size-budget-192.md) | Raise the stripped size budget from 176 to 192 KiB (host limit stays 200) | accepted |
+| [0010](0010-size-budget-192.md) | Raise the stripped size budget from 176 to 192 KiB (host limit stays 200) | accepted (superseded for the core by 0011) |
+| [0011](0011-core-in-its-own-file.md) | Put the core in its own file `/jooki/lib/core.lua`; `player.lib` becomes a loader (no 200 KiB ceiling on the core) | accepted |

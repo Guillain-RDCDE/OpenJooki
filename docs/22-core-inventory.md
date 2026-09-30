@@ -14,7 +14,7 @@ its behaviour, not its code.
 
 | | |
 |---|---|
-| Host | `/jooki/bin/player` (C, closed): reads `/jooki/lib/player.lib`, undoes the 2-byte XOR, inflates with miniz into a **200 KiB** buffer, `luaL_loadbuffer`, runs it. Full standard libraries (`io`, `os`, `debug`…), LuaSocket and LuaFileSystem available from `/usr/lib/lua/5.1`. |
+| Host | `/jooki/bin/player` (C, closed): reads `/jooki/lib/player.lib`, undoes the 2-byte XOR, inflates with miniz into a **200 KiB** buffer, `luaL_loadbuffer`, runs it. Full standard libraries (`io`, `os`, `debug`…), LuaSocket and LuaFileSystem available from `/usr/lib/lua/5.1`. Since **ADR-0011**, `player.lib` is a <1 KiB loader; it reads the real core from `/jooki/lib/core.lua` and runs it, so the 200 KiB buffer bounds only the loader, not the core. |
 | Given by the host | `c_alsa_set_volume(v, x)` (ALSA mixer), `c_syslog(severity, msg)`, `c_isTerminating()` (SIGTERM seen?), `c_sd_notify()` (systemd-style "ready"). Nothing else: the program **runs its own loop** inside the chunk and never returns. |
 | Environment | `id`, `hostname` (note: with `.local` appended), `ip` (empty at start), `wifi_mac`, `machine` (`ml-j2000`), `firmware`, `wlan_interface` (empty), `JOOKI_LOG_LEVEL`. |
 | Supervision | `ml-launch-controller.sh`: restarts the process after 1 s on any non-zero exit (except 137/143). All in-memory state is lost on restart. |

@@ -30,7 +30,7 @@ TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 sys.path.insert(0, os.path.join(HERE, "..", "tools", "sdcard"))
 import lua_patches as L  # noqa: E402
-from jooki import SYSTEM_DIR, WEBUI_FILES, file_mode, load_core, system_files  # noqa: E402
+from jooki import SYSTEM_DIR, WEBUI_FILES, file_mode, load_core, core_side_files, system_files  # noqa: E402
 from make_card_image import scrub_rootfs  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
@@ -111,6 +111,13 @@ def main():
         put(out, os.path.join(work, "orig.lib"), LIB + ".openjooki-orig")
     put(out, os.path.join(work, "player.lib"), LIB)
     print("player.lib: 2.0 core %s (%d B)" % (core, len(lib)) if core else "player.lib patched (%d fixes)" % len(L.P))
+    # the real core next to the loader (ADR-0011): /jooki/lib/core.lua
+    side = core_side_files(core) if core else {}
+    for path, data in sorted(side.items()):
+        local = os.path.join(work, os.path.basename(path))
+        open(local, "wb").write(data)
+        put(out, local, path, mode="0100" + file_mode(path))
+        print("core file installed: %s (%d B)" % (path, len(data)))
 
     # --- keep the 2018 web app, out of the served folder ---
     mk = []
@@ -174,6 +181,7 @@ def main():
     if r.returncode != 0:
         raise SystemExit("e2fsck reports problems:\n" + r.stdout + r.stderr)
     expect = {LIB: lib, "/etc/openjooki-version": (version + "\n").encode()}
+    expect.update(side)   # /jooki/lib/core.lua read back too (ADR-0011)
     for f in WEB_FILES:
         expect[PUB + "/" + f] = open(os.path.join(WEBUI, f), "rb").read()
     for path, f in sysfiles.items():

@@ -32,3 +32,7 @@ rewrite (docs/21 size targets).
   phone, the Wi-Fi watchdog and the broker keeper took the rest. The next feature needs a
   decision first: the v1 layer leaving (14 KiB back), or a new ADR raising the budget
   towards the host's 200 KiB.
+- **Superseded for the core by ADR-0011 (2026-09-30):** the core moved into its own file
+  (`/jooki/lib/core.lua`) and `player.lib` became a loader, so the 200 KiB host buffer no
+  longer bounds the core. This 192 KiB budget no longer binds anything; it stands only as
+  the record of why the room ran out.

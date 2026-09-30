@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.1.2 (30 September 2026) — sound from the speaker on battery
+- **Fixes no sound from the speaker after a start-up on battery.** The Jooki turned its
+  amplifier on only when you plugged or unplugged headphones, not at start-up — so if it
+  started with no headphones, a token or Spotify looked like it was playing but nothing came
+  out of the speaker, until you plugged in a cable (which happened to switch the amplifier on).
+  The amplifier is now switched on at start-up, like the original firmware. Tested on a family
+  Jooki on battery.
+
 ## OpenJooki 2.1.1 (30 September 2026) — the side lights show it's waking up
 - **While the Jooki looks for its Wi-Fi after you switch it on, the two side dots now glow
   back and forth, left then right, instead of sitting still orange.** A steady pair looked

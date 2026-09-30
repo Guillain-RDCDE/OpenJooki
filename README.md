@@ -20,8 +20,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.0.9:** a steadier Wi-Fi. The Jooki stays on the network next to it, and gets its
-Wi-Fi back by itself.
+**New in 2.1.0:** the Jooki serves its own page now, and the old hidden way to run
+commands on it over Wi-Fi is closed for good.
 [All the changes](CHANGELOG.md)
 
 ---

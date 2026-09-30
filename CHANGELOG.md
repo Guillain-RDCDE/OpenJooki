@@ -1,5 +1,23 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.1.0 (30 September 2026) — the Jooki serves its own page; a hidden door is closed
+- **A hidden way to control the Jooki over Wi-Fi is closed.** Until now a small built-in
+  program (from the original maker) answered, to anyone on your Wi-Fi and with no password,
+  a request that ran commands on the Jooki as the top user, and requests that could reboot it
+  or wipe it. That program is no longer started. Nothing you do changes; this only closes a
+  door that should never have been open.
+- **The Jooki now serves its own page.** OpenJooki shows the page and receives the songs and
+  pictures you send, itself. It answers only those two things — the page and your uploads —
+  and refuses a request coming from another website.
+- **Room to grow again.** The program had reached the size the Jooki could load. It is now
+  kept in its own file, so it is no longer boxed in, and new features have room. Nothing
+  changes for you; the Jooki starts and runs just as fast (measured on a family Jooki).
+- For the tinkerers: `web_ctrl` is not launched any more (`/ll` and `/cmd/*` are gone); the
+  core serves the page and `POST /upload` over a small non-blocking server (`adapters.httpd`,
+  port 80). `player.lib` is a <1 KiB loader that reads the real core from `/jooki/lib/core.lua`
+  (ADR-0011, no more 200 KiB ceiling on the core). Maintenance SSH is opened from the page over
+  the WebSocket. See ADR-0007 (now fully built) and ADR-0011.
+
 ## OpenJooki 2.0.9 (29 September 2026) — a steadier Wi-Fi
 - **The Jooki stays on the Wi-Fi next to it.** Until now, every time it was switched on,
   the Jooki's Wi-Fi chip crashed once (an old Muuselabs setting did it), and it could come

@@ -202,7 +202,7 @@ with sync_playwright() as p:
     J.nfc(ELE, "200"); J.wait(lambda: ELE in J.tokens); J.nfc_off(); J.settle()
     pg.goto(URL + "/#/tokens"); pg.wait_for_selector("[data-char='flat.%s']" % ELE)
     tcat = pg.locator("[data-char='flat.%s'] .title" % CAT).inner_text()
-    check("E22 two flat tokens, two tiles, named by the end of their id", pg.locator("[data-char='flat.%s']" % ELE).count() == 1 and tcat.strip().endswith("9C41"), tcat)
+    check("E22 two flat tokens, two tiles, named by the part of their id that differs", pg.locator("[data-char='flat.%s']" % ELE).count() == 1 and tcat.strip().endswith("A1B2"), tcat)
     pg.click("[data-char='flat.%s']" % CAT); pg.wait_for_selector("[data-k=libpick]")
     pg.click("[data-k=libpick]"); pg.wait_for_selector(".libcell[data-img]", timeout=10000)
     ncell = pg.locator(".libcell[data-img]").count()

@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.1.5';
+  var VERSION = '2.2.0';
 
   /* ------------------------------------------------------------------ i18n */
   var T = {
@@ -575,7 +575,8 @@
   function foreignUid(id) { var o = ownParts(id); return o && o.kind === 'tag' ? o.uid : null; }   // the ESP32 never says it was taken off
   function charName(id) {
     var o = ownParts(id);
-    if (o) { var tk = S.db.tokens[o.uid]; return (tk && tk.name) || (t(OWN[o.kind]) + ' ' + o.uid.slice(-4)); }
+    // the flat tokens of one batch differ only by the start of their id (04 03AA 6AE74C81, 04 333F 6AE74C81…)
+    if (o) { var tk = S.db.tokens[o.uid]; return (tk && tk.name) || (t(OWN[o.kind]) + ' ' + (o.kind === 'tag' ? o.uid.slice(-4) : o.uid.slice(2, 6))); }
     var c = charInfo(id); return c[lang] || c.fr;
   }
   // a token's picture: "lib:<id>" = the page's library (tokimg/), else the photo's own address

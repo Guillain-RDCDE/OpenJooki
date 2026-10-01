@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release — every flat token its own, a picture library, new Settings
+## OpenJooki 2.2.0 (1 October 2026) — every flat token its own, a picture library, new Settings
 - **Each flat token can start its own story.** The round flat tokens (a cat, an elephant, a
   rocket printed on them) all carry the same code, so the Jooki saw them as one single token and
   they all started the same playlist. Now each one is a token of its own: give the cat one story

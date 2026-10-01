@@ -21,7 +21,9 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.1.5:** Spotify's album covers show on the page. 2.1.4: night mode works away from
+**New in 2.2.0:** each round flat token can start its own story; 659 ready-made pictures for
+your tokens (no Internet needed); a new, shorter Settings page.
+2.1.5: Spotify's album covers show on the page. 2.1.4: night mode works away from
 home — open the page once and the Jooki takes your phone's time ([Away from home](guide/travel.md)).
 2.1.3: the real fix for the Jooki going silent;
 2.1.1: the side lights glow while it looks for Wi-Fi; 2.1.0: the Jooki serves its own page and the

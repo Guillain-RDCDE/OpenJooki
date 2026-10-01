@@ -214,7 +214,8 @@ with sync_playwright() as p:
     J.wait(lambda: J.tokens[CAT].get("image") == "lib:cat")
     check("E22 the picture is set; the unnamed token takes its name", J.tokens[CAT].get("image") == "lib:cat" and J.tokens[CAT].get("name") == "Chat", J.tokens[CAT])
     if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
-    pg.wait_for_selector("[data-char='flat.%s'] .tok img" % CAT, timeout=5000)
+    # the round token's own picture is an <img> too: wait for the library one, loaded
+    pg.wait_for_function("(function(){var i=document.querySelector(\"[data-char='flat.%s'] .tok img\");return !!i && i.getAttribute('src')==='/tokimg/cat.webp' && i.complete && i.naturalWidth>0;})()" % CAT, timeout=10000)
     src = pg.locator("[data-char='flat.%s'] .tok img" % CAT).get_attribute("src")
     loaded = pg.evaluate("(function(){var i=document.querySelector(\"[data-char='flat.%s'] .tok img\");return i.complete && i.naturalWidth;})()" % CAT)
     check("E22 the tile shows the picture, served by the Jooki", src == "/tokimg/cat.webp" and loaded == 128, (src, loaded))

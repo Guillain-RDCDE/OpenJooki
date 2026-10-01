@@ -19,7 +19,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.
 
 `device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `system`, `config`.
 
-## Commands (36)
+## Commands (37)
 
 ### `bedtime.set`
 
@@ -175,6 +175,12 @@ Payload schema:
   "type": "object"
 }
 ```
+
+### `device.party`
+
+Just for fun: for 5 s the ring and the side dots run through the colour wheel, then go back to their real state.
+
+No payload.
 
 ### `device.power_off`
 

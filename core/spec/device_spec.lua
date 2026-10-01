@@ -117,6 +117,35 @@ describe("services.device — buttons", function()
   end)
 end)
 
+describe("services.device — the Christmas tree", function()
+  it("5 s of colour-wheel frames on the ring and the side dots, then the real lights come back", function()
+    local doc = doc_with({ net = { connected = true, ip = "10.0.0.2" } })
+    local r = device.on_party(doc)
+    assert_true(r.state.device.party)
+    assert_eq(kinds(r), { "timer.every", "timer.once" })
+    assert_eq(r.commands[1].name, "device.party"); assert_eq(r.commands[2].seconds, 5)
+    doc.device = r.state.device
+    assert_eq(device.on_party(doc), {})                          -- a second tap while it runs changes nothing
+    local f = device.on_timer(doc, { name = "device.party", now = 0 })
+    assert_eq(kinds(f), { "led/output/set_raw RING,200,0,0", "led/output/set_raw PREV,0,200,0", "led/output/set_raw NEXT,0,0,200" })
+    assert_eq(kinds(device.on_lights_refresh(doc)), {})          -- nobody repaints over it meanwhile
+    assert_nil(device.on_wifi_anim(doc, { now = 1 }))
+    local e = device.on_timer(doc, { name = "device.party_end", now = 5 })
+    assert_nil(e.state.device.party)
+    assert_eq(kinds(e), { "timer.cancel", "led/output/set_raw RING,200,200,200", "led/output/set_raw PREV,200,200,200", "led/output/set_raw NEXT,200,200,200" })
+  end)
+
+  it("night mode dims it like every other light", function()
+    local doc = doc_with({ limits = { dim = true } }); doc.device.party = true
+    assert_eq(kinds(device.on_party_frame(doc, { now = 0 }))[1], "led/output/set_raw RING,10,0,0")
+  end)
+
+  it("the colour wheel goes all the way round", function()
+    assert_eq(device.wheel(60), { 200, 200, 0 }); assert_eq(device.wheel(180), { 0, 200, 200 }); assert_eq(device.wheel(300), { 200, 0, 200 })
+    assert_eq(device.wheel(360), { 200, 0, 0 })
+  end)
+end)
+
 describe("services.device — airplane mode from the page (always bounded)", function()
   local function flag_cmds(r)
     local out = {}

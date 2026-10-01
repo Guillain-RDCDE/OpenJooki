@@ -341,6 +341,28 @@ with sync_playwright() as p:
           bt.count() == 1 and "JOOKI2_BENCH" in bt.inner_text() and "Bluetooth" in bt.inner_text()
           and bt.locator("a").get_attribute("href") == "https://guillain-rdcde.github.io/OpenJooki/wifi.html" and bt.locator("a").get_attribute("target") == "_blank",
           bt.inner_text() if bt.count() else "no line")
+    # E24 Appearance: dark or light chosen on the page, kept on the phone, 'automatic' follows the phone
+    def bg(): return pg.evaluate("getComputedStyle(document.body).backgroundColor")
+    pg.goto(URL + "/#/settings/theme"); pg.wait_for_selector("[data-k=theme-dark]", timeout=15000)
+    pg.click("[data-k=theme-dark]")
+    check("E24 dark chosen: the page turns dark", pg.evaluate("document.documentElement.dataset.theme") == "dark" and bg() == "rgb(22, 21, 20)", bg())
+    pg.reload(); pg.wait_for_selector("[data-k=theme-dark]", timeout=15000)
+    check("E24 the choice stays after a reload, with its tick", bg() == "rgb(22, 21, 20)" and pg.locator("[data-k=theme-dark] .tick").count() == 1, bg())
+    pg.click("[data-k=theme-auto]")
+    check("E24 automatic: back to the phone's own look (light on the bench)", pg.evaluate("document.documentElement.hasAttribute('data-theme')") is False and bg() == "rgb(246, 244, 241)", bg())
+    # E23 the Christmas tree (OpenJooki 2 core only): 5 s of colours on the lights, then back to normal
+    pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=langnav]", timeout=15000)
+    if pg.locator("[data-k=party]").count():
+        import paho.mqtt.client as mqtt
+        leds = []
+        spy = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "e2e-leds")
+        spy.on_message = lambda c, u, m: leds.append((time.time(), m.payload.decode(errors="replace")))
+        spy.connect("127.0.0.1", 1883); spy.subscribe("/j/led/output/set_raw"); spy.loop_start(); time.sleep(0.3)
+        pg.click("[data-k=party]"); time.sleep(6.5); spy.loop_stop(); spy.disconnect()
+        rings = [p for t, p in leds if p.startswith("RING,")]
+        check("E23 the Christmas tree runs through many colours on the ring", len(set(rings)) >= 6, rings[:12])
+        # white (idle), off (a token plays) or dimmed white (night): anything but a rainbow colour
+        check("E23 then the ring goes back to its real colour", rings and rings[-1] in ("RING,200,200,200", "RING,0,0,0", "RING,10,10,10"), rings[-3:])
     # E14 offline / reconnect
     subprocess.run(["pkill", "-f", "^mosquitto -c"]); time.sleep(2.5)
     off = pg.locator(".conn").inner_text()

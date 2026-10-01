@@ -1,5 +1,15 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Dark or light, your choice.** The page already turned dark when the phone was in dark mode.
+  Now *Settings > Appearance* lets you choose: *Automatic* (like the phone, as before), *Light* or
+  *Dark*. The choice is kept on that phone only: each parent can have their own.
+- **A Christmas tree, just for fun.** In *Settings*, *Christmas tree* makes the ring and the two
+  side lights run through all their colours for 5 seconds, then they go back to normal. It changes
+  nothing else. At night, with night mode on, it stays dimmed like every other light.
+- For the tinkerers: message `OJ_PARTY {}`, v2 command `device.party` (not behind the parent
+  code). The heart is left to the light controller.
+
 ## OpenJooki 2.2.0 (1 October 2026) — every flat token its own, a picture library, new Settings
 - **Each flat token can start its own story.** The round flat tokens (a cat, an elephant, a
   rocket printed on them) all carry the same code, so the Jooki saw them as one single token and

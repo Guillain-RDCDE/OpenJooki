@@ -452,6 +452,7 @@ end
 --- One frame of the start-up "waiting for Wi-Fi" chase, or its end. Driven by the device.wifi_anim
 --- timer started at boot; it cancels that timer as soon as the wait is over.
 function device.on_wifi_anim(doc, ev)
+  if (doc.device or {}).party then return nil end
   if not wifi_waiting(doc) then
     local r = device.on_lights_refresh(doc)   -- let the dots settle to their real state
     r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.wifi_anim" }
@@ -468,6 +469,7 @@ end
 function device.on_lights_refresh(doc)
   local pb = doc.playback or {}
   local cmds = {}
+  if (doc.device or {}).party then return { commands = cmds } end   -- the Christmas tree owns the lights for 5 s
   if pb.state == "starting" then
     cmds[#cmds + 1] = set(doc, "PREV", COLOURS.LIGHTBLUE); cmds[#cmds + 1] = set(doc, "NEXT", COLOURS.LIGHTBLUE)
     return { commands = cmds }
@@ -498,6 +500,46 @@ function device.on_lights_event(doc, ev)
   if ERROR_EVENTS[ev.name] then return { commands = { pulse(doc, "PREV", COLOURS.RED, 2), pulse(doc, "NEXT", COLOURS.RED, 2) } } end
   if WARN_EVENTS[ev.name] then return { commands = { pulse(doc, "PREV", COLOURS.YELLOW, 1), pulse(doc, "NEXT", COLOURS.YELLOW, 1) } } end
   return nil
+end
+
+-- ------------------------------------------------------------------ the Christmas tree (just for fun)
+-- A button in Settings: for 5 s the ring and the two side dots run through the colour wheel, each
+-- at a different place on it, then everything goes back to its real state. The heart stays the
+-- light controller's (docs/24 §1). Night mode's dimming applies, so it never lights up a bedroom.
+local PARTY_S, PARTY_FRAME_S, PARTY_STEP = 5, 0.12, 47   -- 47° a frame: the colours jump, they do not slide
+
+--- A fully saturated colour at `deg` on the colour wheel, 0-200 like the rest of the lights.
+local function wheel(deg)
+  local h = (deg % 360) / 60
+  local i = math.floor(h)
+  local up, down = math.floor(200 * (h - i) + 0.5), math.floor(200 * (1 - (h - i)) + 0.5)
+  return ({ { 200, up, 0 }, { down, 200, 0 }, { 0, 200, up }, { 0, down, 200 }, { up, 0, 200 }, { 200, 0, down } })[i + 1]
+end
+device.wheel = wheel
+
+function device.on_party(doc)
+  if (doc.device or {}).party then return {} end
+  local d = copy(doc.device or {}); d.party = true
+  return { state = { device = d }, commands = {
+    { kind = "timer.every", name = "device.party", seconds = PARTY_FRAME_S },
+    { kind = "timer.once", name = "device.party_end", seconds = PARTY_S } } }
+end
+
+function device.on_party_frame(doc, ev)
+  if not (doc.device or {}).party then return { commands = { { kind = "timer.cancel", name = "device.party" } } } end
+  local deg = math.floor((ev.now or 0) / PARTY_FRAME_S) * PARTY_STEP
+  return { commands = { set(doc, "RING", wheel(deg)), set(doc, "PREV", wheel(deg + 120)), set(doc, "NEXT", wheel(deg + 240)) } }
+end
+
+function device.on_party_end(doc)
+  local d = copy(doc.device or {}); d.party = nil
+  local after = {}
+  for k, v in pairs(doc) do after[k] = v end
+  after.device = d
+  local r = device.on_lights_refresh(after)
+  table.insert(r.commands, 1, { kind = "timer.cancel", name = "device.party" })
+  r.state = { device = d }
+  return r
 end
 
 -- ------------------------------------------------------------------ disk usage (after uploads and at boot)
@@ -614,6 +656,8 @@ function device.on_timer(doc, ev)
   if ev.name == "device.tick" then return device.on_tick(doc, ev) end
   if ev.name == "device.knobs" then return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end
   if ev.name == "device.wifi_anim" then return device.on_wifi_anim(doc, ev) end
+  if ev.name == "device.party" then return device.on_party_frame(doc, ev) end
+  if ev.name == "device.party_end" then return device.on_party_end(doc) end
   if ev.name == "device.airplane" then return device.on_airplane_end(doc, "timer") end
   if ev.name == "device.airplane_restore" then return device.on_airplane_end(doc, "boot") end
   if ev.name:match("^device%.esp32_init%.%d$") then
@@ -693,6 +737,7 @@ function device.install(api, dispatch)
   api.command("device.clock", S.clock, function(doc, p, ev) return device.on_clock(doc, p, ev) end)
   api.command("device.speak_info", nil, function() return { commands = { { kind = "shell", action = "speak_info" }, emit("playback.pause_request", { source = "speak_info" }) } } end)
   api.command("device.airplane", S.airplane, function(doc, p, ev) return device.on_airplane(doc, p, ev) end)
+  api.command("device.party", nil, function(doc) return device.on_party(doc) end)
 end
 
 return device

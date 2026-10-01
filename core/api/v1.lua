@@ -247,6 +247,8 @@ H.OJ_SET_NAME = function(doc, p) return device.on_set_name(doc, p.name) end
 H.OJ_UPDATE_START = function() return { commands = { { kind = "emit", event = { type = "update.start" } } } } end
 -- airplane mode from the page, always bounded (minutes, and at most until the next start)
 H.OJ_AIRPLANE = function(doc, p, ev) return device.on_airplane(doc, { minutes = p.minutes, cancel = p.cancel == true }, ev) end
+-- 5 s of rainbow on the lights, just for fun (left open: it changes nothing)
+H.OJ_PARTY = function(doc) return device.on_party(doc) end
 -- Bluetooth speaker or headphones (docs/26)
 H.OJ_BT_SCAN = function(doc) return bluetooth.on_scan(doc) end
 H.OJ_BT_CONNECT = function(doc, p) return bluetooth.on_connect(doc, p) end

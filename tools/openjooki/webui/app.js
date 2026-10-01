@@ -174,6 +174,9 @@
       s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
       s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
       s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
+      s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
+      s_theme_foot: 'Automatique : comme le téléphone. Ce choix ne vaut que pour ce téléphone.',
+      s_party: 'Sapin de Noël', s_party_sub: 'Toutes les couleurs des lumières, pendant 5 secondes', s_party_done: 'Regarde ton Jooki !',
       s_parent_foot: 'Un code à 4 chiffres empêche les enfants et les invités de changer les réglages.',
       s_wifi_net: 'Réseau', s_wifi_signal: 'Signal', s_wifi_drops: 'Coupures depuis le démarrage', s_wifi_page: 'Adresse de la page',
       s_wifi_change: 'Changer de réseau', s_air_for: 'Pendant combien de temps ?', s_lang_foot: 'La langue de cette page sur ce téléphone.',
@@ -344,6 +347,9 @@
       s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
       s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
       s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
+      s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
+      s_theme_foot: 'Automatic: like the phone. This choice is for this phone only.',
+      s_party: 'Christmas tree', s_party_sub: 'All the colours of the lights, for 5 seconds', s_party_done: 'Look at your Jooki!',
       s_parent_foot: 'A 4-digit code stops children and guests from changing the settings.',
       s_wifi_net: 'Network', s_wifi_signal: 'Signal', s_wifi_drops: 'Drops since start', s_wifi_page: 'Page address',
       s_wifi_change: 'Change network', s_air_for: 'For how long?', s_lang_foot: 'The language of this page on this phone.',
@@ -514,6 +520,9 @@
       s_general: 'Algemeen', s_parents: 'Ouders', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
       s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
       s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
+      s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
+      s_theme_foot: 'Automatisch: zoals de telefoon. Deze keuze geldt alleen voor deze telefoon.',
+      s_party: 'Kerstboom', s_party_sub: 'Alle kleuren van de lampjes, 5 seconden lang', s_party_done: 'Kijk naar je Jooki!',
       s_parent_foot: 'Een code van 4 cijfers voorkomt dat kinderen en gasten instellingen wijzigen.',
       s_wifi_net: 'Netwerk', s_wifi_signal: 'Signaal', s_wifi_drops: 'Onderbrekingen sinds de start', s_wifi_page: 'Adres van de pagina',
       s_wifi_change: 'Ander netwerk', s_air_for: 'Hoe lang?', s_lang_foot: 'De taal van deze pagina op deze telefoon.',
@@ -526,6 +535,13 @@
   // English by default; French or Dutch only when the browser itself is set to that language
   var lang = lsGet('oj.lang') || (navigator.language || 'en').slice(0, 2).toLowerCase();
   if (!T[lang]) lang = 'en';
+  // Appearance, kept on this phone: 'auto' follows the phone, 'light' / 'dark' force it (app.css, html[data-theme])
+  var THEMES = ['auto', 'light', 'dark'];
+  var theme = lsGet('oj.theme');
+  if (THEMES.indexOf(theme) < 0) theme = 'auto';
+  function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
+  applyTheme();
+  function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {
     var v = T[lang][k];
     if (v === undefined) v = T.fr[k];
@@ -640,6 +656,7 @@
     note: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
     link0: '<path d="M8 12h8"/>',
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
+    contrast: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/>',
     sort: '<path d="M4 6h9M4 12h7M4 18h5M17 4v16M14 17l3 3 3-3"/>',
     sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
     camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
@@ -2091,11 +2108,11 @@
       meter !== null && meter !== undefined ? h('div', { class: 'minibar' }, h('i', { class: meterCls || '', style: 'width:' + Math.max(0, Math.min(100, meter)) + '%' })) : null);
   }
   var SUBS = { bluetooth: 's_bt', night: 'night_mode', airplane: 'air_title', wifi: 'wifi', update: 's_update', language: 'language',
-               parent: 'parent_label', home: 's_home', maintenance: 's_maint' };
+               parent: 'parent_label', home: 's_home', maintenance: 's_maint', theme: 's_theme' };
   function settingsPage(sub) {
     var body = sub === 'bluetooth' ? btPage() : sub === 'night' ? nightPage() : sub === 'airplane' ? airPage() : sub === 'wifi' ? wifiPage()
       : sub === 'update' ? updateCard() : sub === 'language' ? langPage() : sub === 'parent' ? parentPage() : sub === 'home' ? homePage()
-      : sub === 'maintenance' ? maintPage() : null;
+      : sub === 'maintenance' ? maintPage() : sub === 'theme' ? themePage() : null;
     return body ? h('div', { class: 'settings sub' }, body) : viewSettings();
   }
   function viewSettings() {
@@ -2131,7 +2148,11 @@
       sGroup(t('s_general'), [
         sRow({ icon: 'wifi', color: 'blue', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
         sRow({ icon: 'up', color: 'green', label: t('s_update'), value: avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : '', vcls: avail ? 'acc' : 'good', href: '#/settings/update', k: 'updnav' }),
-        sRow({ icon: 'globe', color: 'teal', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' })
+        sRow({ icon: 'globe', color: 'teal', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
+        sRow({ icon: 'contrast', color: 'gray', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
+        d.core ? sRow({ icon: 'sparkle', color: 'party', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
+          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
+        } }) : null
       ]),
       typeof m.parent === 'boolean' ? sGroup(t('s_parents'), [
         sRow({ icon: 'lock', color: 'red', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' })
@@ -2152,6 +2173,11 @@
     return sGroup(null, LANGS.map(function (l) {
       return sRow({ label: l[1], lang: l[0], check: lang === l[0], nochev: true, k: 'lang-' + l[0], onclick: function () { setLang(l[0]); } });
     }), t('s_lang_foot'));
+  }
+  function themePage() {
+    return sGroup(null, THEMES.map(function (v) {
+      return sRow({ label: t('s_theme_' + v), check: theme === v, nochev: true, k: 'theme-' + v, onclick: function () { setTheme(v); } });
+    }), t('s_theme_foot'));
   }
   // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
   // speaker by itself once connected, and reconnects to it when it comes back.

@@ -52,6 +52,7 @@ local DESC = {
   ["device.set_config"] = "Shuffle and repeat (0 none, 1 all, 2 one).",
   ["device.toy_safe"] = "Kids volume limit (hardware side).", ["device.power_off"] = "Plays the power-off sound, then powers off.",
   ["device.set_wifi"] = "Always refused (`unavailable`, WIFI_OVER_BLUETOOTH): a Jooki 2 learns a Wi-Fi network over Bluetooth only (docs/wifi.html).", ["device.speak_info"] = "The Jooki says its IP address.",
+  ["device.party"] = "Just for fun: for 5 s the ring and the side dots run through the colour wheel, then go back to their real state.",
   ["device.clock"] = "The phone's time (UTC seconds). Taken only while the Jooki's clock is unset (no Internet since the start: no NTP, no RTC); the page sends it at every connection.",
   ["device.airplane"] = "Switches Wi-Fi and Bluetooth off for `minutes` (1–1440) or, without minutes, until the next start; either way the next start switches them back on. `cancel` switches them back on now. The page loses the Jooki meanwhile.",
   ["upload.add"] = "Imports a file web_ctrl received on /upload (uploadId = the multipart field name).",

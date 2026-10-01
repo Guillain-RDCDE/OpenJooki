@@ -83,6 +83,7 @@ if LUA == "core":   # a foreign tag (amiibo, sticker): 2.x only, the 1.x program
     j.nfc_off(); j.settle(); j.nfc(ELE, "200"); j.wait(lambda: obj(obj(j.state.get("audio")).get("nowPlaying")).get("playlistId") == pe, 5)
     check("TFL the cat and the elephant start different playlists", got_cat == pc and obj(obj(j.state.get("audio")).get("nowPlaying")).get("playlistId") == pe,
           (got_cat, obj(j.state.get("audio")).get("nowPlaying")))
+    j.wait(lambda: obj(obj(j.state.get("audio")).get("playback")).get("state") == "PLAYING", 5)   # really playing, not still starting
     j.nfc_off(); j.wait(lambda: obj(obj(j.state.get("audio")).get("playback")).get("state") == "PAUSED", 5)
     check("TFL taking a flat token off pauses", obj(obj(j.state.get("audio")).get("playback")).get("state") == "PAUSED", obj(j.state.get("audio")).get("playback"))
     # a picture from the page's library; any other address is refused

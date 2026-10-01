@@ -1,10 +1,13 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.1.5 (1 October 2026) — Spotify's album covers
 - **Spotify's album covers on the page.** While Spotify plays on the Jooki, the page showed a grey
   disc instead of the cover: the page's own safety rules blocked pictures coming from Spotify.
-  Covers now show, in the bar at the bottom and in the big player.
-- For the tinkerers: the test bench now tests the page as the Jooki serves it since 2.1.0 (the
+  Covers now show, in the bar at the bottom and in the big player. Tested on a family Jooki with
+  Spotify on an iPhone.
+- For the tinkerers: the page's CSP now allows `img-src https://*.scdn.co https://*.spotifycdn.com`
+  (the daemon sends `https://i.scdn.co/image/…`; a `spotify:image:<id>` would be turned into that
+  address too). The test bench now tests the page as the Jooki serves it since 2.1.0 (the
   core's own web server, port 8090 on the bench) instead of an emulation of the old `web_ctrl`.
   That showed the core's web server could not restart on LuaSocket 3 (reuseaddr set before the
   socket existed): fixed with `tcp4()`, and if the port is ever busy at start the server now tries

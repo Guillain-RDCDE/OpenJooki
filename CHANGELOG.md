@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.2.1 (1 October 2026) — a Christmas tree, dark or light
 - **Dark or light, your choice.** The page already turned dark when the phone was in dark mode.
   Now *Settings > Appearance* lets you choose: *Automatic* (like the phone, as before), *Light* or
   *Dark*. The choice is kept on that phone only: each parent can have their own.

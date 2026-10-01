@@ -665,11 +665,19 @@ def _webui_expected(lib, files, root=""):
     return exp
 
 def _md5_match(host, exp, prefix=""):
-    out = ssh(host, prefix+"md5sum "+" ".join(sorted(exp))+" 2>/dev/null").stdout
-    got = {}
+    # the files of a WEBUI_DIRS folder are summed from inside it ("cd dir && md5sum *"): their ~700
+    # full paths on one command line were too long for the Jooki's shell
+    dirs = sorted({k.rsplit("/", 1)[0] for k in exp if any(k.rsplit("/", 1)[0].endswith(WWW_PUBLIC + "/" + d) for d in WEBUI_DIRS)})
+    single = [k for k in sorted(exp) if k.rsplit("/", 1)[0] not in dirs]
+    cmd = "md5sum " + " ".join(single) + " 2>/dev/null"
+    for d in dirs:
+        cmd += "; echo '@@ %s'; (cd %s && md5sum * 2>/dev/null)" % (d, d)
+    out = ssh(host, prefix + cmd).stdout
+    got, cur = {}, None
     for l in out.splitlines():
+        if l.startswith("@@ "): cur = l[3:].strip(); continue
         p = l.split()
-        if len(p) == 2: got[p[1]] = p[0]
+        if len(p) == 2: got[(cur + "/" + p[1]) if cur else p[1]] = p[0]
     return all(got.get(k) == v for k, v in exp.items())
 
 def webui_active_ok(host, lib, files):

@@ -174,8 +174,10 @@ H.TOKEN_EDIT = function(doc, p)
   if type(p.tagId) ~= "string" then return nil, { code = "not_found", field = "tagId", message = "unknown token" } end
   local had = doc.library and doc.library.tokens[p.tagId] and doc.library.tokens[p.tagId].image
   local r, err = lib(doc, { tokens = true }, function(l) return library.ops.token_edit(l, p.tagId, p.name, p.image) end)
-  -- image = false: the picture goes away with its file
-  if r and p.image == false and had then r.commands[#r.commands + 1] = { kind = "files.remove", path = tokens.image_path(doc, p.tagId) } end
+  -- the photo goes away with its file, whether removed (image = false) or replaced by a library picture
+  if r and p.image ~= nil and type(had) == "string" and had:sub(1, 9) == "/artwork/" and p.image ~= had then
+    r.commands[#r.commands + 1] = { kind = "files.remove", path = tokens.image_path(doc, p.tagId) }
+  end
   return r, err
 end
 H.TOKEN_SET_IMAGE = function(doc, p)

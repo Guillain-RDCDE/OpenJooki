@@ -81,13 +81,20 @@ dead `jooki.rocks` domain). English by default; French or Dutch when the browser
   songs to a playlist or delete them from the Jooki (with confirmation).
 - **Tokens**: one card per character, the playlist it starts (changeable), its
   tokens with optional nicknames, "forget" with confirmation, highlight of the
-  token currently on the Jooki.
+  token currently on the Jooki. Since 2.2 every flat token (and every foreign
+  NFC tag) is a character of its own, with a picture chosen in a library of 659
+  ready-made pictures, or a photo ([23-nfc-tags.md](23-nfc-tags.md) §4-§5).
 - **Player**: now playing, play/pause/previous/next, seek, volume,
   shuffle/repeat.
 - **Settings**: battery, Wi-Fi, IP, storage, versions, limited volume (kids
   mode), language, turn off (with confirmation). Since OpenJooki 2: airplane
   mode for a chosen time (Wi-Fi and Bluetooth off; the Jooki brings them back
   by itself, and at its next start in any case — [24-hardware-and-lights.md](24-hardware-and-lights.md)).
+  Since 2.2 the Settings page is short: a "My Jooki" card (name, battery,
+  storage, version) and grouped rows that show their value; each topic opens on
+  a page of its own, `#/settings/<topic>` (`bluetooth`, `night`, `airplane`,
+  `wifi`, `update`, `language`, `parent`, `home`, `maintenance`), with the back
+  button of the top bar.
 - **Updates** (since 1.2.0): Settings shows the installed OpenJooki version and
   checks GitHub for a newer release (also once when the page opens). If there
   is one, a banner appears on the home page and **Update now** installs it from

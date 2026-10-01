@@ -11,7 +11,7 @@ Python 3, standard library only.
 """
 __version__ = "0.4.0"
 import argparse, os, re, socket, struct, subprocess, sys, time, json, random, mimetypes, base64, glob, hashlib
-import urllib.parse, urllib.request, concurrent.futures, datetime
+import urllib.parse, urllib.request, concurrent.futures, datetime, io, tarfile
 
 HOME = os.path.expanduser("~/.openjooki")
 KEY  = os.path.join(HOME, "id_jooki_rsa")
@@ -493,6 +493,12 @@ def ab_harden(host):
 WEBUI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui")
 WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js",
                "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png")   # home-screen icon (make_icons.py)
+# Folders of the page shipped whole (many small files): the token pictures of the library (docs/23 §5).
+WEBUI_DIRS = ("tokimg",)
+def webui_dir_files(d):
+    """The files of one WEBUI_DIRS folder, as sorted names relative to that folder (no sub-folders)."""
+    root = os.path.join(WEBUI_DIR, d)
+    return sorted(f for f in os.listdir(root) if os.path.isfile(os.path.join(root, f)) and not f.startswith("."))
 WEBUI_STALE = ("config.js",)   # shadowed by web_ctrl's "/config" prefix route: never ship it
 WWW_PUBLIC = "/jooki/app/www/public"
 WWW_ORIG = "/jooki/app/www/public-openjooki-orig"   # old 2018 web app, kept (not served)
@@ -644,6 +650,9 @@ def _webui_build(host, core=None):
     files = {}
     for f in WEBUI_FILES:
         with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[WWW_PUBLIC+"/"+f] = fh.read()
+    for d in WEBUI_DIRS:
+        for f in webui_dir_files(d):
+            with open(os.path.join(WEBUI_DIR, d, f), "rb") as fh: files[WWW_PUBLIC+"/"+d+"/"+f] = fh.read()
     for path, f in system_files(core).items():
         with open(os.path.join(SYSTEM_DIR, f), "rb") as fh: files[path] = fh.read()
     if core:
@@ -677,7 +686,8 @@ def ab_webui(host, dry_run=False, core=None):
     except Exception as e: log("build failed: %s" % e); return 1
     log("player.lib: %d -> %d bytes (%s); web files: %s; system files: %s"
         % (len(orig), len(lib), "2.0 core " + os.path.basename(core) if core else "patched",
-           ", ".join(WEBUI_FILES), ", ".join(sorted(system_files(core)))))
+           ", ".join(WEBUI_FILES + tuple("%s/ (%d)" % (d, len(webui_dir_files(d))) for d in WEBUI_DIRS)),
+           ", ".join(sorted(system_files(core)))))
     if webui_active_ok(host, lib, files):
         log("Web UI and fixes already installed (active partition). Nothing to do."); return 0
     if dry_run: log("[dry-run] build OK, nothing written"); return 0
@@ -701,12 +711,26 @@ def ab_webui(host, dry_run=False, core=None):
     prep += "sync; echo PREP_OK"
     r = ssh(host, prep, timeout=60)
     if "PREP_OK" not in r.stdout: log("prepare failed -> aborting (boot unchanged): %s" % (r.stdout+r.stderr)[-300:]); return 1
-    targets = [(PLAYER_LIB, lib)] + sorted(files.items())
+    in_dir = lambda p: any(p.startswith(WWW_PUBLIC + "/" + d + "/") for d in WEBUI_DIRS)
+    targets = [(PLAYER_LIB, lib)] + sorted((p, b) for p, b in files.items() if not in_dir(p))
     for path, data in targets:
         m = file_mode(path)
         r = ssh_bytes(host, mnt+"cat > %s%s.new && chmod %s %s%s.new && mv %s%s.new %s%s && sync && echo PUT_OK"
                       % (MP, path, m, MP, path, MP, path, MP, path), data=data, timeout=60)
         if b"PUT_OK" not in r.stdout: log("write failed (%s) -> aborting (boot unchanged)" % path); return 1
+    # a folder of many small files (the token pictures) goes as one tar, replacing the folder whole
+    for d in WEBUI_DIRS:
+        pre = WWW_PUBLIC + "/" + d + "/"
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w", format=tarfile.USTAR_FORMAT) as tf:
+            for path, data in sorted(files.items()):
+                if not path.startswith(pre): continue
+                ti = tarfile.TarInfo(path[len(pre):]); ti.size = len(data); ti.mode = 0o644; ti.mtime = int(time.time())
+                tf.addfile(ti, io.BytesIO(data))
+        dst = MP + WWW_PUBLIC + "/" + d
+        r = ssh_bytes(host, mnt+"rm -rf %s.new && mkdir -p %s.new && tar -xf - -C %s.new && rm -rf %s && mv %s.new %s && sync && echo PUT_OK"
+                      % (dst, dst, dst, dst, dst, dst), data=buf.getvalue(), timeout=180)
+        if b"PUT_OK" not in r.stdout: log("write failed (%s/) -> aborting (boot unchanged)" % d); return 1
     exp = _webui_expected(lib, files, root=MP)
     if not _md5_match(host, exp, prefix=mnt.replace("set -e; ", "")+" "):
         log("verification on the spare partition failed -> aborting (boot unchanged)"); return 1

@@ -30,7 +30,7 @@ TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 sys.path.insert(0, os.path.join(HERE, "..", "tools", "sdcard"))
 import lua_patches as L  # noqa: E402
-from jooki import SYSTEM_DIR, WEBUI_FILES, file_mode, load_core, core_side_files, system_files  # noqa: E402
+from jooki import SYSTEM_DIR, WEBUI_FILES, WEBUI_DIRS, webui_dir_files, file_mode, load_core, core_side_files, system_files  # noqa: E402
 from make_card_image import scrub_rootfs  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
@@ -77,6 +77,20 @@ def put(img, local, path, mode="0100644"):
              "set_inode_field %s mode %s" % (path, mode),
              "set_inode_field %s uid 0" % path,
              "set_inode_field %s gid 0" % path]
+    dbg(img, cmds, write=True)
+
+
+def put_dir(img, local_dir, names, path):
+    """A folder of many small files (the token pictures): replaced whole, in one debugfs run."""
+    if exists(img, path):
+        out = subprocess.run(["debugfs", "-R", "ls -p " + path, img], capture_output=True, text=True).stdout
+        old = [l.split("/")[5] for l in out.splitlines() if l.count("/") >= 6 and l.split("/")[5] not in (".", "..")]
+        dbg(img, ["rm %s/%s" % (path, n) for n in old] + ["rmdir " + path], write=True)
+    cmds = ["mkdir " + path, "set_inode_field %s uid 0" % path, "set_inode_field %s gid 0" % path]
+    for n in names:
+        p = path + "/" + n
+        cmds += ["write %s %s" % (os.path.join(local_dir, n), p), "set_inode_field %s mode 0100644" % p,
+                 "set_inode_field %s uid 0" % p, "set_inode_field %s gid 0" % p]
     dbg(img, cmds, write=True)
 
 
@@ -147,7 +161,9 @@ def main():
     # --- new web page ---
     for f in WEB_FILES:
         put(out, os.path.join(WEBUI, f), PUB + "/" + f)
-    print("web page installed:", ", ".join(WEB_FILES))
+    for d in WEBUI_DIRS:
+        put_dir(out, os.path.join(WEBUI, d), webui_dir_files(d), PUB + "/" + d)
+    print("web page installed:", ", ".join(WEB_FILES + tuple("%s/ (%d files)" % (d, len(webui_dir_files(d))) for d in WEBUI_DIRS)))
 
     # --- system files (original kept once) ---
     sysfiles = system_files(core)   # the start script without the 1 s wait comes only with the 2.0 core
@@ -184,6 +200,9 @@ def main():
     expect.update(side)   # /jooki/lib/core.lua read back too (ADR-0011)
     for f in WEB_FILES:
         expect[PUB + "/" + f] = open(os.path.join(WEBUI, f), "rb").read()
+    for d in WEBUI_DIRS:
+        for f in webui_dir_files(d):
+            expect[PUB + "/" + d + "/" + f] = open(os.path.join(WEBUI, d, f), "rb").read()
     for path, f in sysfiles.items():
         expect[path] = open(os.path.join(SYSTEM_DIR, f), "rb").read()
     expect.update(NEUTRAL)

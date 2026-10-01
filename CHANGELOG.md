@@ -1,5 +1,29 @@
 # OpenJooki — Changelog
 
+## Next release — every flat token its own, a picture library, new Settings
+- **Each flat token can start its own story.** The round flat tokens (a cat, an elephant, a
+  rocket printed on them) all carry the same code, so the Jooki saw them as one single token and
+  they all started the same playlist. Now each one is a token of its own: give the cat one story
+  and the elephant another. Taking one off pauses, like any Jooki token. Until a flat token has a
+  playlist of its own, it keeps playing the one all the flat tokens played before. The Thank-you
+  token works the same way.
+- **659 ready-made pictures for your tokens.** On the *Tokens* screen, a flat token, an amiibo or
+  an NFC sticker gets a picture in two taps: *Choose a picture*, then pick one — animals, tales,
+  vehicles, food, music, space… with a search that knows children's words. A token without a name
+  takes the picture's name. *My photo* is still there for your own picture. The pictures are on
+  the Jooki: no Internet needed.
+- **A new Settings page.** Shorter: a card with your Jooki's name, battery, storage and version,
+  then one line per setting, with its value at a glance. The details (night mode, Bluetooth,
+  airplane mode, Wi-Fi, update, language, parent code) open on their own page. Small texts no
+  longer touch the edges of the cards.
+- For the tinkerers: per-token characters `flat.<UID>` / `thanks.<UID>` (codes 512 and 260),
+  migrated at boot, falling back to the shared `Jooki.Flat` playlist
+  ([docs/23](docs/23-nfc-tags.md) §4). A token's `image` is now checked by the core: `lib:<id>` or
+  the page's own `/artwork/tok_<UID>.png?v=<n>`, nothing else. The pictures are Fluent Emoji 3D
+  (Microsoft, MIT), 128 px WebP in `webui/tokimg/` (2.5 MB), served with a long cache by the core's
+  web server, which now knows WebP. `jooki.py patch webui` sends that folder as one tar;
+  `add-webui-to-image.py` writes it in one debugfs run.
+
 ## OpenJooki 2.1.5 (1 October 2026) — Spotify's album covers
 - **Spotify's album covers on the page.** While Spotify plays on the Jooki, the page showed a grey
   disc instead of the cover: the page's own safety rules blocked pictures coming from Spotify.

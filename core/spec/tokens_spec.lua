@@ -40,6 +40,31 @@ describe("services.tokens", function()
     assert_eq(r2.state.library.tokens["046158B2661290"].seen, 2)
   end)
 
+  it("flat tokens (one code for all of them): each one is its own character flat.<uid>, on the Jooki like a token", function()
+    local doc = doc_with({ user_1 = { title = "Chat", star = "flat.04A1B2C3D49C41", tracks = {} },
+                           user_2 = { title = "Éléphant", star = "flat.04A1B2C3D477A0", tracks = {} } })
+    local r = tokens.on_tag(doc, { type = "nfc.tag", uid = "04A1B2C3D49C41", star_code = 512 })
+    assert_eq(r.state.nfc, { starId = "flat.04A1B2C3D49C41", tagId = "04A1B2C3D49C41" })
+    assert_eq(r.state.library.tokens["04A1B2C3D49C41"], { starId = "flat.04A1B2C3D49C41", seen = 1 })
+    assert_eq(emitted(r, "playback.request").playlist, "user_1")
+    r = tokens.on_tag(doc, { type = "nfc.tag", uid = "04A1B2C3D477A0", star_code = 512 })
+    assert_eq(emitted(r, "playback.request").playlist, "user_2")
+    -- taking it off pauses, as with any Jooki token
+    assert_eq(emitted(tokens.on_removed({ nfc = r.state.nfc }), "playback.pause_request").source, "token")
+  end)
+
+  it("a flat token without a playlist of its own plays the one of all the flat tokens; the Thank-you token too", function()
+    local doc = doc_with({ user_1 = { title = "Tous les jetons plats", star = "Jooki.Flat", tracks = {} },
+                           user_2 = { title = "Le mien", star = "flat.04A1B2C3D49C41", tracks = {} },
+                           user_3 = { title = "Merci", star = "Jooki.ThankYou", tracks = {} } })
+    assert_eq(emitted(tokens.on_tag(doc, { type = "nfc.tag", uid = "04A1B2C3D41E07", star_code = 512 }), "playback.request").playlist, "user_1")
+    assert_eq(emitted(tokens.on_tag(doc, { type = "nfc.tag", uid = "04A1B2C3D49C41", star_code = 512 }), "playback.request").playlist, "user_2")
+    local r = tokens.on_tag(doc, { type = "nfc.tag", uid = "0400000000AA01", star_code = 260 })
+    assert_eq(r.state.nfc.starId, "thanks.0400000000AA01")
+    assert_eq(emitted(r, "playback.request").playlist, "user_3")
+    assert_eq(tokens.own_star("Jooki.Fox", "04000000F00001"), "Jooki.Fox")
+  end)
+
   it("a second token of the same character starts the same playlist (character rule)", function()
     local doc = doc_with({ user_1 = { title = "P", star = "Jooki.Black.Dragon", tracks = {} } }, { ["04000000B00001"] = { starId = "Jooki.Black.Dragon", seen = 3 } })
     local r = tokens.on_tag(doc, { type = "nfc.tag", uid = "04000000B00099", star_code = 262 })

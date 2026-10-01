@@ -21,8 +21,12 @@ local MIME = {
   json = "application/json; charset=utf-8", png = "image/png", jpg = "image/jpeg",
   jpeg = "image/jpeg", gif = "image/gif", svg = "image/svg+xml", ico = "image/x-icon",
   txt = "text/plain; charset=utf-8", webmanifest = "application/manifest+json",
-  map = "application/json",
+  map = "application/json", webp = "image/webp",
 }
+-- The token pictures of the page's library never change (a new picture gets a new name): the phone
+-- may keep them, so the Tokens screen does not fetch every picture again at each visit.
+local CACHED_PREFIX = "/tokimg/"
+local CACHED = "Cache-Control: public, max-age=2592000"
 
 local READ_CHUNK = 16384
 local MAX_HEAD = 16 * 1024               -- a request head over this is refused
@@ -127,13 +131,13 @@ function httpd:host_ok(host)
 end
 
 -- Build the response head (a string). Body is either `body` (string) or streamed from `file`.
-local function head(status, ctype, len, extra)
+local function head(status, ctype, len, extra, cache)
   local lines = {
     "HTTP/1.1 " .. status,
     "Content-Type: " .. ctype,
     "Content-Length: " .. tostring(len),
     "Connection: close",
-    "Cache-Control: no-cache",
+    cache or "Cache-Control: no-cache",
   }
   for _, l in ipairs(extra or {}) do lines[#lines + 1] = l end
   return table.concat(lines, "\r\n") .. "\r\n\r\n"
@@ -148,11 +152,11 @@ local function respond_text(c, status, body, ctype)
   c.phase = "resp"
 end
 
-local function respond_file(c, path)
+local function respond_file(c, path, cache)
   local sz = file_size(path)
   if not sz then return respond_text(c, "404 Not Found", "not found", "text/plain") end
   local ct = MIME[ext_of(path)] or "application/octet-stream"
-  c.out = head("200 OK", ct, sz)
+  c.out = head("200 OK", ct, sz, nil, cache)
   c.out_off = 1
   if c.method == "HEAD" then c.out_file = nil else c.out_file = io.open(path, "rb") end
   c.phase = "resp"
@@ -167,7 +171,8 @@ function httpd:route(c)
   if c.method == "GET" or c.method == "HEAD" then
     local path = safe_path(self.docroot, c.path)
     if not path then return respond_text(c, "400 Bad Request", "bad path", "text/plain") end
-    return respond_file(c, path)
+    local cache = c.path:sub(1, #CACHED_PREFIX) == CACHED_PREFIX and ext_of(path) == "webp" and CACHED or nil
+    return respond_file(c, path, cache)
   end
   if c.method == "POST" and c.path:gsub("%?.*$", "") == "/upload" then
     return self:begin_upload(c)

@@ -109,10 +109,19 @@ describe("library.ops — tracks and tokens", function()
     assert_true(ops.learn(l, "04000000F00002", "new.abc"))
     assert_true(ops.token_edit(l, "04000000F00001", "  Dark  ", nil))
     assert_eq(l.tokens["04000000F00001"].name, "Dark")
-    assert_true(ops.token_edit(l, "04000000F00001", false, "pic.png"))
-    assert_nil(l.tokens["04000000F00001"].name); assert_eq(l.tokens["04000000F00001"].image, "pic.png")
+    assert_true(ops.token_edit(l, "04000000F00001", false, "lib:cat_face"))
+    assert_nil(l.tokens["04000000F00001"].name); assert_eq(l.tokens["04000000F00001"].image, "lib:cat_face")
+    assert_true(ops.token_edit(l, "04000000F00001", nil, "/artwork/tok_04000000F00001.png?v=812"))
+    assert_eq(l.tokens["04000000F00001"].image, "/artwork/tok_04000000F00001.png?v=812")
     local _, err = ops.token_edit(l, "04000000F00001", 42)
     assert_eq(err.field, "name")
+    -- a picture is a library name or our own photo, never any other address
+    for _, bad in ipairs({ "pic.png", "https://evil.example/x.png", "lib:../x", "lib:Cat", "javascript:alert(1)", "/artwork/../oj-auth.json" }) do
+      local ok, e = ops.token_edit(l, "04000000F00001", nil, bad)
+      assert_nil(ok, bad); assert_eq(e.field, "image")
+    end
+    assert_eq(l.tokens["04000000F00001"].image, "/artwork/tok_04000000F00001.png?v=812")
+    assert_true(ops.token_edit(l, "04000000F00001", nil, false)); assert_nil(l.tokens["04000000F00001"].image)
     assert_true(ops.token_forget(l, "04000000F00001"))
     local _, err2 = ops.token_forget(l, "04000000F00001"); assert_eq(err2.code, "not_found")
   end)
@@ -146,6 +155,19 @@ describe("library.ops — normalise (boot)", function()
     assert_eq(l.playlists[TRASH].tracks, { "t2" })
     assert_nil(l.tokens.bad); assert_nil(l.tracks.orphan)
     assert_eq(ops.normalise(l), { playlists = false, tracks = false, tokens = false })
+  end)
+
+  it("flat and Thank-you tokens learned before become characters of their own; the shared link stays", function()
+    local l = lib_with({}, { user_1 = { title = "Tous les jetons plats", star = "Jooki.Flat", tracks = {} } }, {
+      ["04A1B2C3D49C41"] = { starId = "Jooki.Flat", seen = 4, name = "Chat" },
+      ["0400000000AA01"] = { starId = "Jooki.ThankYou", seen = 1 },
+      ["04000000F00001"] = { starId = "Jooki.Fox", seen = 1 } })
+    assert_true(ops.normalise(l).tokens)
+    assert_eq(l.tokens["04A1B2C3D49C41"], { starId = "flat.04A1B2C3D49C41", seen = 4, name = "Chat" })
+    assert_eq(l.tokens["0400000000AA01"].starId, "thanks.0400000000AA01")
+    assert_eq(l.tokens["04000000F00001"].starId, "Jooki.Fox")
+    assert_eq(l.playlists.user_1.star, "Jooki.Flat")
+    assert_false(ops.normalise(l).tokens)
   end)
 end)
 

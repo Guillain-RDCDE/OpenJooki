@@ -14,6 +14,10 @@ library.ops = ops
 local TRASH, SYSTEM = "TRASH", "system"
 local TRASH_TITLE = "Unused tracks"
 library.TRASH = TRASH
+-- Codes shared by many different-looking tokens: each physical token is its own character,
+-- "<prefix><uid>" (docs/23 §4). services.tokens names them; tokens learned before are renamed here.
+local PER_TOKEN = { ["Jooki.Flat"] = "flat.", ["Jooki.ThankYou"] = "thanks." }
+library.PER_TOKEN = PER_TOKEN
 
 -- ------------------------------------------------------------------ helpers
 local function trim(s) return (tostring(s):gsub("^%s+", ""):gsub("%s+$", "")) end
@@ -103,8 +107,9 @@ end
 --- Everything 1.x's loader did at boot, plus the 1.3 migrations. Returns { playlists=bool, tracks=bool, tokens=bool }.
 function ops.normalise(lib)
   local changed = { playlists = false, tracks = false, tokens = false }
-  for uid in pairs(lib.tokens) do
-    if not is_uid(uid) then lib.tokens[uid] = nil changed.tokens = true end
+  for uid, tok in pairs(lib.tokens) do
+    if not is_uid(uid) then lib.tokens[uid] = nil changed.tokens = true
+    elseif type(tok) == "table" and PER_TOKEN[tok.starId] then tok.starId = PER_TOKEN[tok.starId] .. uid changed.tokens = true end
   end
   for id, p in pairs(lib.playlists) do
     p.tracks = p.tracks or {}
@@ -299,9 +304,19 @@ function ops.token_edit(lib, uid, name, image)
     tok.name = n
   end
   if image ~= nil then
-    if image == false or image == "" then tok.image = nil else tok.image = image end
+    if image == false or image == "" then tok.image = nil
+    elseif ops.valid_image(image) then tok.image = image
+    else return nil, { code = "invalid_argument", field = "image", message = "invalid image" } end
   end
   return true
+end
+
+--- A token's picture is one of two things, never any other address (the page shows it as is):
+---   "lib:<id>"                        a picture of the page's own library (webui/tokimg/<id>.webp)
+---   "/artwork/tok_<uid>.png?v=<n>"    a photo made on the page (services.tokens.on_image_moved)
+function ops.valid_image(s)
+  if type(s) ~= "string" or #s > 80 then return false end
+  return s:match("^lib:[a-z0-9_]+$") ~= nil or s:match("^/artwork/tok_%x+%.png%?v=%d+$") ~= nil
 end
 
 function ops.token_forget(lib, uid)

@@ -66,6 +66,15 @@ def get(path, host=None, method="GET", body=None, headers=None):
     return r.status, data
 
 
+def headers_of(path):
+    c = http.client.HTTPConnection("127.0.0.1", PORT, timeout=10)
+    c.request("GET", path)
+    r = c.getresponse()
+    r.read()
+    c.close()
+    return r.status, {k.lower(): v for k, v in r.getheaders()}
+
+
 def port_taken_at_start():
     """The port is still held when the server starts (the core before it still closing): the page
     must come back by itself once the port is free, not stay down until the next start."""
@@ -151,6 +160,10 @@ def main():
     open(os.path.join(docroot, "app.js"), "wb").write(big)
     open(os.path.join(docroot, "app.css"), "wb").write(b"body{color:#000}")
     open(os.path.join(docroot, "oj-auth.json"), "wb").write(b'{"mqttUser":"jooki","mqttPass":"x"}')
+    os.makedirs(os.path.join(docroot, "tokimg"))
+    webp = b"RIFF\x1a\x00\x00\x00WEBPVP8L\x0d\x00\x00\x00/\x00\x00\x00\x10\x07\x10\x11\x11\x88\x88\xfe\x07\x00"
+    open(os.path.join(docroot, "tokimg", "cat.webp"), "wb").write(webp)
+    open(os.path.join(docroot, "tokimg", "index.json"), "wb").write(b'{"v":1}')
 
     drv = os.path.join(work, "driver.lua")
     open(drv, "w", newline="\n").write(DRIVER)
@@ -189,6 +202,15 @@ def main():
 
         st, _ = get("/nope.txt")
         check("GET unknown file -> 404", st == 404, st)
+
+        # the token pictures of the library: WebP, and the phone may keep them (they never change)
+        st, hd = headers_of("/tokimg/cat.webp")
+        check("GET a library picture: image/webp, kept by the phone", st == 200 and hd.get("content-type") == "image/webp"
+              and "max-age=" in hd.get("cache-control", ""), (st, hd))
+        st, hd = headers_of("/tokimg/index.json")
+        check("the library's index is not cached (it changes with the page)", st == 200 and hd.get("cache-control") == "no-cache", hd)
+        st, hd = headers_of("/app.js")
+        check("the page itself is not cached", hd.get("cache-control") == "no-cache", hd)
 
         # the security point of the whole change:
         st, _ = get("/ll?action=ls%20-la%20/")

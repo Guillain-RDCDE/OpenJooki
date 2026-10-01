@@ -51,7 +51,7 @@
       launches: 'Lance', none_dash: '— Aucune playlist —',
       token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)', tag_name_ph: 'Nom de ce tag (pour t\'y retrouver)',
       tok_search_ph: 'Rechercher un jeton par son nom', tok_no_match: 'Aucun jeton ne porte ce nom.',
-      photo_btn: 'Photo', photo_remove: 'Retirer la photo', ed_title: 'La photo du tag',
+      photo_btn: 'Ma photo', photo_remove: 'Retirer l\'image', ed_title: 'La photo du jeton',
       ed_hint: 'Touche une zone pour l\'enlever (baguette magique). Glisse pour déplacer.', ed_bg: 'Enlever le fond',
       ed_tol: 'Tolérance', ed_rot: 'Rotation', ed_zoom: 'Zoom', ed_undo: 'Annuler le dernier', ed_reset: 'Tout remettre', ed_save: 'Enregistrer',
       ed_sending: 'Envoi de la photo…', photo_fail: 'La photo n\'a pas pu être enregistrée.', photo_bad: 'Ce fichier n\'est pas une image lisible.',
@@ -163,7 +163,21 @@
       parent_label: 'Code parent', parent_help: 'Un code à 4 chiffres empêche enfants et invités de changer les réglages (supprimer une playlist, le Wi-Fi, lancer une mise à jour).',
       parent_set: 'Définir un code', parent_change: 'Changer le code', parent_off: 'Désactiver',
       parent_prompt: 'Entre le code parent', parent_new: 'Code à 4 chiffres', parent_cur: 'Code actuel', parent_bad: 'Code incorrect',
-      parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.'
+      parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.',
+      flat_tok: 'Jeton plat', thanks_tok: 'Jeton Merci',
+      own_hint: 'Ce jeton est un personnage à lui tout seul : donne-lui un nom, une image et sa playlist.',
+      flat_shared_hint: 'Les jetons plats qui n\'ont pas encore leur propre playlist lancent celle-ci.',
+      lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
+      lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },
+      lib_n: function (n) { return n + (n > 1 ? ' images' : ' image'); }, lib_set: function (n) { return 'Image choisie : ' + n; },
+      s_listen: 'Écoute', s_kids: 'Mode enfant', s_bt: 'Enceinte ou casque', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
+      s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
+      s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
+      s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
+      s_parent_foot: 'Un code à 4 chiffres empêche les enfants et les invités de changer les réglages.',
+      s_wifi_net: 'Réseau', s_wifi_signal: 'Signal', s_wifi_drops: 'Coupures depuis le démarrage', s_wifi_page: 'Adresse de la page',
+      s_wifi_change: 'Changer de réseau', s_air_for: 'Pendant combien de temps ?', s_lang_foot: 'La langue de cette page sur ce téléphone.',
+      s_connect_info: 'Pour te connecter', s_night_hours: 'Horaires', s_night_during: 'Pendant la nuit', s_update: 'Mise à jour'
     },
     en: {
       playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
@@ -207,7 +221,7 @@
       launches: 'Starts', none_dash: '— No playlist —',
       token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)', tag_name_ph: 'Name this tag (to tell them apart)',
       tok_search_ph: 'Search a token by name', tok_no_match: 'No token has that name.',
-      photo_btn: 'Photo', photo_remove: 'Remove the photo', ed_title: 'The tag\'s photo',
+      photo_btn: 'My photo', photo_remove: 'Remove the picture', ed_title: 'The token\'s photo',
       ed_hint: 'Tap a zone to remove it (magic wand). Drag to move.', ed_bg: 'Remove the background',
       ed_tol: 'Tolerance', ed_rot: 'Rotation', ed_zoom: 'Zoom', ed_undo: 'Undo last', ed_reset: 'Start over', ed_save: 'Save',
       ed_sending: 'Sending the photo…', photo_fail: 'The photo could not be saved.', photo_bad: 'This file is not a readable image.',
@@ -319,7 +333,21 @@
       parent_label: 'Parent code', parent_help: 'A 4-digit code stops children and guests from changing settings (deleting a playlist, Wi-Fi, starting an update).',
       parent_set: 'Set a code', parent_change: 'Change the code', parent_off: 'Turn off',
       parent_prompt: 'Enter the parent code', parent_new: '4-digit code', parent_cur: 'Current code', parent_bad: 'Wrong code',
-      parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.'
+      parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.',
+      flat_tok: 'Flat token', thanks_tok: 'Thank-you token',
+      own_hint: 'This token is a character of its own: give it a name, a picture and its playlist.',
+      flat_shared_hint: 'Flat tokens that have no playlist of their own yet start this one.',
+      lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
+      lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },
+      lib_n: function (n) { return n + (n > 1 ? ' pictures' : ' picture'); }, lib_set: function (n) { return 'Picture chosen: ' + n; },
+      s_listen: 'Listening', s_kids: 'Kids mode', s_bt: 'Speaker or headphones', s_none: 'None', s_night_trip: 'Bedtime and travel',
+      s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
+      s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
+      s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
+      s_parent_foot: 'A 4-digit code stops children and guests from changing the settings.',
+      s_wifi_net: 'Network', s_wifi_signal: 'Signal', s_wifi_drops: 'Drops since start', s_wifi_page: 'Page address',
+      s_wifi_change: 'Change network', s_air_for: 'For how long?', s_lang_foot: 'The language of this page on this phone.',
+      s_connect_info: 'To connect', s_night_hours: 'Hours', s_night_during: 'During the night', s_update: 'Update'
     },
     nl: {
       playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
@@ -363,7 +391,7 @@
       launches: 'Start', none_dash: '— Geen afspeellijst —',
       token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)', tag_name_ph: 'Naam van deze tag (om ze uit elkaar te houden)',
       tok_search_ph: 'Zoek een figuurtje op naam', tok_no_match: 'Geen figuurtje met die naam.',
-      photo_btn: 'Foto', photo_remove: 'Foto verwijderen', ed_title: 'De foto van de tag',
+      photo_btn: 'Mijn foto', photo_remove: 'Plaatje weghalen', ed_title: 'De foto van het figuurtje',
       ed_hint: 'Tik op een zone om die weg te halen (toverstaf). Sleep om te verplaatsen.', ed_bg: 'Achtergrond weghalen',
       ed_tol: 'Tolerantie', ed_rot: 'Draaien', ed_zoom: 'Zoom', ed_undo: 'Laatste ongedaan maken', ed_reset: 'Opnieuw beginnen', ed_save: 'Opslaan',
       ed_sending: 'Foto wordt verstuurd…', photo_fail: 'De foto kon niet worden opgeslagen.', photo_bad: 'Dit bestand is geen leesbare afbeelding.',
@@ -475,7 +503,21 @@
       parent_label: 'Oudercode', parent_help: 'Een 4-cijferige code voorkomt dat kinderen en gasten instellingen wijzigen (afspeellijst verwijderen, wifi, een update starten).',
       parent_set: 'Code instellen', parent_change: 'Code wijzigen', parent_off: 'Uitschakelen',
       parent_prompt: 'Voer de oudercode in', parent_new: '4-cijferige code', parent_cur: 'Huidige code', parent_bad: 'Onjuiste code',
-      parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.'
+      parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.',
+      flat_tok: 'Plat figuurtje', thanks_tok: 'Bedankt-figuurtje',
+      own_hint: 'Dit figuurtje is een personage op zich: geef het een naam, een plaatje en een afspeellijst.',
+      flat_shared_hint: 'Platte figuurtjes die nog geen eigen afspeellijst hebben, starten deze.',
+      lib_pick: 'Kies een plaatje', lib_search_ph: 'Zoek: kat, raket, slapen…', lib_loading: 'Plaatjes laden…',
+      lib_fail: 'De plaatjes konden niet geladen worden. Probeer opnieuw.', lib_none: function (q) { return 'Geen plaatje voor “' + q + '”.'; },
+      lib_n: function (n) { return n + (n > 1 ? ' plaatjes' : ' plaatje'); }, lib_set: function (n) { return 'Plaatje gekozen: ' + n; },
+      s_listen: 'Luisteren', s_kids: 'Kindermodus', s_bt: 'Speaker of koptelefoon', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
+      s_general: 'Algemeen', s_parents: 'Ouders', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
+      s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
+      s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
+      s_parent_foot: 'Een code van 4 cijfers voorkomt dat kinderen en gasten instellingen wijzigen.',
+      s_wifi_net: 'Netwerk', s_wifi_signal: 'Signaal', s_wifi_drops: 'Onderbrekingen sinds de start', s_wifi_page: 'Adres van de pagina',
+      s_wifi_change: 'Ander netwerk', s_air_for: 'Hoe lang?', s_lang_foot: 'De taal van deze pagina op deze telefoon.',
+      s_connect_info: 'Om te verbinden', s_night_hours: 'Uren', s_night_during: 'Tijdens de nacht', s_update: 'Update'
     }
   };
   var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands']];
@@ -524,12 +566,23 @@
     if (CHAR[id]) return CHAR[id];
     return { id: id, fr: id || '?', en: id || '?', art: null, order: 999 };
   }
-  // a foreign NFC tag (amiibo, sticker) is its own character "tag.<uid>": named by its nickname, else "NFC tag" + the end of its id
-  function foreignUid(id) { return id && id.indexOf('tag.') === 0 ? id.slice(4) : null; }
+  // A token that is a character of its own (docs/23 §4): a foreign NFC tag "tag.<uid>" (amiibo,
+  // sticker), a flat token "flat.<uid>" or a Thank-you token "thanks.<uid>" (one code for all of
+  // them). Named by its nickname, else its kind + the end of its id; it can carry a picture.
+  var OWN = { tag: 'nfc_tag', flat: 'flat_tok', thanks: 'thanks_tok' };
+  function ownParts(id) { var m = /^(tag|flat|thanks)\.([0-9A-Fa-f]{14})$/.exec(id || ''); return m ? { kind: m[1], uid: m[2] } : null; }
+  function ownUid(id) { var o = ownParts(id); return o ? o.uid : null; }
+  function foreignUid(id) { var o = ownParts(id); return o && o.kind === 'tag' ? o.uid : null; }   // the ESP32 never says it was taken off
   function charName(id) {
-    var uid = foreignUid(id);
-    if (uid) { var tk = S.db.tokens[uid]; return (tk && tk.name) || (t('nfc_tag') + ' ' + uid.slice(-4)); }
+    var o = ownParts(id);
+    if (o) { var tk = S.db.tokens[o.uid]; return (tk && tk.name) || (t(OWN[o.kind]) + ' ' + o.uid.slice(-4)); }
     var c = charInfo(id); return c[lang] || c.fr;
+  }
+  // a token's picture: "lib:<id>" = the page's library (tokimg/), else the photo's own address
+  function tokImgSrc(v) {
+    v = String(v || '');
+    if (/^lib:[a-z0-9_]+$/.test(v)) return '/tokimg/' + v.slice(4) + '.webp';
+    return /^\/artwork\/tok_[0-9A-Fa-f]+\.png\?v=\d+$/.test(v) ? v : null;
   }
   function isUserChar(id) { return !!id && id.indexOf('sys.') !== 0 && id.indexOf('test.') !== 0; }
 
@@ -586,7 +639,20 @@
     note: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
     link0: '<path d="M8 12h8"/>',
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
-    sort: '<path d="M4 6h9M4 12h7M4 18h5M17 4v16M14 17l3 3 3-3"/>'
+    sort: '<path d="M4 6h9M4 12h7M4 18h5M17 4v16M14 17l3 3 3-3"/>',
+    sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+    camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    chev: '<path d="M9 6l6 6-6 6"/>',
+    bt: '<path d="M7 7l10 10-5 4V3l5 4L7 17"/>',
+    wifi: '<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.3a9.5 9.5 0 0 1 13 0M8.6 15.5a5 5 0 0 1 6.8 0"/><path d="M12 19h.01" stroke-width="3"/>',
+    globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18"/>',
+    lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>',
+    home: '<path d="M3.5 11L12 4l8.5 7M6 9.5V20h12V9.5"/>',
+    wrench: '<path d="M14.5 4a5 5 0 0 0-4.6 6.9L4 16.8V20h3.2l5.9-5.9A5 5 0 0 0 20 9.5l-3 3-3-1-1-3 3-3a5 5 0 0 0-1.5-.5z"/>',
+    up: '<path d="M12 19V6M6 11l6-6 6 6"/>',
+    bat: '<rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/>',
+    disk: '<rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/>',
+    tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8" r="1"/>'
   };
   function icon(name) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -858,7 +924,7 @@
       modalRoot.innerHTML = '';
       if (!modal) { document.body.style.overflow = ''; return; }
       document.body.style.overflow = 'hidden';
-      var sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, modal.render());
+      var sheet = h('div', { class: 'sheet' + (modal.cls ? ' ' + modal.cls : ''), role: 'dialog', 'aria-modal': 'true' }, modal.render());
       var ov = h('div', { class: 'overlay', onclick: function (e) { if (e.target === ov) closeModal(); } }, sheet);
       modalRoot.appendChild(ov);
       restoreFocus(modalRoot, keep, modal.autofocus);
@@ -1048,12 +1114,13 @@
     var c = charInfo(starId);
     var el = h('div', { class: 'tok ' + (cls || '') + (live ? ' live' : ''), title: charName(starId) });
     if (!starId) { el.className += ' none'; el.appendChild(icon('token')); return el; }
-    var fu = foreignUid(starId), ftk = fu && S.db.tokens[fu];
-    if (ftk && ftk.image) {   // the picture given to a tag (a 128 px PNG on the Jooki, see tokenImageEditor)
-      var pic = h('img', { src: ftk.image, alt: '' });
+    var own = ownParts(starId), ftk = own && S.db.tokens[own.uid], src = ftk && tokImgSrc(ftk.image);
+    if (src) {   // its picture: from the library, or a photo (a 128 px PNG on the Jooki, see tokenImageEditor)
+      var pic = h('img', { src: src, alt: '' });
       pic.onerror = function () { pic.replaceWith(h('span', { class: 'letter' }, (charName(starId) || '?').charAt(0))); };
       el.appendChild(pic); return el;
     }
+    if (own && own.kind !== 'tag') c = charInfo(own.kind === 'flat' ? 'Jooki.Flat' : 'Jooki.ThankYou');   // no picture yet: the round token
     if (c.art && c.art.charAt(0) === '#') el.appendChild(h('div', { class: 'disc', style: 'background:' + c.art }));
     else if (c.art) {
       var img = h('img', { src: MEDIA + c.art, alt: '' });
@@ -1096,7 +1163,7 @@
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),
-        h('a', { href: '#/settings' }, t('upd_see'))) : null,
+        h('a', { href: '#/settings/update' }, t('upd_see'))) : null,
       un ? h('div', { class: 'banner row' }, h('span', { class: 'grow' }, t('unused_banner', un)),
         h('a', { href: '#/library/unused' }, t('see'))) : null,
       list.length ? null : h('div', { class: 'empty' }, h('div', { class: 'big' }, '🎵'), t('no_playlists')),
@@ -1505,7 +1572,7 @@
   }
   // the details of one character (or foreign tag): its playlist, its physical tokens and their names
   function charModal(sid) {
-    var foreign = !!foreignUid(sid);
+    var foreign = !!foreignUid(sid), own = !!ownUid(sid);
     openModal({
       live: true,
       sig: function () {
@@ -1532,7 +1599,8 @@
           h('div', { class: 'row', style: 'margin-bottom:8px' }, tokVisual(sid, '', S.nfc.starId === sid),
             h('div', { class: 'grow' }, h('h3', { style: 'margin:0' }, charName(sid)),
               h('div', { class: 'small muted' }, tags.length ? t('n_tokens', tags.length) : t('no_token')))),
-          h('p', { class: 'small muted' }, foreign ? t('foreign_hint') : t('tokens_intro')),
+          h('p', { class: 'small muted' }, foreign ? t('foreign_hint') : own ? t('own_hint')
+            : sid === 'Jooki.Flat' || sid === 'Jooki.ThankYou' ? t('flat_shared_hint') : t('tokens_intro')),
           h('label', { class: 'field' }, h('span', null, t('launches')), sel),
           tags.map(function (tag, i) {
             var tk = S.db.tokens[tag] || {};
@@ -1545,24 +1613,26 @@
               delete nameDraft[tag];
               if (v !== (tk.name || '')) { send('TOKEN_EDIT', { tagId: tag, name: v }); toast(t('saved')); }
             }
-            // a foreign tag is its own character: its name IS the card's title, so the field says so
+            // a token of its own (tag, flat token) is its own character: its name IS the card's title, so the field says so
             return h('div', { class: 'physical', 'data-tag': tag },
-              h('span', { class: 'badge' + (live ? ' accent' : '') }, live ? t('on_jooki') : foreign ? t('nfc_tag') : t('token_n', i + 1)),
-              h('input', { class: 'input grow', 'data-k': key, value: val, maxlength: '60', placeholder: foreign ? t('tag_name_ph') : t('token_name_ph'), 'aria-label': foreign ? t('tag_name_ph') : t('token_n', i + 1),
+              h('span', { class: 'badge' + (live ? ' accent' : '') }, live ? t('on_jooki') : own ? t(OWN[ownParts(sid).kind]) : t('token_n', i + 1)),
+              h('input', { class: 'input grow', 'data-k': key, value: val, maxlength: '60', placeholder: own ? t('tag_name_ph') : t('token_name_ph'), 'aria-label': own ? t('tag_name_ph') : t('token_n', i + 1),
                 oninput: function (e) { nameDraft[tag] = e.target.value; },
                 onblur: commit, onkeydown: function (e) { if (e.key === 'Enter') { e.target.blur(); } } }),
               h('button', { class: 'icon-btn', 'aria-label': t('forget'), title: t('forget'), onclick: function () {
                 confirmBox(t('forget_q'), t('forget_text'), t('forget'), true).then(function (ok) { if (ok) send('TOKEN_DELETE', { tagId: tag }); });
               } }, icon('x')));
           }),
-          // a tag can carry a picture: taken now, picked from the gallery or a file on a computer
-          foreign && tags.length ? h('div', { class: 'row', style: 'gap:8px;margin-top:6px' },
-            h('label', { class: 'btn', style: 'cursor:pointer' }, icon('upload'), t('photo_btn'),
+          // a token of its own carries a picture: one of the library, or a photo (taken now, from the gallery or a computer)
+          own && tags.length ? h('div', { class: 'picrow' },
+            h('button', { class: 'btn primary', 'data-k': 'libpick', onclick: function () { libraryPicker(sid, tags[0]); } }, icon('sparkle'), t('lib_pick')),
+            h('label', { class: 'btn', style: 'cursor:pointer' }, icon('camera'), t('photo_btn'),
               h('input', { type: 'file', accept: 'image/*', 'data-k': 'photo', style: 'display:none', onchange: function (e) {
                 var f = e.target.files && e.target.files[0]; if (!f) return;
-                closeModal(); tokenImageEditor(tags[0], f);
-              } })),
-            (S.db.tokens[tags[0]] || {}).image ? h('button', { class: 'btn ghost', 'data-k': 'photo-remove', onclick: function () { send('TOKEN_EDIT', { tagId: tags[0], image: false }); } }, t('photo_remove')) : null) : null,
+                closeModal(); tokenImageEditor(tags[0], f, sid);
+              } }))) : null,
+          own && tags.length && (S.db.tokens[tags[0]] || {}).image ? h('button', { class: 'btn ghost', 'data-k': 'photo-remove', style: 'color:var(--danger)',
+            onclick: function () { send('TOKEN_EDIT', { tagId: tags[0], image: false }); } }, t('photo_remove')) : null,
           h('div', { class: 'foot' }, h('button', { class: 'btn primary', 'data-k': 'charclose', onclick: closeModal }, t('close')))
         ];
       }
@@ -1599,6 +1669,85 @@
     ];
   }
 
+  /* ------------------------------------------------------------------ the picture library */
+  // Ready-made pictures for the tokens of their own (docs/23 §5): Fluent Emoji 3D (Microsoft, MIT,
+  // tokimg/LICENSE.txt), 128 px WebP shipped with the page, so it works without Internet.
+  // tokimg/index.json = { cats: [[id, {fr, en, nl}, iconId]], img: [[id, cat, fr, en, nl, "search words"]] }.
+  // The grid is filled here, not by renderModal: typing in the search keeps the field and the scroll.
+  var libIdx = null, libWait = null;
+  function loadLibIndex(cb) {
+    if (libIdx) return cb(libIdx);
+    if (libWait) { libWait.push(cb); return; }
+    libWait = [cb];
+    getText('/tokimg/index.json', function (txt) {
+      var d = null; try { d = JSON.parse(txt); } catch (e) {}
+      if (d && Array.isArray(d.img) && Array.isArray(d.cats)) libIdx = d;
+      var w = libWait; libWait = null; w.forEach(function (f) { f(libIdx); });
+    });
+  }
+  function libName(r) { return (lang === 'en' ? r[3] : lang === 'nl' ? r[4] : r[2]) || r[2]; }
+  function libraryPicker(sid, tag) {
+    var q = '', failed = false, chips = {}, picked = false;
+    var body = h('div', { class: 'libbody', 'data-k': 'libgrid' });
+    var cats = h('div', { class: 'libcats', role: 'tablist' });
+    var input = h('input', { class: 'input', type: 'search', 'data-k': 'imgq', placeholder: t('lib_search_ph'), autocomplete: 'off', 'aria-label': t('lib_search_ph'),
+      oninput: function (e) { q = e.target.value; fill(); body.scrollTop = 0; } });
+    function pick(r) {
+      var tk = S.db.tokens[tag] || {}, p = { tagId: tag, image: 'lib:' + r[0] };
+      if (!tk.name) p.name = libName(r);   // an unnamed token takes the picture's name; it can be changed
+      send('TOKEN_EDIT', p);
+      picked = true; closeModal(); toast(t('lib_set', libName(r))); charModal(sid);
+    }
+    function cell(r) {
+      return h('button', { class: 'libcell', 'data-img': r[0], title: libName(r), onclick: function () { pick(r); } },
+        h('img', { src: '/tokimg/' + r[0] + '.webp', alt: '', loading: 'lazy', decoding: 'async' }), h('span', null, libName(r)));
+    }
+    function fill() {
+      body.innerHTML = '';
+      if (!libIdx) { body.appendChild(h('p', { class: 'small muted libempty' }, failed ? t('lib_fail') : t('lib_loading'))); return; }
+      var nq = normTxt(q.trim());
+      if (nq) {
+        var hits = libIdx.img.filter(function (r) { return (' ' + r[5]).indexOf(' ' + nq) >= 0 || normTxt(libName(r)).indexOf(nq) >= 0; });
+        hits.sort(function (a, b) { return (normTxt(libName(a)).indexOf(nq) === 0 ? 0 : 1) - (normTxt(libName(b)).indexOf(nq) === 0 ? 0 : 1); });
+        if (!hits.length) { body.appendChild(h('p', { class: 'small muted libempty' }, t('lib_none', q.trim()))); return; }
+        body.appendChild(h('div', { class: 'libsec' }, t('lib_n', hits.length)));
+        body.appendChild(h('div', { class: 'libgrid' }, hits.map(cell)));
+        return;
+      }
+      libIdx.cats.forEach(function (c) {
+        body.appendChild(h('div', { class: 'libsec', 'data-cat': c[0] }, c[1][lang] || c[1].fr));
+        body.appendChild(h('div', { class: 'libgrid' }, libIdx.img.filter(function (r) { return r[1] === c[0]; }).map(cell)));
+      });
+    }
+    function spy() {
+      if (q.trim() || !libIdx) return;
+      var cur = libIdx.cats[0][0];
+      Array.prototype.forEach.call(body.querySelectorAll('[data-cat]'), function (s) { if (s.offsetTop - 12 <= body.scrollTop) cur = s.getAttribute('data-cat'); });
+      Object.keys(chips).forEach(function (k) { chips[k].classList.toggle('on', k === cur); });
+    }
+    body.addEventListener('scroll', spy, { passive: true });
+    function buildCats() {
+      cats.innerHTML = '';
+      (libIdx ? libIdx.cats : []).forEach(function (c, i) {
+        var name = c[1][lang] || c[1].fr;
+        chips[c[0]] = h('button', { class: i ? '' : 'on', title: name, 'aria-label': name, 'data-libcat': c[0], onclick: function () {
+          q = ''; input.value = ''; fill();
+          var s = body.querySelector('[data-cat="' + c[0] + '"]'); if (s) body.scrollTop = s.offsetTop;
+          spy();
+        } }, h('img', { src: '/tokimg/' + c[2] + '.webp', alt: '' }));
+        cats.appendChild(chips[c[0]]);
+      });
+    }
+    var head = h('div', { class: 'libhead' },
+      h('div', { class: 'row' }, h('h3', { class: 'grow', style: 'margin:0' }, t('lib_pick')),
+        h('button', { class: 'btn ghost', 'data-k': 'libcancel', onclick: function () { closeModal(); } }, t('cancel'))),
+      h('div', { class: 'search' }, icon('search'), input), cats);
+    openModal({ cls: 'libsheet', autofocus: null, onclose: function () { if (!picked) charModal(sid); },
+      render: function () { return [head, body]; } });
+    fill();
+    loadLibIndex(function (d) { failed = !d; buildCats(); fill(); });
+  }
+
   /* ------------------------------------------------------------------ a picture for a tag */
   // The whole job happens in the browser: the photo (camera, gallery or a file on a computer) is
   // read into a canvas, the background is removed by flood fill (a tap = a magic wand on that
@@ -1613,7 +1762,8 @@
     xhr.onload = function () { cb(xhr.status === 200 ? uid : null); };
     xhr.send(fd);
   }
-  function tokenImageEditor(tag, file) {
+  function tokenImageEditor(tag, file, sid) {
+    sid = sid || ('tag.' + tag);   // the sheet to go back to
     var SRC_MAX = 640, VIEW = 320, OUT = 128, R = VIEW / 2 - 6;
     var src = document.createElement('canvas'), cut = document.createElement('canvas'), sw = 0, sh = 0;
     var keep = null, undo = [], rot = 0, zoom = 1, px = 0, py = 0, tol = 25, busy = false;
@@ -1741,7 +1891,7 @@
           send('TOKEN_SET_IMAGE', { tagId: tag, uploadId: uploadId });
           var tries = 0, tm = setInterval(function () {
             var now = (S.db.tokens[tag] || {}).image || '';
-            if (now && now !== before) { clearInterval(tm); closeModal(); toast(t('saved')); charModal('tag.' + tag); }
+            if (now && now !== before) { clearInterval(tm); closeModal(); toast(t('saved')); charModal(sid); }
             else if (++tries > 60) { clearInterval(tm); busy = false; status.textContent = t('photo_fail'); }
           }, 250);
         });
@@ -1759,7 +1909,7 @@
       (function () { rotInp = range('edrot', t('ed_rot'), -180, 180, 1, function () { return rot; }, function (v) { rot = v; }); return rotInp; })(),
       range('edzoom', t('ed_zoom'), 0.5, 4, 0.1, function () { return zoom; }, function (v) { zoom = v; }),
       h('div', { class: 'foot' },
-        h('button', { class: 'btn', onclick: function () { closeModal(); charModal('tag.' + tag); } }, t('cancel')),
+        h('button', { class: 'btn', onclick: function () { closeModal(); charModal(sid); } }, t('cancel')),
         h('button', { class: 'btn', 'data-k': 'edreset', onclick: function () { if (!ready()) return; pushUndo(); keep.fill(1); rot = 0; zoom = 1; px = py = 0; rebuildCut(); draw(); } }, t('ed_reset')),
         h('button', { class: 'btn primary', 'data-k': 'edsave', onclick: save }, t('ed_save'))));
     var rotInp;
@@ -1870,13 +2020,9 @@
         h('span', null, n + (now && i === 1 && upd.pct !== null ? ' … ' + upd.pct + ' %' : now ? '…' : '')));
     }));
   }
+  // the Update page's body (Settings > Update)
   function updateCard() {
     var cur = installed();
-    var status = null, action = null;
-    if (upd.state === 'checking') status = t('upd_checking');
-    else if (upd.state === 'offline') status = t('upd_offline');
-    else if (upd.state === 'failed') status = t('upd_failed');
-    else if (upd.state === 'checked') status = updateAvailable() ? t('upd_available', upd.latest) : t('upd_uptodate');
     if (upd.state === 'running' || upd.state === 'rebooting') {
       return h('div', { class: 'card', style: 'padding:16px', 'data-k': 'updcard' },
         h('div', { class: 'row' }, h('div', { class: 'spinner', style: 'width:28px;height:28px;border-width:3px;margin:0' }),
@@ -1884,10 +2030,17 @@
         updSteps(),
         h('p', { class: 'small muted' }, t('upd_keep')));
     }
-    if (upd.state === 'checked' && updateAvailable()) action = h('button', { class: 'btn primary block', 'data-k': 'updnow', onclick: startUpdate }, icon('upload'), t('upd_now'));
-    else action = h('button', { class: 'btn block', 'data-k': 'updcheck', disabled: upd.state === 'checking' || !cur, onclick: checkUpdate }, t('upd_check'));
-    return h('div', { class: 'card', style: 'padding:14px 16px' },
-      status ? h('p', { class: 'small', style: 'margin:0 0 10px' + (updateAvailable() ? ';color:var(--accent);font-weight:700' : '') }, status) : null, action);
+    var avail = upd.state === 'checked' && updateAvailable();
+    var bad = upd.state === 'failed' || upd.state === 'offline';
+    var look = avail ? ['up', 'accent'] : bad ? ['x', 'danger'] : upd.state === 'checked' ? ['check', 'ok'] : ['up', 'muted'];
+    var title = upd.state === 'checking' ? t('upd_checking') : upd.state === 'offline' ? t('upd_offline') : upd.state === 'failed' ? t('upd_failed')
+      : avail ? t('upd_available', upd.latest) : upd.state === 'checked' ? t('upd_uptodate') : 'OpenJooki ' + (cur || '—');
+    return [
+      h('div', { class: 'statuscard', 'data-k': 'updcard' }, h('div', { class: 'bigico ' + look[1] }, icon(look[0])),
+        h('b', null, title), h('p', null, avail ? t('upd_text') : 'OpenJooki ' + (cur || '—'))),
+      avail ? h('button', { class: 'btn primary block', 'data-k': 'updnow', onclick: startUpdate }, icon('upload'), t('upd_now'))
+        : h('button', { class: 'btn block', 'data-k': 'updcheck', disabled: upd.state === 'checking' || !cur, onclick: checkUpdate }, t('upd_check'))
+    ];
   }
   var lastOnline = true, backAt = 0;
   function watchUpdateReconnect() {
@@ -1909,89 +2062,134 @@
     lastOnline = online;
   }
 
+  /* ---------------- settings: a short page; each topic opens on a page of its own (#/settings/<topic>) */
+  // A row: icon tile, label (+ a small line), then a value and a chevron, or a switch.
+  function sRow(o) {
+    var right = [];
+    if (o.value !== undefined && o.value !== null && o.value !== '') right.push(h('span', { class: 'val' + (o.vcls ? ' ' + o.vcls : '') }, o.value));
+    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
+    if (o.check) right.push(h('span', { class: 'tick' }, icon('check')));
+    if (o.href || (o.onclick && !o.nochev)) right.push(h('span', { class: 'chev' }, icon('chev')));
+    var inner = [o.icon ? h('span', { class: 'ico ' + (o.color || 'gray') }, icon(o.icon)) : null,
+      h('span', { class: 'lbl' }, h('span', { class: 'l1' }, o.label), o.sub ? h('span', { class: 'l2' }, o.sub) : null), right];
+    var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '');
+    if (o.sw) return h('label', { class: cls }, inner);
+    if (o.href) return h('a', { class: cls, href: o.href, 'data-k': o.k }, inner);
+    if (o.onclick) return h('button', { class: cls, type: 'button', 'data-k': o.k, lang: o.lang || null, disabled: o.disabled ? 'disabled' : null, onclick: o.onclick }, inner);
+    return h('div', { class: cls, 'data-k': o.k }, inner);
+  }
+  function sGroup(title, rows, foot, k) {
+    return [title ? h('div', { class: 'gtitle' }, title) : null, h('div', { class: 'group', 'data-k': k }, rows),
+      foot ? h('div', { class: 'gfoot' }, foot) : null];
+  }
+  function stat(ic, label, value, sub, subCls, meter, meterCls, k) {
+    return h('div', { class: 'stat', 'data-k': k },
+      h('div', { class: 'k' }, icon(ic), h('span', { class: 'ellipsis' }, label)),
+      h('div', { class: 'v ellipsis' }, value),
+      sub ? h('div', { class: 's ellipsis' + (subCls ? ' ' + subCls : '') }, sub) : null,
+      meter !== null && meter !== undefined ? h('div', { class: 'minibar' }, h('i', { class: meterCls || '', style: 'width:' + Math.max(0, Math.min(100, meter)) + '%' })) : null);
+  }
+  var SUBS = { bluetooth: 's_bt', night: 'night_mode', airplane: 'air_title', wifi: 'wifi', update: 's_update', language: 'language',
+               parent: 'parent_label', home: 's_home', maintenance: 's_maint' };
+  function settingsPage(sub) {
+    var body = sub === 'bluetooth' ? btPage() : sub === 'night' ? nightPage() : sub === 'airplane' ? airPage() : sub === 'wifi' ? wifiPage()
+      : sub === 'update' ? updateCard() : sub === 'language' ? langPage() : sub === 'parent' ? parentPage() : sub === 'home' ? homePage()
+      : sub === 'maintenance' ? maintPage() : null;
+    return body ? h('div', { class: 'settings sub' }, body) : viewSettings();
+  }
   function viewSettings() {
-    var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config;
+    var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config, m = obj(S.maintenance), b = obj(S.bluetooth), c = S.bedtime.cfg;
     var lvl = pw.level && typeof pw.level === 'object' ? Number(pw.level.p) : NaN;
-    var bat = isNaN(lvl) || (lvl === 0 && pw.level && !pw.level.mv) ? '—' : Math.round(lvl / 10) + ' %' + (pw.charging ? ' · ' + t('charging') : pw.connected ? ' · ' + t('plugged') : '');
+    var known = !(isNaN(lvl) || (lvl === 0 && pw.level && !pw.level.mv)), pct = known ? Math.round(lvl / 10) : null;
     var du = obj(d.diskUsage);
     var total = Number(du.total) * 1024, used = Number(du.used) * 1024, free = Number(du.available) * 1024;
-    return [
-      h('div', { class: 'section-title' }, t('device')),
-      h('div', { class: 'card' },
-        h('div', { class: 'kv' }, h('span', null, t('device_name')), h('span', { class: 'row' }, h('b', null, (d.hostname || '—').replace(/\.local$/, '')),
-          d.core ? h('button', { class: 'btn ghost', 'data-k': 'rename', onclick: nameModal }, t('rename')) : null)),
-        h('div', { class: 'kv' }, h('span', null, t('battery')), h('b', null, bat)),
-        wifiRow(w),
-        h('div', { class: 'kv' }, h('span', null, t('ip')), h('b', null, (d.ip || location.hostname) + (S.net.name ? ' · ' + S.net.name : ''))),
-        h('div', { class: 'kv' }, h('span', null, t('storage')), h('b', null, total ? fmtBytes(free) + ' ' + t('free') + ' / ' + fmtBytes(total) : '—')),
-        total ? h('div', { class: 'meter' }, h('i', { style: 'width:' + Math.min(100, Math.round(used / total * 100)) + '%' })) : null,
-        h('div', { class: 'kv' }, h('span', null, t('version')), h('b', null, 'OpenJooki ' + (d.openjooki || '—'),
-          h('div', { class: 'small muted', style: 'font-weight:400' }, t('web_page') + ' ' + VERSION + (d.firmware ? ' · ' + d.firmware : ''))))),
-      updateCard(),
-      h('div', { class: 'section-title' }, t('playback')),
-      h('div', { class: 'card' },
-        h('label', { class: 'switch' }, h('span', null, t('toy_safe')), h('input', { type: 'checkbox', role: 'switch', checked: !!d.toy_safe, 'data-k': 'toysafe',
-          onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } })),
-        h('label', { class: 'switch' }, h('span', null, t('shuffle')), h('input', { type: 'checkbox', role: 'switch', checked: !!cfg.shuffle_mode, 'data-k': 'shuffle',
-          onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } })),
-        h('label', { class: 'switch' }, h('span', null, t('repeat')), h('input', { type: 'checkbox', role: 'switch', checked: cfg.repeat_mode === 1 || cfg.repeat_mode === true, 'data-k': 'repeat',
-          onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }))),
-      bluetoothCard(),
-      bedtimeCard(),
-      airplaneCard(),
-      h('div', { class: 'section-title' }, t('language')),
-      h('div', { class: 'card', style: 'padding:12px 16px' }, h('div', { class: 'seg', role: 'group', 'aria-label': t('language') },
-        LANGS.map(function (l) { return h('button', { class: lang === l[0] ? 'on' : '', lang: l[0], onclick: function () { setLang(l[0]); } }, l[1]); }))),
-      securityCard(),
-      h('div', { class: 'actions', style: 'margin-top:24px' }, h('button', { class: 'btn danger', onclick: function () {
+    var avail = upd.state === 'checked' && updateAvailable();
+    var name = (d.hostname || '—').replace(/\.local$/, '');
+    var con = obj(b.connected);
+    var hero = h('div', { class: 'hero' },
+      h('div', { class: 'row' }, h('div', { class: 'avatar', 'aria-hidden': 'true' }, 'J'),
+        h('div', { class: 'grow', style: 'min-width:0' }, h('div', { class: 'hname ellipsis' }, name),
+          h('div', { class: 'hsub ellipsis' }, h('i', { class: 'dot' + (online ? ' on' : '') }), (online ? t('connected') : t('offline')) + (w.ssid ? ' · ' + w.ssid : ''))),
+        d.core ? h('button', { class: 'pillbtn', 'data-k': 'rename', onclick: nameModal }, t('rename')) : null),
+      h('div', { class: 'stats' },
+        stat('bat', t('battery'), known ? pct + ' %' : '—', pw.charging ? t('charging') : pw.connected ? t('plugged') : null, null, known ? pct : null, pct !== null && pct < 20 ? 'low' : 'ok'),
+        stat('disk', t('storage'), total ? fmtBytes(free) : '—', total ? t('s_storage_free') : null, null, total ? used / total * 100 : null),
+        stat('tag', t('version'), d.openjooki || '—', avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : null, avail ? 'accent-text' : 'ok-text', null, null, 'version')));
+    return h('div', { class: 'settings' }, hero,
+      avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
+      sGroup(t('s_listen'), [
+        sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
+        sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
+        sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
+        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null
+      ]),
+      c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
+        c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
+        d.airplane !== undefined ? sRow({ icon: 'plane', color: 'orange', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
+      ]) : null,
+      sGroup(t('s_general'), [
+        sRow({ icon: 'wifi', color: 'blue', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
+        sRow({ icon: 'up', color: 'green', label: t('s_update'), value: avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : '', vcls: avail ? 'acc' : 'good', href: '#/settings/update', k: 'updnav' }),
+        sRow({ icon: 'globe', color: 'teal', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' })
+      ]),
+      typeof m.parent === 'boolean' ? sGroup(t('s_parents'), [
+        sRow({ icon: 'lock', color: 'red', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' })
+      ], t('s_parent_foot')) : null,
+      typeof m.ssh === 'boolean' ? sGroup(t('s_advanced'), [
+        sRow({ icon: 'home', color: 'gray', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
+        sRow({ icon: 'wrench', color: 'gray', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
+      ]) : null,
+      sGroup(null, [sRow({ icon: 'power', color: 'red', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
         confirmBox(t('power_off_q'), t('power_off_text'), t('power_off'), true).then(function (ok) {
           if (!ok) return;
           send('SHUTDOWN', { src: 'from-web' }); toast(t('power_off_done'));
         });
-      } }, icon('power'), t('power_off')))
-    ];
+      } })]),
+      h('div', { class: 'verline', 'data-k': 'verline' }, 'OpenJooki ' + (d.openjooki || '—') + ' · ' + t('web_page') + ' ' + VERSION + (d.firmware ? ' · ' + d.firmware : '')));
+  }
+  function langPage() {
+    return sGroup(null, LANGS.map(function (l) {
+      return sRow({ label: l[1], lang: l[0], check: lang === l[0], nochev: true, k: 'lang-' + l[0], onclick: function () { setLang(l[0]); } });
+    }), t('s_lang_foot'));
   }
   // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
   // speaker by itself once connected, and reconnects to it when it comes back.
   var btTried = null;   // the device this page asked to connect, to tell a failure from "nothing connected"
-  function bluetoothCard() {
+  function btPage() {
     var b = obj(S.bluetooth);
     if (typeof b.state !== 'number') return null;
-    var st = b.state, devs = arr(b.devices), con = obj(b.connected), rows = [];
+    var st = b.state, devs = arr(b.devices), con = obj(b.connected);
     function name(d) { return d.name || t('bt_unnamed'); }
-    if (arr(S.device.flags).indexOf('BT_OFF') >= 0) {
-      rows.push(h('p', { class: 'small muted pad', 'data-k': 'btair' }, t('bt_air')));
-    } else if (con.mac) {
+    if (arr(S.device.flags).indexOf('BT_OFF') >= 0) return h('div', { class: 'gfoot', 'data-k': 'btair' }, t('bt_air'));
+    if (con.mac) {
       btTried = null;
-      rows.push(h('div', { class: 'kv' }, h('b', { 'data-k': 'bton' }, t('bt_on', name(con)))));
-      rows.push(h('p', { class: 'small muted pad', style: 'margin:0 0 8px' }, t('bt_on_help')));
-      rows.push(h('div', { class: 'actions pad' }, h('button', { class: 'btn', 'data-k': 'btforget', onclick: function () {
-        confirmBox(t('bt_off_q'), t('bt_off_text'), t('bt_off_btn'), false).then(function (ok) { if (ok) send('OJ_BT_FORGET', { mac: con.mac }); });
-      } }, t('bt_off_btn'))));
-    } else {
-      rows.push(h('p', { class: 'small muted pad', style: 'margin:12px 0 4px' }, t('bt_help')));
-      // the speakers the Jooki already knows: reconnecting needs no pairing mode, and a paired
-      // speaker does not show in a search, so they come first, whatever the search finds
-      var known = arr(b.known).map(function (k) { return Object.assign({ known: true }, k); });
-      devs = known.concat(devs.filter(function (d) { return !known.some(function (k) { return k.mac === d.mac; }); }));
-      devs.forEach(function (d) {
-        var busy = st === 4 && btTried === d.mac;
-        rows.push(h('div', { class: 'kv' }, h('span', null, name(d), d.known ? h('div', { class: 'small muted', style: 'font-weight:400' }, t('bt_known')) : null),
-          h('button', { class: 'btn ghost', 'data-k': 'btdev-' + d.mac, disabled: st === 4 ? 'disabled' : null, onclick: function () {
-            if (send('OJ_BT_CONNECT', { mac: d.mac }) !== false) { btTried = d.mac; }
-          } }, busy ? t('bt_connecting') : t('bt_connect'))));
-      });
-      if (st === 6 && btTried) rows.push(h('p', { class: 'small accent-text pad', 'data-k': 'btfail' }, t('bt_failed')));
-      else if (st === 2 && !devs.length) rows.push(h('p', { class: 'small muted pad', 'data-k': 'btnone' }, t('bt_none')));
-      rows.push(h('div', { class: 'actions pad' }, h('button', { class: 'btn', 'data-k': 'btscan', disabled: st === 1 || st === 4 ? 'disabled' : null,
-        onclick: function () { btTried = null; send('OJ_BT_SCAN', {}); } }, st === 1 ? t('bt_searching') : t('bt_search'))));
+      return [h('div', { class: 'statuscard', 'data-k': 'btcard' }, h('div', { class: 'bigico blue' }, icon('bt')),
+          h('b', { 'data-k': 'bton' }, t('bt_on', name(con))), h('p', null, t('bt_on_help'))),
+        sGroup(null, [sRow({ label: t('bt_off_btn'), danger: true, nochev: true, k: 'btforget', onclick: function () {
+          confirmBox(t('bt_off_q'), t('bt_off_text'), t('bt_off_btn'), false).then(function (ok) { if (ok) send('OJ_BT_FORGET', { mac: con.mac }); });
+        } })])];
     }
-    return [h('div', { class: 'section-title' }, t('bt_title')), h('div', { class: 'card', 'data-k': 'btcard' }, rows)];
+    // the speakers the Jooki already knows: reconnecting needs no pairing mode, and a paired
+    // speaker does not show in a search, so they come first, whatever the search finds
+    var known = arr(b.known).map(function (k) { return Object.assign({ known: true }, k); });
+    devs = known.concat(devs.filter(function (d) { return !known.some(function (k) { return k.mac === d.mac; }); }));
+    var rows = devs.map(function (d) {
+      var busy = st === 4 && btTried === d.mac;
+      return sRow({ label: name(d), sub: d.known ? t('bt_known') : null, value: busy ? t('bt_connecting') : t('bt_connect'), vcls: 'acc', nochev: true,
+        k: 'btdev-' + d.mac, disabled: st === 4, onclick: function () { if (send('OJ_BT_CONNECT', { mac: d.mac }) !== false) { btTried = d.mac; } } });
+    });
+    return h('div', { 'data-k': 'btcard' },
+      rows.length ? sGroup(null, rows) : null,
+      st === 6 && btTried ? h('p', { class: 'gfoot accent-text', 'data-k': 'btfail' }, t('bt_failed'))
+        : st === 2 && !devs.length ? h('p', { class: 'gfoot', 'data-k': 'btnone' }, t('bt_none')) : null,
+      h('button', { class: 'btn block', 'data-k': 'btscan', disabled: st === 1 || st === 4 ? 'disabled' : null,
+        onclick: function () { btTried = null; send('OJ_BT_SCAN', {}); } }, icon('search'), st === 1 ? t('bt_searching') : t('bt_search')),
+      h('p', { class: 'gfoot' }, t('bt_help')));
   }
   // Airplane mode (docs/24), only on a core that offers it. Always bounded: the Jooki switches its
   // radios back on by itself at the chosen time, and in any case at its next start.
   var airChoice = '2';   // hours, or 'morning' (the night mode's end) or 'boot'
-  function airplaneCard() {
+  function airPage() {
     if (S.device.airplane === undefined) return null;
     var stop = Number(S.bedtime.cfg.stop); if (isNaN(stop)) stop = 420;
     var now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
@@ -2008,62 +2206,60 @@
         if (send('OJ_AIRPLANE', minutes ? { minutes: minutes } : {}) !== false) { setAirplane(a); toast(t('air_sent')); }
       });
     }
-    return [h('div', { class: 'section-title' }, t('air_title')),
-      h('div', { class: 'card' },
-        h('p', { class: 'small muted pad', style: 'margin:12px 0 4px' }, t('air_help')),
-        h('label', { class: 'field pad' }, h('span', null, t('air_for')),
-          h('select', { class: 'input', 'data-k': 'airfor', onchange: function (e) { airChoice = e.target.value; e.target.blur(); } },
-            opts.map(function (o) { return h('option', { value: o[0], selected: airChoice === o[0] ? 'selected' : null }, o[1]); }))),
-        h('div', { class: 'actions pad' }, h('button', { class: 'btn', 'data-k': 'airgo', onclick: go }, icon('plane'), t('air_btn'))))];
+    return [h('p', { class: 'gfoot', style: 'margin:0 16px 14px' }, t('air_help')),
+      sGroup(t('s_air_for'), [h('div', { class: 'choice', role: 'group', 'aria-label': t('s_air_for') }, opts.map(function (o) {
+        return h('button', { class: airChoice === o[0] ? 'on' : '', 'data-k': 'air-' + o[0], 'aria-pressed': String(airChoice === o[0]),
+          onclick: function () { airChoice = o[0]; render(); } }, o[1]);
+      }))]),
+      h('button', { class: 'btn primary block', 'data-k': 'airgo', onclick: go }, icon('plane'), t('air_btn'))];
   }
   // Security switches (docs/adr/0007): only shown on a core that offers them.
-  function securityCard() {
+  function parentPage() {
+    var m = obj(S.maintenance);
+    if (typeof m.parent !== 'boolean') return null;
+    var rows = [sRow({ icon: 'lock', color: 'red', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
+      onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })];
+    if (m.parent) rows.push(sRow({ label: t('parent_change'), k: 'pchange', onclick: function () { parentModal('change'); } }));
+    return sGroup(null, rows, [t('parent_help'), m.parent ? ' ' + t('parent_reset') : null]);
+  }
+  function homePage() {
     var m = obj(S.maintenance);
     if (typeof m.ssh !== 'boolean' && typeof m.parent !== 'boolean') return null;
-    var rows = [
-      h('label', { class: 'switch' }, h('span', null, t('ssh_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('ssh_help'))),
-        h('input', { type: 'checkbox', role: 'switch', checked: !!m.ssh, 'data-k': 'ssh',
-          onchange: function (e) { send(e.target.checked ? 'OJ_SSH_ON' : 'OJ_SSH_OFF', {}); } })),
-      // while the access is open: a public key, kept on the Jooki across updates
-      m.ssh ? h('div', { class: 'field', style: 'padding:0 16px 12px' },
-        h('span', null, t('ssh_key_l') + ' · ' + t('ssh_keys_n', Number(m.ssh_keys) || 0)),
-        h('div', { class: 'small muted' }, t('ssh_key_help')),
-        h('textarea', { class: 'input', rows: '3', 'data-k': 'sshkey', spellcheck: 'false', autocomplete: 'off', style: 'font-family:monospace;font-size:12px',
-          oninput: function (e) { ui.sshKey = e.target.value; } }, ui.sshKey || ''),
-        h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap;margin-top:8px' },
-          h('button', { class: 'btn', 'data-k': 'sshkeyadd', onclick: function () {
-            var k = String(ui.sshKey || '').trim();
-            if (!k) return;
-            var before = Number(m.ssh_keys) || 0, done = false;
-            waiters.push(function (partial) {
-              if (done) return true;
-              if (!partial.maintenance || !(Number(obj(S.maintenance).ssh_keys) > before || before >= 5)) return false;
-              done = true; ui.sshKey = ''; toast(t('ssh_key_added')); render(); return true;
-            });
-            onCmdError = function () { done = true; };     // refused: the usual error toast says why
-            send('OJ_SSH_KEY', { key: k });
-          } }, t('ssh_key_add')),
-          Number(m.ssh_keys) ? h('button', { class: 'btn ghost', 'data-k': 'sshkeyclear', onclick: function () { send('OJ_SSH_KEY', { clear: true }); } }, t('ssh_key_clear')) : null)) : null,
-      h('label', { class: 'switch' }, h('span', null, t('mqtt_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('mqtt_help'))),
-        h('input', { type: 'checkbox', role: 'switch', checked: !!m.mqtt_lan, 'data-k': 'mqttlan',
-          onchange: function (e) { send('OJ_MQTT_LAN', { on: e.target.checked }); } }))
-    ];
+    var out = [sGroup(null, [sRow({ icon: 'home', color: 'gray', label: t('mqtt_label'), sw: true, on: m.mqtt_lan, k: 'mqttlan',
+      onchange: function (e) { send('OJ_MQTT_LAN', { on: e.target.checked }); } })], t('mqtt_help'))];
     if (m.mqtt_lan) {
-      var host = (S.net && S.net.name ? String(S.net.name).replace(/\.local$/, '.local') : null) || (S.device && S.device.hostname) || location.hostname;
-      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_host_l')), h('b', null, host)));
-      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_port_l')), h('b', null, '1883')));
-      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_user_l')), h('b', null, 'jooki')));
-      rows.push(h('div', { class: 'kv' }, h('span', null, t('mqtt_pass_l')), h('b', { style: 'user-select:all;word-break:break-all' }, CFG.mqttPass || '—')));
+      var host = (S.net && S.net.name ? String(S.net.name) : null) || (S.device && S.device.hostname) || location.hostname;
+      out.push(sGroup(t('s_connect_info'), [
+        sRow({ label: t('mqtt_host_l'), value: host }), sRow({ label: t('mqtt_port_l'), value: '1883' }), sRow({ label: t('mqtt_user_l'), value: 'jooki' }),
+        h('div', { class: 'srow noico col' }, h('span', { class: 'l1' }, t('mqtt_pass_l')), h('span', { class: 'mono' }, CFG.mqttPass || '—'))]));
     }
-    rows.push(h('label', { class: 'switch' }, h('span', null, t('parent_label'), h('div', { class: 'small muted', style: 'font-weight:400' }, t('parent_help'))),
-      h('input', { type: 'checkbox', role: 'switch', checked: !!m.parent, 'data-k': 'parent',
-        onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })));
-    if (m.parent) {
-      rows.push(h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap;margin-top:4px' },
-        h('button', { class: 'btn ghost', 'data-k': 'pchange', onclick: function () { parentModal('change'); } }, t('parent_change'))));
-      rows.push(h('p', { class: 'small muted' }, t('parent_reset')));
-    }
-    return [h('div', { class: 'section-title' }, t('sec_title')), h('div', { class: 'card' }, rows)];
+    return out;
+  }
+  function maintPage() {
+    var m = obj(S.maintenance);
+    if (typeof m.ssh !== 'boolean') return null;
+    var out = [sGroup(null, [sRow({ icon: 'wrench', color: 'gray', label: t('ssh_label'), sw: true, on: m.ssh, k: 'ssh',
+      onchange: function (e) { send(e.target.checked ? 'OJ_SSH_ON' : 'OJ_SSH_OFF', {}); } })], t('ssh_help'))];
+    // while the access is open: a public key, kept on the Jooki across updates
+    if (m.ssh) out.push(sGroup(t('ssh_key_l') + ' · ' + t('ssh_keys_n', Number(m.ssh_keys) || 0), [h('div', { class: 'gpad' },
+      h('textarea', { class: 'input', rows: '3', 'data-k': 'sshkey', spellcheck: 'false', autocomplete: 'off', 'aria-label': t('ssh_key_l'), style: 'font-family:monospace;font-size:12px',
+        oninput: function (e) { ui.sshKey = e.target.value; } }, ui.sshKey || ''),
+      h('div', { class: 'row', style: 'gap:8px;flex-wrap:wrap;margin-top:8px' },
+        h('button', { class: 'btn primary', 'data-k': 'sshkeyadd', onclick: function () {
+          var k = String(ui.sshKey || '').trim();
+          if (!k) return;
+          var before = Number(m.ssh_keys) || 0, done = false;
+          waiters.push(function (partial) {
+            if (done) return true;
+            if (!partial.maintenance || !(Number(obj(S.maintenance).ssh_keys) > before || before >= 5)) return false;
+            done = true; ui.sshKey = ''; toast(t('ssh_key_added')); render(); return true;
+          });
+          onCmdError = function () { done = true; };     // refused: the usual error toast says why
+          send('OJ_SSH_KEY', { key: k });
+        } }, t('ssh_key_add')),
+        Number(m.ssh_keys) ? h('button', { class: 'btn ghost', 'data-k': 'sshkeyclear', onclick: function () { send('OJ_SSH_KEY', { clear: true }); } }, t('ssh_key_clear')) : null))],
+      t('ssh_key_help')));
+    return out;
   }
   // Ask for the parent code when the Jooki refuses a protected action, then retry it.
   function askParent(bad) {
@@ -2137,17 +2333,22 @@
       }
     });
   }
-  function wifiRow(w) {
-    var dbm = Number(w.signal);
+  function wifiPage() {
+    var w = S.wifi, d = S.device, n = S.net, dbm = Number(w.signal);
     var has = w.signal !== undefined && w.signal !== null && !isNaN(dbm);
     var q = !has ? null : dbm >= -65 ? 'good' : dbm >= -75 ? 'fair' : 'weak';
-    var n = S.net, drops = Number(n.drops) || 0;
-    return h('div', { class: 'kv col', 'data-k': 'wifirow' },
-      h('div', { class: 'row', style: 'width:100%' }, h('span', { class: 'grow' }, t('wifi')),
-        h('b', null, (w.ssid || '—') + (has ? ' · ' + dbm + ' dBm' : ''))),
-      q ? h('div', { class: 'small wifi-' + q, 'data-k': 'wifiq' }, t('wifi_' + q) + (drops ? ' · ' + t('wifi_drops', drops) : '')) : null,
-      q === 'weak' ? h('div', { class: 'small muted' }, t('wifi_advice')) : null,
-      wifiBluetoothLine());
+    var drops = Number(n.drops) || 0, bars = h('span', { class: 'bars' });
+    for (var i = 1; i <= 4; i++) bars.appendChild(h('i', { class: has && i <= (dbm >= -60 ? 4 : dbm >= -67 ? 3 : dbm >= -75 ? 2 : 1) ? 'on ' + q : null, style: 'height:' + (3 + i * 2.6) + 'px' }));
+    return [h('div', { 'data-k': 'wifirow' }, sGroup(null, [
+        sRow({ label: t('s_wifi_net'), value: w.ssid || '—' }),
+        has ? h('div', { class: 'srow noico' }, h('span', { class: 'lbl' }, h('span', { class: 'l1' }, t('s_wifi_signal'))),
+          h('span', { class: 'val wifi-' + q, 'data-k': 'wifiq' }, bars, t('wifi_' + q) + ' · ' + dbm + ' dBm')) : null,
+        sRow({ label: t('s_wifi_drops'), value: String(drops) }),
+        sRow({ label: t('ip'), value: d.ip || location.hostname }),
+        n.name ? sRow({ label: t('s_wifi_page'), value: String(n.name) }) : null
+      ], q === 'weak' ? t('wifi_advice') : null)),
+      sGroup(t('s_wifi_change'), [h('a', { class: 'srow noico', href: WIFI_PAGE, target: '_blank', rel: 'noopener' },
+        h('span', { class: 'lbl' }, h('span', { class: 'l1' }, 'Bluetooth')), h('span', { class: 'chev' }, icon('chev')))], wifiBluetoothLine())];
   }
   // The way back when the Jooki loses its network (docs/wifi.html, over Bluetooth): said here, while
   // the page can still be read, with the name the Jooki shows in a Bluetooth list (JOOKI2_ + its id).
@@ -2156,7 +2357,7 @@
     var id = String((S.device && S.device.id) || '');
     if (!id) return null;
     var bt = 'JOOKI2_' + id.replace(/^jooki2[-_]/i, '').toUpperCase();
-    return h('div', { class: 'small muted', 'data-k': 'wifibt' }, t('wifi_bt'),
+    return h('span', { 'data-k': 'wifibt' }, t('wifi_bt'),
       h('a', { href: WIFI_PAGE, target: '_blank', rel: 'noopener' }, 'guillain-rdcde.github.io/OpenJooki/wifi'), ' ', t('wifi_bt_name', bt));
   }
   function setLang(l) { lang = l; lsSet('oj.lang', l); document.documentElement.lang = l; render(); }
@@ -2205,35 +2406,36 @@
         s ? h('button', { class: 'toggle', 'data-k': 'sleepoff', 'aria-label': t('sleep_cancel'), onclick: function () { send('OJ_SLEEP', { cancel: true }); } }, icon('x'), t('sleep_off')) : null));
   }
   var nightVolDrag = null;
-  function bedtimeCard() {
+  function nightPage() {
     var c = S.bedtime.cfg;
     if (c.start === undefined) return null; // firmware without bedtime
     var mv = nightVolDrag !== null ? nightVolDrag : Number(c.maxvol) || 100;
     var timers = [0, 10, 15, 20, 30, 45, 60];
     if (timers.indexOf(Number(c.timer)) < 0) { timers.push(Number(c.timer)); timers.sort(function (a, b) { return a - b; }); }
-    function volLabel(v) { return t('night_maxvol') + ' : ' + (v >= 100 ? t('night_nolimit') : v + ' %'); }
-    return [h('div', { class: 'section-title' }, t('bedtime')),
-      h('div', { class: 'card', 'data-k': 'bedcard' },
-        h('label', { class: 'switch' }, h('div', null, h('div', null, t('night_mode')), h('div', { class: 'small muted' }, t('night_help'))),
-          h('input', { type: 'checkbox', role: 'switch', checked: !!c.enabled, 'data-k': 'nighton', onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })),
-        c.enabled ? [
-          h('div', { class: 'kv', 'data-k': 'nightstatus' }, S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start)))),
-          h('div', { class: 'timepair' },
-            h('label', { class: 'field' }, h('span', null, t('night_from')), h('input', { class: 'input', type: 'time', value: hm(c.start), 'data-k': 'nightstart',
-              onchange: function (e) { if (e.target.value) setBedtime({ start: e.target.value }); } })),
-            h('label', { class: 'field' }, h('span', null, t('night_to')), h('input', { class: 'input', type: 'time', value: hm(c.stop), 'data-k': 'nightstop',
-              onchange: function (e) { if (e.target.value) setBedtime({ stop: e.target.value }); } }))),
-          h('label', { class: 'field pad' }, h('span', null, t('night_timer')),
-            h('select', { class: 'input', 'data-k': 'nighttimer', onchange: function (e) { e.target.blur(); setBedtime({ timer: Number(e.target.value) }); } },
-              timers.map(function (m) { return h('option', { value: String(m), selected: Number(c.timer) === m ? 'selected' : null }, m ? t('sleep_min', m) : t('night_timer_none')); }))),
-          h('label', { class: 'field pad' }, h('span', { 'data-nightvol': '1' }, volLabel(mv)),
-            h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol',
-              oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
-              onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
-          h('label', { class: 'switch' }, h('span', null, t('night_dim')), h('input', { type: 'checkbox', role: 'switch', checked: !!c.dim, 'data-k': 'nightdim',
-            onchange: function (e) { setBedtime({ dim: e.target.checked }); } })),
-          h('p', { class: 'small muted pad', style: 'margin:4px 0 14px' }, t('night_clock'))
-        ] : null)];
+    function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
+    var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
+      onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
+    if (!c.enabled) return out;
+    out.push(sGroup(t('s_night_hours'), [
+      h('div', { class: 'srow noico', 'data-k': 'nightstatus' }, S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start)))),
+      h('div', { class: 'timepair' },
+        h('label', { class: 'field' }, h('span', null, t('night_from')), h('input', { class: 'input', type: 'time', value: hm(c.start), 'data-k': 'nightstart',
+          onchange: function (e) { if (e.target.value) setBedtime({ start: e.target.value }); } })),
+        h('label', { class: 'field' }, h('span', null, t('night_to')), h('input', { class: 'input', type: 'time', value: hm(c.stop), 'data-k': 'nightstop',
+          onchange: function (e) { if (e.target.value) setBedtime({ stop: e.target.value }); } })))
+    ], t('night_clock')));
+    out.push(sGroup(t('s_night_during'), [
+      h('label', { class: 'srow noico' }, h('span', { class: 'lbl' }, h('span', { class: 'l1' }, t('night_timer'))),
+        h('select', { class: 'input mini', 'data-k': 'nighttimer', onchange: function (e) { e.target.blur(); setBedtime({ timer: Number(e.target.value) }); } },
+          timers.map(function (m) { return h('option', { value: String(m), selected: Number(c.timer) === m ? 'selected' : null }, m ? t('sleep_min', m) : t('night_timer_none')); }))),
+      h('label', { class: 'srow noico col' }, h('span', { class: 'row', style: 'width:100%' }, h('span', { class: 'l1 grow' }, t('night_maxvol')),
+          h('span', { class: 'val', 'data-nightvol': '1' }, volLabel(mv))),
+        h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol', 'aria-label': t('night_maxvol'),
+          oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
+          onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
+      sRow({ label: t('night_dim'), sw: true, on: c.dim, k: 'nightdim', onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
+    ]));
+    return out;
   }
   /* sort a playlist by one criterion; web radios keep their relative order at the end */
   var SORT_KEYS = ['name', 'title', 'artist', 'album', 'duration'];
@@ -2449,7 +2651,12 @@
       body = viewPlaylist(r.arg);
     } else if (r.name === 'tokens') { title = t('tokens'); body = viewTokens(); }
     else if (r.name === 'library') { title = t('library'); body = viewLibrary(r.arg); }
-    else if (r.name === 'settings') { title = t('settings'); body = viewSettings(); }
+    else if (r.name === 'settings') {
+      var sub = r.arg && SUBS[r.arg] ? r.arg : null;
+      title = sub ? t(SUBS[sub]) : t('settings');
+      if (sub) back = '#/settings';
+      body = sub ? settingsPage(sub) : viewSettings();
+    }
     else { title = t('playlists'); body = viewPlaylists(); }
     document.title = gotState ? title + ' — OpenJooki' : 'OpenJooki';
     var conn = h('div', { class: 'conn ' + (online ? 'on' : 'off'), role: 'status', 'aria-live': 'polite' }, h('i'), online ? t('connected') : t('offline'));

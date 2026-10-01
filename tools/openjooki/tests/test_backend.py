@@ -34,8 +34,10 @@ check("T1 rename twice: no error", j.errors == [], j.errors)
 check("T1 name trimmed and saved", j.tokens[BD1].get("name") == "Dark", j.tokens[BD1])
 check("T2 naming keeps character link", j.pls[p].get("star") == "Jooki.Black.Dragon" and not j.pls[p].get("tagId"), j.pls[p])
 j.upload("media/song1.mp3", p); j.settle(1.5)
-j.nfc(BD2, "106"); j.settle()
-check("T2 another black dragon plays it", j.state["audio"]["nowPlaying"].get("playlistId") == p, j.state["audio"].get("nowPlaying"))
+j.wait(lambda: len(j.pls[p].get("tracks") or []) == 1, 15)   # a loaded bench imports later: wait for it, not a fixed time
+j.nfc(BD2, "106")
+j.wait(lambda: (j.state["audio"].get("nowPlaying") or {}).get("playlistId") == p, 5)
+check("T2 another black dragon plays it", (j.state["audio"].get("nowPlaying") or {}).get("playlistId") == p, j.state["audio"].get("nowPlaying"))
 j.nfc_off(); j.settle()
 p2 = newpl(j, "Autre")
 j.send("PLAYLIST_UPDATE", {"playlist": {"id": p2, "tagId": BD1}}); j.settle()
@@ -64,6 +66,31 @@ if LUA == "core":   # a foreign tag (amiibo, sticker): 2.x only, the 1.x program
     check("TF foreign tag starts its playlist", obj(audio.get("nowPlaying")).get("playlistId") == p
           and obj(audio.get("playback")).get("state") != "PAUSED", audio)
     check("TF no errors", j.errors == [], j.errors)
+    # flat tokens (2.x): one code (512 = 0x200) for all of them, but each one is its own character
+    CAT, ELE = "04A1B2C3D49C41", "04A1B2C3D477A0"
+    j.nfc_off(); j.settle()
+    j.nfc(CAT, "200"); j.settle(); j.nfc_off(); j.settle()
+    j.nfc(ELE, "200"); j.settle()
+    check("TFL each flat token is its own character", (j.tokens.get(CAT) or {}).get("starId") == "flat." + CAT
+          and (j.tokens.get(ELE) or {}).get("starId") == "flat." + ELE, (j.tokens.get(CAT), j.tokens.get(ELE)))
+    check("TFL a flat token is on the Jooki like a token", (j.state.get("nfc") or {}).get("starId") == "flat." + ELE, j.state.get("nfc"))
+    j.nfc_off(); j.settle()
+    pc = newpl(j, "Le chat"); pe = newpl(j, "L'éléphant")
+    j.send("PLAYLIST_UPDATE", {"playlist": {"id": pc, "star": "flat." + CAT}}); j.send("PLAYLIST_UPDATE", {"playlist": {"id": pe, "star": "flat." + ELE}}); j.settle()
+    j.upload("media/song2.mp3", pc); j.upload("media/song3.mp3", pe); j.settle(2)
+    j.nfc(CAT, "200"); j.wait(lambda: obj(obj(j.state.get("audio")).get("nowPlaying")).get("playlistId") == pc, 5)
+    got_cat = obj(obj(j.state.get("audio")).get("nowPlaying")).get("playlistId")
+    j.nfc_off(); j.settle(); j.nfc(ELE, "200"); j.wait(lambda: obj(obj(j.state.get("audio")).get("nowPlaying")).get("playlistId") == pe, 5)
+    check("TFL the cat and the elephant start different playlists", got_cat == pc and obj(obj(j.state.get("audio")).get("nowPlaying")).get("playlistId") == pe,
+          (got_cat, obj(j.state.get("audio")).get("nowPlaying")))
+    j.nfc_off(); j.wait(lambda: obj(obj(j.state.get("audio")).get("playback")).get("state") == "PAUSED", 5)
+    check("TFL taking a flat token off pauses", obj(obj(j.state.get("audio")).get("playback")).get("state") == "PAUSED", obj(j.state.get("audio")).get("playback"))
+    # a picture from the page's library; any other address is refused
+    j.errors.clear(); j.send("TOKEN_EDIT", {"tagId": CAT, "image": "lib:cat_face"}); j.settle()
+    check("TFL a library picture for a token", j.tokens[CAT].get("image") == "lib:cat_face" and not j.errors, (j.tokens[CAT], j.errors))
+    j.send("TOKEN_EDIT", {"tagId": CAT, "image": "https://evil.example/x.png"}); j.settle()
+    check("TFL a foreign address is refused", j.tokens[CAT].get("image") == "lib:cat_face" and j.errors, (j.tokens[CAT], j.errors))
+    j.errors.clear()
 j.close()
 
 # ---------- migration at boot + image preserved

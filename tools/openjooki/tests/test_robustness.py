@@ -61,7 +61,7 @@ try:
     with sync_playwright() as p:
         b = p.chromium.launch()
         pg = b.new_page(viewport={"width": 390, "height": 844}, locale="fr-FR")
-        pg.goto(PAGE + "/#/settings")
+        pg.goto(PAGE + "/#/settings/maintenance")   # since 2.2 each topic has its own page
         pg.wait_for_selector("[data-k=ssh]", timeout=15000)
         shown = pg.locator("[data-k=sshkey]").count() == 1 and "1 clé enregistrée" in pg.locator("body").inner_text()
         check("R4 the page shows the key field and the saved key while the access is open", shown, pg.locator("body").inner_text()[-600:])

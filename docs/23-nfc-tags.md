@@ -68,7 +68,48 @@ row needs another tag in between (or the play button); the tag must sit close
 to the reader (an amiibo's base is wider than the Jooki's hollow and reads only
 at the right angle).
 
-## 4. Do not
+## 4. Flat tokens and the Thank-you token: one code, many tokens (2.2)
+
+The round flat tokens (sold with a cat, an elephant, a rocket… printed on them)
+all carry the same character code, **512** (`Jooki.Flat`), and the Thank-you
+token carries **260** (`Jooki.ThankYou`). By the character rule they were one
+single character: every flat token started the same playlist. Since OpenJooki
+2.2 each of them is a character of its own, named after its UID:
+`flat.<UID>` and `thanks.<UID>` (`core/services/tokens.lua`, `tokens.own_star`;
+the prefixes live in `library.PER_TOKEN`).
+
+- They are genuine Jooki tokens: they claim `state.nfc`, the page shows them
+  on the Jooki, and taking one off pauses — unlike a foreign tag.
+- A flat token without a playlist of its own plays the playlist linked to the
+  shared `Jooki.Flat` character, as before 2.2 (the same for `Jooki.ThankYou`).
+  So nothing changes for a family until it gives a token its own playlist.
+- Tokens learned before 2.2 are renamed at boot (`library.ops.normalise`:
+  `starId "Jooki.Flat"` -> `"flat.<UID>"`); their names and pictures stay.
+- On the page they behave like a foreign tag: one tile per token, a name, a
+  picture (§5), a playlist.
+
+## 5. A picture for a token of its own: the library (2.2)
+
+A token that is a character of its own (`tag.`, `flat.`, `thanks.`) can carry a
+picture, stored in `tokens.json` as `image`. Two forms only, checked by the core
+(`library.ops.valid_image`; anything else is refused with `invalid_argument`):
+
+- `lib:<id>`: one of the page's ready-made pictures, `webui/tokimg/<id>.webp`
+  (served at `/tokimg/`). 659 pictures of Fluent Emoji 3D (Microsoft, MIT
+  licence, `tokimg/LICENSE.txt`), 128 px WebP, 2.5 MB in all, in 16 families;
+  `tokimg/index.json` gives their family and their names and search words in
+  English, French and Dutch (Unicode CLDR, shortened by hand, plus children's
+  words such as "minou" or "doudou"). They ship with the system image, so they
+  work without Internet. The core's web server lets the phone keep them
+  (`Cache-Control: max-age`, `/tokimg/*.webp` only). `webui/make_tokimg.py`
+  rebuilds the folder.
+- `/artwork/tok_<UID>.png?v=<size>`: a photo edited on the page (§3).
+
+`TOKEN_EDIT { tagId, image: "lib:<id>", name? }` sets a library picture (the
+page also gives the picture's name to a token that has none); a photo replaced
+that way, or removed with `image: false`, has its file deleted.
+
+## 6. Do not
 
 - `esp32_cmd set_nfc_mode`: setting 0 turned the reader off, and setting 1 again
   answered "ok" without turning it back on. Only a restart of the Jooki did.

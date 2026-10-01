@@ -4,6 +4,8 @@ set -e
 W=/jooki/app/www/public
 mkdir -p $W/static/media
 rm -f $W/config.js; cp "$(dirname "$0")"/../webui/{index.html,app.js,app.css,mqtt.js,service-worker.js,manifest.json,icon-192.png,icon-512.png,apple-touch-icon.png} $W/
+# the token pictures of the library (jooki.py WEBUI_DIRS)
+rm -rf $W/tokimg; cp -r "$(dirname "$0")"/../webui/tokimg $W/tokimg
 # the per-Jooki broker credential the page fetches at its own origin (S57 does this on the device)
 printf '{"mqttUser":"jooki","mqttPass":"benchsecret","wsPort":8000}\n' > $W/oj-auth.json
 # placeholder token pictures (the real ones exist on the Jooki)

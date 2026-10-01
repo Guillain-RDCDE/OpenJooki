@@ -5,6 +5,10 @@
 -- it is learned and starts its playlist like a token, but the ESP32 never reports its
 -- removal, so it does not claim state.nfc (the page would show it on the Jooki forever)
 -- and taking it off does not pause.
+-- The round flat tokens (code 512) and the Thank-you token (260) all carry the same code, so
+-- each one is its own character too, "flat.<uid>" / "thanks.<uid>" (docs/23 §4): a real
+-- Jooki token, so it claims state.nfc and taking it off pauses. Until it has a playlist of
+-- its own it plays the one linked to the shared character (Jooki.Flat / Jooki.ThankYou).
 -- Emits:      playback.request { playlist, source = "token" }
 --             playback.pause_request { source = "token" }
 --             system.tag { name }            (sys.* tags: device handles them)
@@ -38,9 +42,19 @@ end
 
 local function is_system(name) return name and (name:sub(1, 4) == "sys." or name:sub(1, 5) == "test.") end
 
+-- shared character -> prefix of the per-token characters (docs/23 §4)
+local PER_TOKEN = library.PER_TOKEN
+--- The character of one physical token: its own for the per-token codes, else the shared one.
+function tokens.own_star(star, uid)
+  local prefix = star and PER_TOKEN[star]
+  if prefix and type(uid) == "string" and uid ~= "" then return prefix .. uid, star end
+  return star, nil
+end
+
 function tokens.on_tag(doc, ev)
   if ev.bad then return { commands = { { kind = "log", level = "warn", key = "tokens.bad_tag", fields = { raw = tostring(ev.raw) } } } } end
-  local star = ev.foreign and ("tag." .. ev.uid) or tokens.star_name(ev.star_code)
+  local star, shared
+  if ev.foreign then star = "tag." .. ev.uid else star, shared = tokens.own_star(tokens.star_name(ev.star_code), ev.uid) end
   if not star then return { commands = { { kind = "log", level = "warn", key = "tokens.no_star", fields = { uid = ev.uid } } } } end
   local result = { state = { nfc = { starId = star, tagId = ev.uid } }, commands = {} }
   if ev.foreign then
@@ -59,6 +73,8 @@ function tokens.on_tag(doc, ev)
   end
   local lib = (mutated and mutated.state.library) or doc.library or { playlists = {}, tracks = {}, tokens = {} }
   local playlist = library.ops.playlist_for(lib, star, ev.uid)
+  -- a flat token without a playlist of its own plays the one of all the flat tokens (as before)
+  if not playlist and shared then playlist = library.ops.playlist_for(lib, shared) end
   if playlist then
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "system.event", name = "Evt.Character.Detect" } }
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "playback.request", playlist = playlist, source = "token" } }

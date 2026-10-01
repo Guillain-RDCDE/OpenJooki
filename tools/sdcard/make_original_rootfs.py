@@ -33,6 +33,7 @@ ADDED = ("/etc/openjooki-version", "/etc/rcS.d/S57_oj-security.sh", "/etc/mosqui
          PUB + "/app.js", PUB + "/app.css", PUB + "/mqtt.js", PUB + "/manifest.json", PUB + "/icon-192.png",
          PUB + "/icon-512.png", PUB + "/apple-touch-icon.png", PUB + "/index.html", PUB + "/service-worker.js",
          PUB + "/oj-auth.json", PUB + "/openjooki-status.txt")
+ADDED_DIRS = (PUB + "/tokimg",)                          # jooki.py WEBUI_DIRS: the token pictures
 CHECKED = ("jooki/app/", "jooki/bin/", "jooki/lib/")    # what a pre-OpenJooki backup holds of the system
 
 
@@ -64,6 +65,9 @@ def restore(img):
     for p in ADDED:
         if debugfs_exists(img, p):
             debugfs_w(img, ["rm " + p]); done.append("-" + p)
+    for d in ADDED_DIRS:
+        if debugfs_exists(img, d):
+            debugfs_w(img, ["rm " + p for p, mode in walk(img, d) if not is_dir(mode)] + ["rmdir " + d]); done.append("-" + d + "/")
     # 3. the 2018 web app back in the served folder
     if debugfs_exists(img, PUB_ORIG):
         for p, mode in walk(img, PUB_ORIG):

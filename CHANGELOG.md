@@ -1,5 +1,15 @@
 # OpenJooki — Changelog
 
+## Next release
+- **`http://jooki.local/` works every time.** Opening the page by its name often failed while the
+  address (192.168.1.x) worked. The Jooki's Wi-Fi chip misses most of the questions "who is
+  jooki.local?" that phones send to the whole network: one in five got through on our Jooki. Now
+  the Jooki says its name by itself, every 30 seconds, and the phone remembers it. On a phone, type
+  `http://` in front of `jooki.local`.
+- For the tinkerers: unsolicited mDNS announcements (A, cache-flush, TTL 120) at once, 1 s and 3 s
+  after getting an address, then every 30 s; questions written with name compression (A + AAAA in
+  one packet) are now read, and echoed in full in unicast answers. Details in docs/20.
+
 ## OpenJooki 2.2.1 (1 October 2026) — a Christmas tree, dark or light
 - **Dark or light, your choice.** The page already turned dark when the phone was in dark mode.
   Now *Settings > Appearance* lets you choose: *Automatic* (like the phone, as before), *Light* or

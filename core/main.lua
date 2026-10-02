@@ -188,7 +188,7 @@ loop.init(adapters, { translate = translate_with_time, publisher = publisher,
       -- only its own name: web_ctrl (closed) redirects any other Host, jooki.local included, to
       -- Muuselabs' dead setup site (docs/20). Names are kept lower case by the adapter.
       if doc.net.name and not mdns.names[doc.net.name:lower()] then mdns:set_names({ doc.net.name }) end
-      mdns:serve(doc.net.ip)
+      mdns:serve(doc.net.ip, clock.now())
     end
   end })
 timers.every("health", 60, clock.now())

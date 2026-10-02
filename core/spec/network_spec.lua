@@ -177,4 +177,25 @@ describe("adapters.mdns packets", function()
     assert_eq(a6:sub(-3), string.char(0, 1, 64))
     assert_nil(mdns.answer(q, "not an ip", false))
   end)
+
+  it("reads a second question written as a pointer to the first (A + AAAA in one packet, as phones ask)", function()
+    local first = query("jooki2-a1b2c3.local", 28)
+    local p = first:sub(1, 5) .. string.char(2) .. first:sub(7) .. string.char(0xC0, 12, 0, 1, 0, 1)   -- QDCOUNT 2, then a pointer to offset 12
+    local qs = mdns.questions(p, names)
+    assert_eq(#qs, 2); assert_eq(qs[2].name, "jooki2-a1b2c3.local"); assert_eq(qs[2].qtype, 1)
+    local u = mdns.answer(qs[2], "192.168.1.19", true, "\1\2")
+    assert_eq(u:sub(13, 13 + 24), string.char(13) .. "jooki2-a1b2c3" .. string.char(5) .. "local" .. string.char(0, 0, 1, 0, 1))   -- the question, in full
+    assert_eq(#mdns.questions("\18\52\0\0\0\1\0\0\0\0\0\0" .. string.char(0xC0, 12), names), 0)   -- a pointer to itself: refused
+  end)
+
+  it("announces the name unasked: at once, 1 s and 3 s later, then every 30 s, and again on a new address", function()
+    local sched, at = {}, {}
+    for t = 0, 70, 0.5 do if mdns.due(sched, t, "192.168.1.19 jooki.local") then at[#at + 1] = t end end
+    assert_eq(at, { 0, 1, 3, 33, 63 })
+    assert_true(mdns.due(sched, 70.5, "192.168.1.20 jooki.local"), "a new address is announced at once")
+    local a = mdns.announcement("jooki.local", "192.168.1.19")
+    assert_eq(a:sub(1, 6), "\0\0\132\0\0\0")                       -- a response, no question
+    assert_eq(a:byte(8), 1); assert_eq(a:sub(-4), string.char(192, 168, 1, 19))
+    assert_true(a:find(string.char(0, 1, 128, 1, 0, 0, 0, 120), 1, true) ~= nil, "cache-flush, TTL 120")
+  end)
 end)

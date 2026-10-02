@@ -44,6 +44,16 @@ not wait 5 s for an IPv6 address. The responder shares UDP 5353 with
 `spotify_ctrl`'s own (which only announces `A8:EE:C6:A1:B2:C3.local`); if the
 port could not be shared the Jooki simply works without the name.
 
+**The name is announced, not only answered (2.2.2).** The Jooki's Wi-Fi chip
+misses most multicast it is sent: on 2 October 2026, while a Mac asked for
+`jooki.local` five times, the Jooki received one of the questions, and a phone
+could not open the page by its name. What the Jooki sends does get through. So
+the core announces its name, unasked: three times when it gets an address (at
+once, 1 s and 3 s later, RFC 6762 §8.3), then every 30 s, with a TTL of 120 s.
+Phones and computers keep the name in their cache and open `http://jooki.local/`
+without having to ask. On a phone, type `http://` in front: without it the
+browser searches the web or tries https.
+
 ## How it is built
 
 - `tools/openjooki/system/syslog-ng.conf` replaces `/etc/syslog-ng/syslog-ng.conf`

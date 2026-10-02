@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Your discs in FLAC, three times lighter.** FLAC and WAV files are now turned into MP3 on your
+  computer or phone, in the page, before they are sent: an album takes about 100 MB instead of
+  300, and goes over three times faster. Title, artist, album, track number and the cover are kept
+  (the cover made small, 300 px). Quality: 256 kbps, or 192 / 320 in *Settings > MP3 quality*.
+  Your FLAC files stay at home, untouched.
+- **Drop a disc, get a playlist.** On a computer, *Add albums* (or drop the folders on the
+  playlists page): each folder becomes a playlist named after its album, its tracks in the disc's
+  order, ready to be given a token. The cover.jpg, .cue and .log files are left out.
+- For the tinkerers: decoding by the browser (resampled to 44.1 kHz), encoding by lamejs 1.2.1
+  (LGPL-3.0, `webui/lame.min.js`, `lame.LICENSE.txt`) in a Web Worker (`mp3-worker.js`), ID3v2.3
+  tags written by the page. Nothing changes on the Jooki itself.
+
 ## OpenJooki 2.2.2 (2 October 2026) — http://jooki.local/ works every time
 - **`http://jooki.local/` works every time.** Opening the page by its name often failed while the
   address (192.168.1.x) worked. The Jooki's Wi-Fi chip misses most of the questions "who is

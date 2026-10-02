@@ -174,6 +174,15 @@
       s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
       s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
       s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
+      disc_add: 'Ajouter des disques', disc_drop: 'Glisse ici les dossiers de tes disques : chaque dossier devient une playlist',
+      disc_hint: function (k) { return 'Les FLAC et WAV sont convertis en MP3 ' + k + ' kbps sur ton ordinateur, avant l\'envoi.'; },
+      converting: function (k) { return 'Conversion en MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'En attente (sera converti en MP3 ' + k + ' kbps)'; },
+      up_conv_fail: 'Ce navigateur n\'a pas pu lire ce fichier (essaie Chrome ou Firefox sur un ordinateur)',
+      disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' pistes' : ' piste'); },
+      disc_errors: function (n) { return n + (n > 1 ? ' pistes n\'ont pas pu être envoyées' : ' piste n\'a pas pu être envoyée'); },
+      disc_created: function (n) { return 'Playlist créée : ' + n; },
+      s_mp3: 'Qualité des MP3', s_mp3_sub: 'Pour les FLAC et WAV envoyés', s_mp3_192: '192 kbps — le plus léger', s_mp3_256: '256 kbps — recommandé', s_mp3_320: '320 kbps — le plus fin',
+      s_mp3_foot: 'Les FLAC et WAV envoyés au Jooki sont convertis en MP3 sur ton ordinateur ou ton téléphone : un disque prend trois fois moins de place. 256 kbps suffit largement pour l\'enceinte du Jooki et un casque Bluetooth. Ce choix ne vaut que pour cet appareil.',
       s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
       s_theme_foot: 'Automatique : comme le téléphone. Ce choix ne vaut que pour ce téléphone.',
       s_party: 'Sapin de Noël', s_party_sub: 'Toutes les couleurs des lumières, pendant 5 secondes', s_party_done: 'Regarde ton Jooki !',
@@ -347,6 +356,15 @@
       s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
       s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
       s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
+      disc_add: 'Add albums', disc_drop: 'Drop your album folders here: each folder becomes a playlist',
+      disc_hint: function (k) { return 'FLAC and WAV files are turned into MP3 at ' + k + ' kbps on your computer, before they are sent.'; },
+      converting: function (k) { return 'Converting to MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Waiting (will be converted to MP3 ' + k + ' kbps)'; },
+      up_conv_fail: 'This browser could not read this file (try Chrome or Firefox on a computer)',
+      disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' tracks' : ' track'); },
+      disc_errors: function (n) { return n + (n > 1 ? ' tracks could not be sent' : ' track could not be sent'); },
+      disc_created: function (n) { return 'Playlist created: ' + n; },
+      s_mp3: 'MP3 quality', s_mp3_sub: 'For the FLAC and WAV you send', s_mp3_192: '192 kbps — lightest', s_mp3_256: '256 kbps — recommended', s_mp3_320: '320 kbps — finest',
+      s_mp3_foot: 'FLAC and WAV files sent to the Jooki are turned into MP3 on your computer or phone: an album takes three times less space. 256 kbps is plenty for the Jooki\'s speaker and Bluetooth headphones. This choice is for this device only.',
       s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
       s_theme_foot: 'Automatic: like the phone. This choice is for this phone only.',
       s_party: 'Christmas tree', s_party_sub: 'All the colours of the lights, for 5 seconds', s_party_done: 'Look at your Jooki!',
@@ -520,6 +538,15 @@
       s_general: 'Algemeen', s_parents: 'Ouders', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
       s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
       s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
+      disc_add: 'Albums toevoegen', disc_drop: 'Sleep de mappen van je albums hierheen: elke map wordt een afspeellijst',
+      disc_hint: function (k) { return 'FLAC- en WAV-bestanden worden op je computer omgezet naar MP3 ' + k + ' kbps, voordat ze verstuurd worden.'; },
+      converting: function (k) { return 'Omzetten naar MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Wachten (wordt omgezet naar MP3 ' + k + ' kbps)'; },
+      up_conv_fail: 'Deze browser kon dit bestand niet lezen (probeer Chrome of Firefox op een computer)',
+      disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' nummers' : ' nummer'); },
+      disc_errors: function (n) { return n + (n > 1 ? ' nummers konden niet verstuurd worden' : ' nummer kon niet verstuurd worden'); },
+      disc_created: function (n) { return 'Afspeellijst gemaakt: ' + n; },
+      s_mp3: 'MP3-kwaliteit', s_mp3_sub: 'Voor de FLAC en WAV die je verstuurt', s_mp3_192: '192 kbps — het lichtst', s_mp3_256: '256 kbps — aanbevolen', s_mp3_320: '320 kbps — het fijnst',
+      s_mp3_foot: 'FLAC- en WAV-bestanden die naar de Jooki gaan, worden op je computer of telefoon omgezet naar MP3: een album neemt drie keer minder ruimte in. 256 kbps is ruim genoeg voor de luidspreker van de Jooki en een Bluetooth-koptelefoon. Deze keuze geldt alleen voor dit apparaat.',
       s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
       s_theme_foot: 'Automatisch: zoals de telefoon. Deze keuze geldt alleen voor deze telefoon.',
       s_party: 'Kerstboom', s_party_sub: 'Alle kleuren van de lampjes, 5 seconden lang', s_party_done: 'Kijk naar je Jooki!',
@@ -980,21 +1007,254 @@
 
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal) closeModal(); });
 
+  /* ------------------------------------------------------------------ discs: FLAC / WAV -> MP3, in the browser */
+  // A disc in FLAC weighs ~300 MB: a twentieth of the Jooki's card. The page turns lossless files into
+  // MP3 here, on the phone or computer (the Jooki has neither the power nor the memory, and writing
+  // while it plays makes the sound stutter), keeps the tags and a small cover, then sends the MP3 like
+  // any other file. Decoding: the browser's own (FLAC since Chrome 56, Firefox 51, Safari 11),
+  // resampled to 44.1 kHz; encoding: lamejs (LGPL-3.0, lame.LICENSE.txt) in mp3-worker.js.
+  var LOSSLESS = /\.(flac|wav)$/i;
+  var MP3_RATES = [192, 256, 320];
+  function mp3Kbps() { var v = Number(lsGet('oj.mp3')); return MP3_RATES.indexOf(v) >= 0 ? v : 256; }
+  function canConvert() { return !!(window.Worker && (window.OfflineAudioContext || window.webkitOfflineAudioContext)); }
+  function readBytes(blob, from, len) {
+    return new Promise(function (ok, ko) {
+      var fr = new FileReader();
+      fr.onload = function () { ok(new Uint8Array(fr.result)); };
+      fr.onerror = function () { ko(fr.error); };
+      fr.readAsArrayBuffer(blob.slice(from, from + len));
+    });
+  }
+  function u32le(b, i) { return (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)) >>> 0; }
+  function u32be(b, i) { return ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0; }
+  var utf8 = window.TextDecoder ? new TextDecoder('utf-8') : null;
+  function utf8At(b, from, len) { return utf8 ? utf8.decode(b.subarray(from, from + len)) : ''; }
+  // A FLAC file's tags (Vorbis comments, upper-case keys) and its first picture (front cover first):
+  // only the small metadata blocks at its start are read, never the audio.
+  function flacTags(file, withPicture) {
+    var tags = {};
+    if (!/\.flac$/i.test(file.name)) return Promise.resolve(tags);
+    var pos = 4;
+    function block() {
+      return readBytes(file, pos, 4).then(function (hd) {
+        if (hd.length < 4) return tags;
+        var last = hd[0] & 128, type = hd[0] & 127, len = (hd[1] << 16) | (hd[2] << 8) | hd[3], start = pos + 4;
+        pos = start + len;
+        var want = type === 4 || (type === 6 && withPicture && len < 16e6 && !(tags.picture && tags.picture.front));
+        return (want ? readBytes(file, start, len).then(function (b) { if (type === 4) vorbisTags(b, tags); else flacPicture(b, tags); }) : Promise.resolve())
+          .then(function () { return last || pos >= file.size ? tags : block(); });
+      });
+    }
+    return readBytes(file, 0, 4).then(function (m) { return String.fromCharCode(m[0], m[1], m[2], m[3]) === 'fLaC' ? block() : tags; })
+      .catch(function () { return tags; });
+  }
+  function vorbisTags(b, tags) {
+    var i = 4 + u32le(b, 0), n = u32le(b, i);
+    i += 4;
+    for (var k = 0; k < n && i + 4 <= b.length; k++) {
+      var len = u32le(b, i), kv = utf8At(b, i + 4, len), eq = kv.indexOf('=');
+      i += 4 + len;
+      if (eq > 0 && !tags[kv.slice(0, eq).toUpperCase()]) tags[kv.slice(0, eq).toUpperCase()] = kv.slice(eq + 1);
+    }
+  }
+  function flacPicture(b, tags) {
+    var kind = u32be(b, 0), ml = u32be(b, 4), mime = utf8At(b, 8, ml), i = 8 + ml;
+    i += 4 + u32be(b, i) + 16;   // description, then width, height, depth, colours
+    var len = u32be(b, i);
+    tags.picture = { mime: mime || 'image/jpeg', data: b.slice(i + 4, i + 4 + len), front: kind === 3 };
+  }
+  // the cover, at most 300 px (a big cover inside the file slows the Jooki down), as JPEG bytes
+  function smallCover(blob) {
+    if (!blob || !window.createImageBitmap) return Promise.resolve(null);
+    return createImageBitmap(blob).then(function (img) {
+      var s = Math.min(1, 300 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      return new Promise(function (ok) { c.toBlob(ok, 'image/jpeg', 0.85); });
+    }).then(function (jpg) { return jpg ? readBytes(jpg, 0, jpg.size) : null; }).catch(function () { return null; });
+  }
+  // An ID3v2.3 tag (UTF-16 text frames, an APIC front cover): what the Jooki reads from an MP3.
+  function id3(tags, cover) {
+    var frames = [];
+    function text(id, v) {
+      if (!v) return;
+      v = String(v);
+      var b = new Uint8Array(5 + v.length * 2);
+      b[0] = 1; b[1] = 255; b[2] = 254;
+      for (var i = 0; i < v.length; i++) { b[3 + 2 * i] = v.charCodeAt(i) & 255; b[4 + 2 * i] = v.charCodeAt(i) >> 8; }
+      frames.push([id, b]);
+    }
+    var track = tags.TRACKNUMBER, total = tags.TRACKTOTAL || tags.TOTALTRACKS;
+    text('TIT2', tags.TITLE); text('TPE1', tags.ARTIST); text('TALB', tags.ALBUM);
+    text('TPE2', tags.ALBUMARTIST || tags['ALBUM ARTIST']); text('TCON', tags.GENRE);
+    text('TRCK', track && total && String(track).indexOf('/') < 0 ? track + '/' + total : track);
+    text('TPOS', tags.DISCNUMBER); text('TYER', (String(tags.DATE || '').match(/\d{4}/) || [])[0]);
+    if (cover) {
+      var head = [0].concat('image/jpeg'.split('').map(function (c) { return c.charCodeAt(0); }), [0, 3, 0]);
+      var pic = new Uint8Array(head.length + cover.length);
+      pic.set(head, 0); pic.set(cover, head.length);
+      frames.push(['APIC', pic]);
+    }
+    var size = frames.reduce(function (s, f) { return s + 10 + f[1].length; }, 0), out = new Uint8Array(10 + size), at = 10;
+    out.set([73, 68, 51, 3, 0, 0, (size >> 21) & 127, (size >> 14) & 127, (size >> 7) & 127, size & 127], 0);
+    frames.forEach(function (f) {
+      var n = f[1].length;
+      out.set([f[0].charCodeAt(0), f[0].charCodeAt(1), f[0].charCodeAt(2), f[0].charCodeAt(3), (n >>> 24) & 255, (n >> 16) & 255, (n >> 8) & 255, n & 255, 0, 0], at);
+      out.set(f[1], at + 10); at += 10 + n;
+    });
+    return out;
+  }
+  function decodeAudio(file) {
+    return readBytes(file, 0, file.size).then(function (bytes) {
+      var Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext, ctx = new Ctx(2, 1, 44100);
+      return new Promise(function (ok, ko) { var p = ctx.decodeAudioData(bytes.buffer, ok, ko); if (p && p.then) p.then(ok, ko); });
+    });
+  }
+  function encodeMp3(audio, kbps, onProgress) {
+    return new Promise(function (ok, ko) {
+      var w = new Worker('mp3-worker.js?v=' + VERSION);
+      var ch = [audio.getChannelData(0)];
+      if (audio.numberOfChannels > 1) ch.push(audio.getChannelData(1));
+      ch = ch.map(function (c) { return new Float32Array(c); });   // copies the worker may take
+      w.onmessage = function (e) {
+        var d = e.data;
+        if (d.progress !== undefined) { onProgress(d.progress); return; }
+        w.terminate();
+        if (d.mp3) ok(d.mp3); else ko(new Error(d.error || 'mp3'));
+      };
+      w.onerror = function (e) { w.terminate(); ko(new Error(e.message || 'mp3 worker')); };
+      w.postMessage({ channels: ch, rate: audio.sampleRate, kbps: kbps }, ch.map(function (c) { return c.buffer; }));
+    });
+  }
+  // file (FLAC / WAV) -> an MP3 File with its tags and cover; `cover` = the folder's picture, if any
+  function toMp3(file, cover, onProgress) {
+    var kbps = mp3Kbps();
+    return Promise.all([flacTags(file, true), decodeAudio(file)]).then(function (r) {
+      var tags = r[0], pic = tags.picture ? new Blob([tags.picture.data], { type: tags.picture.mime }) : cover;
+      return Promise.all([encodeMp3(r[1], kbps, onProgress), smallCover(pic)]).then(function (x) {
+        return new File([id3(tags, x[1]), x[0]], file.name.replace(LOSSLESS, '') + '.mp3', { type: 'audio/mpeg' });
+      });
+    });
+  }
+  // One file at a time, at most two ahead of the upload (each decoded disc track is ~100 MB of memory).
+  var convBusy = false;
+  function convPump() {
+    if (convBusy) return;
+    if (uploads.filter(function (x) { return x.conv && x.converted && x.status === 'queued'; }).length >= 2) return;
+    var u = uploads.filter(function (x) { return x.conv && !x.converted && x.status === 'queued'; })[0];
+    if (!u) return;
+    convBusy = true; u.status = 'converting'; u.progress = 0; render();
+    toMp3(u.file, u.cover, function (p) { u.progress = p; updateUploadRow(u); }).then(function (mp3) {
+      u.file = mp3; u.name = mp3.name; u.size = mp3.size; u.converted = true; u.status = 'queued'; u.progress = 0; u.cover = null;
+    }, function () {
+      u.status = 'error'; u.error = t('up_conv_fail'); u.file = null; u.cover = null;
+    }).then(function () { convBusy = false; render(); pump(); convPump(); });
+  }
+
+  // Folders: a dropped folder (or one chosen with "Add albums") is a disc. Its files come back as
+  // groups, one per folder; files dropped loose make one group of their own (dir = null).
+  function groupsFromList(files) {
+    var groups = {}, order = [];
+    Array.prototype.forEach.call(files, function (f) {
+      var p = f.webkitRelativePath || '', dir = p.indexOf('/') > 0 ? p.slice(0, p.lastIndexOf('/')) : null;
+      if (!groups.hasOwnProperty(dir)) { groups[dir] = []; order.push(dir); }
+      groups[dir].push(f);
+    });
+    return order.map(function (d) { return { dir: d, files: groups[d] }; });
+  }
+  function groupsFromDrop(dt) {
+    var entries = Array.prototype.map.call(dt.items || [], function (it) { return it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; }).filter(Boolean);
+    if (!entries.some(function (e) { return e.isDirectory; })) return Promise.resolve(groupsFromList(dt.files));
+    var out = [], loose = [];
+    function fileOf(e) { return new Promise(function (ok) { e.file(ok, function () { ok(null); }); }); }
+    function children(dir) {
+      var reader = dir.createReader(), all = [];
+      return new Promise(function (ok) {
+        (function more() { reader.readEntries(function (b) { if (!b.length) ok(all); else { all = all.concat(b); more(); } }, function () { ok(all); }); })();
+      });
+    }
+    function walk(dir) {   // a folder: its own files are one group, its sub-folders (CD1, CD2…) are walked too
+      return children(dir).then(function (list) {
+        return Promise.all(list.filter(function (e) { return e.isFile; }).map(fileOf)).then(function (files) {
+          files = files.filter(Boolean);
+          if (files.length) out.push({ dir: dir.fullPath.replace(/^\//, ''), files: files });
+          return list.filter(function (e) { return e.isDirectory; }).reduce(function (c, d) { return c.then(function () { return walk(d); }); }, Promise.resolve());
+        });
+      });
+    }
+    return entries.reduce(function (c, e) {
+      return c.then(function () { return e.isDirectory ? walk(e) : fileOf(e).then(function (f) { if (f) loose.push(f); }); });
+    }, Promise.resolve()).then(function () {
+      out.sort(function (a, b) { return natural(a.dir, b.dir); });
+      if (loose.length) out.push({ dir: null, files: loose });
+      return out;
+    });
+  }
+  var COVER_NAME = /^(cover|folder|front|album|pochette)[^/]*\.(jpe?g|png)$/i;
+  function natural(a, b) { return collator().compare(a, b); }
+  // one group -> { title, files (disc then track order), cover }; null when it holds no audio
+  function discOf(group) {
+    var audio = group.files.filter(function (f) { return AUDIO_EXT.test(f.name) && f.size > 5000; });
+    if (!audio.length) return Promise.resolve(null);
+    var cover = group.files.filter(function (f) { return COVER_NAME.test(f.name); })[0] || null;
+    return Promise.all(audio.map(function (f) { return flacTags(f, false); })).then(function (tags) {
+      var rows = audio.map(function (f, i) { return { f: f, d: parseInt(tags[i].DISCNUMBER, 10) || 0, n: parseInt(tags[i].TRACKNUMBER, 10) || 0, tags: tags[i] }; });
+      rows.sort(function (a, b) { return a.d - b.d || a.n - b.n || natural(a.f.name, b.f.name); });
+      var parts = (group.dir || '').split('/'), folder = parts[parts.length - 1] || '';
+      var album = (rows.filter(function (r) { return r.tags.ALBUM; })[0] || { tags: {} }).tags.ALBUM;
+      if (!album && /^(cd|disc|disk|disque|disco)\s*\d+$/i.test(folder) && parts.length > 1) album = parts[parts.length - 2] + ' – ' + folder;
+      return { title: (album || folder || t('new_playlist')).slice(0, 100), files: rows.map(function (r) { return r.f; }), cover: cover };
+    });
+  }
+  function createPlaylist(title) {
+    return new Promise(function (ok, ko) {
+      var before = Object.keys(pls()), over = false;
+      var timer = setTimeout(function () { over = true; ko(new Error('timeout')); }, 20000);
+      waiters.push(function (partial) {
+        if (over) return true;
+        if (!partial.db) return false;
+        var fresh = Object.keys(pls()).filter(function (k) { return before.indexOf(k) < 0 && k !== 'TRASH'; })[0];
+        if (!fresh) return false;
+        clearTimeout(timer); ok(fresh); return true;
+      });
+      send('PLAYLIST_NEW', { title: title, audiobook: false });
+    });
+  }
+  // Discs dropped on the playlists page: each folder becomes a playlist named after its album, its
+  // tracks in disc order. Dropped in a playlist: everything goes into that playlist, folder by folder.
+  function addDiscs(groups, playlistId) {
+    return groups.reduce(function (chain, g) {
+      return chain.then(function () { return discOf(g); }).then(function (d) {
+        if (!d) return null;
+        if (playlistId || !g.dir) { enqueue(d.files, playlistId || null, { cover: d.cover }); return null; }
+        return createPlaylist(d.title).then(function (id) {
+          enqueue(d.files, id, { cover: d.cover, disc: { id: ++discSeq, title: d.title } });
+          toast(t('disc_created', d.title));
+        }, function () { toast(t('up_fail') + ' : ' + d.title, 'error'); });
+      });
+    }, Promise.resolve());
+  }
+
   /* ------------------------------------------------------------------ uploads */
   var uploads = [], upBusy = false, upSeq = 0;
   var AUDIO_EXT = /\.(mp3|m4a|mp4|aac|ogg|oga|flac|wav|wma|m4b)$/i;
-  function enqueue(files, playlistId) {
+  function enqueue(files, playlistId, opts) {
+    opts = opts || {};
     var free = S.device.diskUsage && Number(S.device.diskUsage.available) ? Number(S.device.diskUsage.available) * 1024 : null;
-    var reserved = 0;
+    var reserved = 0, conv = canConvert();
     Array.prototype.forEach.call(files, function (f) {
-      var u = { key: ++upSeq, file: f, name: f.name, size: f.size, playlistId: playlistId || null, status: 'queued', progress: 0, error: null };
+      var u = { key: ++upSeq, file: f, name: f.name, size: f.size, playlistId: playlistId || null, status: 'queued', progress: 0, error: null,
+                conv: conv && LOSSLESS.test(f.name), cover: opts.cover || null, disc: opts.disc || null };
+      // the space an MP3 will take: FLAC is ~700 kbit/s or more, WAV 1411
+      var need = u.conv ? f.size * mp3Kbps() / (/\.wav$/i.test(f.name) ? 1411 : 700) : f.size;
       if (f.size <= 5000) { u.status = 'error'; u.error = t('up_too_small'); }
       else if (!AUDIO_EXT.test(f.name) && !(f.type && f.type.indexOf('audio/') === 0)) { u.status = 'error'; u.error = t('up_type'); }
-      else if (free !== null && reserved + f.size + 10e6 > free) { u.status = 'error'; u.error = t('up_no_space'); }
-      else reserved += f.size;
+      else if (free !== null && reserved + need + 10e6 > free) { u.status = 'error'; u.error = t('up_no_space'); }
+      else reserved += need;
       uploads.push(u);
     });
     render();
+    convPump();
     pump();
   }
   // A weak Wi-Fi drops connections: a failed or stalled transfer is retried on its own
@@ -1003,9 +1263,11 @@
   function pump() {
     if (upBusy) return;
     var now = Date.now();
-    var u = uploads.filter(function (x) { return x.status === 'queued' && !(x.retryAt > now); })[0];
+    // in order: a file still to be converted holds back the ones after it (they keep the disc's order)
+    var u = uploads.filter(function (x) { return x.status === 'queued' || x.status === 'converting'; })[0];
+    if (u && (u.status === 'converting' || (u.conv && !u.converted) || u.retryAt > now)) u = null;
     if (!u) {
-      var next = uploads.filter(function (x) { return x.status === 'queued'; }).map(function (x) { return x.retryAt; })[0];
+      var next = uploads.filter(function (x) { return x.status === 'queued' && x.retryAt; }).map(function (x) { return x.retryAt; })[0];
       if (next) setTimeout(pump, Math.max(200, next - now));
       return;
     }
@@ -1084,23 +1346,26 @@
     u.status = status; u.error = err || null; u.file = null; u.note = null;
     upBusy = false;
     render();
-    setTimeout(pump, 50);
+    setTimeout(function () { pump(); convPump(); }, 50);
   }
-  function uploadsActive() { return uploads.some(function (u) { return u.status === 'queued' || u.status === 'uploading' || u.status === 'processing'; }); }
+  function uploadsActive() { return uploads.some(function (u) { return u.status === 'queued' || u.status === 'converting' || u.status === 'uploading' || u.status === 'processing'; }); }
   window.addEventListener('beforeunload', function (e) { if (uploadsActive()) { e.preventDefault(); e.returnValue = t('uploads_running'); return e.returnValue; } });
   function updateUploadRow(u) {
     var el = document.querySelector('[data-up="' + u.key + '"] .bar > i');
     if (el) el.style.width = Math.round(u.progress * 100) + '%';
     var st = document.querySelector('[data-up="' + u.key + '"] .st');
-    if (st) st.textContent = t('uploading') + ' ' + Math.round(u.progress * 100) + ' %';
+    if (st) st.textContent = upLabel(u) + ' ' + Math.round(u.progress * 100) + ' %';
+    if (u.disc) updateDiscRow(u.disc);
   }
+  function upLabel(u) { return u.status === 'converting' ? t('converting', mp3Kbps()) : t('uploading'); }
   function uploadsBlock(playlistId) {
     var list = uploads.filter(function (u) { return u.playlistId === (playlistId || null); });
     if (!list.length) return null;
     var anyDone = list.some(function (u) { return u.status === 'done' || u.status === 'error'; });
     return h('div', { class: 'card uploads' },
       list.map(function (u) {
-        var st = u.status === 'queued' ? (u.note || t('queued')) : u.status === 'uploading' ? t('uploading') + ' ' + Math.round(u.progress * 100) + ' %'
+        var st = u.status === 'queued' ? (u.note || (u.conv && !u.converted ? t('queued_conv', mp3Kbps()) : t('queued')))
+          : u.status === 'uploading' || u.status === 'converting' ? upLabel(u) + ' ' + Math.round(u.progress * 100) + ' %'
           : u.status === 'processing' ? t('processing') : u.status === 'done' ? t('done') : u.error;
         return h('div', { class: 'up ' + u.status, 'data-up': u.key },
           h('div', { class: 'row' }, h('div', { class: 'grow ellipsis' }, u.name), h('span', { class: 'small muted' }, fmtBytes(u.size))),
@@ -1122,10 +1387,62 @@
     var z = h('div', { class: 'drop' }, t('drop_here'), h('div', { class: 'small' }, t('files_hint')));
     z.addEventListener('dragover', function (e) { e.preventDefault(); z.classList.add('over'); });
     z.addEventListener('dragleave', function () { z.classList.remove('over'); });
-    z.addEventListener('drop', function (e) { e.preventDefault(); z.classList.remove('over'); if (e.dataTransfer && e.dataTransfer.files.length) enqueue(e.dataTransfer.files, playlistId); });
+    // folders too: their files go into this playlist, folder after folder, in disc order
+    z.addEventListener('drop', function (e) { e.preventDefault(); z.classList.remove('over'); if (e.dataTransfer && e.dataTransfer.files.length) groupsFromDrop(e.dataTransfer).then(function (g) { addDiscs(g, playlistId); }); });
     return z;
   }
   var canHover = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  // discs on the playlists page: one line per disc (folder) being sent, with its progress
+  var discSeq = 0;
+  function discInfo(disc) {
+    var list = uploads.filter(function (u) { return u.disc === disc; });
+    var done = list.filter(function (u) { return u.status === 'done'; }).length, bad = list.filter(function (u) { return u.status === 'error'; });
+    var cur = list.filter(function (u) { return u.status === 'uploading' || u.status === 'processing' || u.status === 'converting'; })[0];
+    var st = cur ? cur.name + ' · ' + (cur.status === 'processing' ? t('processing') : upLabel(cur) + ' ' + Math.round(cur.progress * 100) + ' %')
+      : done + bad.length < list.length ? t('queued') : bad.length ? t('disc_errors', bad.length) : t('done');
+    return { n: list.length, done: done, bad: bad, st: st, frac: (done + bad.length + (cur ? cur.progress : 0)) / Math.max(1, list.length),
+             over: done + bad.length === list.length };
+  }
+  function updateDiscRow(disc) {
+    var el = document.querySelector('[data-disc="' + disc.id + '"]');
+    if (!el) return;
+    var i = discInfo(disc);
+    el.querySelector('.bar > i').style.width = Math.round(i.frac * 100) + '%';
+    el.querySelector('.st').textContent = i.st;
+  }
+  function discsBlock() {
+    var discs = [];
+    uploads.forEach(function (u) { if (u.disc && discs.indexOf(u.disc) < 0) discs.push(u.disc); });
+    if (!discs.length) return null;
+    var running = discs.some(function (d) { return !discInfo(d).over; });
+    return h('div', { class: 'card uploads', 'data-k': 'discs' }, discs.map(function (d) {
+      var i = discInfo(d);
+      return h('div', { class: 'up' + (i.over ? (i.bad.length ? ' error' : ' done') : ''), 'data-disc': d.id },
+        h('div', { class: 'row' }, h('div', { class: 'grow ellipsis' }, '💿 ' + d.title), h('span', { class: 'small muted' }, t('disc_progress', i.done, i.n))),
+        h('div', { class: 'bar' }, h('i', { style: 'width:' + Math.round(i.frac * 100) + '%' })),
+        h('div', { class: 'st small' }, i.st),
+        i.bad.map(function (u) { return h('div', { class: 'small accent-text ellipsis' }, u.name + ' : ' + u.error); }));
+    }), running ? null : h('div', { class: 'up' }, h('button', { class: 'btn ghost block', 'data-k': 'discclear', onclick: function () {
+      uploads = uploads.filter(function (u) { return !u.disc; }); render();
+    } }, t('clear_done'))));
+  }
+  // "Add albums": a folder picker, on computers (phones cannot pick a folder)
+  function discButton() {
+    if (!canHover || !('webkitdirectory' in document.createElement('input'))) return null;
+    var inp = h('input', { type: 'file', webkitdirectory: true, multiple: true, class: 'sr', 'aria-hidden': 'true', tabindex: '-1', 'data-k': 'discinput',
+      onchange: function () { var f = inp.files; if (f && f.length) addDiscs(groupsFromList(f), null); inp.value = ''; } });
+    return h('label', { class: 'btn', tabindex: '0', role: 'button', 'data-k': 'discadd',
+      onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } } }, icon('upload'), t('disc_add'), inp);
+  }
+  function discDrop() {
+    if (!canHover) return null;
+    var z = h('div', { class: 'drop', 'data-k': 'discdrop' }, t('disc_drop'), h('div', { class: 'small' }, t('disc_hint', mp3Kbps())));
+    z.addEventListener('dragover', function (e) { e.preventDefault(); z.classList.add('over'); });
+    z.addEventListener('dragleave', function () { z.classList.remove('over'); });
+    z.addEventListener('drop', function (e) { e.preventDefault(); z.classList.remove('over'); if (e.dataTransfer && e.dataTransfer.files.length) groupsFromDrop(e.dataTransfer).then(function (g) { addDiscs(g, null); }); });
+    return z;
+  }
 
   /* ------------------------------------------------------------------ token visuals */
   function tokVisual(starId, cls, live) {
@@ -1179,13 +1496,17 @@
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
+    var addDisc = discButton();
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),
         h('a', { href: '#/settings/update' }, t('upd_see'))) : null,
       un ? h('div', { class: 'banner row' }, h('span', { class: 'grow' }, t('unused_banner', un)),
         h('a', { href: '#/library/unused' }, t('see'))) : null,
       list.length ? null : h('div', { class: 'empty' }, h('div', { class: 'big' }, '🎵'), t('no_playlists')),
-      h('div', { class: 'plgrid' }, cards)
+      h('div', { class: 'plgrid' }, cards),
+      discsBlock(),
+      addDisc ? h('div', { class: 'actions', style: 'margin-top:14px' }, addDisc) : null,
+      discDrop()
     ];
   }
 
@@ -2108,11 +2429,11 @@
       meter !== null && meter !== undefined ? h('div', { class: 'minibar' }, h('i', { class: meterCls || '', style: 'width:' + Math.max(0, Math.min(100, meter)) + '%' })) : null);
   }
   var SUBS = { bluetooth: 's_bt', night: 'night_mode', airplane: 'air_title', wifi: 'wifi', update: 's_update', language: 'language',
-               parent: 'parent_label', home: 's_home', maintenance: 's_maint', theme: 's_theme' };
+               parent: 'parent_label', home: 's_home', maintenance: 's_maint', theme: 's_theme', mp3: 's_mp3' };
   function settingsPage(sub) {
     var body = sub === 'bluetooth' ? btPage() : sub === 'night' ? nightPage() : sub === 'airplane' ? airPage() : sub === 'wifi' ? wifiPage()
       : sub === 'update' ? updateCard() : sub === 'language' ? langPage() : sub === 'parent' ? parentPage() : sub === 'home' ? homePage()
-      : sub === 'maintenance' ? maintPage() : sub === 'theme' ? themePage() : null;
+      : sub === 'maintenance' ? maintPage() : sub === 'theme' ? themePage() : sub === 'mp3' ? mp3Page() : null;
     return body ? h('div', { class: 'settings sub' }, body) : viewSettings();
   }
   function viewSettings() {
@@ -2139,6 +2460,7 @@
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
+        canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
         typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null
       ]),
       c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
@@ -2173,6 +2495,12 @@
     return sGroup(null, LANGS.map(function (l) {
       return sRow({ label: l[1], lang: l[0], check: lang === l[0], nochev: true, k: 'lang-' + l[0], onclick: function () { setLang(l[0]); } });
     }), t('s_lang_foot'));
+  }
+  // the MP3 quality for FLAC / WAV sent to the Jooki, kept on this phone or computer
+  function mp3Page() {
+    return sGroup(null, MP3_RATES.map(function (v) {
+      return sRow({ label: t('s_mp3_' + v), check: mp3Kbps() === v, nochev: true, k: 'mp3-' + v, onclick: function () { lsSet('oj.mp3', String(v)); render(); } });
+    }), t('s_mp3_foot'));
   }
   function themePage() {
     return sGroup(null, THEMES.map(function (v) {

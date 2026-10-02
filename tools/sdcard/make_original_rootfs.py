@@ -32,6 +32,7 @@ PUB_ORIG = "/jooki/app/www/public-openjooki-orig"
 ADDED = ("/etc/openjooki-version", "/etc/rcS.d/S57_oj-security.sh", "/etc/mosquitto/mosquitto.conf.openjooki-base",
          PUB + "/app.js", PUB + "/app.css", PUB + "/mqtt.js", PUB + "/manifest.json", PUB + "/icon-192.png",
          PUB + "/icon-512.png", PUB + "/apple-touch-icon.png", PUB + "/index.html", PUB + "/service-worker.js",
+         PUB + "/mp3-worker.js", PUB + "/lame.min.js", PUB + "/lame.LICENSE.txt",
          PUB + "/oj-auth.json", PUB + "/openjooki-status.txt")
 ADDED_DIRS = (PUB + "/tokimg",)                          # jooki.py WEBUI_DIRS: the token pictures
 CHECKED = ("jooki/app/", "jooki/bin/", "jooki/lib/")    # what a pre-OpenJooki backup holds of the system

@@ -363,6 +363,54 @@ with sync_playwright() as p:
         check("E23 the Christmas tree runs through many colours on the ring", len(set(rings)) >= 6, rings[:12])
         # white (idle), off (a token plays) or dimmed white (night): anything but a rainbow colour
         check("E23 then the ring goes back to its real colour", rings and rings[-1] in ("RING,200,200,200", "RING,0,0,0", "RING,10,10,10"), rings[-3:])
+    # E25 discs: FLAC (24 bit / 96 kHz) turned into MP3 in the browser, tags and a small cover kept
+    def probe(path):
+        r = subprocess.run(["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path], capture_output=True, text=True)
+        try: return json.loads(r.stdout)
+        except Exception: return {}
+    FLAC1 = "media/Disque FLAC/b - première.flac"
+    pid = J.pls and [k for k, v in J.pls.items() if k != "TRASH" and not v.get("spotify")][0]
+    pg.goto(URL + "/#/p/" + pid); pg.wait_for_selector("input[type=file]", state="attached", timeout=15000)
+    n0 = len(J.pls[pid]["tracks"])
+    pg.set_input_files("input[type=file]", [FLAC1])
+    seen_conv = False
+    for _ in range(240):
+        if pg.locator(".up.converting").count(): seen_conv = True
+        if len(J.pls[pid]["tracks"]) > n0: break
+        time.sleep(0.25)
+    new = J.pls[pid]["tracks"][-1] if len(J.pls[pid]["tracks"]) > n0 else None
+    tr = J.tracks.get(new, {}) if new else {}
+    check("E25 a FLAC sent from the page arrives as an MP3, converted in the browser", tr.get("codec2") == "mp3" and seen_conv, (seen_conv, tr))
+    check("E25 ... with its tags (title, artist, album)", tr.get("title") == "Première piste" and tr.get("artist") == "Les Testeurs" and tr.get("album") == "Disque d'essai", tr)
+    pr = probe(tr.get("filename") or "")
+    st = [s for s in pr.get("streams", []) if s.get("codec_type") == "audio"]
+    pic = [s for s in pr.get("streams", []) if s.get("codec_type") == "video"]
+    tags = {k.lower(): v for k, v in (pr.get("format", {}).get("tags") or {}).items()}
+    check("E25 ... 256 kbps, 44.1 kHz stereo (from 24 bit / 96 kHz)", st and st[0].get("sample_rate") == "44100" and st[0].get("channels") == 2
+          and abs(int(st[0].get("bit_rate") or 0) - 256000) < 2000, st)
+    check("E25 ... track number, year, album artist and a 300 px cover inside", tags.get("track") == "1/2" and tags.get("date") == "1999"
+          and tags.get("album_artist") == "Les Testeurs" and pic and max(pic[0].get("width", 0), pic[0].get("height", 0)) == 300, (tags, pic))
+    check("E25 ... and much smaller than the FLAC", 0 < int(pr.get("format", {}).get("size") or 0) < os.path.getsize(FLAC1) / 2,
+          (pr.get("format", {}).get("size"), os.path.getsize(FLAC1)))
+    # E25 a folder chosen on a computer becomes a playlist named after its album, tracks in disc order
+    dctx = b.new_context(viewport={"width": 1280, "height": 900}, locale="fr-FR", timezone_id="Europe/Paris", bypass_csp=True)
+    dpg = dctx.new_page()
+    dpg.on("pageerror", lambda e: errs.append("PAGEERROR (desktop) " + str(e)))
+    dpg.goto(URL + "/"); dpg.wait_for_selector("[data-k=discinput]", state="attached", timeout=15000)
+    check("E25 the playlists page offers 'Ajouter des disques' and a drop zone for folders on a computer",
+          dpg.locator("[data-k=discadd]").count() == 1 and dpg.locator("[data-k=discdrop]").count() == 1)
+    dpg.set_input_files("[data-k=discinput]", "media/Disque FLAC")
+    disc = None
+    for _ in range(360):
+        disc = pl_by_title("Disque d'essai")
+        if disc and len(J.pls[disc]["tracks"]) >= 2 and not dpg.locator(".up.converting, .up.uploading").count(): break
+        time.sleep(0.25)
+    titles = [J.tracks.get(x, {}).get("title") for x in (J.pls[disc]["tracks"] if disc else [])]
+    check("E25 ... a playlist 'Disque d'essai' with its 2 tracks in disc order (not file-name order)", titles == ["Première piste", "Deuxième piste"], titles)
+    dpg.wait_for_function("document.querySelector('[data-k=discs]') && /2 \\/ 2/.test(document.querySelector('[data-k=discs]').textContent)", timeout=30000)
+    check("E25 ... the cover.jpg and the .cue are left out, no error", "pas pu" not in dpg.locator("[data-k=discs]").inner_text()
+          and all(J.tracks.get(x, {}).get("codec2") == "mp3" for x in J.pls[disc]["tracks"]), dpg.locator("[data-k=discs]").inner_text())
+    dctx.close()
     # E14 offline / reconnect
     subprocess.run(["pkill", "-f", "^mosquitto -c"]); time.sleep(2.5)
     off = pg.locator(".conn").inner_text()

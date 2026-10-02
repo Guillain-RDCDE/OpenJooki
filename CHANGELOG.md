@@ -1,5 +1,12 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.2.4 (2 October 2026) — discs keep going behind another tab
+- **A disc keeps converting while you do something else.** Left behind another browser tab, a disc
+  seemed to stop: Chrome slows the timers of a hidden tab, after five minutes to one a minute, and
+  the page waited up to a minute between two tracks. The steps now follow one another without a
+  timer. If your browser's energy saver still freezes the tab, add `jooki.local` to its sites that
+  always stay active (in Chrome: *Settings > Performance*).
+
 ## OpenJooki 2.2.3 (2 October 2026) — your FLAC discs, three times lighter
 - **Your discs in FLAC, three times lighter.** FLAC and WAV files are now turned into MP3 on your
   computer or phone, in the page, before they are sent: an album takes about 100 MB instead of

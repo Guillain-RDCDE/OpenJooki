@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.2.3 (2 October 2026) — your FLAC discs, three times lighter
 - **Your discs in FLAC, three times lighter.** FLAC and WAV files are now turned into MP3 on your
   computer or phone, in the page, before they are sent: an album takes about 100 MB instead of
   300, and goes over three times faster. Title, artist, album, track number and the cover are kept

@@ -1334,11 +1334,11 @@
       u.status = 'queued'; u.progress = 0;
       u.retryAt = Date.now() + UP_DELAYS[Math.min(u.tries - 1, UP_DELAYS.length - 1)];
       u.note = t('up_retrying', u.tries + 1, UP_TRIES);
-      render(); setTimeout(pump, 50);
+      render(); soon(pump);
       return;
     }
     u.status = 'error'; u.error = why; u.canRetry = !!u.file;
-    render(); setTimeout(pump, 50);
+    render(); soon(pump); soon(convPump);
   }
   function retryUpload(u) { u.status = 'queued'; u.tries = 0; u.retryAt = 0; u.error = null; u.canRetry = false; render(); pump(); }
   function finishUp(u, status, err) {
@@ -1346,8 +1346,13 @@
     u.status = status; u.error = err || null; u.file = null; u.note = null;
     upBusy = false;
     render();
-    setTimeout(function () { pump(); convPump(); }, 50);
+    soon(function () { pump(); convPump(); });
   }
+  // The next step starts as a microtask, never a timer: Chrome slows a hidden tab's timers to one a
+  // second, and after five minutes to ONE A MINUTE, so a disc left to convert behind another tab
+  // waited up to a minute between tracks. (A Web Lock would also keep the tab from being frozen, but
+  // the page is served over plain http, where browsers do not offer them.)
+  function soon(fn) { Promise.resolve().then(fn); }
   function uploadsActive() { return uploads.some(function (u) { return u.status === 'queued' || u.status === 'converting' || u.status === 'uploading' || u.status === 'processing'; }); }
   window.addEventListener('beforeunload', function (e) { if (uploadsActive()) { e.preventDefault(); e.returnValue = t('uploads_running'); return e.returnValue; } });
   function updateUploadRow(u) {

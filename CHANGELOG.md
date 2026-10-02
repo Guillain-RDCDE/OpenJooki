@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.2.2 (2 October 2026) — http://jooki.local/ works every time
 - **`http://jooki.local/` works every time.** Opening the page by its name often failed while the
   address (192.168.1.x) worked. The Jooki's Wi-Fi chip misses most of the questions "who is
   jooki.local?" that phones send to the whole network: one in five got through on our Jooki. Now

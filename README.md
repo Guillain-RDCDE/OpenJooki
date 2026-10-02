@@ -21,7 +21,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.2.1:** the page in dark or light, your choice (*Settings > Appearance*); and a
+**New in 2.2.2:** `http://jooki.local/` opens the page every time (type `http://` in front).
+2.2.1: the page in dark or light, your choice (*Settings > Appearance*); and a
 *Christmas tree* button, just for fun: all the colours of the lights for 5 seconds.
 2.2.0: each round flat token can start its own story; 659 ready-made pictures for
 your tokens (no Internet needed); a new, shorter Settings page.

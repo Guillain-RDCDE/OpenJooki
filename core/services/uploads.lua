@@ -10,15 +10,10 @@
 --   a user message UPLOAD_FAIL[_TYPE] is raised, upload.done is emitted.
 local json = require("vendor.json")
 local library = require("services.library")
+local util = require("services.util")
 local uploads = {}
 
-local function data_dir(doc) return (doc.config and doc.config.data_dir) or "/jooki/external/jooki" end
-local function scratch_dir(doc) return (doc.config and doc.config.scratch_dir) or "/run/openjooki" end
-local function emit(t, extra)
-  local e = { type = t }
-  for k, v in pairs(extra or {}) do e[k] = v end
-  return { kind = "emit", event = e }
-end
+local data_dir, scratch_dir, emit = util.data_dir, util.scratch_dir, util.emit
 
 local function fail(ref, kind, err, remove_path)
   local cmds = {}

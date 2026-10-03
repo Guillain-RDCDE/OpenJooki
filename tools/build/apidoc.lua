@@ -73,7 +73,7 @@ io.write("| Jooki → page | `" .. api.TOPIC_STATE .. "` | full: `{\"v\":2, \"re
 io.write("| Jooki → page | `" .. api.TOPIC_EVENT .. "` | `{\"v\":2, \"type\":\"…\", \"payload\":{…}}` |\n\n")
 io.write("Error codes: `invalid_argument` (field names the culprit), `not_found`, `forbidden` (the parent code, when one is set: `PARENT_CODE_REQUIRED`), `read_only`, `conflict`, `unavailable`, `internal`.\n\n")
 io.write("The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.lua` for one release.\n\n")
-io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `system`, `config`.\n\n")
+io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
 io.write("## Commands (" .. #api.commands() .. ")\n\n")
 local cmds = api.commands()
 for _, name in ipairs(cmds) do

@@ -15,6 +15,7 @@
 --             system.event { name }          (Evt.Character.Detect / .Empty / .Write)
 -- Writes:     tokens.json when a token is learned (through library.mutate)
 local library = require("services.library")
+local util = require("services.util")
 local tokens = {}
 
 -- character codes (docs/22 §3.5); anything else is "new.<hex>" and still works
@@ -104,7 +105,7 @@ end
 -- (stored as <data_dir>/uploads/upload_<id>), then TOKEN_SET_IMAGE { tagId, uploadId }.
 -- The file moves to <data_dir>/artwork/tok_<tagId>.png (served at /artwork/) and the token
 -- keeps that address, with the file size as a cache key so the page reloads a new picture.
-local function data_dir(doc) return (doc.config and doc.config.data_dir) or "/jooki/external/jooki" end
+local data_dir = util.data_dir
 function tokens.image_path(doc, uid) return data_dir(doc) .. "/artwork/tok_" .. uid .. ".png" end
 
 local function image_fail(ref, err)

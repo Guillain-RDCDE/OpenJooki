@@ -17,7 +17,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.
 
 ## State document keys
 
-`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `system`, `config`.
+`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
 
 ## Commands (37)
 

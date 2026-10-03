@@ -4,24 +4,15 @@
 --      state.bedtime_int = { fade, ends, restore, stop_at_end, ... } (internal)
 -- Drives state.limits = { maxvol, fade, dim } that the device applies to the
 -- speaker and the lights (event limits.changed).
+local util = require("services.util")
 local bedtime = {}
 
 local DEF = { enabled = true, start = 1200, stop = 420, timer = 20, maxvol = 30, dim = true, tzbase = 60, tzdst = "EU" }
 local FADE_S, TRACK_FADE_MS = 60, 20000
 bedtime.DEFAULTS = DEF
 
-local function copy(v)
-  if type(v) ~= "table" then return v end
-  local out = {}
-  for k, x in pairs(v) do out[k] = copy(x) end
-  return out
-end
-local function emit(t, extra)
-  local e = { type = t }
-  for k, v in pairs(extra or {}) do e[k] = v end
-  return { kind = "emit", event = e }
-end
-local function path(doc) return ((doc.config and doc.config.data_dir) or "/jooki/external/jooki") .. "/bedtime.json" end
+local copy, emit, err = util.copy, util.emit, util.err
+local function path(doc) return util.data_dir(doc) .. "/bedtime.json" end
 
 -- ------------------------------------------------------------------ clock (UTC -> local minutes, EU summer time)
 local function dow(y, m, d)
@@ -126,12 +117,7 @@ function bedtime.on_boot(doc, ev)
   return r
 end
 
-function bedtime.on_timer(doc, ev)
-  if ev.name == "bedtime.clock" then return bedtime.on_clock(doc, ev) end
-  if ev.name == "bedtime.tick" then return bedtime.on_tick(doc, ev) end
-  return nil
-end
-
+--- Every 15 s (timer bedtime.clock): is it night now?
 function bedtime.on_clock(doc, ev)
   local b, i = bt_of(doc), int_of(doc)
   local n = bedtime.is_night(b.cfg, ev.wall)
@@ -145,7 +131,7 @@ function bedtime.on_tick(doc, ev)
   local b, i = bt_of(doc), int_of(doc)
   local cmds = {}
   local pb = doc.playback or {}
-  if i.restore and pb.state ~= "playing" and pb.state ~= "starting" then
+  if i.restore and not util.is_playing(doc) then
     i.restore = nil
     set_fade(i, 1)
   end
@@ -215,7 +201,7 @@ function bedtime.on_sleep(doc, p, now)
     return result(doc, b, i, { start_sleep(b, i, now, nil, "track"), { kind = "log", level = "info", key = "bedtime.sleep", fields = { mode = "track" } } })
   end
   local s = tonumber(p.seconds) or (tonumber(p.minutes) and tonumber(p.minutes) * 60)
-  if not s or s < 1 or s > 4 * 3600 then return nil, { code = "invalid_argument", field = "seconds", message = "invalid duration" } end
+  if not s or s < 1 or s > 4 * 3600 then return nil, err("invalid_argument", "seconds", "invalid duration") end
   return result(doc, b, i, { start_sleep(b, i, now, math.floor(s), "time"), { kind = "log", level = "info", key = "bedtime.sleep", fields = { seconds = math.floor(s) } } })
 end
 
@@ -231,19 +217,19 @@ end
 
 --- bedtime.set { enabled?, start?, stop?, timer?, maxvol?, dim?, tzbase?, tzdst? }
 function bedtime.on_set(doc, p, wall)
-  if type(p) ~= "table" then return nil, { code = "invalid_argument", field = "", message = "invalid payload" } end
+  if type(p) ~= "table" then return nil, err("invalid_argument", "", "invalid payload") end
   local b, i = bt_of(doc), int_of(doc)
   local n = copy(b.cfg)
   for _, k in ipairs({ "enabled", "dim" }) do
     if p[k] ~= nil then
-      if type(p[k]) ~= "boolean" then return nil, { code = "invalid_argument", field = k, message = "invalid " .. k } end
+      if type(p[k]) ~= "boolean" then return nil, err("invalid_argument", k, "invalid " .. k) end
       n[k] = p[k]
     end
   end
   for _, k in ipairs({ "start", "stop" }) do
     if p[k] ~= nil then
       local v = hm(p[k])
-      if not v then return nil, { code = "invalid_argument", field = k, message = "invalid " .. k } end
+      if not v then return nil, err("invalid_argument", k, "invalid " .. k) end
       n[k] = v
     end
   end
@@ -251,12 +237,12 @@ function bedtime.on_set(doc, p, wall)
   for k, r in pairs(lim) do
     if p[k] ~= nil then
       local v = tonumber(p[k])
-      if not v or v < r[1] or v > r[2] then return nil, { code = "invalid_argument", field = k, message = "invalid " .. k } end
+      if not v or v < r[1] or v > r[2] then return nil, err("invalid_argument", k, "invalid " .. k) end
       n[k] = math.floor(v)
     end
   end
   if p.tzdst ~= nil then
-    if p.tzdst ~= "EU" and p.tzdst ~= "none" then return nil, { code = "invalid_argument", field = "tzdst", message = "invalid tzdst" } end
+    if p.tzdst ~= "EU" and p.tzdst ~= "none" then return nil, err("invalid_argument", "tzdst", "invalid tzdst") end
     n.tzdst = p.tzdst
   end
   b.cfg = n
@@ -272,7 +258,8 @@ bedtime.schemas = S
 
 function bedtime.install(api, dispatch)
   dispatch.on("boot", "bedtime", bedtime.on_boot)
-  dispatch.on("timer", "bedtime", bedtime.on_timer)
+  dispatch.on_timer("bedtime.clock", "bedtime", bedtime.on_clock)
+  dispatch.on_timer("bedtime.tick", "bedtime", bedtime.on_tick)
   -- the page just gave the Jooki its time (no Internet): night or day, now rather than in 15 s
   dispatch.on("clock.set", "bedtime", function(doc) return bedtime.on_clock(doc, { wall = os.time() }) end)
   dispatch.on("playback.changed", "bedtime", bedtime.on_playback)

@@ -108,6 +108,7 @@ local function safe_path(docroot, urlpath)
   if #parts == 0 then parts = { "index.html" } end
   return docroot .. "/" .. table.concat(parts, "/")
 end
+httpd._safe_path, httpd._url_decode, httpd._ext_of = safe_path, url_decode, ext_of   -- tests only
 
 local function file_size(path)
   local f = io.open(path, "rb")

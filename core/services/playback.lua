@@ -1,25 +1,24 @@
 -- services.playback: what plays, in what order, and where it resumes.
--- Owns state.playback:
+-- Owns state.playback (what the page sees):
 --   { state = "idle"|"starting"|"playing"|"paused"|"ended",
 --     position_ms, now = { playlist, index, queue_pos, track, uri, service, audiobook,
 --                          title, album, artist, duration_ms, has_next, has_prev, image },
---     paused_by, paused_at, resume_ms (pending seek), last = { [playlist] = index },
---     shuffle = { [playlist] = { order... } }, seed (set at boot from the clock),
---     sys = { name, after, resume_music } (a system sound in progress) }
--- and state.resume (persisted as resume.json, 1.3 shape: { [playlist] = { id, pos, t } }).
+--     paused_by, paused_at, resume_ms (pending seek) }
+-- and state.playback_int (its own bookkeeping, never published):
+--   { last = { [playlist] = index }, shuffle = { [playlist] = { order... } }, seed (set at boot from
+--     the clock), sys = { name, after, resume_music } (a system sound in progress), resume_dirty }
+-- The handlers work on the two merged into one table (pb_of) and split them again on the way out (st).
+-- Also owns state.resume (persisted as resume.json, 1.3 shape: { [playlist] = { id, pos, t } }).
 -- Talks to audio_ctrl: stream 7 = music, stream 3 = system sounds (docs/22 §4.4).
+local util = require("services.util")
 local playback = {}
 
 local MUSIC, SOUND = 7, 3
 local BACK_PAUSE, BACK_TIMER, MIN_BACK = 15000, 60000, 5000
 local AUDIO_OUT = "/j/audio/out/"
+local INT = { last = true, shuffle = true, seed = true, sys = true, resume_dirty = true }   -- the playback_int keys
 
-local function copy(v)
-  if type(v) ~= "table" then return v end
-  local out = {}
-  for k, x in pairs(v) do out[k] = copy(x) end
-  return out
-end
+local copy, emit, is_playing = util.copy, util.emit, util.is_playing
 
 local function cmd_audio(action, id, arg)
   local payload = tostring(id)
@@ -27,23 +26,23 @@ local function cmd_audio(action, id, arg)
   return { kind = "bus.publish", topic = AUDIO_OUT .. action, payload = payload }
 end
 
-local function emit(t, extra)
-  local e = { type = t }
-  for k, v in pairs(extra or {}) do e[k] = v end
-  return { kind = "emit", event = e }
-end
-
 local function pb_of(doc)
   local pb = copy(doc.playback or {})
+  for k, v in pairs(doc.playback_int or {}) do pb[k] = copy(v) end
   pb.state = pb.state or "idle"
   pb.last = pb.last or {}
   pb.shuffle = pb.shuffle or {}
   return pb
 end
 
-local function resume_path(doc)
-  return ((doc.config and doc.config.data_dir) or "/jooki/external/jooki") .. "/resume.json"
+--- The working table split back into the two sub-trees a handler returns: { playback, playback_int }.
+local function st(pb)
+  local pub, int = {}, {}
+  for k, v in pairs(pb) do if INT[k] then int[k] = v else pub[k] = v end end
+  return { playback = pub, playback_int = int }
 end
+
+local function resume_path(doc) return util.data_dir(doc) .. "/resume.json" end
 
 local function write_resume(doc, resume)
   return { kind = "files.write", path = resume_path(doc), doc = resume, version = 1 }
@@ -135,7 +134,7 @@ local function start(doc, pb, playlist_id, opts)
     pb.now, pb.state, pb.position_ms, pb.resume_ms = now, "starting", 0, nil
     pb.paused_by, pb.paused_at = nil, nil
     cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
-    return { state = { playback = pb }, commands = cmds }
+    return { state = st(pb), commands = cmds }
   end
   local n = #(p.tracks or {})
   local cmds = {}
@@ -162,7 +161,7 @@ local function start(doc, pb, playlist_id, opts)
   local now = describe(doc, playlist_id, p, index, queue_pos, n)
   -- same track already loaded?
   if pb.now and pb.now.playlist == playlist_id and pb.now.index == index and not opts.restart then
-    if pb.state == "playing" or pb.state == "starting" then return { state = { playback = pb }, commands = cmds } end
+    if pb.state == "playing" or pb.state == "starting" then return { state = st(pb), commands = cmds } end
     if pb.state == "paused" then return playback.resume_paused(doc, pb, opts.now_s) end
   end
   local streamed = pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER")
@@ -181,7 +180,7 @@ local function start(doc, pb, playlist_id, opts)
   pb.paused_by, pb.paused_at = nil, nil
   cmds[#cmds + 1] = cmd_audio("play", MUSIC, now.uri)
   cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
-  return { state = { playback = pb }, commands = cmds }
+  return { state = st(pb), commands = cmds }
 end
 
 --- Continue after a pause, with the rewind rules: short pause -> exactly where it
@@ -202,7 +201,7 @@ function playback.resume_paused(_, pb, now_s)
   end
   cmds[#cmds + 1] = cmd_audio("cont", MUSIC)
   pb.paused_by, pb.paused_at = nil, nil
-  return { state = { playback = pb }, commands = cmds }
+  return { state = st(pb), commands = cmds }
 end
 
 -- ------------------------------------------------------------------ resume bookkeeping
@@ -230,7 +229,7 @@ local function stream_cmds(pb, action, arg) return { commands = require("service
 
 function playback.on_pause(doc, ev)
   local pb = pb_of(doc)
-  if pb.state ~= "playing" and pb.state ~= "starting" then return nil end
+  if not is_playing(doc) then return nil end
   if is_streaming(pb) then
     -- taking a token off pauses what a token started, not Spotify started from the phone
     if ev.source == "token" and not pb.now.playlist then return nil end
@@ -238,9 +237,9 @@ function playback.on_pause(doc, ev)
   end
   pb.paused_by, pb.paused_at = ev.source, ev.now
   if pb.now and pb.now.service == "STREAM" then
-    return { state = { playback = pb }, commands = { cmd_audio("stop", MUSIC) } }
+    return { state = st(pb), commands = { cmd_audio("stop", MUSIC) } }
   end
-  return { state = { playback = pb }, commands = { cmd_audio("pauz", MUSIC) } }
+  return { state = st(pb), commands = { cmd_audio("pauz", MUSIC) } }
 end
 
 function playback.on_resume(doc, ev)
@@ -256,15 +255,14 @@ function playback.on_resume(doc, ev)
 end
 
 function playback.on_toggle(doc, ev)
-  local pb = pb_of(doc)
-  if pb.state == "playing" or pb.state == "starting" then return playback.on_pause(doc, ev) end
+  if is_playing(doc) then return playback.on_pause(doc, ev) end
   return playback.on_resume(doc, ev)
 end
 
 local function step(doc, pb, delta, ev)
   local now = pb.now
   if not now then return nil end
-  if not ev.forced and pb.state ~= "playing" and pb.state ~= "starting" then return nil end
+  if not ev.forced and not is_playing(doc) then return nil end
   local p = doc.library and doc.library.playlists[now.playlist]
   if not p then return nil end
   local q = queue_for(doc, pb, now.playlist, p)
@@ -288,10 +286,10 @@ function playback.on_prev(doc, ev)
   local pb = pb_of(doc)
   if not pb.now then return nil end
   if is_streaming(pb) then return stream_cmds(pb, "prev") end
-  if not ev.forced and pb.state ~= "playing" and pb.state ~= "starting" then return nil end
+  if not ev.forced and not is_playing(doc) then return nil end
   if (pb.position_ms or 0) > 5000 then
     pb.position_ms = 0
-    return { state = { playback = pb }, commands = { cmd_audio("seek", MUSIC, 1) } }
+    return { state = st(pb), commands = { cmd_audio("seek", MUSIC, 1) } }
   end
   return step(doc, pb, -1, ev)
 end
@@ -302,7 +300,7 @@ function playback.on_seek(doc, ev)
   local ms = math.max(1, math.floor(tonumber(ev.ms) or 1))
   if is_streaming(pb) then return stream_cmds(pb, "seek", ms) end
   pb.position_ms = ms
-  return { state = { playback = pb }, commands = { cmd_audio("seek", MUSIC, ms) } }
+  return { state = st(pb), commands = { cmd_audio("seek", MUSIC, ms) } }
 end
 
 function playback.on_skip(doc, ev)
@@ -316,7 +314,7 @@ function playback.on_stop(doc)
   local pb = pb_of(doc)
   if pb.state == "idle" then return nil end
   if is_streaming(pb) then return stream_cmds(pb, "stop") end
-  return { state = { playback = pb }, commands = { cmd_audio("stop", MUSIC) } }
+  return { state = st(pb), commands = { cmd_audio("stop", MUSIC) } }
 end
 
 -- audio engine events ----------------------------------------------------------
@@ -344,7 +342,7 @@ function playback.on_audio(doc, ev)
       resume_changed = note_position(doc, pb, resume, ev.ms, false)
       pb.resume_dirty = resume_changed or pb.resume_dirty
     end
-    local r = { state = { playback = pb } }
+    local r = { state = st(pb) }
     if resume_changed then r.state.resume = resume end
     return r
   end
@@ -385,21 +383,22 @@ function playback.on_audio(doc, ev)
     local cfg = doc.audiocfg or {}
     -- with the sleep timer in "end of chapter" mode, stay ended (bedtime clears its flag on playback.changed)
     local stop_here = doc.bedtime_int and doc.bedtime_int.stop_at_end
+    -- (start and step work on this very pb: only their commands are to be collected)
     if not stop_here and p and cfg.repeat_mode == 2 and not p.audiobook then
       local r = start(doc, pb, now.playlist, { index = now.index, restart = true })
-      if r then pb = r.state.playback for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end end
+      if r then for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end end
     elseif not stop_here and p then
       local r = step(doc, pb, 1, { forced = true, now = ev.now })
-      if r then pb = r.state.playback for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end end
+      if r then for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end end
     end
   end
   cmds[#cmds + 1] = emit("playback.changed", { state = pb.state })
-  local result = { state = { playback = pb }, commands = cmds }
   if resume_changed then
-    result.state.resume = resume
     cmds[#cmds + 1] = write_resume(doc, resume)
     pb.resume_dirty = nil
   end
+  local result = { state = st(pb), commands = cmds }
+  if resume_changed then result.state.resume = resume end
   return result
 end
 
@@ -421,14 +420,14 @@ function playback.on_system_event(doc, ev)
   end
   local pb = pb_of(doc)
   local resume_music = false
-  if (pb.state == "playing" or pb.state == "starting") and not ev.no_pause then
+  if is_playing(doc) and not ev.no_pause then
     cmds[#cmds + 1] = cmd_audio("pauz", MUSIC)
     resume_music = true
   end
   if pb.sys and pb.sys.name then cmds[#cmds + 1] = cmd_audio("stop", SOUND) end
   pb.sys = { name = ev.name, after = ev.after, resume_music = resume_music or (pb.sys and pb.sys.resume_music) or nil }
   cmds[#cmds + 1] = cmd_audio("play", SOUND, uri)
-  return { state = { playback = pb }, commands = cmds }
+  return { state = st(pb), commands = cmds }
 end
 
 function playback.on_sound_audio(doc, _, kind)
@@ -440,7 +439,7 @@ function playback.on_sound_audio(doc, _, kind)
   if sys.resume_music and pb.state ~= "idle" then cmds[#cmds + 1] = cmd_audio("cont", MUSIC) end
   if sys.after then cmds[#cmds + 1] = { kind = "emit", event = sys.after } end
   pb.sys = nil
-  return { state = { playback = pb }, commands = cmds }
+  return { state = st(pb), commands = cmds }
 end
 
 -- boot / timers / api ------------------------------------------------------------
@@ -452,16 +451,22 @@ function playback.on_boot(_, ev)
   -- the shuffle seed: the clock at boot, so that two starts (or two playlists of the same length)
   -- do not play in the same "random" order
   local seed = math.floor(tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483648
-  return { state = { playback = { state = "idle", last = {}, shuffle = {}, seed = seed }, resume = resume, system = ev.system or { tracks = {} } },
+  return { state = { playback = { state = "idle" }, playback_int = { last = {}, shuffle = {}, seed = seed }, resume = resume, system = ev.system or { tracks = {} } },
            commands = { { kind = "timer.every", name = "playback.save", seconds = 60 } } }
 end
 
-function playback.on_timer(doc, ev)
-  if ev.name ~= "playback.save" then return nil end
+--- Every 60 s (timer playback.save): an audiobook position noted since the last write goes to disk.
+function playback.on_save(doc)
   local pb = pb_of(doc)
   if not pb.resume_dirty then return nil end
   pb.resume_dirty = nil
-  return { state = { playback = pb }, commands = { write_resume(doc, doc.resume or {}) } }
+  return { state = st(pb), commands = { write_resume(doc, doc.resume or {}) } }
+end
+
+--- The timer by name (the specs drive this one; the kernel routes the name itself).
+function playback.on_timer(doc, ev)
+  if ev.name ~= "playback.save" then return nil end
+  return playback.on_save(doc)
 end
 
 function playback.on_resume_reset(doc, playlist_id)
@@ -493,7 +498,7 @@ function playback.install(api, dispatch)
     dispatch.on("audio." .. k, "playback", playback.on_audio)
   end
   dispatch.on("system.event", "playback", playback.on_system_event)
-  dispatch.on("timer", "playback", playback.on_timer)
+  dispatch.on_timer("playback.save", "playback", playback.on_save)
   dispatch.on("host.terminating", "playback", playback.on_shutdown)
   api.command("playback.play", S.play, function(doc, p, ev)
     local pb = pb_of(doc)

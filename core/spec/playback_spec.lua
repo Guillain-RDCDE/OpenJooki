@@ -30,6 +30,14 @@ local function topics(r)
   return out
 end
 
+-- Assertion rule: the commands of a handler are a set, unless their order is a rule of the player
+-- itself -- "stop" before "play", "seek" before "cont" (or the engine plays the old position for an
+-- instant), the music paused before a system sound starts, the music continued before `after` runs.
+-- Those keep a positional assert; everything else uses `same` (whole set, any order) or `has` (one topic).
+local function sorted(list) local out = {} for i, v in ipairs(list) do out[i] = v end table.sort(out) return out end
+local function same(r, expected) assert_eq(sorted(topics(r)), sorted(expected)) end
+local function has(r, s) for _, t in ipairs(topics(r)) do if t == s then return true end end return false end
+
 local function apply(doc, r)
   for k, v in pairs(r.state or {}) do doc[k] = v end
   return doc
@@ -39,13 +47,13 @@ describe("services.playback — starting a playlist", function()
   it("plays track 1 of a music playlist, stopping what was playing", function()
     local doc = doc_with()
     local r = playback.on_request(doc, { playlist = "music", now = 10 })
-    assert_eq(topics(r), { "play 7\tfile:///d/uploads/a", "emit playback.changed starting" })
+    same(r, { "play 7\tfile:///d/uploads/a", "emit playback.changed starting" })
     assert_eq(r.state.playback.state, "starting")
     assert_eq(r.state.playback.now.title, "Chapter a"); assert_true(r.state.playback.now.has_next); assert_false(r.state.playback.now.has_prev)
     apply(doc, r)
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
     r = playback.on_request(doc, { playlist = "music", index = 3, now = 12 })
-    assert_eq(topics(r)[1], "stop 7"); assert_eq(topics(r)[2], "play 7\tfile:///d/uploads/c")
+    assert_eq(topics(r)[1], "stop 7"); assert_eq(topics(r)[2], "play 7\tfile:///d/uploads/c")   -- stop before play: order matters
   end)
 
   it("an empty playlist plays nothing and raises the 'empty' event; unknown playlist only logs", function()
@@ -76,13 +84,14 @@ describe("services.playback — starting a playlist", function()
   it("shuffle: a memoised order, never for audiobooks", function()
     local doc = doc_with({ shuffle = true })
     local r = playback.on_request(doc, { playlist = "music" })
-    local order = r.state.playback.shuffle.music
+    local order = r.state.playback_int.shuffle.music     -- the order is the player's own business: never published
     assert_eq(#order, 3)
-    assert_nil(r.state.playback.shuffle.book)
+    assert_nil(r.state.playback_int.shuffle.book); assert_nil(r.state.playback.shuffle)
     apply(doc, r)
     local r2 = playback.on_request(doc, { playlist = "book" })
     assert_eq(r2.state.playback.now.index, 1)
-    assert_nil(r2.state.playback.shuffle.book)
+    assert_nil(r2.state.playback_int.shuffle.book)
+    assert_eq(r2.state.playback_int.shuffle.music, order)   -- what was memoised stays
   end)
 end)
 
@@ -94,7 +103,7 @@ describe("services.playback — audiobook resume", function()
     assert_eq(r.state.playback.resume_ms, 110000)
     apply(doc, r)
     r = playback.on_audio(doc, { type = "audio.playing", id = 7 })
-    assert_eq(topics(r)[1], "seek 7\t110000")
+    assert_true(has(r, "seek 7\t110000"))
     assert_nil(r.state.playback.resume_ms)
     assert_eq(r.state.playback.position_ms, 110000)
   end)
@@ -114,10 +123,10 @@ describe("services.playback — audiobook resume", function()
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
     apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 40000 }))
     assert_eq(doc.resume.book, { id = "b", pos = 40000 })
-    assert_true(doc.playback.resume_dirty)
+    assert_true(doc.playback_int.resume_dirty); assert_nil(doc.playback.resume_dirty)
     apply(doc, playback.on_pause(doc, { source = "token", now = 50 }))
     local r = playback.on_audio(doc, { type = "audio.paused", id = 7 })
-    assert_eq(topics(r)[#topics(r)], "write /d/resume.json")
+    assert_true(has(r, "write /d/resume.json"))
     apply(doc, r)
     apply(doc, playback.on_audio(doc, { type = "audio.ended", id = 7 }))
     assert_eq(doc.resume.book, { id = "c", pos = 0 })
@@ -137,23 +146,23 @@ describe("services.playback — audiobook resume", function()
     apply(doc, playback.on_audio(doc, { type = "audio.paused", id = 7 }))
     assert_eq(topics(playback.on_resume(doc, { now = 130 })), { "cont 7" })
     local r = playback.on_resume(doc, { now = 170 })
-    assert_eq(topics(r)[1], "seek 7\t185000")
+    assert_eq(topics(r)[1], "seek 7\t185000")   -- seek before cont: order matters
     apply(doc, r)
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
     apply(doc, playback.on_pause(doc, { source = "sleep_timer", now = 200 }))
     apply(doc, playback.on_audio(doc, { type = "audio.paused", id = 7 }))
     assert_eq(doc.resume.book.t, true)
     r = playback.on_resume(doc, { now = 201 })
-    assert_eq(topics(r)[1], "seek 7\t140000")
+    assert_eq(topics(r)[1], "seek 7\t140000")   -- seek before cont: order matters
   end)
 
   it("resume_reset forgets a book's position; the save timer flushes dirty positions", function()
     local doc = doc_with({ resume = { book = { id = "b", pos = 5 } } })
     local r = playback.on_resume_reset(doc, "book")
     assert_eq(r.state.resume, {}); assert_eq(topics(r), { "write /d/resume.json" })
-    doc.playback = { state = "playing", resume_dirty = true, last = {}, shuffle = {} }
+    doc.playback = { state = "playing" }; doc.playback_int = { resume_dirty = true, last = {}, shuffle = {} }
     r = playback.on_timer(doc, { name = "playback.save" })
-    assert_eq(topics(r), { "write /d/resume.json" })
+    assert_eq(topics(r), { "write /d/resume.json" }); assert_nil(r.state.playback_int.resume_dirty)
     assert_nil(playback.on_timer(doc, { name = "other" }))
   end)
 end)
@@ -164,7 +173,7 @@ describe("services.playback — transport and end of track", function()
     apply(doc, playback.on_request(doc, { playlist = "music", index = 2 }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
     apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 9000 }))
-    assert_eq(topics(playback.on_prev(doc, {}))[1], "seek 7\t1")
+    assert_true(has(playback.on_prev(doc, {}), "seek 7\t1"))
     apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 2000 }))
     local r = playback.on_prev(doc, {})
     assert_eq(r.state.playback.now.index, 1)
@@ -189,7 +198,7 @@ describe("services.playback — transport and end of track", function()
     apply(doc, playback.on_request(doc, { playlist = "music", index = 2 }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
     r = playback.on_audio(doc, { type = "audio.ended", id = 7 })
-    assert_eq(r.state.playback.now.index, 2); assert_eq(topics(r)[1], "play 7\tfile:///d/uploads/b")
+    assert_eq(r.state.playback.now.index, 2); assert_true(has(r, "play 7\tfile:///d/uploads/b"))
   end)
 
   it("streams pause by stopping and cannot seek", function()
@@ -215,16 +224,17 @@ describe("services.playback — system sounds", function()
     apply(doc, playback.on_request(doc, { playlist = "music" }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
     local r = playback.on_system_event(doc, { name = "Evt.Jooki.Ready", after = { type = "shutdown.request" } })
+    -- positional: the music is paused BEFORE the sound starts, and continued BEFORE `after` runs
     assert_eq(topics(r), { "emit lights.event Evt.Jooki.Ready", "pauz 7", "play 3\tfile:///sys/assets/ready.ogg" })
     apply(doc, r)
     r = playback.on_audio(doc, { type = "audio.ended", id = 3 })
     assert_eq(topics(r), { "cont 7", "emit shutdown.request" })
-    assert_nil(r.state.playback.sys)
+    assert_nil(r.state.playback_int.sys); assert_nil(r.state.playback.sys)
   end)
 
   it("an event without a sound only lights up and runs `after` at once", function()
     local doc = doc_with()
     local r = playback.on_system_event(doc, { name = "Evt.Character.Detect", after = { type = "x" } })
-    assert_eq(topics(r), { "emit lights.event Evt.Character.Detect", "emit x" })
+    same(r, { "emit lights.event Evt.Character.Detect", "emit x" })
   end)
 end)

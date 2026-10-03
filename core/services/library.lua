@@ -7,6 +7,7 @@
 --   playlists[id] = { title, tracks = {trackId...}, star?, audiobook?, image?, plType?, spotify?, deezer? }
 --   tracks[id]    = { filename, userFilename?, title, album, artist, duration, size, hasImage, isUrl? }
 --   tokens[uid]   = { starId, seen, name?, image? }
+local util = require("services.util")
 local library = {}
 local ops = {}
 library.ops = ops
@@ -26,12 +27,7 @@ local function is_star(s) return type(s) == "string" and s ~= "" and #s <= 64 en
 local function is_jplay(p) return p and p.plType == "JPLAY" end
 local function is_url(u) return type(u) == "string" and u:match("^https?://[%w%[]") ~= nil end
 
-local function deep_copy(v)
-  if type(v) ~= "table" then return v end
-  local out = {}
-  for k, x in pairs(v) do out[k] = deep_copy(x) end
-  return out
-end
+local deep_copy = util.copy
 
 local function used_track_ids(lib)
   local used = {}
@@ -320,7 +316,7 @@ end
 
 -- ------------------------------------------------------------------ handlers
 local function paths(doc)
-  local dir = (doc.config and doc.config.data_dir) or "/jooki/external/jooki"
+  local dir = util.data_dir(doc)
   return { playlists = dir .. "/playlists.json", tracks = dir .. "/tracks.json", tokens = dir .. "/tokens.json" }
 end
 

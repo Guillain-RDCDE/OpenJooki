@@ -10,6 +10,7 @@
 -- nor does it always end a search, so a search lasts 20 s on our clock.
 -- Owns state.bluetooth = { state, connected_mac, connected = {mac, name}, known = {...} (remembered
 --                          by the chip), devices = {...} (last search), auto, scanning }
+local util = require("services.util")
 local bluetooth = {}
 
 local OUT = "/j/esp32/output/bt/"
@@ -52,13 +53,22 @@ function bluetooth.on_boot()
            commands = { pub("get_state"), { kind = "timer.every", name = "bluetooth.poll", seconds = 30 } } }
 end
 
-function bluetooth.on_timer(doc, ev)
-  if ev.name == "bluetooth.poll" then return { commands = { pub("get_state") } } end
-  if ev.name ~= "bluetooth.scan_end" then return nil end
+--- Every 30 s (timer bluetooth.poll): ask the chip where it stands.
+function bluetooth.on_poll() return { commands = { pub("get_state") } } end
+
+--- 20 s after a search began (timer bluetooth.scan_end): the search is over, whatever the chip says.
+function bluetooth.on_scan_end(doc)
   local b = copy(doc.bluetooth)
   b.scanning = nil
   if b.state == 1 then b.state = 2 end
   return { state = { bluetooth = b } }
+end
+
+--- Either timer, by name (the specs drive this one; the kernel routes each name itself).
+function bluetooth.on_timer(doc, ev)
+  if ev.name == "bluetooth.poll" then return bluetooth.on_poll(doc, ev) end
+  if ev.name == "bluetooth.scan_end" then return bluetooth.on_scan_end(doc, ev) end
+  return nil
 end
 
 function bluetooth.on_state(doc, ev)
@@ -103,7 +113,7 @@ function bluetooth.on_discovered(doc, ev)
 end
 
 -- ------------------------------------------------------------------ page commands
-local function bad(field, message) return nil, { code = "invalid_argument", field = field, message = message } end
+local function bad(field, message) return nil, util.err("invalid_argument", field, message) end
 local function valid_mac(m) return type(m) == "string" and m:upper():match("^%x%x:%x%x:%x%x:%x%x:%x%x:%x%x$") ~= nil end
 
 function bluetooth.on_scan(doc)
@@ -118,7 +128,7 @@ function bluetooth.on_connect(doc, p)
   local dev
   for _, d in ipairs((doc.bluetooth or {}).known or {}) do if d.mac == mac then dev = d end end
   for _, d in ipairs((doc.bluetooth or {}).devices or {}) do if d.mac == mac then dev = d end end
-  if not dev then return nil, { code = "not_found", field = "mac", message = "unknown Bluetooth device" } end
+  if not dev then return nil, util.err("not_found", "mac", "unknown Bluetooth device") end
   local b = copy(doc.bluetooth)
   b.state, b.auto = 4, false
   -- autoconnect off first, so the chip does not fight us for the previous speaker
@@ -138,7 +148,8 @@ end
 
 function bluetooth.install(_, dispatch)
   dispatch.on("boot", "bluetooth", bluetooth.on_boot)
-  dispatch.on("timer", "bluetooth", bluetooth.on_timer)
+  dispatch.on_timer("bluetooth.poll", "bluetooth", bluetooth.on_poll)
+  dispatch.on_timer("bluetooth.scan_end", "bluetooth", bluetooth.on_scan_end)
   dispatch.on("bt.state", "bluetooth", bluetooth.on_state)
   dispatch.on("bt.connected", "bluetooth", bluetooth.on_connected)
   dispatch.on("bt.discovered", "bluetooth", bluetooth.on_discovered)

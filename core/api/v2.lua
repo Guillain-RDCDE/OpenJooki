@@ -6,7 +6,8 @@
 --                          /j/web/v2/event    {"v":2,"type":"...","payload":{...}}
 -- This module translates bus messages into events, validates envelopes and
 -- payloads, and turns handler results into replies. Commands are registered
--- by services with api.command(type, schema, fn).
+-- by services with api.command(type, schema, fn). The state it publishes leaves
+-- out the private sub-trees (api.published).
 local json = require("vendor.json")
 local schema = require("api.schema")
 local api = {}
@@ -91,15 +92,21 @@ function api.handle(doc, event)
   return result
 end
 
---- State publication: full or patch, as commands for the kernel.
+-- Sub-trees that stay on the Jooki: the kernel's configuration, the services' own bookkeeping
+-- (activity: the last press, system: the sound files, and every `<module>_int`). The page sees the rest.
+local PRIVATE = { config = true, activity = true, system = true }
+function api.published(key) return key ~= "rev" and not PRIVATE[key] and not tostring(key):match("_int$") end
+
+--- State publication: full or patch, as commands for the kernel. A change to private keys only
+--- still goes out as an empty patch, so the page sees no gap in `rev` (it would ask for a full state).
 function api.publisher(doc, dirty_keys, full)
   if full then
     local copy = {}
-    for k, v in pairs(doc) do if k ~= "rev" then copy[k] = v end end
+    for k, v in pairs(doc) do if api.published(k) then copy[k] = v end end
     return { { kind = "bus.publish", topic = api.TOPIC_STATE, payload = { v = 2, rev = doc.rev, full = true, state = copy } } }
   end
   local patch = {}
-  for _, k in ipairs(dirty_keys) do patch[k] = doc[k] end
+  for _, k in ipairs(dirty_keys) do if api.published(k) then patch[k] = doc[k] end end
   return { { kind = "bus.publish", topic = api.TOPIC_STATE, payload = { v = 2, rev = doc.rev, patch = patch } } }
 end
 

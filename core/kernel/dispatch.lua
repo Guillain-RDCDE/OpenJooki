@@ -28,6 +28,24 @@ function dispatch.on(event_type, module, fn)
   table.insert(handlers[event_type], { module = module, fn = fn })
 end
 
+--- A handler for one timer, by its name: it receives the `timer` events named `name` only and never
+--- has to test ev.name. Handlers on the plain "timer" type still see every timer (the fan-out).
+function dispatch.on_timer(name, module, fn)
+  dispatch.on("timer:" .. name, module, fn)
+end
+
+--- The handlers of an event: its type's, plus, for a timer, those registered on its name.
+local function handlers_of(event)
+  local list = handlers[event.type]
+  local named = event.type == "timer" and event.name and handlers["timer:" .. event.name]
+  if not named then return list end
+  if not list then return named end
+  local both = {}
+  for _, h in ipairs(list) do both[#both + 1] = h end
+  for _, h in ipairs(named) do both[#both + 1] = h end
+  return both
+end
+
 function dispatch.disabled(module)
   local f = failures[module]
   return f ~= nil and f.disabled == true
@@ -54,7 +72,7 @@ end
 --- ordered list of commands, plus the list of failures { module, err }.
 function dispatch.handle(doc, event)
   local changes, commands, errors = {}, {}, {}
-  local list = handlers[event.type]
+  local list = handlers_of(event)
   if not list then return changes, commands, errors end
   for _, h in ipairs(list) do
     if not dispatch.disabled(h.module) then

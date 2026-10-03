@@ -6,16 +6,20 @@
 -- Reads /tmp/oj-wifi.log (Wi-Fi events copied there by syslog-ng, see
 -- tools/openjooki/system/syslog-ng.conf) every 20 s; cleans the logs the
 -- original system piled up, once at boot.
+local util = require("services.util")
 local network = {}
 
 local WIFI_LOG = "/tmp/oj-wifi.log"
 
-local function copy(v)
-  if type(v) ~= "table" then return v end
-  local out = {}
-  for k, x in pairs(v) do out[k] = copy(x) end
-  return out
+local copy = util.copy
+local function cfg(doc, key, default)
+  local c = doc.config or {}
+  if c[key] ~= nil then return c[key] end
+  return default
 end
+-- the watchdog's tunables (kernel.config), with the defaults of the real Jooki
+local WATCHDOG_S, WATCHDOG_MAX = 10 * 60, 2
+local WATCHDOG_FILE, QUIET_BOOT_FILE = "/data/openjooki/wifi_watchdog", "/data/openjooki/quiet_boot"
 
 --- Count drops / beacon losses and find the last access point in the Wi-Fi log text.
 function network.read_wifi_log(txt)
@@ -74,8 +78,7 @@ local function radios_off(doc)
 end
 
 function network.watchdog(doc, now)
-  local config = require("kernel.config")
-  local limit, max = config.get("wifi_watchdog_s"), config.get("wifi_watchdog_max")
+  local limit, max = cfg(doc, "wifi_watchdog_s", WATCHDOG_S), cfg(doc, "wifi_watchdog_max", WATCHDOG_MAX)
   local w = copy(doc.net_watch or { count = 0 })
   if online(doc.net) then
     local cmds = {}
@@ -90,7 +93,7 @@ function network.watchdog(doc, now)
     end
     if not w.since and (w.count or 0) == 0 then return { state = { net_watch = w }, commands = cmds } end
     if (w.count or 0) > 0 then
-      cmds[#cmds + 1] = { kind = "files.write_text", path = config.get("wifi_watchdog_file"), text = "0\n" }
+      cmds[#cmds + 1] = { kind = "files.write_text", path = cfg(doc, "wifi_watchdog_file", WATCHDOG_FILE), text = "0\n" }
       cmds[#cmds + 1] = { kind = "log", level = "info", key = "network.watchdog_ok", fields = { after_restarts = w.count } }
     end
     w.since, w.count = nil, 0
@@ -106,29 +109,38 @@ function network.watchdog(doc, now)
   end
   if not w.since then w.since = now return { state = { net_watch = w } } end
   if now - w.since < limit then return keep end
-  local pb = doc.playback or {}
-  local busy = pb.state == "playing" or pb.state == "starting" or (pb.sys and pb.sys.name)
+  local sys = (doc.playback_int or {}).sys       -- a system sound in progress (services.playback)
+  local busy = util.is_playing(doc) or (sys and sys.name)
   local plugged = doc.power and doc.power.connected
   if busy or not plugged or (w.count or 0) >= max then return keep end
   w.count = (w.count or 0) + 1
   w.since = nil
   return { state = { net_watch = w }, commands = {
     { kind = "log", level = "warn", key = "network.watchdog_restart", fields = { offline_s = math.floor(now - (doc.net_watch.since or now)), restart = w.count } },
-    { kind = "files.write_text", path = config.get("wifi_watchdog_file"), text = w.count .. "\n" },
-    { kind = "files.write_text", path = config.get("quiet_boot_file"), text = "wifi watchdog\n" },
+    { kind = "files.write_text", path = cfg(doc, "wifi_watchdog_file", WATCHDOG_FILE), text = w.count .. "\n" },
+    { kind = "files.write_text", path = cfg(doc, "quiet_boot_file", QUIET_BOOT_FILE), text = "wifi watchdog\n" },
     { kind = "shell", action = "watchdog_reboot" } } }
 end
 
-function network.on_timer(doc, ev)
-  if ev.name == "network.status" then
-    local r = network.watchdog(doc, ev.now or 0) or { commands = {} }
-    r.commands = r.commands or {}
-    table.insert(r.commands, 1, { kind = "bus.publish", topic = "/j/esp32/output/net/sta/status", payload = "" })
-    table.insert(r.commands, 2, { kind = "files.read_text", path = ROUTES, reply = "network.route" })
-    return r
-  end
-  if ev.name ~= "network.wifi_log" then return nil end
+--- Every 30 s (timer network.status): ask the chip, read the routes, run the watchdog.
+function network.on_status_timer(doc, ev)
+  local r = network.watchdog(doc, ev.now or 0) or { commands = {} }
+  r.commands = r.commands or {}
+  table.insert(r.commands, 1, { kind = "bus.publish", topic = "/j/esp32/output/net/sta/status", payload = "" })
+  table.insert(r.commands, 2, { kind = "files.read_text", path = ROUTES, reply = "network.route" })
+  return r
+end
+
+--- Every 20 s (timer network.wifi_log): read what syslog-ng copied of the Wi-Fi events.
+function network.on_wifi_log_timer()
   return { commands = { { kind = "files.read_text", path = WIFI_LOG, reply = "network.wifi_log" } } }
+end
+
+--- Either timer, by name (the specs drive this one; the kernel routes each name itself).
+function network.on_timer(doc, ev)
+  if ev.name == "network.status" then return network.on_status_timer(doc, ev) end
+  if ev.name == "network.wifi_log" then return network.on_wifi_log_timer(doc, ev) end
+  return nil
 end
 
 function network.on_wifi_log(doc, ev)
@@ -143,7 +155,8 @@ end
 function network.install(_, dispatch)
   dispatch.on("boot", "network", network.on_boot)
   dispatch.on("net.status", "network", network.on_status)
-  dispatch.on("timer", "network", network.on_timer)
+  dispatch.on_timer("network.status", "network", network.on_status_timer)
+  dispatch.on_timer("network.wifi_log", "network", network.on_wifi_log_timer)
   dispatch.on("network.wifi_log", "network", network.on_wifi_log)
   dispatch.on("network.route", "network", network.on_route)
 end

@@ -18,6 +18,16 @@ local function kinds(r)
   end
   return out
 end
+-- Assertion rule: an upload's failure path IS a sequence (the temp file removed, the message raised,
+-- then upload.done, which the 1.x page waits for last): those lists stay positional. Where only the
+-- presence of a command matters, `has` / `find` look for it, whatever its place.
+local function find(r, kind, key, val)
+  for _, c in ipairs((r and r.commands) or {}) do
+    if c.kind == kind and (key == nil or c[key] == val) then return c end
+  end
+  return nil
+end
+local function has(r, kind, key, val) return find(r, kind, key, val) ~= nil end
 
 describe("services.uploads", function()
   it("happy path: md5 -> rename -> probe -> meta -> track added to the playlist", function()
@@ -35,8 +45,8 @@ describe("services.uploads", function()
     local t = r.state.library.tracks.fedcba9876543210
     assert_eq(t.title, "T"); assert_eq(t.album, "A"); assert_eq(t.artist, "unknown"); assert_eq(t.duration, 12.5); assert_eq(t.size, 1234)
     assert_eq(r.state.library.playlists.p.tracks, { "fedcba9876543210" })
-    assert_eq(kinds(r)[1], "files.remove /run/probe_fedcba9876543210.json")
-    assert_eq(kinds(r)[#kinds(r)], "emit upload.done")
+    assert_true(has(r, "files.remove", "path", "/run/probe_fedcba9876543210.json"))
+    assert_eq(kinds(r)[#kinds(r)], "emit upload.done")   -- last: the page's "upload ended" follows it
   end)
 
   it("title falls back to the file name without extension; non-audio is refused and removed", function()
@@ -47,14 +57,14 @@ describe("services.uploads", function()
     r = uploads.on_meta(doc, { text = json.encode({ ["file-type"] = 0, ["mime-type"] = "text/plain" }), ref = ref })
     assert_eq(kinds(r), { "files.remove /run/p.json", "files.remove /d/uploads/aaaaaaaaaaaaaaaa", "log", "emit user.message UPLOAD_FAIL_TYPE", "emit upload.done" })
     r = uploads.on_probed(doc, { rc = 1, ref = ref })
-    assert_eq(kinds(r)[1], "files.remove /d/uploads/aaaaaaaaaaaaaaaa")
+    assert_true(has(r, "files.remove", "path", "/d/uploads/aaaaaaaaaaaaaaaa"))
   end)
 
   it("a duplicate keeps the existing file and is added to the playlist; a bad playlist fails early", function()
     local doc = doc_with()
     local ref = { uploadId = "7", filename = "x.mp3", playlistId = "p", temp = "/d/uploads/upload_7" }
     local r = uploads.on_hashed(doc, { rc = 0, out = "0123456789abcdef0000 x", ref = ref })
-    assert_eq(kinds(r)[1], "files.remove /d/uploads/upload_7")
+    assert_true(has(r, "files.remove", "path", "/d/uploads/upload_7"))
     assert_eq(r.state.library.playlists.p.tracks, { "0123456789abcdef" })
     r = uploads.on_add(doc, { uploadId = "8", filename = "x.mp3", playlistId = "nope" })
     assert_eq(kinds(r), { "files.remove /d/uploads/upload_8", "log", "emit user.message UPLOAD_FAIL", "emit upload.done" })
@@ -128,12 +138,12 @@ describe("api.v1", function()
     r = cmd(doc, "SET_VOL", "[]")
     assert_match(r.commands[1].payload.msg, "missing or invalid vol")
     r = cmd(doc, "SET_CFG", { repeat_mode = false, shuffle_mode = true })
-    assert_eq(r.state.audiocfg.repeat_mode, 0); assert_true(r.state.audiocfg.shuffle_mode); assert_eq(r.commands[1].kind, "files.write")
+    assert_eq(r.state.audiocfg.repeat_mode, 0); assert_true(r.state.audiocfg.shuffle_mode); assert_true(has(r, "files.write"))
     r = cmd(doc, "MESSAGE_DISMISS", { id = "a" })
     assert_match(r.commands[1].payload.msg, "invalid msg id")
     doc.device = { id = "jooki2-A1B2C3" }
     r = cmd(doc, "OJ_SET_NAME", { name = "Jooki" })
-    assert_eq(r.state.device.hostname, "jooki.local"); assert_eq(r.commands[1].action, "set_name")
+    assert_eq(r.state.device.hostname, "jooki.local"); assert_true(has(r, "shell", "action", "set_name"))
     r = cmd(doc, "OJ_SET_NAME", { name = "jo oki" })
     assert_match(r.commands[1].payload.msg, "invalid name")
     doc.userMessages = { { id = 3, messageType = "UPLOAD_FAIL" } }
@@ -144,6 +154,6 @@ describe("api.v1", function()
     r = cmd(doc, "DO_PLAY", "")
     assert_eq(r, {})
     r = cmd(doc, "SHUTDOWN", { src = "from-web" })
-    assert_eq(r.commands[1].event.name, "Evt.Jooki.Poweroff")
+    assert_eq(find(r, "emit").event.name, "Evt.Jooki.Poweroff")
   end)
 end)

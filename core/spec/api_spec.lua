@@ -98,4 +98,16 @@ describe("api.v2", function()
     local cmds = api.publisher({ rev = 3, playback = { state = "playing" }, device = {} }, { "playback" })
     assert_eq(cmds[1].payload, { v = 2, rev = 3, patch = { playback = { state = "playing" } } })
   end)
+
+  it("keeps the private sub-trees on the Jooki: config, activity, system and every *_int, in patches and full states", function()
+    local doc = { rev = 9, playback = { state = "idle" }, playback_int = { seed = 1 }, bedtime = { night = false }, bedtime_int = { fade = 1 },
+                  config = { data_dir = "/d" }, activity = { last = 5 }, system = { tracks = {} }, limits = { maxvol = 100 } }
+    local full = api.publisher(doc, {}, true)[1].payload
+    assert_eq(full.state, { playback = { state = "idle" }, bedtime = { night = false }, limits = { maxvol = 100 } })
+    local patch = api.publisher(doc, { "activity", "playback", "playback_int" })[1].payload
+    assert_eq(patch, { v = 2, rev = 9, patch = { playback = { state = "idle" } } })
+    -- private keys alone: an empty patch still carries the revision (no gap for the page to fill)
+    assert_eq(api.publisher(doc, { "activity", "bedtime_int" })[1].payload, { v = 2, rev = 9, patch = {} })
+    assert_true(api.published("net")); assert_false(api.published("streaming_int")); assert_false(api.published("rev"))
+  end)
 end)

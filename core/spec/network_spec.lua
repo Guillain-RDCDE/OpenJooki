@@ -57,7 +57,7 @@ describe("services.network — Wi-Fi watchdog", function()
 
   it("never while playing, on battery, in airplane mode, or after two restarts in a row", function()
     local cases = {
-      { playback = { state = "playing" } }, { playback = { state = "idle", sys = { name = "Evt.X" } } },
+      { playback = { state = "playing" } }, { playback = { state = "idle" }, playback_int = { sys = { name = "Evt.X" } } },
       { power = { connected = false } }, { flags = { WIFI_OFF = true } }, { flags = { OJ_AIRPLANE = true } },
       { device = { airplane = { ends = 1 } } }, { net_watch = { count = 2 } },
     }

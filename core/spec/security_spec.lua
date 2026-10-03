@@ -13,7 +13,6 @@ describe("services.security", function()
   before_each(function()
     security._set_parent_code(nil)
     security._set_ssh_keys({})
-    security._files = nil
   end)
 
   it("the gate: open without a code; with one, protected names need it, the others never do", function()
@@ -122,16 +121,17 @@ describe("services.security", function()
     assert_true(find(r.commands, "emit") ~= nil)
   end)
 
-  it("boot: reads the parent code from disk, the LAN flag, SSH always off", function()
-    security._files = {
-      exists = function(p) return p == "/data/openjooki/mqtt_lan" end,
-      read_text = function(p) return p:find("parent_code") and "9876\n" or nil end,
-    }
-    local r = security.on_boot({})
+  it("boot: the parent code, the LAN flag and the keys come with the boot event (main reads the files); SSH always off", function()
+    local r = security.on_boot({}, { security = { mqtt_lan = true, parent_code = "9876\n", authorized_keys = "ssh-ed25519 AAAA a\n\nssh-rsa BBBB b\n" } })
     assert_false(r.state.maintenance.ssh)
     assert_true(r.state.maintenance.mqtt_lan)
     assert_true(r.state.maintenance.parent)
+    assert_eq(r.state.maintenance.ssh_keys, 2)
     assert_eq(security._parent_code(), "9876")
+    assert_eq(security.FILES.parent, "/data/openjooki/parent_code")
+    -- nothing on disk (a first start): everything off
+    r = security.on_boot({}, { security = { mqtt_lan = false } })
+    assert_false(r.state.maintenance.mqtt_lan); assert_false(r.state.maintenance.parent); assert_eq(r.state.maintenance.ssh_keys, 0)
   end)
 end)
 

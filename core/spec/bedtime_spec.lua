@@ -24,6 +24,12 @@ local function kinds(r)
   return out
 end
 local function apply(doc, r) for k, v in pairs((r and r.state) or {}) do doc[k] = v end return doc end
+-- Assertion rule: bedtime's commands never depend on their order (a timer, a log, a write, an event
+-- for other services), so `same` compares the whole set and `has` looks for one; nothing is positional.
+local function sorted(list) local out = {} for i, v in ipairs(list) do out[i] = v end table.sort(out) return out end
+local function same(r, expected) assert_eq(sorted(kinds(r)), sorted(expected)) end
+local function has(r, s) for _, k in ipairs(kinds(r)) do if k == s then return true end end return false end
+local function find(r, kind) for _, c in ipairs((r and r.commands) or {}) do if c.kind == kind then return c end end return nil end
 
 describe("services.bedtime — clock", function()
   local cfg = { enabled = true, start = 1200, stop = 420, tzbase = 60, tzdst = "EU" }
@@ -51,7 +57,7 @@ describe("services.bedtime — settings and night limits", function()
     assert_eq(r.state.bedtime.cfg.maxvol, 40); assert_eq(r.state.bedtime.cfg.start, 1200)
     assert_true(r.state.bedtime.night)
     assert_eq(r.state.limits, { maxvol = 40, fade = 1, dim = true })
-    assert_eq(kinds(r)[1], "timer.every bedtime.clock")
+    assert_true(has(r, "timer.every bedtime.clock"))
   end)
 
   it("set: validation, persistence, limits recomputed", function()
@@ -63,7 +69,7 @@ describe("services.bedtime — settings and night limits", function()
     local r = bedtime.on_set(doc, { start = "13:00", stop = "15:30", tzbase = 0, tzdst = "none", maxvol = 30 }, at(2026, 1, 15, 14, 0))
     assert_true(r.state.bedtime.night)
     assert_eq(r.state.limits, { maxvol = 30, fade = 1, dim = true })
-    assert_eq(kinds(r), { "write /d/bedtime.json", "emit limits.changed" })
+    same(r, { "write /d/bedtime.json", "emit limits.changed" })
     doc = apply(doc, r)
     r = bedtime.on_clock(doc, { wall = at(2026, 1, 15, 16, 0) })
     assert_false(r.state.bedtime.night); assert_eq(r.state.limits.maxvol, 100)
@@ -82,7 +88,7 @@ describe("services.bedtime — sleep timer", function()
     local doc = playing_doc()
     local r = bedtime.on_sleep(doc, { seconds = 90 }, 1000)
     assert_eq(r.state.bedtime.sleep, { mode = "time", remaining = 90, total = 90 })
-    assert_eq(kinds(r)[1], "timer.every bedtime.tick")
+    assert_true(has(r, "timer.every bedtime.tick"))
     doc = apply(doc, r)
     r = bedtime.on_tick(doc, { now = 1050 }); doc = apply(doc, r)
     assert_eq(doc.limits.fade, 1)
@@ -92,8 +98,8 @@ describe("services.bedtime — sleep timer", function()
     r = bedtime.on_tick(doc, { now = 1089 }); doc = apply(doc, r)
     assert_true(doc.limits.fade <= 0.05)
     r = bedtime.on_tick(doc, { now = 1090 })
-    assert_eq(kinds(r), { "timer.cancel bedtime.tick", "log bedtime.sleep_done", "emit playback.pause_request" })
-    assert_eq(r.commands[3].event.source, "sleep_timer")
+    same(r, { "timer.cancel bedtime.tick", "log bedtime.sleep_done", "emit playback.pause_request" })
+    assert_eq(find(r, "emit").event.source, "sleep_timer")
     doc = apply(doc, r)
     assert_false(doc.bedtime.sleep)
     assert_true(doc.limits.fade <= 0.05, "still silent while pausing")
@@ -108,7 +114,7 @@ describe("services.bedtime — sleep timer", function()
     assert_true(doc.limits.fade < 1)
     local r = bedtime.on_sleep(doc, { cancel = true }, 51)
     assert_eq(r.state.limits.fade, 1); assert_false(r.state.bedtime.sleep)
-    assert_eq(kinds(r)[1], "timer.cancel bedtime.tick")
+    assert_true(has(r, "timer.cancel bedtime.tick"))
     local _, err = bedtime.on_sleep(doc, { minutes = 0 }, 0); assert_eq(err.field, "seconds")
     _, err = bedtime.on_sleep(doc, {}, 0); assert_eq(err.field, "seconds")
   end)

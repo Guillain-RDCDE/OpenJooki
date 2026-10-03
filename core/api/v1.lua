@@ -13,6 +13,7 @@ local uploads = require("services.uploads")
 local bedtime = require("services.bedtime")
 local security = require("services.security")
 local bluetooth = require("services.bluetooth")
+local util = require("services.util")
 -- optional module (ADR-0009): absent from a `--without services.streaming` build
 local has_streaming, streaming = pcall(require, "services.streaming")
 if not has_streaming then
@@ -130,7 +131,7 @@ local H = {}    -- name -> function(doc, payload, ev) -> result | nil, err ; sec
 local function lib(doc, which, fn) return library.mutate(doc, which, fn) end
 
 H.GET_STATE = function(doc) return { commands = { { kind = "bus.publish", topic = v1.TOPIC_STATE, payload = v1.state(doc) } } } end
-H.CONNECT = function() return { commands = { { kind = "emit", event = { type = "system.event", name = "Evt.Mobile.connect", no_pause = true } } } } end
+H.CONNECT = function() return { commands = { util.emit("system.event", { name = "Evt.Mobile.connect", no_pause = true }) } } end
 H.PLAYLIST_PLAY = function(doc, p, ev)
   if type(p.playlistId) ~= "string" then return nil, { code = "not_found", field = "playlist", message = "nil playlistId" } end
   return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.trackIndex ~= nil })
@@ -200,18 +201,8 @@ H.SET_VOL = function(doc, p)
   if not v then return nil, { code = "invalid_argument", field = "vol", message = "missing or invalid vol " .. tostring(p.vol) } end
   return device.set_volume(doc, v), nil, { "audio" }
 end
-H.SET_CFG = function(doc, p)
-  local a = {}
-  for k, v in pairs(doc.audiocfg or {}) do a[k] = v end
-  if p.shuffle_mode ~= nil then a.shuffle_mode = p.shuffle_mode == true end
-  if p.repeat_mode ~= nil then
-    local m = p.repeat_mode
-    if m == true then m = 1 elseif m == false then m = 0 end
-    a.repeat_mode = tonumber(m) or a.repeat_mode
-  end
-  return { state = { audiocfg = a }, commands = { { kind = "files.write", path = ((doc.config or {}).data_dir or "/jooki/external/jooki") .. "/audiocfg.json", doc = a, version = 1 },
-                                                 { kind = "emit", event = { type = "audiocfg.changed", shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode } } } }, nil, { "audio" }
-end
+-- the page's booleans (repeat_mode true/false too) are read by device.update_config
+H.SET_CFG = function(doc, p) return device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode }), nil, { "audio" } end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
 -- refused without echoing the payload: it holds a Wi-Fi password, and the error topic reaches every page
 H.SET_WIFI = function() return { commands = { err_cmd(device.WIFI_OVER_BLUETOOTH.message) } } end
@@ -240,9 +231,9 @@ H.OJ_RESUME_RESET = function(doc, p)
   if type(p.playlistId) ~= "string" then return nil, { code = "invalid_argument", field = "playlistId", message = "invalid payload" } end
   return playback.on_resume_reset(doc, p.playlistId)
 end
-H.OJ_UPDATE_CHECK = function() return { commands = { { kind = "emit", event = { type = "update.check" } } } } end
+H.OJ_UPDATE_CHECK = function() return { commands = { util.emit("update.check") } } end
 H.OJ_SET_NAME = function(doc, p) return device.on_set_name(doc, p.name) end
-H.OJ_UPDATE_START = function() return { commands = { { kind = "emit", event = { type = "update.start" } } } } end
+H.OJ_UPDATE_START = function() return { commands = { util.emit("update.start") } } end
 -- airplane mode from the page, always bounded (minutes, and at most until the next start)
 H.OJ_AIRPLANE = function(doc, p, ev) return device.on_airplane(doc, { minutes = p.minutes, cancel = p.cancel == true }, ev) end
 -- 5 s of rainbow on the lights, just for fun (left open: it changes nothing)
@@ -301,7 +292,7 @@ function v1.on_cmd(doc, ev)
   result = result or {}
   if force then
     result.commands = result.commands or {}
-    result.commands[#result.commands + 1] = { kind = "emit", event = { type = "v1.force_publish", parts = force } }
+    result.commands[#result.commands + 1] = util.emit("v1.force_publish", { parts = force })
   end
   return result
 end

@@ -8,7 +8,7 @@ what it replaces: `docs/22-core-inventory.md`; decisions: `docs/adr/`.
 kernel/     loop, dispatch, timers, state, commands, log, config   (no I/O)
 adapters/   bus (MQTT), files (atomic JSON), clock, host (C functions), shell (named actions)
 api/        the contract with the page: v2 (schema-validated), v1 compatibility
-services/   library · playback · tokens · bedtime · device · network · update · streaming
+services/   library · playback · tokens · bedtime · device · network · update · streaming · util (shared pure helpers)
 fakes/      in-memory adapters for the specs and the simulator
 vendor/     third-party code (json.lua, MIT), pinned
 spec/       unit specs (*_spec.lua) and integration (spec/integration/)

@@ -52,6 +52,23 @@ describe("kernel.dispatch", function()
     assert_eq(errors[1].err, "bad result type")
   end)
 
+  it("delivers a timer to the handlers of its name, after the plain timer fan-out", function()
+    local seen = {}
+    dispatch.on_timer("a.tick", "a", function(_, ev) seen[#seen + 1] = "a:" .. ev.name end)
+    dispatch.on_timer("b.tick", "b", function(_, ev) seen[#seen + 1] = "b:" .. ev.name return { commands = { { kind = "b" } } } end)
+    dispatch.on("timer", "all", function(_, ev) seen[#seen + 1] = "all:" .. ev.name end)
+    dispatch.handle({}, { type = "timer", name = "a.tick" })
+    local _, commands = dispatch.handle({}, { type = "timer", name = "b.tick" })
+    dispatch.handle({}, { type = "timer", name = "other" })
+    assert_eq(seen, { "all:a.tick", "a:a.tick", "all:b.tick", "b:b.tick", "all:other" })
+    assert_eq(commands, { { kind = "b" } })
+    -- a name nobody listens to, with no fan-out either, is simply dropped
+    dispatch.reset({})
+    dispatch.on_timer("x", "m", function() return { commands = { { kind = "x" } } } end)
+    assert_eq(select(2, dispatch.handle({}, { type = "timer", name = "y" })), {})
+    assert_eq(select(2, dispatch.handle({}, { type = "timer", name = "x" })), { { kind = "x" } })
+  end)
+
   it("lists the event types it knows", function()
     dispatch.on("b", "m", function() end)
     dispatch.on("a", "m", function() end)

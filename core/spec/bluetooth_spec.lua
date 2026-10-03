@@ -9,6 +9,11 @@ local function topics(r)
   for _, c in ipairs(r.commands or {}) do if c.kind == "bus.publish" then out[#out + 1] = c.topic:gsub("^/j/esp32/output/bt/", "") .. " " .. c.payload end end
   return out
 end
+-- Assertion rule: what the chip hears is a set, except where the order is the chip's own rule --
+-- set_autoconnect false BEFORE connect_device / forget_device (docs/26): those lists stay positional.
+-- A timer is looked up by kind (`find`), a message by `has`, whatever their place.
+local function find(r, kind) for _, c in ipairs((r and r.commands) or {}) do if c.kind == kind then return c end end return nil end
+local function has(r, s) for _, t in ipairs(topics(r)) do if t == s then return true end end return false end
 
 describe("services.bluetooth", function()
   it("bus: discovered and connected devices, as the real chip sends them", function()
@@ -23,7 +28,7 @@ describe("services.bluetooth", function()
     local r = bluetooth.on_boot()
     assert_eq(r.state.bluetooth.state, 0)
     assert_eq(topics(r), { "get_state " })
-    assert_eq(r.commands[2], { kind = "timer.every", name = "bluetooth.poll", seconds = 30 })
+    assert_eq(find(r, "timer.every"), { kind = "timer.every", name = "bluetooth.poll", seconds = 30 })
     assert_eq(topics(bluetooth.on_timer({}, { name = "bluetooth.poll" })), { "get_state " })
     assert_nil(bluetooth.on_timer({}, { name = "other" }))
   end)
@@ -45,7 +50,7 @@ describe("services.bluetooth", function()
 
   it("a search lasts 20 s whatever the chip says (it can answer 'searching' for ever)", function()
     local r = bluetooth.on_scan({ bluetooth = { state = 0, devices = {} } })
-    assert_eq(r.commands[2], { kind = "timer.once", name = "bluetooth.scan_end", seconds = 20 })
+    assert_eq(find(r, "timer.once"), { kind = "timer.once", name = "bluetooth.scan_end", seconds = 20 })
     local doc = { bluetooth = r.state.bluetooth }
     assert_nil(bluetooth.on_state(doc, { code = 1 }))
     r = bluetooth.on_timer(doc, { name = "bluetooth.scan_end" })
@@ -57,7 +62,7 @@ describe("services.bluetooth", function()
   it("connect: autoconnect off, then MAC<TAB>COD<TAB>name; once connected, autoconnect on once", function()
     local doc = { bluetooth = { state = 2, devices = { { mac = "8C:DE:52:BA:D9:F0", name = "SRS-X11", cod = 0x240414 } } } }
     local r = bluetooth.on_connect(doc, { mac = "8c:de:52:ba:d9:f0" })
-    assert_eq(topics(r), { "set_autoconnect false", "connect_device 8C:DE:52:BA:D9:F0\t0x00240414\tSRS-X11" })
+    assert_eq(topics(r), { "set_autoconnect false", "connect_device 8C:DE:52:BA:D9:F0\t0x00240414\tSRS-X11" })   -- positional: autoconnect off first
     doc.bluetooth = r.state.bluetooth
     r = bluetooth.on_connected(doc, { mac = "8C:DE:52:BA:D9:F0", name = "SRS-X11" })
     assert_eq(topics(r), { "set_autoconnect true" })
@@ -88,14 +93,14 @@ describe("services.bluetooth", function()
     doc.bluetooth = r.state.bluetooth
     assert_eq(#doc.bluetooth.known, 2)
     r = bluetooth.on_connect(doc, { mac = "8C:DE:52:BA:D9:F0" })
-    assert_eq(topics(r)[2], "connect_device 8C:DE:52:BA:D9:F0\t0x00240414\tSRS-X11")
+    assert_true(has(r, "connect_device 8C:DE:52:BA:D9:F0\t0x00240414\tSRS-X11"))
     assert_eq(bluetooth.on_forget(doc, { mac = "8C:DE:52:BA:D9:F0" }).state.bluetooth.known, { { mac = "F4:4E:FD:C9:F5:0D", name = "Fosi Audio BT20A", cod = 0x240404 } })
   end)
 
   it("forget: autoconnect off first (the chip refuses otherwise), then the MAC", function()
     local doc = { bluetooth = { state = 5, auto = true, connected_mac = "8C:DE:52:BA:D9:F0", devices = {} } }
     local r = bluetooth.on_forget(doc, { mac = "8C:DE:52:BA:D9:F0" })
-    assert_eq(topics(r), { "set_autoconnect false", "forget_device 8C:DE:52:BA:D9:F0" })
+    assert_eq(topics(r), { "set_autoconnect false", "forget_device 8C:DE:52:BA:D9:F0" })   -- positional: autoconnect off first
     assert_nil(r.state.bluetooth.connected_mac)
   end)
 

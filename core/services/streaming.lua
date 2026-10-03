@@ -5,22 +5,13 @@
 -- sub-trees: state.spotify = { username, active }, state.deezer = { username, id, active }.
 -- Best effort: verified on the bench with a fake daemon, not against the services.
 -- Note: the 2022 firmware ships spotify_ctrl but no deezer_ctrl (docs/22 §1).
+local util = require("services.util")
 local streaming = {}
 
 local SP, DZ = "/j/spotify/output/", "/j/deezer/output/"
 
-local function copy(v)
-  if type(v) ~= "table" then return v end
-  local out = {}
-  for k, x in pairs(v) do out[k] = copy(x) end
-  return out
-end
+local copy, emit = util.copy, util.emit
 local function pub(topic, payload) return { kind = "bus.publish", topic = topic, payload = payload == nil and "" or tostring(payload) } end
-local function emit(t, extra)
-  local e = { type = t }
-  for k, v in pairs(extra or {}) do e[k] = v end
-  return { kind = "emit", event = e }
-end
 
 local function hex2str(h) return (tostring(h):gsub("..", function(x) return string.char(tonumber(x, 16)) end)) end
 local function str2hex(s) return (tostring(s):gsub(".", function(c) return string.format("%02X", string.byte(c)) end)) end

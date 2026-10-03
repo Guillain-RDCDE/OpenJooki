@@ -6,16 +6,10 @@ local shell = {}
 
 local function is_lang(s) return type(s) == "string" and s:match("^[A-Z][A-Z]$") ~= nil end
 local function is_path(s) return type(s) == "string" and s:sub(1, 1) == "/" and not s:find("[%c'\"\\]") and not s:find("%.%.") end
--- a network name: lower-case letters, digits, inner hyphens, 1-32 characters ("" = back to the factory name)
--- an SSH public key on one line: its type, the base64 blob, an optional plain comment
-local function is_pubkey(s)
-  if type(s) ~= "string" or #s > 1000 then return false end
-  local kind, blob, rest = s:match("^(%S+) ([A-Za-z0-9+/]+=?=?)(.*)$")
-  if not (kind == "ssh-ed25519" or kind == "ssh-rsa" or (kind and kind:match("^ecdsa%-sha2%-nistp%d+$"))) then return false end
-  if #blob < 60 then return false end
-  return rest == "" or rest:match("^ [%w@%.%-_]+$") ~= nil
-end
+-- an SSH public key on one line: the one definition is services.security (pure), checked again here
+local is_pubkey = require("services.security").is_pubkey
 shell.is_pubkey = is_pubkey
+-- a network name: lower-case letters, digits, inner hyphens, 1-32 characters ("" = back to the factory name)
 local function is_hostname(s) return type(s) == "string" and #s <= 32 and (s:match("^[a-z0-9]$") or s:match("^[a-z0-9][a-z0-9%-]*[a-z0-9]$")) ~= nil end
 -- an address the updater may fetch from: our GitHub (releases, Pages) or the bench's own server
 local function is_update_url(s)

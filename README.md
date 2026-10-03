@@ -21,7 +21,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.2.4:** a disc keeps converting while its tab is behind another one.
+**New in 2.2.5:** the pages inside Settings (night mode, update…) no longer blink.
+2.2.4: a disc keeps converting while its tab is behind another one.
 2.2.3: your discs in FLAC go onto the Jooki as MP3, three times lighter, converted by
 the page itself; on a computer, drop an album folder and it becomes a playlist.
 2.2.2: `http://jooki.local/` opens the page every time (type `http://` in front).

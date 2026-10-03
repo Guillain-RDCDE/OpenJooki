@@ -1,5 +1,10 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.2.5 (3 October 2026) — Settings pages stay still
+- **The pages inside Settings no longer blink.** Night mode, Update, Bluetooth, Wi-Fi and the
+  other pages opened from Settings flickered, again and again, since 2.2.0: their small fade-in
+  played each time the Jooki sent news, which is often. It now plays once, when you open the page.
+
 ## OpenJooki 2.2.4 (2 October 2026) — discs keep going behind another tab
 - **A disc keeps converting while you do something else.** Left behind another browser tab, a disc
   seemed to stop: Chrome slows the timers of a hidden tab, after five minutes to one a minute, and

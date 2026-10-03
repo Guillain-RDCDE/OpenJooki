@@ -3,9 +3,12 @@
 -- isolated from local playback: the closed daemons (spotify_ctrl, deezer_ctrl)
 -- do the streaming; this module only carries messages and keeps two small
 -- sub-trees: state.spotify = { username, active }, state.deezer = { username, id, active }.
+-- What a daemon says about the track it plays reaches state.playback through one door,
+-- playback.on_external: this module never writes the music machine's sub-tree itself.
 -- Best effort: verified on the bench with a fake daemon, not against the services.
 -- Note: the 2022 firmware ships spotify_ctrl but no deezer_ctrl (docs/22 §1).
 local util = require("services.util")
+local playback = require("services.playback")
 local streaming = {}
 
 local SP, DZ = "/j/spotify/output/", "/j/deezer/output/"
@@ -57,11 +60,17 @@ function streaming.transport(service, action, arg)
 end
 
 -- ------------------------------------------------------------------ Spotify events
-local function pb_of(doc) local pb = copy(doc.playback or {}); pb.state = pb.state or "idle"; return pb end
 local function active(doc, service) return doc.playback and doc.playback.now and doc.playback.now.service == service end
-local function local_busy(pb)
-  return pb.now and (pb.now.service == "FILE" or pb.now.service == "STREAM")
-    and (pb.state == "playing" or pb.state == "starting" or pb.state == "paused")
+-- the daemon's word on the music state, through playback's door, completed with this module's own sub-tree
+local function external(doc, ev, own)
+  local r = playback.on_external(doc, ev)
+  for k, v in pairs(own or {}) do r.state[k] = v end
+  return r
+end
+-- a service logged out while it played: nothing plays any more
+local function gone(doc, service, own)
+  if not active(doc, service) then return { state = own } end
+  return external(doc, { service = service, clear = true, state = "idle" }, own)
 end
 
 --- A cover a browser can show: the daemon may give Spotify's own "spotify:image:<id>", which is
@@ -85,16 +94,9 @@ end
 --- music stops (the last one to start wins). The daemon's two messages, "playing" and
 --- "now_playing", may come in either order: `sp.playing` and `sp.track` remember each.
 local function take_over(doc, sp)
-  local pb = pb_of(doc)
-  local cmds = {}
-  if local_busy(pb) then cmds[#cmds + 1] = pub("/j/audio/out/stop", "7") end
-  pb.now = sp_now(sp.track)
-  pb.state = sp.playing and "playing" or "idle"
-  pb.position_ms = 0
-  pb.paused_by, pb.paused_at, pb.resume_ms = nil, nil, nil
-  cmds[#cmds + 1] = emit("playback.changed", { state = pb.state })
-  cmds[#cmds + 1] = { kind = "log", level = "info", key = "streaming.spotify_took_over", fields = { cover = tostring((sp.track or {}).image or ""):sub(1, 90) } }
-  return { state = { spotify = sp, playback = pb }, commands = cmds }
+  local r = external(doc, { service = "SPOTIFY", takeover = true, now = sp_now(sp.track), state = sp.playing and "playing" or "idle", position_ms = 0 }, { spotify = sp })
+  r.commands[#r.commands + 1] = { kind = "log", level = "info", key = "streaming.spotify_took_over", fields = { cover = tostring((sp.track or {}).image or ""):sub(1, 90) } }
+  return r
 end
 
 function streaming.on_spotify(doc, ev)
@@ -105,9 +107,7 @@ function streaming.on_spotify(doc, ev)
     return { state = { spotify = sp }, commands = { emit("volume.apply", {}) } }
   elseif kind == "logout" then
     sp.username, sp.playing, sp.track = nil, nil, nil
-    local r = { state = { spotify = sp }, commands = {} }
-    if active(doc, "SPOTIFY") then local pb = pb_of(doc); pb.now, pb.state = nil, "idle"; r.state.playback = pb; r.commands[1] = emit("playback.changed", { state = "idle" }) end
-    return r
+    return gone(doc, "SPOTIFY", { spotify = sp })
   elseif kind == "login_required" then
     return { commands = { emit("system.event", { name = "Evt.Spotify.NoLoginError" }) } }
   elseif kind == "active" then
@@ -121,16 +121,15 @@ function streaming.on_spotify(doc, ev)
   elseif kind == "now_playing" then
     sp.track = copy(ev.data or {})
     if active(doc, "SPOTIFY") then
-      local pb = pb_of(doc)
-      local was = pb.now and pb.now.image
-      pb.now = sp_now(sp.track, pb.now.playlist)
-      local r = { state = { spotify = sp, playback = pb } }
+      local was = doc.playback.now
+      local now = sp_now(sp.track, was.playlist)
+      local r = external(doc, { service = "SPOTIFY", now = now }, { spotify = sp })
       -- what the daemon gives as a cover, once per new cover (docs: the page's covers)
-      if pb.now.image ~= was then r.commands = { { kind = "log", level = "info", key = "streaming.spotify_cover", fields = { raw = tostring(sp.track.image or ""):sub(1, 90) } } } end
+      if now.image ~= was.image then r.commands = { { kind = "log", level = "info", key = "streaming.spotify_cover", fields = { raw = tostring(sp.track.image or ""):sub(1, 90) } } } end
       return r
     end
     -- local music loaded: wait for "playing" (the phone may only have changed the track of a paused Spotify)
-    if local_busy(pb_of(doc)) then return { state = { spotify = sp } } end
+    if playback.local_busy(doc) then return { state = { spotify = sp } } end
     return take_over(doc, sp)
   elseif kind == "playing" or kind == "paused" then
     sp.playing = kind == "playing"
@@ -138,13 +137,10 @@ function streaming.on_spotify(doc, ev)
       if kind == "playing" then return take_over(doc, sp) end
       return { state = { spotify = sp } }
     end
-    local pb = pb_of(doc)
-    pb.state = kind
-    return { state = { spotify = sp, playback = pb }, commands = { emit("playback.changed", { state = kind }) } }
+    return external(doc, { service = "SPOTIFY", state = kind }, { spotify = sp })
   elseif kind == "position" then
     if not active(doc, "SPOTIFY") or (doc.playback or {}).state ~= "playing" then return nil end
-    local pb = pb_of(doc); pb.position_ms = tonumber(ev.ms) or 0
-    return { state = { playback = pb } }
+    return external(doc, { service = "SPOTIFY", position_ms = tonumber(ev.ms) or 0 })
   elseif kind == "volume" then
     return nil   -- 1.x ignored the app's volume and re-applied its own
   elseif kind == "set_cfg" then
@@ -173,35 +169,29 @@ function streaming.on_deezer(doc, ev)
   elseif kind == "options" then dz.active = (ev.license and dz.username) and true or nil return { state = { deezer = dz } }
   elseif kind == "logout" then
     dz.username, dz.id, dz.active = nil, nil, nil
-    local r = { state = { deezer = dz }, commands = {} }
-    if active(doc, "DEEZER") then local pb = pb_of(doc); pb.now, pb.state = nil, "idle"; r.state.playback = pb; r.commands[1] = emit("playback.changed", { state = "idle" }) end
-    return r
+    return gone(doc, "DEEZER", { deezer = dz })
   elseif kind == "play_error" then return { commands = { emit("system.event", { name = "Evt.Deezer.PlayError" }) } }
   elseif kind == "playlists" then return { commands = { pub("/j/web/output/state", ev.raw or "{}") } }   -- 1.x: state {deezerPlaylists}
   elseif kind == "now_playing" then
-    local pb = pb_of(doc); local d = ev.data or {}
-    pb.now = { playlist = pb.now and pb.now.playlist, service = "DEEZER", source_uri = d.link, album = d.album and d.album.title, artist = d.artist and d.artist.name,
-               audiobook = false, duration_ms = (tonumber(d.duration) or 0) * 1000, has_next = true, has_prev = true, image = d.album and d.album.cover_big, title = d.title }
-    return { state = { playback = pb } }
+    local cur = doc.playback and doc.playback.now; local d = ev.data or {}
+    local now = { playlist = cur and cur.playlist, service = "DEEZER", source_uri = d.link, album = d.album and d.album.title, artist = d.artist and d.artist.name,
+                  audiobook = false, duration_ms = (tonumber(d.duration) or 0) * 1000, has_next = true, has_prev = true, image = d.album and d.album.cover_big, title = d.title }
+    return external(doc, { service = "DEEZER", now = now })
   elseif kind == "now_pl" then
     if not active(doc, "DEEZER") then return nil end
-    local pb = pb_of(doc); pb.now.uri = ev.uri
-    return { state = { playback = pb } }
+    return external(doc, { service = "DEEZER", uri = ev.uri })
   elseif kind == "starting" or kind == "playing" or kind == "paused" or kind == "stopped" or kind == "ended" then
     if not active(doc, "DEEZER") then return nil end
-    local pb = pb_of(doc)
-    local cmds = {}
-    if kind == "paused" then pb.state = ev.flag == "1" and "paused" or "playing"
-    elseif kind == "ended" then pb.state = "idle" cmds[#cmds + 1] = pub(DZ .. "next")
-    elseif kind == "stopped" then pb.state = "idle"
-    else pb.state = kind end
-    if kind == "starting" then pb.position_ms = 0 end
-    cmds[#cmds + 1] = emit("playback.changed", { state = pb.state })
-    return { state = { playback = pb }, commands = cmds }
+    local state
+    if kind == "paused" then state = ev.flag == "1" and "paused" or "playing"
+    elseif kind == "ended" or kind == "stopped" then state = "idle"
+    else state = kind end
+    local r = external(doc, { service = "DEEZER", state = state, position_ms = kind == "starting" and 0 or nil })
+    if kind == "ended" then table.insert(r.commands, 1, pub(DZ .. "next")) end   -- the daemon is asked for the next track first
+    return r
   elseif kind == "position" then
     if not active(doc, "DEEZER") or (doc.playback or {}).state ~= "playing" then return nil end
-    local pb = pb_of(doc); pb.position_ms = tonumber(ev.ms) or 0
-    return { state = { playback = pb } }
+    return external(doc, { service = "DEEZER", position_ms = tonumber(ev.ms) or 0 })
   end
   return nil
 end

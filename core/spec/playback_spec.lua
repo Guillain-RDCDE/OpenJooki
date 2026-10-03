@@ -32,8 +32,7 @@ end
 
 -- Assertion rule: the commands of a handler are a set, unless their order is a rule of the player
 -- itself -- "stop" before "play", "seek" before "cont" (or the engine plays the old position for an
--- instant), the music paused before a system sound starts, the music continued before `after` runs.
--- Those keep a positional assert; everything else uses `same` (whole set, any order) or `has` (one topic).
+-- instant). Those keep a positional assert; everything else uses `same` (whole set, any order) or `has` (one topic).
 local function sorted(list) local out = {} for i, v in ipairs(list) do out[i] = v end table.sort(out) return out end
 local function same(r, expected) assert_eq(sorted(topics(r)), sorted(expected)) end
 local function has(r, s) for _, t in ipairs(topics(r)) do if t == s then return true end end return false end
@@ -81,62 +80,14 @@ describe("services.playback — starting a playlist", function()
     assert_eq(r.state.playback.now.index, 2)
   end)
 
-  it("shuffle: a memoised order, never for audiobooks", function()
-    local doc = doc_with({ shuffle = true })
-    local r = playback.on_request(doc, { playlist = "music" })
-    local order = r.state.playback_int.shuffle.music     -- the order is the player's own business: never published
-    assert_eq(#order, 3)
-    assert_nil(r.state.playback_int.shuffle.book); assert_nil(r.state.playback.shuffle)
-    apply(doc, r)
-    local r2 = playback.on_request(doc, { playlist = "book" })
-    assert_eq(r2.state.playback.now.index, 1)
-    assert_nil(r2.state.playback_int.shuffle.book)
-    assert_eq(r2.state.playback_int.shuffle.music, order)   -- what was memoised stays
+  it("boot: an idle machine and a seed from the clock", function()
+    local r = playback.on_boot(doc_with(), { wall = 1700000000, now = 5 })
+    assert_eq(r.state.playback, { state = "idle" }); assert_eq(r.state.playback_int.seed, 1700000000)
+    assert_eq(r.state.playback_int.last, {}); assert_eq(r.state.playback_int.shuffle, {})
   end)
 end)
 
-describe("services.playback — audiobook resume", function()
-  it("resumes at the saved chapter, 15 s back, seeking once the engine plays", function()
-    local doc = doc_with({ resume = { book = { id = "b", pos = 125000 } } })
-    local r = playback.on_request(doc, { playlist = "book" })
-    assert_eq(r.state.playback.now.index, 2)
-    assert_eq(r.state.playback.resume_ms, 110000)
-    apply(doc, r)
-    r = playback.on_audio(doc, { type = "audio.playing", id = 7 })
-    assert_true(has(r, "seek 7\t110000"))
-    assert_nil(r.state.playback.resume_ms)
-    assert_eq(r.state.playback.position_ms, 110000)
-  end)
-
-  it("near the chapter start it starts the chapter; after the timer it goes 60 s back", function()
-    local doc = doc_with({ resume = { book = { id = "b", pos = 12000 } } })
-    local r = playback.on_request(doc, { playlist = "book" })
-    assert_eq(r.state.playback.now.index, 2); assert_nil(r.state.playback.resume_ms)
-    doc = doc_with({ resume = { book = { id = "c", pos = 200000, t = true } } })
-    r = playback.on_request(doc, { playlist = "book" })
-    assert_eq(r.state.playback.resume_ms, 140000)
-  end)
-
-  it("saves the position on pause, stop and end of chapter; the end of the book goes back to chapter 1", function()
-    local doc = doc_with()
-    apply(doc, playback.on_request(doc, { playlist = "book", index = 2 }))
-    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
-    apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 40000 }))
-    assert_eq(doc.resume.book, { id = "b", pos = 40000 })
-    assert_true(doc.playback_int.resume_dirty); assert_nil(doc.playback.resume_dirty)
-    apply(doc, playback.on_pause(doc, { source = "token", now = 50 }))
-    local r = playback.on_audio(doc, { type = "audio.paused", id = 7 })
-    assert_true(has(r, "write /d/resume.json"))
-    apply(doc, r)
-    apply(doc, playback.on_audio(doc, { type = "audio.ended", id = 7 }))
-    assert_eq(doc.resume.book, { id = "c", pos = 0 })
-    assert_eq(doc.playback.now.index, 3)   -- next chapter started
-    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
-    apply(doc, playback.on_audio(doc, { type = "audio.ended", id = 7 }))
-    assert_nil(doc.resume.book)
-    assert_eq(doc.playback.state, "ended")
-  end)
-
+describe("services.playback — pause and continue", function()
   it("pause rules: short pause continues, long pause 15 s back, sleep-timer pause 60 s back", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "book", index = 1 }))
@@ -154,16 +105,6 @@ describe("services.playback — audiobook resume", function()
     assert_eq(doc.resume.book.t, true)
     r = playback.on_resume(doc, { now = 201 })
     assert_eq(topics(r)[1], "seek 7\t140000")   -- seek before cont: order matters
-  end)
-
-  it("resume_reset forgets a book's position; the save timer flushes dirty positions", function()
-    local doc = doc_with({ resume = { book = { id = "b", pos = 5 } } })
-    local r = playback.on_resume_reset(doc, "book")
-    assert_eq(r.state.resume, {}); assert_eq(topics(r), { "write /d/resume.json" })
-    doc.playback = { state = "playing" }; doc.playback_int = { resume_dirty = true, last = {}, shuffle = {} }
-    r = playback.on_timer(doc, { name = "playback.save" })
-    assert_eq(topics(r), { "write /d/resume.json" }); assert_nil(r.state.playback_int.resume_dirty)
-    assert_nil(playback.on_timer(doc, { name = "other" }))
   end)
 end)
 
@@ -218,23 +159,30 @@ describe("services.playback — transport and end of track", function()
   end)
 end)
 
-describe("services.playback — system sounds", function()
-  it("pauses the music, plays the sound on stream 3, then continues the music and runs `after`", function()
+describe("services.playback — what a streaming daemon reports (the one door to state.playback)", function()
+  it("a takeover stops the local music that plays, clears the pause, and says the state changed", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "music" }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
-    local r = playback.on_system_event(doc, { name = "Evt.Jooki.Ready", after = { type = "shutdown.request" } })
-    -- positional: the music is paused BEFORE the sound starts, and continued BEFORE `after` runs
-    assert_eq(topics(r), { "emit lights.event Evt.Jooki.Ready", "pauz 7", "play 3\tfile:///sys/assets/ready.ogg" })
+    assert_true(playback.local_busy(doc))
+    local r = playback.on_external(doc, { service = "SPOTIFY", takeover = true, now = { service = "SPOTIFY", title = "X" }, state = "playing", position_ms = 0 })
+    assert_eq(topics(r), { "stop 7", "emit playback.changed playing" })   -- stop before the word goes round: order matters
+    assert_eq(r.state.playback.now.title, "X"); assert_eq(r.state.playback.position_ms, 0); assert_nil(r.state.playback.paused_by)
+    assert_nil(r.state.playback_int)                                       -- the bookkeeping is the local machine's
     apply(doc, r)
-    r = playback.on_audio(doc, { type = "audio.ended", id = 3 })
-    assert_eq(topics(r), { "cont 7", "emit shutdown.request" })
-    assert_nil(r.state.playback_int.sys); assert_nil(r.state.playback.sys)
+    assert_false(playback.local_busy(doc) == true)
+    r = playback.on_external(doc, { service = "SPOTIFY", takeover = true, now = { service = "SPOTIFY" }, state = "idle" })
+    assert_eq(topics(r), { "emit playback.changed idle" })                 -- nothing local to stop
   end)
 
-  it("an event without a sound only lights up and runs `after` at once", function()
-    local doc = doc_with()
-    local r = playback.on_system_event(doc, { name = "Evt.Character.Detect", after = { type = "x" } })
-    same(r, { "emit lights.event Evt.Character.Detect", "emit x" })
+  it("a track, a position or a uri alone change the state silently; clear empties it", function()
+    local doc = doc_with({ playback = { state = "playing", now = { service = "DEEZER", playlist = "dz" } } })
+    local r = playback.on_external(doc, { service = "DEEZER", position_ms = 4200 })
+    assert_eq(r.state.playback.position_ms, 4200); assert_nil(r.commands)
+    r = playback.on_external(doc, { service = "DEEZER", uri = "dzmedia:///track/1" })
+    assert_eq(r.state.playback.now.uri, "dzmedia:///track/1"); assert_eq(r.state.playback.now.playlist, "dz"); assert_nil(r.commands)
+    r = playback.on_external(doc, { service = "DEEZER", clear = true, state = "idle" })
+    assert_nil(r.state.playback.now); assert_eq(topics(r), { "emit playback.changed idle" })
+    assert_eq(playback.on_external({}, { service = "SPOTIFY", now = { service = "SPOTIFY" } }).state.playback.state, "idle")
   end)
 end)

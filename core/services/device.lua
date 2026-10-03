@@ -1,20 +1,22 @@
 -- services.device: the Jooki as a physical object.
--- Volume and its limits, headphones, toy-safe, buttons (with long presses and
--- the four-button combo), battery / charging / heat, inactivity power-off,
--- lights, and the power-off sequence. Owns:
+-- Volume and its limits, headphones and the amplifier, the ESP32's boot orders, the clock from the
+-- page, disk usage, the name on the network. The rest of the object lives in four sub-modules this
+-- one installs and whose handlers it re-exports under their old names (api.v1 reaches them here):
+--   services.device.lights    the ring and the side dots, the Wi-Fi chase, the event pulses, the party
+--   services.device.power     battery, cable, charging, heat, inactivity, the power-off sequence
+--   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
+--   services.device.buttons   presses, long presses, the tick that runs while a button is held
+-- Owns:
 --   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode }   (audiocfg.json, 1.x shape)
---   state.power    = { connected, charging, level = { mv, p, t }, warned_at }
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
---   state.lights   = { ring, prev, next, circle }   (last colours sent; the simulator shows them)
---   state.device.toy_safe, state.device.ip, state.device.hostname, ...
---   state.activity = { last, buttons = { [name] = down_at } }
+--   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
+-- (state.power and state.activity are power's, state.device.toy_safe / airplane and state.flags radio's.)
 local util = require("services.util")
+local lights = require("services.device.lights")
+local power = require("services.device.power")
+local radio = require("services.device.radio")
+local buttons = require("services.device.buttons")
 local device = {}
-
-local LED = "/j/led/output/"
-local COLOURS = { WHITE = { 200, 200, 200 }, BLACK = { 0, 0, 0 }, RED = { 200, 0, 0 }, GREEN = { 0, 200, 0 },
-                  BLUE = { 0, 0, 200 }, YELLOW = { 200, 200, 0 }, ORANGE = { 200, 40, 0 }, LO_ORANGE = { 50, 10, 0 },
-                  LIGHTBLUE = { 0, 10, 200 } }
 
 local copy, emit, err = util.copy, util.emit, util.err
 local function cfg(doc, key, default)
@@ -43,8 +45,10 @@ local function audiocfg_of(doc)
   a.repeat_mode = a.repeat_mode or 1
   return a
 end
+device.audiocfg_of = audiocfg_of   -- power (the cable, the power-off save) and buttons (the volume steps) read it here
 
 local function audiocfg_path(doc) return util.data_dir(doc) .. "/audiocfg.json" end
+device.audiocfg_path = audiocfg_path
 
 local function set_volume(doc, requested, persist)
   local a = audiocfg_of(doc)
@@ -133,282 +137,6 @@ function device.on_knobs(doc, ev)
   return r
 end
 
--- ------------------------------------------------------------------ buttons (1.x keys module)
-local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
-local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
-
-local function activity_of(doc)
-  local a = copy(doc.activity or {})
-  a.buttons = a.buttons or {}
-  return a
-end
-
-local function all_down(buttons)
-  for _, b in ipairs(COMBO) do if not buttons[b] then return false end end
-  return true
-end
-
--- The long-press tick (device.tick, every 0.5 s) runs only while a button is held: the first button
--- down starts it, the last one up (or the tick that acts on it) stops it. Nothing to tick otherwise.
-local TICK_S = 0.5
-local function tick_change(cmds, held_before, buttons)
-  local held = next(buttons) ~= nil
-  if held and not held_before then cmds[#cmds + 1] = { kind = "timer.every", name = "device.tick", seconds = TICK_S }
-  elseif held_before and not held then cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.tick" } end
-end
-
-function device.on_button(doc, ev)
-  local act = activity_of(doc)
-  act.last = ev.now
-  local cmds = {}
-  local name = ev.button
-  local held_before = next(act.buttons) ~= nil
-  if ev.down then
-    act.buttons[name] = ev.now
-    if all_down(act.buttons) then
-      cmds[#cmds + 1] = { kind = "shell", action = "speak_info" }
-      cmds[#cmds + 1] = emit("playback.pause_request", { source = "speak_info" })
-      act.buttons = {}
-    end
-    tick_change(cmds, held_before, act.buttons)
-    -- airplane buttons are decided on release or by the long-press tick
-    return { state = { activity = act }, commands = cmds }
-  end
-  -- release: circle short press does nothing (the long press is on the tick);
-  -- hp_plugged is reported through the knob state
-  local down_at = act.buttons[name]
-  act.buttons[name] = nil
-  if name == "airplane_release" then act.buttons.airplane_mode_on, act.buttons.airplane_mode_off = nil, nil end
-  tick_change(cmds, held_before, act.buttons)
-  if not down_at then return { state = { activity = act }, commands = cmds } end
-  if name == "next" then cmds[#cmds + 1] = emit("playback.next", {})
-  elseif name == "prev" then cmds[#cmds + 1] = emit("playback.prev", {})
-  elseif name == "vol_inc" or name == "vol_dec" then
-    local a = audiocfg_of(doc)
-    local s = set_volume(doc, a.volume + (name == "vol_inc" and 10 or -10))
-    for _, c in ipairs(s.commands) do cmds[#cmds + 1] = c end
-    return { state = { activity = act, audiocfg = s.state.audiocfg }, commands = cmds }
-  end
-  return { state = { activity = act }, commands = cmds }
-end
-
---- Long presses are detected on the tick (like 1.x): circle 2 s -> power off, airplane 5 s.
-function device.on_tick(doc, ev)
-  local act = doc.activity
-  if not act or not act.buttons then return nil end
-  local now = ev.now
-  local cmds = {}
-  local changed = false
-  local a2 = activity_of(doc)
-  if act.buttons.circle and now - act.buttons.circle >= LONG_CIRCLE_S then
-    a2.buttons.circle = nil; changed = true
-    cmds[#cmds + 1] = emit("power.off_request", { reason = "button" })
-  end
-  for _, n in ipairs({ "airplane_mode_on", "airplane_mode_off" }) do
-    if act.buttons[n] and now - act.buttons[n] >= LONG_AIRPLANE_S then
-      a2.buttons[n] = nil; changed = true
-      cmds[#cmds + 1] = emit("radio.set", { wifi = n == "airplane_mode_off", bt = n == "airplane_mode_off" })
-    end
-  end
-  -- prev + next held together for 10 s: clear the parent code (docs/adr/0007 — whoever
-  -- holds the Jooki is allowed). A confirmation sound is played by services.security.
-  if act.buttons.prev and act.buttons.next and now - math.max(act.buttons.prev, act.buttons.next) >= LONG_RESET_S then
-    a2.buttons.prev = nil; a2.buttons.next = nil; changed = true
-    cmds[#cmds + 1] = emit("security.parent_clear", { physical = true })
-  end
-  if not changed then return nil end
-  tick_change(cmds, true, a2.buttons)   -- the press acted on was the last one held: the tick stops
-  return { state = { activity = a2 }, commands = cmds }
-end
-
--- ------------------------------------------------------------------ power
-local function power_of(doc)
-  local p = copy(doc.power or {})
-  p.level = p.level or { mv = 0, p = 0, t = 0 }
-  return p
-end
-
-function device.on_battery(doc, ev)
-  local p = power_of(doc)
-  p.level = { mv = ev.mv or 0, p = ev.tenths or 0, t = ev.mc or 0 }
-  local cmds = {}
-  if (ev.mc or 0) > cfg(doc, "overheat_mc", 80000) then
-    cmds[#cmds + 1] = { kind = "log", level = "error", key = "device.overheat", fields = { mc = ev.mc } }
-    cmds[#cmds + 1] = emit("device.toy_safe_request", { enable = true })
-    cmds[#cmds + 1] = { kind = "shell", action = "power_overheat" }
-    local s = set_volume(doc, 80)
-    for _, c in ipairs(s.commands) do cmds[#cmds + 1] = c end
-    return { state = { power = p, audiocfg = s.state.audiocfg }, commands = cmds }
-  end
-  if not p.charging then
-    local percent = (ev.tenths or 0) / 10
-    if percent < cfg(doc, "battery_off_percent", 10) then
-      cmds[#cmds + 1] = emit("system.event", { name = "Evt.Power.Low.Shutdown", after = { type = "power.off_request", reason = "battery" } })
-    elseif percent < cfg(doc, "battery_warn_percent", 20) and (not p.warned_at or ev.now - p.warned_at >= 300) then
-      p.warned_at = ev.now
-      cmds[#cmds + 1] = emit("system.event", { name = "Evt.Power.Low.Warning" })
-    end
-  end
-  return { state = { power = p }, commands = cmds }
-end
-
-function device.on_plugged(doc, ev)
-  local p = power_of(doc)
-  if p.connected == ev.on then return nil end
-  local first = p.connected == nil
-  p.connected = ev.on
-  local cmds = {}
-  if not first then
-    cmds[#cmds + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = (ev.on and not audiocfg_of(doc).headphones_en) and "0" or "1" }
-    cmds[#cmds + 1] = emit("system.event", { name = ev.on and "Evt.Power.Cable.Insert" or "Evt.Power.Cable.Remove" })
-  end
-  return { state = { power = p }, commands = cmds }
-end
-
-function device.on_charging(doc, ev)
-  local p = power_of(doc)
-  if p.charging == ev.on then return nil end
-  local first = p.charging == nil
-  p.charging = ev.on
-  if ev.on then p.warned_at = nil end
-  local cmds = {}
-  if not first and ev.on then cmds[#cmds + 1] = emit("system.event", { name = "Evt.Power.Charging" }) end
-  return { state = { power = p }, commands = cmds }
-end
-
---- Inactivity (every 30 s): 14 min -> warning lights, 15 min -> power off, unless kept awake.
-function device.on_inactivity(doc, ev)
-  if doc.flags and doc.flags.STAY_ON then return nil end
-  local act = doc.activity or {}
-  -- a connected Bluetooth speaker no longer keeps it awake (1.x did): the chip reconnects it
-  -- by itself, so a Jooki idle next to its speaker would never switch off (docs/26)
-  local plugged = doc.power and doc.power.connected
-  if util.is_playing(doc) or plugged then
-    if act.last ~= ev.now then
-      local a2 = activity_of(doc); a2.last = ev.now
-      return { state = { activity = a2 } }
-    end
-    return nil
-  end
-  local idle = ev.now - (act.last or 0)
-  if idle >= cfg(doc, "inactivity_off_s", 900) then
-    return { commands = { { kind = "log", level = "info", key = "device.inactivity_off", fields = { idle_s = math.floor(idle) } },
-                          emit("power.off_request", { reason = "inactivity" }) } }
-  end
-  if idle >= cfg(doc, "inactivity_warn_s", 840) and not act.warned then
-    local a2 = activity_of(doc); a2.warned = true
-    return { state = { activity = a2 }, commands = { emit("lights.event", { name = "Evt.Power.Inactivity.Warning" }) } }
-  end
-  return nil
-end
-
---- Anything the child or a page does keeps the Jooki awake.
-function device.on_activity(doc, ev)
-  local a2 = activity_of(doc)
-  if a2.last == ev.now and not a2.warned then return nil end
-  a2.last, a2.warned = ev.now, nil
-  return { state = { activity = a2 } }
-end
-
--- ------------------------------------------------------------------ power off
-function device.on_off_request(_, ev)
-  return { commands = { emit("system.event", { name = "Evt.Jooki.Poweroff", after = { type = "shutdown.request", reason = ev.reason } }) } }
-end
-
-function device.on_shutdown_request(doc, ev)
-  local a = audiocfg_of(doc)
-  local cmds = {
-    { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 },
-    { kind = "bus.publish", topic = LED .. "set_raw", payload = "ALL,0,0,0" },
-    { kind = "bus.publish", topic = LED .. "set_raw", payload = "CIRCLE,200,0,0" },
-    { kind = "bus.publish", topic = "/j/all/quit", payload = '"from-player"' },
-    { kind = "shell", action = "sync" },
-  }
-  if ev.reason ~= "signal" then cmds[#cmds + 1] = { kind = "shell", action = "poweroff" } end
-  cmds[#cmds + 1] = { kind = "shutdown", reason = ev.reason or "requested" }
-  return { commands = cmds }
-end
-
--- ------------------------------------------------------------------ toy safe, radio, wifi
-function device.on_toy_safe(doc, ev)
-  local d = copy(doc.device or {})
-  d.toy_safe = ev.enable == true
-  local flags = copy(doc.flags or {})
-  flags.TOY_SAFE_OFF = (not d.toy_safe) or nil
-  return { state = { device = d, flags = flags }, commands = {
-    { kind = "files.flag", name = "TOY_SAFE_OFF", set = not d.toy_safe },
-    { kind = "shell", action = "toysafe_update" },
-    { kind = "bus.publish", topic = "/j/esp32/output/audio/set_toysafe", payload = d.toy_safe and "1" or "0" },
-    emit("lights.event", { name = d.toy_safe and "Evt.ToySafe.On" or "Evt.ToySafe.Off" }) } }
-end
-
---- radio.set { wifi?, bt?, bounded? }: the knob (held 5 s) and the system tokens switch the radios
---- for good — the ESP32 remembers airplane mode across restarts, and the way back is a knob
---- gesture few owners know. A change that is not `bounded` therefore also ends any airplane
---- mode the page had started (its timer and its boot flag go).
-function device.on_radio(doc, ev)
-  local flags = copy(doc.flags or {})
-  flags.WIFI_OFF = (ev.wifi == false) or nil
-  flags.BT_OFF = (ev.bt == false) or nil
-  local name = (ev.wifi and ev.bt) and "Evt.Airplane.Disable" or ((ev.wifi == false and ev.bt == false) and "Evt.Airplane.Enable" or "Evt.Airplane.Change")
-  local cmds = {
-    { kind = "files.flag", name = "WIFI_OFF", set = ev.wifi == false }, { kind = "files.flag", name = "BT_OFF", set = ev.bt == false },
-    { kind = "shell", action = "radio", args = { wifi = ev.wifi ~= false, bt = ev.bt ~= false } },
-    emit("lights.event", { name = name }) }
-  local r = { state = { flags = flags }, commands = cmds }
-  if not ev.bounded then
-    flags.OJ_AIRPLANE = nil
-    local d = copy(doc.device or {})
-    if d.airplane ~= false then
-      d.airplane = false
-      r.state.device = d
-      cmds[#cmds + 1] = { kind = "files.flag", name = "OJ_AIRPLANE", set = false }
-      cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.airplane" }
-    end
-  end
-  return r
-end
-
--- ------------------------------------------------------------------ airplane mode from the page (always bounded)
--- Parents ask for the airplane button the Muuselabs app had (no radio near the bed, or on a
--- plane). From the page it is only ever bounded: for a number of minutes (a timer switches the
--- radios back on) and, whatever happens, until the next start: the flag OJ_AIRPLANE on /data/mode
--- marks it, and at boot the core sees the flag, switches the radios back on and drops it. So a
--- Jooki can never be left with its two side dots orange for good by a tap on the page.
-local AIRPLANE_MAX_MIN = 24 * 60
-local AIRPLANE_BOOT_RESTORE_S = 3      -- after boot: let the ready chime and the ESP32 orders go first
-
---- device.airplane { minutes? (1-1440, or none = until the next start) | cancel = true }
-function device.on_airplane(doc, p, ev)
-  if p.cancel then return device.on_radio(doc, { wifi = true, bt = true }) end
-  local minutes
-  if p.minutes ~= nil then
-    minutes = tonumber(p.minutes)
-    if not minutes or minutes < 1 or minutes > AIRPLANE_MAX_MIN then
-      return nil, err("invalid_argument", "minutes", "invalid duration (1 to " .. AIRPLANE_MAX_MIN .. " minutes)")
-    end
-    minutes = math.floor(minutes)
-  end
-  local r = device.on_radio(doc, { wifi = false, bt = false, bounded = true })
-  local d = copy(doc.device or {})
-  d.airplane = { ends = minutes and ((ev.wall or 0) + minutes * 60) or nil, boot = true }
-  r.state.device = d
-  r.state.flags.OJ_AIRPLANE = true
-  local cmds = r.commands
-  cmds[#cmds + 1] = { kind = "files.flag", name = "OJ_AIRPLANE", set = true }
-  if minutes then cmds[#cmds + 1] = { kind = "timer.once", name = "device.airplane", seconds = minutes * 60 }
-  else cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.airplane" } end
-  cmds[#cmds + 1] = { kind = "log", level = "info", key = "device.airplane", fields = { minutes = minutes or "boot" } }
-  return r
-end
-
---- The timer (or the boot flag) is over: the radios come back, the flag goes.
-function device.on_airplane_end(doc, why)
-  local r = device.on_radio(doc, { wifi = true, bt = true })
-  r.commands[#r.commands + 1] = { kind = "log", level = "info", key = "device.airplane_end", fields = { why = why } }
-  return r
-end
-
 -- ------------------------------------------------------------------ the time, from the page
 -- The Jooki has no clock of its own (no RTC): it takes the time from the Internet (ntpd). Away
 -- from the Internet (holiday Wi-Fi without Internet, a phone's hotspot) it starts in 1970, and
@@ -435,139 +163,6 @@ end
 -- wifi_add_network.sh is the Jooki 1's (wpa_supplicant, absent here) and never reaches the chip,
 -- and `esp32_cmd add_ap` crashes it (docs/20). Said plainly instead of pretending.
 device.WIFI_OVER_BLUETOOTH = err("unavailable", "ssid", "WIFI_OVER_BLUETOOTH")
-
--- ------------------------------------------------------------------ lights (1.x language, 1.3 dimming)
-local function dimmed(doc, c)
-  local lim = doc.limits or {}
-  if not lim.dim then return c end
-  local out = {}
-  for i = 1, 3 do out[i] = c[i] > 0 and math.max(1, math.floor(c[i] * 0.05 + 0.5)) or 0 end
-  return out
-end
-local function set(doc, group, colour) return { kind = "bus.publish", topic = LED .. "set_raw", payload = group .. "," .. table.concat(dimmed(doc, colour), ",") } end
-local function pulse(doc, group, colour, n) return { kind = "bus.publish", topic = LED .. "pulse_raw", payload = group .. "," .. table.concat(dimmed(doc, colour), ",") .. "," .. (n or 1) .. ",500,0.5" } end
-
-local function wifi_lights(doc)
-  local w = doc.net or {}
-  local assoc, ip = w.connected, (w.ip and w.ip ~= "")
-  return { set(doc, "PREV", assoc and COLOURS.WHITE or COLOURS.ORANGE), set(doc, "NEXT", ip and COLOURS.WHITE or COLOURS.ORANGE) }
-end
-
--- While the Jooki waits for its Wi-Fi at start-up, the two side dots are orange. Both at once and
--- steady, that reads as "it crashed" (the chip only tries to join the network about a minute after
--- power-on, docs/20). So instead of a steady pair we run a slow left<->right glow -- bright orange
--- ping-ponging over dim orange, both dots always lit so it never looks dead -- which plainly says
--- "something is happening, you can wait". It stops on its own the moment the Wi-Fi associates, a
--- token is played, or airplane mode is on (where steady orange is the intended "off", docs/24).
-local ANIM_S = 0.45   -- default frame interval; the live value comes from config (0 = off, e.g. on the bench)
-local function anim_s(doc) local v = cfg(doc, "wifi_anim_s", ANIM_S); return (v and v > 0) and v or ANIM_S end
-local function radios_off(doc)
-  if doc.flags and doc.flags.WIFI_OFF then return true end
-  if doc.device and doc.device.airplane then return true end
-  return false
-end
-local function playing(doc)
-  local s = (doc.playback or {}).state
-  return s == "playing" or s == "starting" or s == "paused"
-end
--- the side dots should chase (rather than sit steady orange) while: not yet associated, radios on,
--- nothing playing. The same test tells on_lights_refresh to leave the dots to the animation.
-local function wifi_waiting(doc)
-  return not (doc.net and doc.net.connected) and not radios_off(doc) and not playing(doc)
-end
-
---- One frame of the start-up "waiting for Wi-Fi" chase, or its end. Driven by the device.wifi_anim
---- timer started at boot; it cancels that timer as soon as the wait is over.
-function device.on_wifi_anim(doc, ev)
-  if (doc.device or {}).party then return nil end
-  if not wifi_waiting(doc) then
-    local r = device.on_lights_refresh(doc)   -- let the dots settle to their real state
-    r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.wifi_anim" }
-    return r
-  end
-  local phase = math.floor((ev.now or 0) / anim_s(doc)) % 2
-  return { commands = {
-    set(doc, "PREV", phase == 0 and COLOURS.ORANGE or COLOURS.LO_ORANGE),
-    set(doc, "NEXT", phase == 0 and COLOURS.LO_ORANGE or COLOURS.ORANGE),
-  } }
-end
-
---- Idle/playing ring + Wi-Fi dots, recomputed on playback and network changes.
-function device.on_lights_refresh(doc)
-  local pb = doc.playback or {}
-  local cmds = {}
-  if (doc.device or {}).party then return { commands = cmds } end   -- the Christmas tree owns the lights for 5 s
-  if pb.state == "starting" then
-    cmds[#cmds + 1] = set(doc, "PREV", COLOURS.LIGHTBLUE); cmds[#cmds + 1] = set(doc, "NEXT", COLOURS.LIGHTBLUE)
-    return { commands = cmds }
-  end
-  local ring = COLOURS.WHITE
-  if pb.state == "playing" and doc.nfc and doc.nfc.tagId then ring = COLOURS.BLACK end   -- 1.x: the ring goes off while a token plays
-  cmds[#cmds + 1] = set(doc, "RING", ring)
-  -- while the start-up chase owns the side dots, leave them to it (it paints PREV/NEXT itself)
-  if not wifi_waiting(doc) then
-    for _, c in ipairs(wifi_lights(doc)) do cmds[#cmds + 1] = c end
-  end
-  return { commands = cmds }
-end
-
-local EVENT_LIGHTS = {
-  ["Evt.Character.Detect"] = function(doc) return { set(doc, "PREV", COLOURS.LIGHTBLUE), set(doc, "NEXT", COLOURS.LIGHTBLUE) } end,
-  ["Evt.Character.Write"] = function(doc) return { pulse(doc, "PREV", COLOURS.GREEN, 8), pulse(doc, "NEXT", COLOURS.GREEN, 8) } end,
-  ["Evt.Mobile.connect"] = function(doc) return { pulse(doc, "PREV", COLOURS.LIGHTBLUE, 1), pulse(doc, "NEXT", COLOURS.LIGHTBLUE, 1) } end,
-}
-local ERROR_EVENTS = { ["Evt.Character.Detect.Empty"] = true, ["Evt.Disk.FullError"] = true, ["Evt.Spotify.PlayError"] = true,
-                       ["Evt.Spotify.NoLoginError"] = true, ["Evt.Deezer.PlayError"] = true, ["Evt.Deezer.NoLoginError"] = true }
-local WARN_EVENTS = { ["Evt.ToySafe.On"] = true, ["Evt.ToySafe.Off"] = true, ["Evt.Factory.Enable"] = true, ["Evt.Factory.Disable"] = true,
-                      ["Evt.Power.Low.Warning"] = true, ["Evt.Power.Inactivity.Warning"] = true, ["Evt.Airplane.Enable"] = true }
-
-function device.on_lights_event(doc, ev)
-  local f = EVENT_LIGHTS[ev.name]
-  if f then return { commands = f(doc) } end
-  if ERROR_EVENTS[ev.name] then return { commands = { pulse(doc, "PREV", COLOURS.RED, 2), pulse(doc, "NEXT", COLOURS.RED, 2) } } end
-  if WARN_EVENTS[ev.name] then return { commands = { pulse(doc, "PREV", COLOURS.YELLOW, 1), pulse(doc, "NEXT", COLOURS.YELLOW, 1) } } end
-  return nil
-end
-
--- ------------------------------------------------------------------ the Christmas tree (just for fun)
--- A button in Settings: for 5 s the ring and the two side dots run through the colour wheel, each
--- at a different place on it, then everything goes back to its real state. The heart stays the
--- light controller's (docs/24 §1). Night mode's dimming applies, so it never lights up a bedroom.
-local PARTY_S, PARTY_FRAME_S, PARTY_STEP = 5, 0.12, 47   -- 47° a frame: the colours jump, they do not slide
-
---- A fully saturated colour at `deg` on the colour wheel, 0-200 like the rest of the lights.
-local function wheel(deg)
-  local h = (deg % 360) / 60
-  local i = math.floor(h)
-  local up, down = math.floor(200 * (h - i) + 0.5), math.floor(200 * (1 - (h - i)) + 0.5)
-  return ({ { 200, up, 0 }, { down, 200, 0 }, { 0, 200, up }, { 0, down, 200 }, { up, 0, 200 }, { 200, 0, down } })[i + 1]
-end
-device.wheel = wheel
-
-function device.on_party(doc)
-  if (doc.device or {}).party then return {} end
-  local d = copy(doc.device or {}); d.party = true
-  return { state = { device = d }, commands = {
-    { kind = "timer.every", name = "device.party", seconds = PARTY_FRAME_S },
-    { kind = "timer.once", name = "device.party_end", seconds = PARTY_S } } }
-end
-
-function device.on_party_frame(doc, ev)
-  if not (doc.device or {}).party then return { commands = { { kind = "timer.cancel", name = "device.party" } } } end
-  local deg = math.floor((ev.now or 0) / PARTY_FRAME_S) * PARTY_STEP
-  return { commands = { set(doc, "RING", wheel(deg)), set(doc, "PREV", wheel(deg + 120)), set(doc, "NEXT", wheel(deg + 240)) } }
-end
-
-function device.on_party_end(doc)
-  local d = copy(doc.device or {}); d.party = nil
-  local after = {}
-  for k, v in pairs(doc) do after[k] = v end
-  after.device = d
-  local r = device.on_lights_refresh(after)
-  table.insert(r.commands, 1, { kind = "timer.cancel", name = "device.party" })
-  r.state = { device = d }
-  return r
-end
 
 -- ------------------------------------------------------------------ disk usage (after uploads and at boot)
 function device.on_disk_request(doc)
@@ -612,13 +207,12 @@ on_bus_up = function(doc)
 end
 device.on_bus_up = function(doc) return on_bus_up(doc) end
 
+--- Boot: the saved volume through the chain, the sound routed and the amplifier on, the ESP32's
+--- orders, the knobs poll, the ready chime. (The sub-modules have their own boot handlers: the
+--- flags and the airplane restore are radio's, the charger and the inactivity timer power's, the
+--- Wi-Fi chase lights'; the long-press tick, device.tick, starts with the first button held.)
 function device.on_boot(doc, ev)
   local a = audiocfg_of({ audiocfg = ev.audiocfg })
-  local flags = ev.flags or {}
-  local d = copy(doc.device or {})
-  d.toy_safe = not flags.TOY_SAFE_OFF
-  -- false = the page may offer the (bounded) airplane mode; a table = one is running (until the restore below)
-  d.airplane = flags.OJ_AIRPLANE and { boot = true } or false
   local cmds = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } }
   -- route the sound and turn the amplifier on at boot (speaker unless headphones are set); without
   -- this the speaker stays silent until a headphones toggle (see output_commands). With no jack
@@ -627,18 +221,7 @@ function device.on_boot(doc, ev)
   for _, c in ipairs(output_commands(doc, a.headphones_en)) do cmds[#cmds + 1] = c end
   for _, c in ipairs(esp32_init()) do cmds[#cmds + 1] = c end
   for i, s in ipairs(ESP32_RESEND_S) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
-  -- an airplane mode started from the page ends at the next start, whatever the ESP32 remembers
-  if flags.OJ_AIRPLANE then cmds[#cmds + 1] = { kind = "timer.once", name = "device.airplane_restore", seconds = AIRPLANE_BOOT_RESTORE_S } end
-  -- (the long-press tick, device.tick, starts with the first button held: see on_button)
-  for _, c in ipairs({
-    { kind = "timer.every", name = "device.inactivity", seconds = 30 },
-    { kind = "timer.every", name = "device.knobs", seconds = 10 },
-  }) do cmds[#cmds + 1] = c end
-  -- the side-dot "waiting for Wi-Fi" chase; it stops itself once the network is up (or a token plays).
-  -- Off the real Jooki wifi_anim_s is 0 (no frames, no idle bus traffic on the bench).
-  if cfg(doc, "wifi_anim_s", ANIM_S) > 0 then
-    cmds[#cmds + 1] = { kind = "timer.every", name = "device.wifi_anim", seconds = anim_s(doc) }
-  end
+  cmds[#cmds + 1] = { kind = "timer.every", name = "device.knobs", seconds = 10 }
   if ev.quiet_boot then
     -- restarted by the Wi-Fi watchdog (services.network): no chime, maybe in the middle of the night
     cmds[#cmds + 1] = { kind = "files.remove", path = cfg(doc, "quiet_boot_file", "/data/openjooki/quiet_boot") }
@@ -646,11 +229,7 @@ function device.on_boot(doc, ev)
   else
     cmds[#cmds + 1] = emit("system.event", { name = "Evt.Jooki.Ready" })
   end
-  -- plugged at start (1.x did the same): known from the first second, so no cable sound either
-  local connected
-  if ev.plugged == "1" then connected = true elseif ev.plugged == "0" then connected = false end
-  return { state = { audiocfg = a, flags = flags, device = d, power = { level = { mv = 0, p = 0, t = 0 }, connected = connected }, activity = { last = ev.now or 0, buttons = {} },
-                     limits = { maxvol = 100, fade = 1, dim = false } }, commands = cmds }
+  return { state = { audiocfg = a, limits = { maxvol = 100, fade = 1, dim = false } }, commands = cmds }
 end
 
 --- The Jooki's name on the network (name.local). web_ctrl, closed, serves only the system's own
@@ -684,35 +263,37 @@ local function esp32_resend(doc)
   return { commands = esp32_init() }
 end
 
--- the device's timers, each handler on its own name (kernel.dispatch on_timer)
+-- the facade's own timers, each handler on its own name (kernel.dispatch on_timer)
 local TIMERS = {
-  ["device.inactivity"] = device.on_inactivity,
-  ["device.tick"] = device.on_tick,
   ["device.knobs"] = function() return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end,
-  ["device.wifi_anim"] = device.on_wifi_anim,
-  ["device.party"] = device.on_party_frame,
-  ["device.party_end"] = device.on_party_end,
-  ["device.airplane"] = function(doc) return device.on_airplane_end(doc, "timer") end,
-  ["device.airplane_restore"] = function(doc) return device.on_airplane_end(doc, "boot") end,
   ["device.esp32_init.1"] = esp32_resend, ["device.esp32_init.2"] = esp32_resend, ["device.esp32_init.3"] = esp32_resend,
 }
 device.TIMERS = TIMERS
 
---- Any of the device's timers, by name (the specs drive this one; the kernel routes each name itself).
+--- Any of the device's timers, by name, the sub-modules' included (the specs drive this one; the
+--- kernel routes each name itself).
 function device.on_timer(doc, ev)
-  local fn = TIMERS[ev.name]
+  local fn = TIMERS[ev.name] or lights.TIMERS[ev.name] or power.TIMERS[ev.name] or radio.TIMERS[ev.name] or buttons.TIMERS[ev.name]
   if not fn then return nil end
   return fn(doc, ev)
 end
 
+-- the sub-modules' handlers under their old names (api.v1 and the other services reach them here)
+device.on_lights_refresh, device.on_lights_event, device.on_wifi_anim = lights.on_lights_refresh, lights.on_lights_event, lights.on_wifi_anim
+device.on_party, device.on_party_frame, device.on_party_end, device.wheel = lights.on_party, lights.on_party_frame, lights.on_party_end, lights.wheel
+device.on_battery, device.on_plugged, device.on_charging = power.on_battery, power.on_plugged, power.on_charging
+device.on_inactivity, device.on_activity = power.on_inactivity, power.on_activity
+device.on_off_request, device.on_shutdown_request = power.on_off_request, power.on_shutdown_request
+device.on_toy_safe, device.on_radio, device.on_airplane, device.on_airplane_end = radio.on_toy_safe, radio.on_radio, radio.on_airplane, radio.on_airplane_end
+device.on_button, device.on_tick = buttons.on_button, buttons.on_tick
+
 local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 } }, additionalProperties = false }
-S.enable = { type = "object", required = { "enable" }, properties = { enable = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }
-S.airplane = { type = "object", properties = { minutes = { type = "integer", minimum = 1, maximum = AIRPLANE_MAX_MIN }, cancel = { type = "boolean" } }, additionalProperties = false }
+S.enable, S.airplane = radio.schemas.enable, radio.schemas.airplane
 device.schemas = S
 
 function device.install(api, dispatch)
@@ -720,54 +301,27 @@ function device.install(api, dispatch)
   dispatch.on("bus.up", "device", device.on_bus_up)
   for name, fn in pairs(TIMERS) do dispatch.on_timer(name, "device", fn) end
   dispatch.on("gpio.volume", "device", device.on_gpio_volume)
-  dispatch.on("gpio.button", "device", device.on_button)
   dispatch.on("knobs", "device", device.on_knobs)
-  dispatch.on("power.battery", "device", device.on_battery)
-  dispatch.on("power.plugged", "device", device.on_plugged)
-  dispatch.on("power.charging", "device", device.on_charging)
-  dispatch.on("power.off_request", "device", device.on_off_request)
-  dispatch.on("shutdown.request", "device", device.on_shutdown_request)
-  dispatch.on("host.terminating", "device", function(doc) return device.on_shutdown_request(doc, { reason = "signal" }) end)
-  dispatch.on("device.toy_safe_request", "device", device.on_toy_safe)
-  dispatch.on("radio.set", "device", device.on_radio)
   dispatch.on("volume.apply", "device", device.on_apply_volume)
-  dispatch.on("lights.event", "device", device.on_lights_event)
-  dispatch.on("playback.changed", "device", device.on_lights_refresh)
-  dispatch.on("net.status", "device", device.on_lights_refresh)
-  dispatch.on("limits.changed", "device", function(doc)
-    local r = device.on_apply_volume(doc)
-    for _, c in ipairs(device.on_lights_refresh(doc).commands) do r.commands[#r.commands + 1] = c end
-    return r
-  end)
+  dispatch.on("limits.changed", "device", device.on_apply_volume)   -- then lights repaints (installed below)
   dispatch.on("upload.done", "device", device.on_disk_request)
   dispatch.on("boot", "device.disk", device.on_disk_request)
   dispatch.on("device.df", "device", device.on_df)
-  for _, t in ipairs({ "nfc.tag", "api.cmd", "v1.cmd", "playback.request" }) do dispatch.on(t, "device", device.on_activity) end
-  dispatch.on("system.tag", "device", function(doc, ev)
-    if ev.name == "sys.toy_safe_on" then return device.on_toy_safe(doc, { enable = true }) end
-    if ev.name == "sys.toy_safe_off" then return device.on_toy_safe(doc, { enable = false }) end
-    if ev.name == "sys.airplane_mode_on" then return device.on_radio(doc, { wifi = false, bt = false }) end
-    if ev.name == "sys.airplane_mode_off" then return device.on_radio(doc, { wifi = true, bt = true }) end
-    if ev.name == "sys.wifi_on" then return device.on_radio(doc, { wifi = true }) end
-    if ev.name == "sys.wifi_off" then return device.on_radio(doc, { wifi = false }) end
-    if ev.name == "sys.bt_on" then return device.on_radio(doc, { bt = true }) end
-    if ev.name == "sys.bt_off" then return device.on_radio(doc, { bt = false }) end
-    return { commands = { { kind = "log", level = "warn", key = "device.system_tag_ignored", fields = { name = ev.name } } } }
-  end)
   api.command("device.set_volume", S.volume, function(doc, p) return set_volume(doc, p.percent) end)
   api.command("device.set_config", S.config, function(doc, p) return device.update_config(doc, p) end)
   -- the Spotify daemon reporting its own shuffle/repeat (services.streaming): saved, not echoed back
   dispatch.on("device.set_config_request", "device", function(doc, ev)
     return device.update_config(doc, { shuffle_mode = ev.shuffle_mode, repeat_mode = ev.repeat_mode }, { silent = true })
   end)
-  api.command("device.toy_safe", S.enable, function(doc, p) return device.on_toy_safe(doc, { enable = p.enable }) end)
   api.command("device.set_name", S.name, function(doc, p) return device.on_set_name(doc, p.name) end)
-  api.command("device.power_off", nil,function(_, _, ev) return device.on_off_request(nil, { reason = "page", now = ev.now }) end)
   api.command("device.set_wifi", S.wifi, function() return nil, device.WIFI_OVER_BLUETOOTH end)
   api.command("device.clock", S.clock, function(doc, p, ev) return device.on_clock(doc, p, ev) end)
   api.command("device.speak_info", nil, function() return { commands = { { kind = "shell", action = "speak_info" }, emit("playback.pause_request", { source = "speak_info" }) } } end)
-  api.command("device.airplane", S.airplane, function(doc, p, ev) return device.on_airplane(doc, p, ev) end)
-  api.command("device.party", nil, function(doc) return device.on_party(doc) end)
+  -- the rest of the object, each part with its own handlers and timers
+  lights.install(api, dispatch)
+  power.install(api, dispatch)
+  radio.install(api, dispatch)
+  buttons.install(api, dispatch)
 end
 
 return device

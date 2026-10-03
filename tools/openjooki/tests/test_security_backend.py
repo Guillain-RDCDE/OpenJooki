@@ -3,7 +3,7 @@ SSH one-hour toggle, MQTT-on-the-LAN toggle, and the parent-code gate.
   python3 test_security_backend.py"""
 import json, os, subprocess, sys, time
 from jk import Jooki
-LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = os.environ.get("PLAYER_LUA", "core")
 R = []
 def check(n, c, info=""):
     R.append((n, bool(c))); print(("PASS " if c else "FAIL ") + n + ("" if c else "  -> " + str(info)[:300]))

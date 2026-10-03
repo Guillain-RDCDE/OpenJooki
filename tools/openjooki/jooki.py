@@ -4,21 +4,20 @@
 OpenJooki — safe recovery of a Jooki v2 from a computer.
 
 Anti-brick promise (see README): never touches the bootloader nor the
-factory partition; backs up before any write; OS patches via A/B (rollback).
-This file: read/backup + CONTENT management (music/playlists/tokens).
-Content management writes ONLY to /jooki/external — bricking is impossible.
-Python 3, standard library only.
+factory partition; backs up before any write; system changes go through A/B
+(spare partition, armed U-Boot rollback). This file: discover, info, backup, and
+the A/B install of the OpenJooki core and page (`patch webui --core`).
+Music and playlists are managed from the Jooki's own page.
+Python 3, standard library only (paho-mqtt only to open the maintenance SSH from a 2.1+ Jooki).
 """
-__version__ = "0.4.0"
-import argparse, os, re, socket, struct, subprocess, sys, time, json, random, mimetypes, base64, glob, hashlib
+__version__ = "0.5.0"
+import argparse, os, re, socket, struct, subprocess, sys, time, json, random, hashlib
 import urllib.parse, urllib.request, concurrent.futures, datetime, io, tarfile
 
 HOME = os.path.expanduser("~/.openjooki")
 KEY  = os.path.join(HOME, "id_jooki_rsa")
 BKP  = os.path.join(HOME, "backups")
 DEFAULT_HOST = os.environ.get("JOOKI_HOST", "192.168.1.61")
-PATCH_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "patches")
-SERVICES_DIR = "/jooki/app/services"
 # Hardware models OpenJooki currently supports (Jooki v2 = Ingenic X1000).
 # A firmware is refused on any other model (e.g. a v1) BEFORE any write.
 SUPPORTED_DEVICE_TYPES = ("ml-j2000",)
@@ -133,60 +132,6 @@ def read_remote_json(host, path):
     if r.returncode!=0: return None
     try: return json.loads(r.stdout)
     except Exception: return None
-
-# ---------------- Minimal MQTT (publish QoS0) ----------------
-def _mqtt_remlen(n):
-    out=b""
-    while True:
-        b=n%128; n//=128
-        if n>0: b|=0x80
-        out+=bytes([b])
-        if n==0: break
-    return out
-
-def mqtt_publish(host, topic, payload, timeout=8):
-    """Minimal MQTT client (stdlib): CONNECT + PUBLISH QoS0 + DISCONNECT."""
-    cid=("openjooki%d"%random.randint(0,99999)).encode()
-    # CONNECT
-    vh=struct.pack("!H",4)+b"MQTT"+bytes([4,2])+struct.pack("!H",60)  # clean session, keepalive 60
-    pl=struct.pack("!H",len(cid))+cid
-    connect=bytes([0x10])+_mqtt_remlen(len(vh)+len(pl))+vh+pl
-    tb=topic.encode(); msg=payload.encode()
-    pub_vh=struct.pack("!H",len(tb))+tb
-    publish=bytes([0x30])+_mqtt_remlen(len(pub_vh)+len(msg))+pub_vh+msg
-    disc=bytes([0xE0,0x00])
-    s=socket.create_connection((host,MQTT_PORT),timeout=timeout)
-    try:
-        s.sendall(connect)
-        connack=s.recv(4)  # 0x20 0x02 0x00 0x00 expected
-        if len(connack)<4 or connack[0]!=0x20 or connack[3]!=0x00:
-            raise RuntimeError("MQTT CONNECT refused (%r)"%connack)
-        s.sendall(publish); s.sendall(disc); time.sleep(0.2)
-    finally:
-        s.close()
-
-def web_cmd(host, typ, fields):
-    """Send a command to the app via /j/web/input/<TYPE>."""
-    mqtt_publish(host, "/j/web/input/"+typ, json.dumps(fields))
-
-# ---------------- HTTP multipart upload ----------------
-def upload_file(host, filepath, timeout=120):
-    name=os.path.basename(filepath)
-    data=open(filepath,"rb").read()
-    if len(data)<=5000: raise RuntimeError("file too small (>5000 bytes required)")
-    uid=str(random.randint(0,9999999))            # upload_id = random integer (like the app)
-    boundary="----openjooki%d"%random.randint(0,1<<31)
-    ctype=mimetypes.guess_type(name)[0] or "audio/mpeg"
-    body=(("--%s\r\nContent-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n"
-           "Content-Type: %s\r\n\r\n"%(boundary,uid,name,ctype)).encode()+data+
-          ("\r\n--%s--\r\n"%boundary).encode())
-    req=urllib.request.Request("http://%s/upload"%host, data=body, method="POST",
-        headers={"Content-Type":"multipart/form-data; boundary=%s"%boundary,"Content-Length":str(len(body))})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        if r.status!=200: raise RuntimeError("upload HTTP %s"%r.status)
-    return uid, name
-
-# ---------------- Backup-before-write ----------------
 def quick_backup(host):
     ts=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     out=os.path.join(BKP,ts); os.makedirs(out,exist_ok=True)
@@ -247,67 +192,6 @@ def cmd_backup(args):
     else: pull("jooki-content.tar.gz","tar czf - /jooki/external 2>/dev/null")
     open(os.path.join(out,"info.txt"),"w").write(ssh(host,'uname -a; cat /etc/mender/artifact_info; ls -la /boot').stdout or "")
     log("Backup finished in %s"%out); return 0
-
-def _playlists(host):
-    d=read_remote_json(host,"/jooki/external/jooki/playlists.json") or {}
-    return {k:v for k,v in d.items() if k!="_"}
-
-def cmd_playlist(args):
-    host=args.host
-    if not is_jooki(host): log("Jooki unreachable"); return 2
-    if not ensure_ssh(host): log("SSH access failed."); return 3
-    if args.action=="list":
-        for pid,pl in _playlists(host).items():
-            log("%-22s  %-28s tag=%s  %d tracks"%(pid, pl.get("title","?"), pl.get("tagId","-"), len(pl.get("tracks",[]))))
-        return 0
-    if args.action=="new":
-        if args.dry_run: log("[dry-run] PLAYLIST_NEW title=%r audiobook=False"%args.title); return 0
-        quick_backup(host)
-        before=set(_playlists(host).keys())
-        web_cmd(host,"PLAYLIST_NEW",{"title":args.title,"audiobook":False}); time.sleep(2)
-        after=_playlists(host); new=[k for k in after if k not in before]
-        if new: log("Playlist created: %s (%s)"%(new[0], after[new[0]].get("title"))); 
-        else: log("Playlist sent (id not detected, check 'playlist list').")
-        return 0
-    return 1
-
-def cmd_music(args):
-    host=args.host
-    if not os.path.exists(args.file): log("File not found: %s"%args.file); return 2
-    if not is_jooki(host): log("Jooki unreachable"); return 2
-    if not ensure_ssh(host): log("SSH access failed."); return 3
-    pls=_playlists(host)
-    # resolve the target playlist (id or title)
-    target=args.playlist
-    if target not in pls:
-        match=[pid for pid,pl in pls.items() if pl.get("title")==target]
-        if match: target=match[0]
-        elif args.create:
-            if args.dry_run: log("[dry-run] would create playlist %r"%args.playlist)
-            else:
-                quick_backup(host); before=set(pls.keys())
-                web_cmd(host,"PLAYLIST_NEW",{"title":args.playlist,"audiobook":False}); time.sleep(2)
-                after=_playlists(host); new=[k for k in after if k not in before]
-                if not new: log("Could not create the playlist."); return 4
-                target=new[0]; log("Playlist created: %s"%target)
-        else:
-            log("Playlist '%s' not found. Options: %s  (or --create)"%(args.playlist, ", ".join(pls)or"none")); return 4
-    if args.dry_run:
-        log("[dry-run] upload %s then PLAYLIST_ADD_UPLOAD to %s"%(args.file,target)); return 0
-    quick_backup(host)
-    before_tracks=len((_playlists(host).get(target) or {}).get("tracks",[]))
-    log("Uploading %s ..."%os.path.basename(args.file))
-    uid,name=upload_file(host,args.file)
-    web_cmd(host,"PLAYLIST_ADD_UPLOAD",{"playlistId":target,"uploadId":uid,"filename":name})
-    # verification
-    ok=False
-    for _ in range(10):
-        time.sleep(2)
-        n=len((_playlists(host).get(target) or {}).get("tracks",[]))
-        if n>before_tracks: ok=True; break
-    log("Added to %s: %s  (%s)"%(target, name, "OK, %d->%d tracks"%(before_tracks,n) if ok else "sent, check 'playlist list'"))
-    return 0 if ok else 5
-
 
 # ---------------- A/B patch (proven mechanism: clone + switch + revert) ----------------
 def _device_type(host):
@@ -398,100 +282,10 @@ def ab_switch(host, part):
         log("  -> OK, boots on p%s, trial settled (%s)"%(part, ua or "upgrade_available=0")); return 0
     log("  -> TO VERIFY (mender_boot_part=%s) — trial NOT settled, U-Boot rollback stays armed"%bp); return 2
 
-def ab_cut_cloud(host):
-    """A/B patch: neutralize the cloud heartbeat (phone-home + ## ML_OTA backdoor).
-       Clone active partition -> spare, patch the copy, switch, verify.
-       Anti-brick: never touches the active partition's boot."""
-    a=_boot_part(host)
-    if a not in ("2","3"): log("unexpected boot_part: %r"%a); return 1
-    s=_spare(a); sdev="/dev/mmcblk0p"+s
-    # already cut?
-    cur=ssh(host,"cat /jooki/app/services/heartbeat.sh 2>/dev/null").stdout
-    if "OpenJooki" in cur and "socat" not in cur.lower():
-        log("Cloud already cut (heartbeat neutralized). Nothing to do."); return 0
-    log("[1] backup"); quick_backup(host)
-    log("[2] clone p%s -> p%s"%(a,s))
-    if ab_clone(host)!=0: log("clone failed -> aborting (boot unchanged)"); return 1
-    log("[3] patch heartbeat on the spare partition")
-    HB="/mnt/p2patch/jooki/app/services/heartbeat.sh"
-    noop=("#!/bin/ash\n"
-          "# Neutralized by OpenJooki: original cloud service stopped (server off).\n"
-          "# No longer contacts any remote server nor executes remote code.\n"
-          "exit 0\n")
-    cmd=("set -e\nmkdir -p /mnt/p2patch\nmount %s /mnt/p2patch\n"
-         "test -f %s || { echo NO_HB; umount /mnt/p2patch; exit 3; }\n"
-         "cp -a %s %s.openjooki-orig\ncat > %s <<'HBEOF'\n%sHBEOF\n"
-         "chmod 755 %s\nsync; umount /mnt/p2patch; echo PATCH_OK\n")%(sdev,HB,HB,HB,HB,noop,HB)
-    if "PATCH_OK" not in ssh(host,cmd,timeout=60).stdout: log("patch failed -> aborting"); return 1
-    log("[4] switch to p%s (patched)"%s)
-    if ab_switch(host,s)!=0: log("switch KO -> back to p%s"%a); ab_switch(host,a); return 2
-    hb=ssh(host,"cat /jooki/app/services/heartbeat.sh").stdout
-    ok=is_jooki(host) and ("OpenJooki" in hb) and ("socat" not in hb.lower()) and _boot_part(host)==s
-    if ok:
-        log("cloud PATCH OK — Jooki on p%s, cloud cut. Rollback: jooki patch switch %s"%(s,a)); return 0
-    log("verify KO -> back to p%s"%a); ab_switch(host,a); return 2
 
-
-# ---------------- "harden" patch: security/robustness fixes via A/B ----------------
-def _load_patches():
-    out={}
-    for fp in sorted(glob.glob(os.path.join(PATCH_DIR,"*.sh"))):
-        with open(fp,"rb") as f: out[os.path.basename(fp)]=f.read()
-    return out
-
-def _norm(t):
-    if isinstance(t,bytes): t=t.decode("utf-8","replace")
-    return t.replace("\r\n","\n").rstrip("\n")
-
-def _services_match(host, patches):
-    """True if each service file (active partition) is identical to the patch (busybox without base64)."""
-    for name,content in patches.items():
-        got=ssh(host,"cat %s/%s 2>/dev/null"%(SERVICES_DIR,name)).stdout
-        if _norm(got)!=_norm(content): return False
-    return True
-
-def ab_harden(host):
-    """Apply the fixes from the patches/ folder (security/robustness audit) via A/B.
-       Clone active->spare, write the patched files on the copy, switch, verify each file.
-       Anti-brick: never touches the active partition's boot; auto rollback if any file diverges."""
-    patches=_load_patches()
-    if not patches: log("No fix in %s"%PATCH_DIR); return 1
-    a=_boot_part(host)
-    if a not in ("2","3"): log("unexpected boot_part: %r"%a); return 1
-    s=_spare(a); sdev="/dev/mmcblk0p"+s
-    log("Fixes: %s"%", ".join(sorted(patches)))
-    if _services_match(host, patches):
-        log("All fixes are already applied (active partition). Nothing to do."); return 0
-    log("[1] backup"); quick_backup(host)
-    log("[2] clone p%s -> p%s"%(a,s))
-    if ab_clone(host)!=0: log("clone failed -> aborting (boot unchanged)"); return 1
-    log("[3] writing the fixes on the spare partition")
-    MP="/mnt/p2patch"; DELIM="OJ_PATCH_EOF_9f3a2b"
-    lines=["set -e","mkdir -p %s"%MP,"mount %s %s"%(sdev,MP),"D=%s%s"%(MP,SERVICES_DIR)]
-    lines.append("trap 'umount %s 2>/dev/null' EXIT"%MP)  # umount ALWAYS, even on failure
-    for name,content in sorted(patches.items()):
-        body=_norm(content)
-        if DELIM in body: log("delimiter conflict in %s -> aborting"%name); return 1
-        lines.append("test -f $D/%s || { echo NO_%s; umount %s; exit 3; }"%(name,name.replace('.','_'),MP))
-        lines.append("test -f $D/%s.openjooki-orig || cp -a $D/%s $D/%s.openjooki-orig"%(name,name,name))
-        lines.append("cat > $D/%s <<'%s'"%(name,DELIM))
-        lines.append(body)
-        lines.append(DELIM)
-        lines.append("chmod 755 $D/%s"%name)
-    lines+=["sync","umount %s"%MP,"echo PATCH_OK"]
-    if "PATCH_OK" not in ssh(host,"\n".join(lines),timeout=120).stdout:
-        log("write failed -> aborting (boot unchanged)"); return 1
-    log("[4] switch to p%s (patched)"%s)
-    if ab_switch(host,s)!=0: log("switch KO -> back to p%s"%a); ab_switch(host,a); return 2
-    log("[5] verification of the %d files on the active partition"%len(patches))
-    if is_jooki(host) and _boot_part(host)==s and _services_match(host,patches):
-        log("HARDEN OK — Jooki on p%s, %d fixes verified. Rollback: jooki patch switch %s"%(s,len(patches),a)); return 0
-    log("verify KO -> back to p%s"%a); ab_switch(host,a); return 2
-
-
-# ---------------- "webui" patch: new web page + application fixes via A/B ----------------
+# ---------------- "webui": the OpenJooki core + its web page, via A/B ----------------
 WEBUI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui")
-WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js", "service-worker.js",
+WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js",
                "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png",   # home-screen icon (make_icons.py)
                "mp3-worker.js", "lame.min.js", "lame.LICENSE.txt")   # FLAC/WAV -> MP3 in the browser (lamejs, LGPL-3.0)
 # Folders of the page shipped whole (many small files): the token pictures of the library (docs/23 §5).
@@ -537,6 +331,16 @@ def ssh_bytes(host, remote_cmd, data=None, timeout=120):
     return subprocess.run(cmd, input=data, capture_output=True, timeout=timeout)
 
 def _md5(b): return hashlib.md5(b).hexdigest()
+
+def _mqtt_remlen(n):
+    """MQTT's variable-length "remaining length" field."""
+    out=b""
+    while True:
+        b=n%128; n//=128
+        if n>0: b|=0x80
+        out+=bytes([b])
+        if n==0: break
+    return out
 
 def mqtt_get_state(host, timeout=8):
     """Ask the Jooki app for its state (proves the patched application runs).
@@ -612,7 +416,7 @@ def load_core(path):
     """A 2.0 core built by tools/build/bundle.py (build/player.lib): same container as the
        original program (XOR + zlib), checked here before anything is written. Since ADR-0011
        this is the LOADER; the real core is delivered separately (see core_side_files)."""
-    import lua_patches as L
+    import playerlib as L
     lib = open(path, "rb").read()
     try: src = L.decode(lib)
     except Exception as e: raise RuntimeError("not a player.lib: %s" % e)
@@ -625,7 +429,7 @@ def core_side_files(path):
        needs the real core at /jooki/lib/core.lua (build/core.min.lua, sibling of `path`), and the
        loader carries that file's exact byte length, so a stale build is caught here before install.
        A legacy single-file player.lib returns {} (nothing extra)."""
-    import lua_patches as L
+    import playerlib as L
     src = L.decode(open(path, "rb").read())
     if "_OPENJOOKI_LOADER" not in src[:400]:
         return {}
@@ -639,15 +443,14 @@ def core_side_files(path):
                            % (len(data), int(m.group(1))))
     return {CORE_FILE: data}
 
-def _webui_build(host, core=None):
-    """Build the patched player.lib (from the ORIGINAL one) + the web files.
-       With `core`: the 2.0 core replaces the patched program (the original is still kept)."""
-    import lua_patches as L
+def _webui_build(host, core):
+    """The core (build/player.lib, the loader) + the web files + the system files to install;
+       the Jooki's ORIGINAL player.lib is read first and kept (reversibility, ADR-0004)."""
+    import playerlib as L
     r = ssh_bytes(host, "cat %s.openjooki-orig 2>/dev/null || cat %s" % (PLAYER_LIB, PLAYER_LIB))
     if r.returncode != 0 or len(r.stdout) < 1000: raise RuntimeError("cannot read player.lib")
-    src = L.decode(r.stdout)
-    if L.is_patched(src): raise RuntimeError("the base player.lib is already patched (original missing)")
-    lib = load_core(core) if core else L.encode(L.apply(src))
+    if L.is_openjooki(L.decode(r.stdout)): raise RuntimeError("the base player.lib is already OpenJooki's (original missing)")
+    lib = load_core(core)
     files = {}
     for f in WEBUI_FILES:
         with open(os.path.join(WEBUI_DIR, f), "rb") as fh: files[WWW_PUBLIC+"/"+f] = fh.read()
@@ -656,8 +459,7 @@ def _webui_build(host, core=None):
             with open(os.path.join(WEBUI_DIR, d, f), "rb") as fh: files[WWW_PUBLIC+"/"+d+"/"+f] = fh.read()
     for path, f in system_files(core).items():
         with open(os.path.join(SYSTEM_DIR, f), "rb") as fh: files[path] = fh.read()
-    if core:
-        files.update(core_side_files(core))   # /jooki/lib/core.lua for a loader player.lib (ADR-0011)
+    files.update(core_side_files(core))   # /jooki/lib/core.lua for a loader player.lib (ADR-0011)
     return r.stdout, lib, files
 
 def _webui_expected(lib, files, root=""):
@@ -779,9 +581,9 @@ def cmd_patch(args):
     if not is_jooki(host): log("Jooki unreachable"); return 2
     if not ensure_ssh(host): log("SSH access failed."); return 3
     if args.action=="status": ab_status(host); return 0
-    if args.action=="cut-cloud": return ab_cut_cloud(host)
-    if args.action=="harden":    return ab_harden(host)
-    if args.action=="webui":     return ab_webui(host, dry_run=getattr(args,"dry_run",False), core=getattr(args,"core",None))
+    if args.action=="webui":
+        if not args.core: log("patch webui needs --core build/player.lib (python3 tools/build/bundle.py builds it; ADR-0012)"); return 1
+        return ab_webui(host, dry_run=args.dry_run, core=args.core)
     if args.action=="clone":  return ab_clone(host)
     if args.action=="switch":
         if not args.part: log("specify the partition: patch switch 2|3"); return 1
@@ -796,22 +598,13 @@ def main():
     sub.add_parser("discover", help="find the Jooki")
     sub.add_parser("info", help="device info")
     pb=sub.add_parser("backup", help="backup"); pb.add_argument("--quick",action="store_true")
-    pp=sub.add_parser("playlist", help="manage playlists")
-    pp.add_argument("action", choices=["list","new"]); pp.add_argument("title", nargs="?", default="")
-    pp.add_argument("--dry-run", action="store_true")
-    pm=sub.add_parser("music", help="add music")
-    pm.add_argument("action", choices=["add"]); pm.add_argument("file")
-    pm.add_argument("--playlist", required=True, help="id or title of the target playlist")
-    pm.add_argument("--create", action="store_true", help="create the playlist if missing")
-    pm.add_argument("--dry-run", action="store_true")
-    pa=sub.add_parser("patch", help="A/B firmware patch (clone/switch, anti-brick)")
-    pa.add_argument("action", choices=["status","clone","switch","cut-cloud","harden","webui"])
+    pa=sub.add_parser("patch", help="A/B system change (clone/switch/webui, anti-brick)")
+    pa.add_argument("action", choices=["status","clone","switch","webui"])
     pa.add_argument("--dry-run", action="store_true", help="webui: build and check only")
-    pa.add_argument("--core", metavar="PLAYER_LIB", help="webui: install this 2.0 core (build/player.lib) instead of the patched program")
+    pa.add_argument("--core", metavar="PLAYER_LIB", help="webui: the core to install (build/player.lib, with core.min.lua next to it)")
     pa.add_argument("part", nargs="?", choices=["2","3"], help="for switch: target partition")
     args=ap.parse_args()
-    return {"discover":cmd_discover,"info":cmd_info,"backup":cmd_backup,
-            "playlist":cmd_playlist,"music":lambda a:cmd_music(a),"patch":cmd_patch}[args.cmd](args)
+    return {"discover":cmd_discover,"info":cmd_info,"backup":cmd_backup,"patch":cmd_patch}[args.cmd](args)
 
 if __name__=="__main__":
     sys.exit(main() or 0)

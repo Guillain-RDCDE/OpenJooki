@@ -151,7 +151,7 @@ def main():
             r["fr"] = FR[r["folder"]]
             words.add(plain(r["fr"]))
         r["words"] = " ".join(sorted(w for w in words if w))
-        png = fetch(FLUENT + "/".join(urllib.parse.quote(x) for x in r["path"].split("/")), "png-%s.png" % r["id"])
+        fetch(FLUENT + "/".join(urllib.parse.quote(x) for x in r["path"].split("/")), "png-%s.png" % r["id"])   # into CACHE
         src = os.path.join(CACHE, "png-%s.png" % r["id"])
         Image.open(src).convert("RGBA").resize((128, 128), Image.LANCZOS).save(os.path.join(OUT, r["id"] + ".webp"), quality=82, method=6)
         return r

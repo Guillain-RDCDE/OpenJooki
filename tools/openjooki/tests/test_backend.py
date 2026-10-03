@@ -1,7 +1,7 @@
 """Backend regression tests: real Jooki Lua app (patched) + mosquitto on the bench."""
-import json, os, subprocess, time, sys, shutil
+import json, os, subprocess, time, sys
 from jk import Jooki
-LUA = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("PLAYER_LUA", "core")
 DB = "/jooki/external/jooki"
 BD1, BD2 = "04000000B00001", "04000000B00003"   # two black dragons (star 262 = 0x106)
 FOX = "04000000F00001"                          # fox (257 = 0x101)

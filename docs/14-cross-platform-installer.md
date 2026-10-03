@@ -36,7 +36,7 @@ What we confirmed on the device:
   music) to receive the firmware, and **`/ll`** (runs a root command, ~100
   characters max, no pipe) to launch the install.
 - The install core **on the device** is written and **validated (ash -n)**:
-  `tools/openjooki/device/openjooki-selfupdate.sh` — dd onto the spare partition
+  `docs/openjooki-selfupdate.sh` (served by GitHub Pages) — dd onto the spare partition
   (decompresses the .gz on the fly), **bit-perfect sha256 verification** (exact
   byte reads, without `head -c`, which is missing from busybox), "bootable
   system" check, then **U-Boot rollback arming** (`upgrade_available=1`,

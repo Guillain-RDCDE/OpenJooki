@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 BUILD = os.environ.get("CORE_BUILD", os.path.join(REPO, "build"))
 sys.path.insert(0, os.path.join(REPO, "tools", "openjooki"))
-import lua_patches as L  # noqa: E402
+import playerlib as L  # noqa: E402
 
 CORE_PATH = "/jooki/lib/core.lua"   # the loader's hard-coded location (matches the device)
 

@@ -2,8 +2,8 @@
 import json, time, random, threading, urllib.request, os
 import paho.mqtt.client as mqtt
 # Where the page is served, as on the device: since 2.1.0 the core serves it itself (adapters.httpd,
-# port 8090 on the bench, see start_player.sh); the web_ctrl emulator (8080) only for the 1.x program.
-PAGE = os.environ.get("OJ_PAGE_URL") or ("http://127.0.0.1:8090" if os.environ.get("PLAYER_LUA") == "core" else "http://127.0.0.1:8080")
+# port 8090 on the bench, see start_player.sh).
+PAGE = os.environ.get("OJ_PAGE_URL") or "http://127.0.0.1:8090"
 class Jooki:
     def __init__(s, host="127.0.0.1", port=1883, http=PAGE, transport="tcp", user=None, pw=None):
         s.host, s.http = host, http

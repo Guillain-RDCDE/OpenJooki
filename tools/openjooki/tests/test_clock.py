@@ -5,7 +5,7 @@ import json, os, subprocess, time
 import paho.mqtt.client as mqtt
 from playwright.sync_api import sync_playwright
 from jk import Jooki, PAGE
-LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = os.environ.get("PLAYER_LUA", "core")
 URL = PAGE
 R = []
 def check(n, c, info=""):

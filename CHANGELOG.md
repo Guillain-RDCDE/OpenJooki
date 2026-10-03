@@ -18,6 +18,19 @@
   paths before writing (the running system is on the active partition, p2 and p3 are twins);
   the "original card" tool also removes `/jooki/lib/core.lua`; a lost log line on a duplicate
   upload whose playlist add fails.
+- **The 1.x patched program and its tooling are retired (ADR-0012).** `lua_patches.py`, the
+  `patches/` folder, the 1.x bench and the `playlist` / `music add` / `patch cut-cloud` /
+  `patch harden` commands of `jooki.py` are gone (the page does all of that; the two content
+  commands had stopped working when 2.1 closed the broker). `patch webui` and
+  `add-webui-to-image.py` require `--core`. The `player.lib` container codec lives in
+  `tools/openjooki/playerlib.py`, shared by the build, the device tool, the release script and
+  the loader test. A Jooki still on 1.x updates like any other (its page, the phone path, a card).
+- **Dead code removed**, nothing visible: in the core (unused kernel helpers, four shell actions
+  nobody called including `factory_reset`, bus subscriptions nothing handled, three config keys
+  never read, handler registrations no event reached), in the page (48 translations never shown,
+  two icons, unused CSS rules, the service worker that only unregistered itself: the page already
+  does that), and in the tools (an abandoned Tk installer, duplicate copies of the device scripts,
+  a stale backup script, the stray `version.json` at the repository root).
 
 ## OpenJooki 2.2.5 (3 October 2026) — Settings pages stay still
 - **The pages inside Settings no longer blink.** Night mode, Update, Bluetooth, Wi-Fi and the

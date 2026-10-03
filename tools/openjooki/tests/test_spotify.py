@@ -8,7 +8,7 @@ import sys, time, json, os, subprocess, threading
 import paho.mqtt.client as mqtt
 from playwright.sync_api import sync_playwright
 from jk import Jooki, PAGE
-LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = os.environ.get("PLAYER_LUA", "core")
 URL = PAGE
 FOX = "04000000F00001"
 R = []

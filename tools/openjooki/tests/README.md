@@ -17,8 +17,8 @@ Python 3 with `paho-mqtt` and `playwright` (Chromium).
 | the system scripts it calls (`/jooki/app/services/*.sh`) | stubs written by `setup.sh`, each call logged in `/tmp/bench_services.log` |
 | the clock (Internet time, none without it) | the machine's clock, always set: the "no time" case is in the specs (`core/spec`) |
 
-`webctrl_emu.py` (port 8080) emulates the original `web_ctrl`; only the 1.x program uses it
-(`PLAYER_LUA` unset). The tests find the page through `jk.PAGE` (`OJ_PAGE_URL` to override).
+The tests find the page through `jk.PAGE` (`OJ_PAGE_URL` to override). Only the core runs here:
+the 1.x patched program and its `web_ctrl` emulator left with ADR-0012.
 
 ```sh
 (cd ../../.. && python3 tools/build/bundle.py)   # the core, into build/ at the repository root

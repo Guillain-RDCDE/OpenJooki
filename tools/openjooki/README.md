@@ -29,19 +29,19 @@ python3 jooki.py discover              # find the Jooki on the network
 python3 jooki.py --host 192.168.1.61 info      # device info
 python3 jooki.py --host 192.168.1.61 backup    # backup (system + content)
 ```
-### System patches (A/B, anti-brick)
+### System changes (A/B, anti-brick)
 ```sh
-python3 jooki.py --host 192.168.1.61 patch status     # active / spare partition
-python3 jooki.py --host 192.168.1.61 patch cut-cloud  # cut the cloud heartbeat
-python3 jooki.py --host 192.168.1.61 patch harden     # apply the security/robustness audit
-python3 jooki.py --host 192.168.1.61 patch switch 2   # roll back to the other partition
-python3 jooki.py --host 192.168.1.61 patch webui      # new web page + application fixes (docs/18-web-ui.md)
+python3 tools/build/bundle.py                                            # builds the core into build/
+python3 jooki.py --host 192.168.1.61 patch status                        # active / spare partition
+python3 jooki.py --host 192.168.1.61 patch webui --core build/player.lib # install the OpenJooki core + page
+python3 jooki.py --host 192.168.1.61 patch switch 2                      # roll back to the other partition
 ```
-A patch first clones the **active** partition to the **spare** partition, writes to
-it, **arms the U-Boot rollback**, **switches**, then **verifies** and **commits**
-the trial; if in doubt it **returns** to the previous state (and even if it loses
-the network, U-Boot switches back on its own at power-up). The fixes applied by
-`harden` are readable one by one in `patches/`.
+`patch webui` first clones the **active** partition to the **spare** partition, writes
+the core, its page and its system files there, **arms the U-Boot rollback**, **switches**,
+then **verifies** and **commits** the trial; if in doubt it **returns** to the previous
+state (and even if it loses the network, U-Boot switches back on its own at power-up).
+The Jooki's original program is kept next to ours (`player.lib.openjooki-orig`).
+Music and playlists are managed from the Jooki's own page, not from here.
 
 Backups go to `~/.openjooki/backups/`. A dedicated SSH key is created in
 `~/.openjooki/` (it is only used for this Jooki, on your local network).
@@ -77,12 +77,10 @@ Command line (advanced): `python3 installer.py <firmware>`
 
 ## Status
 - [x] `discover`, `info`, `backup` (+`--quick`) — **tested 100% on a real Jooki (J2000)**.
-- [x] `playlist list/new`, `music add` — **tested 100%** (upload + MQTT, backup-before-write).
-- [x] `patch webui` — **new web page + fixes of the application (`player.lib`)**, A/B, tested on a bench running the real application and on a real Jooki (J2000). Tokens are named/linked from the page.
+- [x] `patch webui --core` — **the OpenJooki core and its page**, A/B, tested on the bench running the real core and on a real Jooki (J2000).
 - [x] `patch status/clone/switch` — **A/B tested 100%** (verified clone + proven p3↔p2 switch on the device).
 - [x] **Automatic rollback locked in** — `switch` arms U-Boot (`upgrade_available`/bootcount) then commits; armed cycle p3→p2→p3 verified 100%.
-- [x] `patch cut-cloud` — **cuts the cloud heartbeat, tested 100%** (A/B patch applied on the device, cloud neutralized, rollback available).
-- [x] `patch harden` — **security/robustness audit (5 fixes), tested 100%** (A/B applied + verified file by file, idempotent, rollback available).
+- [x] `playlist`, `music add`, `patch cut-cloud`, `patch harden` — **retired** (ADR-0012): the page does the content, and the 2.x core replaced the 1.x patches of the original program.
 - [x] **Firmware installer (Mac app + `installer.py`)** — writes to spare, **bit-perfect check**, bootable check, activates with armed rollback. **Tested end-to-end 100%** (real install p3→p2→p3, compressed image decompressed on the device).
 - [x] 100% automatic rollback for OS patches (via armed A/B); serial console reserved for patches touching **the boot/kernel** (out of scope).
 - [ ] `esp32-flash` — reflash the ESP32 (opt-in, advanced).

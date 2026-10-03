@@ -17,11 +17,13 @@ Steps (each one checked):
      is no longer bound by the host's 200 KiB buffer (only the loader is).
 The build is deterministic: same sources -> same bytes.
 """
-import argparse, hashlib, os, re, subprocess, sys, zlib
+import argparse, hashlib, os, re, subprocess, sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CORE = os.path.join(ROOT, "core")
 SKIP_DIRS = {"spec", "fakes"}
+sys.path.insert(0, os.path.join(ROOT, "tools", "openjooki"))
+from playerlib import encode  # noqa: E402  (the player.lib container: one codec for every tool)
 
 
 WITHOUT = set()   # module names excluded by --without (optional services, e.g. "services.streaming")
@@ -94,13 +96,6 @@ def strip_lua(src):
         line.append(c); i += 1
     flush()
     return "\n".join(out) + "\n"
-
-
-def encode(src):
-    raw = src.encode("latin-1")
-    c = bytearray(zlib.compress(raw, 9))
-    c[0] ^= c[-1]; c[1] ^= c[-2]
-    return bytes(c)
 
 
 # The core is no longer embedded in player.lib (ADR-0011). player.lib is this loader,

@@ -21,7 +21,7 @@ grows the content partition to the end of the card when it writes it (like for a
 Written next to the image: <out>.gz and sdcard.json (name, sizes, SHA-256 of both), the two files
 to attach to the GitHub release.
 """
-import argparse, hashlib, json, os, re, shutil, struct, subprocess, sys, tempfile, time, zlib
+import argparse, hashlib, json, os, shutil, struct, subprocess, sys, tempfile, time, zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import jooki_sd  # noqa: E402  (the GPT code the SD tool itself uses)

@@ -28,4 +28,4 @@ on them beyond that file.
 - Size budget 176 KiB stripped (160 before ADR-0009); build step required (ADR-0006 keeps
   dependencies small).
 - The loader's format (XOR + zlib) is reproduced by our build tool
-  (`lua_patches.encode` already does it).
+  (`tools/openjooki/playerlib.py` does it).

@@ -7,7 +7,7 @@ Run last in a chain: R2 leaves a broker started from /etc/mosquitto; up.sh puts 
   python3 test_robustness.py"""
 import json, os, subprocess, sys, time
 from jk import Jooki, PAGE
-LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = os.environ.get("PLAYER_LUA", "core")
 R = []
 def check(n, c, info=""):
     R.append((n, bool(c))); print(("PASS " if c else "FAIL ") + n + ("" if c else "  -> " + str(info)[:300]), flush=True)

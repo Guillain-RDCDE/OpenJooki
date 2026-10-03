@@ -2,9 +2,10 @@
 """OpenJooki — add the new web page + application fixes to a firmware image.
 
 Takes an OpenJooki firmware image (ext4 rootfs, .img or .img.gz), applies exactly
-what `jooki.py patch webui` applies on a live Jooki, and writes a new image:
+what `jooki.py patch webui --core` applies on a live Jooki, and writes a new image:
 
-  * /jooki/lib/player.lib            -> patched (tools/openjooki/lua_patches.py);
+  * /jooki/lib/player.lib            -> OpenJooki's loader (tools/build/bundle.py), with the
+                                        core at /jooki/lib/core.lua (ADR-0011);
                                         the original is kept as player.lib.openjooki-orig
   * /jooki/app/www/public/           -> the new web page (tools/openjooki/webui/);
                                         the 2018 web app is moved to public-openjooki-orig/
@@ -19,8 +20,8 @@ what `jooki.py patch webui` applies on a live Jooki, and writes a new image:
 No mount and no root needed: it edits the ext4 image with `debugfs` (e2fsprogs),
 then checks it with `e2fsck -fn` and reads every written file back.
 
-Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version> [--core build/player.lib] [--forget <s>]...
-       --core: install the 2.0 core (tools/build/bundle.py) instead of the patched program
+Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version> --core build/player.lib [--forget <s>]...
+       --core: the core to install (tools/build/bundle.py; core.min.lua must sit next to it)
 Then:  scripts/make-release.sh <out.img> <version>
 """
 import gzip, hashlib, os, shutil, subprocess, sys, tempfile
@@ -29,7 +30,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 sys.path.insert(0, os.path.join(HERE, "..", "tools", "sdcard"))
-import lua_patches as L  # noqa: E402
+import playerlib as L  # noqa: E402
 from jooki import SYSTEM_DIR, WEBUI_FILES, WEBUI_DIRS, webui_dir_files, file_mode, load_core, core_side_files, system_files  # noqa: E402
 from make_card_image import scrub_rootfs  # noqa: E402
 
@@ -102,7 +103,7 @@ def main():
     forget = []
     while "--forget" in argv:
         i = argv.index("--forget"); forget.append(argv[i + 1]); del argv[i:i + 2]
-    if len(argv) != 3:
+    if len(argv) != 3 or not core:
         print(__doc__); sys.exit(1)
     src, out, version = argv
     work = tempfile.mkdtemp(prefix="ojimg-")
@@ -113,12 +114,12 @@ def main():
     else:
         shutil.copyfile(src, out)
 
-    # --- application fixes (player.lib) ---
+    # --- the core (player.lib = the loader, core.lua next to it); the original program is kept ---
     base = cat(out, LIB + ".openjooki-orig") if exists(out, LIB + ".openjooki-orig") else cat(out, LIB)
     source = L.decode(base)
-    if L.is_patched(source):
-        raise SystemExit("the image's player.lib is already patched and has no original copy")
-    lib = load_core(core) if core else L.encode(L.apply(source))
+    if L.is_openjooki(source):
+        raise SystemExit("the image's player.lib is already OpenJooki's and has no original copy")
+    lib = load_core(core)
     open(os.path.join(work, "orig.lib"), "wb").write(base)
     open(os.path.join(work, "player.lib"), "wb").write(lib)
     if not exists(out, LIB + ".openjooki-orig"):

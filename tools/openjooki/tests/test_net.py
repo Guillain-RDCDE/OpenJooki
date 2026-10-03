@@ -2,7 +2,7 @@
 Log cleanup at boot, Wi-Fi state published for the page, "<hostname>.local" answered.  python3 test_net.py"""
 import os, socket, struct, subprocess, sys, time
 from jk import Jooki
-LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = os.environ.get("PLAYER_LUA", "core")
 LD = "/jooki/external/logs/syslog-ng"
 R = []
 def check(n, c, info=""):

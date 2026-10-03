@@ -230,26 +230,11 @@ def install_firmware(host, image_path, on_step=None, on_progress=None, do_switch
     return {"ok": False, "switched": False, "hash": src_hash, "active": a, "spare": s, "reason": "boot"}
 
 
-def dump_partition(host, part, out_path, use_gzip=True, on_progress=None):
-    """Dump partition p<part> to a local file (gzip on the device side to
-       reduce the transfer). Used to build a real, bootable test image."""
-    dev = "/dev/mmcblk0p" + part
-    remote = "dd if=%s bs=1M 2>/dev/null" % dev
-    if use_gzip and "gzip" in jooki.ssh(host, "which gzip").stdout:
-        remote += " | gzip -1"
-    else:
-        out_path = out_path[:-3] if out_path.endswith(".gz") else out_path
-    with open(out_path, "wb") as f:
-        proc = subprocess.Popen(_ssh_base(host) + [remote], stdout=f)
-        rc = proc.wait()
-    return rc, out_path
-
-
 def selftest_transfer(host, size_mb=8, on_step=None):
     """Plumbing test WITHOUT touching the partitions: sends a random file
        to /data, reads it back, compares the hash. Safe and fast."""
     step = on_step or jooki.log
-    import tempfile, os as _os
+    import os as _os
     if not jooki.ensure_ssh(host):
         raise InstallError("SSH KO")
     htool, halgo = _remote_hash_tool(host)

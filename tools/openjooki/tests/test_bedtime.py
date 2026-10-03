@@ -1,9 +1,9 @@
 """Bedtime tests on the bench: the real Jooki program (patched) + mosquitto + fake audio.
 Checks resume, sleep timer, night window, volume limit and lights end to end.  python3 test_bedtime.py"""
-import datetime, json, os, subprocess, sys, threading, time
+import datetime, json, os, subprocess, sys, time
 import paho.mqtt.client as mqtt
 from jk import Jooki
-LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
+LUA = os.environ.get("PLAYER_LUA", "core")
 DB = "/jooki/external/jooki"
 FOX = "04000000F00001"            # fox token (star 257 = 0x101)
 MUSIC = 7                         # id the program gives to music playback (system sounds use 3)

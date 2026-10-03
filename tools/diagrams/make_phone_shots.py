@@ -8,7 +8,7 @@ Demo data only (seed_demo.py), never a family's. Three screens of an Android-siz
 in the phone's own font (Roboto; the bench's default one draws everything too bold), something
 playing, then framed side by side on the page's warm background.
 """
-import json, os, sys, time, tempfile
+import os, time, tempfile
 from playwright.sync_api import sync_playwright
 from PIL import Image, ImageDraw, ImageFilter
 

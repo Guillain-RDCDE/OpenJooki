@@ -19,7 +19,9 @@
   --safe-b: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
 }
-/* dark: with the phone (Appearance = automatic), or chosen on the page (html[data-theme], Settings > Appearance) */
+/* dark: with the phone (Appearance = automatic), or chosen on the page (html[data-theme], Settings > Appearance).
+   The same values twice: a media query cannot share a block with a plain selector. --outer is the margin
+   colour of the large-screen frame (see the end of the file); defined here so each selector has one block. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #161514;
@@ -35,6 +37,7 @@
     --danger-soft: #3d1f1c;
     --ok: #5cc27d;
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+    --outer: #0e0d0c;
     color-scheme: dark;
   }
 }
@@ -52,6 +55,7 @@
   --danger-soft: #3d1f1c;
   --ok: #5cc27d;
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  --outer: #0e0d0c;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -368,12 +372,6 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
   .toasts { left: calc(50% + 110px); }
   .plgrid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
   .pl { min-height: 190px; }
-}
-@media (min-width: 1400px) and (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --outer: #0e0d0c; }
-}
-@media (min-width: 1400px) {
-  :root[data-theme="dark"] { --outer: #0e0d0c; }
 }
 
 /* ---------- settings: a short page of grouped rows; each topic opens on a page of its own */

@@ -25,6 +25,7 @@
   `add-webui-to-image.py` require `--core`. The `player.lib` container codec lives in
   `tools/openjooki/playerlib.py`, shared by the build, the device tool, the release script and
   the loader test. A Jooki still on 1.x updates like any other (its page, the phone path, a card).
+- In English and Dutch the page no longer puts a French space before a colon ("Playlist : X").
 - **Dead code removed**, nothing visible: in the core (unused kernel helpers, four shell actions
   nobody called including `factory_reset`, bus subscriptions nothing handled, three config keys
   never read, handler registrations no event reached), in the page (48 translations never shown,

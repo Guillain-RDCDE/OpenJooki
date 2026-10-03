@@ -13,6 +13,11 @@
 - **The updater's addresses come from the configuration** (`update_manifest_url`,
   `update_script_url`, restricted to our GitHub or the bench's own server). The bench no longer
   reaches GitHub, and the CI no longer runs the real `o.sh` as root.
+- **The firmware image no longer carries traces of the Jooki it was built from.** The name and
+  Wi-Fi address of the maintainer's own Jooki survived in unused blocks of the images of 2.0 to
+  2.2.5 (the new-card image was checked for them, the firmware image was not): the clean-up
+  skipped those blocks whenever it had just repaired the filesystem. The build now cleans until
+  nothing is left and refuses to produce an image where they can be found.
 - Fixes in the tools: `openjooki-selfupdate.sh --force-model --dry` really is a dry run (the
   options were read by position); `installer.py` makes the same two checks as the other install
   paths before writing (the running system is on the active partition, p2 and p3 are twins);

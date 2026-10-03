@@ -1,0 +1,3 @@
+# The bench's Python dependencies, pinned to what the maintainer's bench runs (CI installs this file).
+paho-mqtt==2.1.0
+playwright==1.63.0

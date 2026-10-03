@@ -1,5 +1,5 @@
 """Fake audio engine for the bench: answers /j/audio/out/* like the Jooki's GStreamer player."""
-import json, time, threading, paho.mqtt.client as mqtt
+import json, time, paho.mqtt.client as mqtt
 st = {"id": None, "playing": False, "pos": 0, "t": time.time()}
 c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "fakeaudio")
 def pub(ev, **kw): c.publish("/j/audio/input/" + ev, json.dumps(dict(kw, id=st["id"])))

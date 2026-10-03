@@ -1,0 +1,29 @@
+name: bench
+description: "The off-device bench (tools/openjooki/tests): tools, pinned Python deps, Chromium, the built core, broker and fake audio up."
+runs:
+  using: composite
+  steps:
+    - name: Tools
+      shell: bash
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto ffmpeg python3-pip
+        sudo pip3 install --break-system-packages -r tools/openjooki/tests/requirements.txt
+    - name: Chromium (cached by Playwright version)
+      id: pw
+      uses: actions/cache@v4
+      with:
+        path: /opt/pw
+        key: playwright-${{ hashFiles('tools/openjooki/tests/requirements.txt') }}-chromium
+    - name: Chromium (download when not cached; the system libraries every time)
+      shell: bash
+      run: |
+        if [ "${{ steps.pw.outputs.cache-hit }}" = "true" ]; then sudo -E python3 -m playwright install-deps chromium; else sudo -E python3 -m playwright install --with-deps chromium; fi
+    - name: Build the core
+      shell: bash
+      run: python3 tools/build/bundle.py
+    - name: "Broker, fake audio, test media (as root: the bench creates /jooki and /data/mode like the device)"
+      shell: bash
+      run: |
+        sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)
+        cd tools/openjooki/tests && sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null && sleep 1'

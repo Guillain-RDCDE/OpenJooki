@@ -1,5 +1,13 @@
 # Files installed on the Jooki: always LF
 tools/openjooki/system/* text eol=lf
+# Everything that runs somewhere (the device, the bench, CI, a browser): LF, whatever the checkout
+*.sh text eol=lf
+*.py text eol=lf
+*.lua text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.yml text eol=lf
 # Windows scripts: stored and downloaded as-is, with CRLF (cmd labels and goto misbehave with LF)
 *.cmd -text
 # the Mac app launchers: always LF (bash)

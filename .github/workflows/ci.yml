@@ -2,11 +2,46 @@ name: core
 
 on:
   push:
-    paths: ["core/**", "tools/build/**", "tools/openjooki/webui/**", "tools/openjooki/tests/**", "docs/wifi.html", ".github/workflows/ci.yml"]
+    branches: [main]      # a tag push does not run this again: the nightly workflow covers tags
+    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", ".github/**", "README.md", "CHANGELOG.md"]
   pull_request:
-    paths: ["core/**", "tools/build/**", "tools/openjooki/webui/**", "tools/openjooki/tests/**", "docs/wifi.html", ".github/workflows/ci.yml"]
+    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", ".github/**", "README.md", "CHANGELOG.md"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PLAYWRIGHT_BROWSERS_PATH: /opt/pw   # installed with sudo, used by the bench as root: one path for both
 
 jobs:
+  # Fast gates on what is written by hand: one version number, Python that at least imports,
+  # a page that parses and stays small, shell scripts that parse.
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versions agree (app.js, index.html, README, CHANGELOG)
+        run: python3 scripts/check_versions.py
+      - name: Python (ruff, undefined names and unused imports only)
+        run: pip install -q ruff==0.15.14 && ruff check --select F tools scripts core/spec/integration
+      - name: The page parses and stays small (app.js <= 256 KiB, app.css <= 64 KiB)
+        run: |
+          node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js
+          python3 - <<'EOF'
+          import os, sys
+          caps = {"tools/openjooki/webui/app.js": 256, "tools/openjooki/webui/app.css": 64}
+          bad = [(p, os.path.getsize(p) // 1024) for p, k in caps.items() if os.path.getsize(p) > k * 1024]
+          print("sizes:", {p: "%d KiB" % (os.path.getsize(p) // 1024) for p in caps})
+          sys.exit("over the cap: %r" % bad if bad else 0)
+          EOF
+      - name: "Shell scripts parse (the device's are busybox ash; dash is the closest here)"
+        run: |
+          for f in tools/openjooki/system/*.sh docs/*.sh scripts/*.sh tools/openjooki/tests/*.sh; do
+            case "$(head -c 20 "$f")" in *bash*) bash -n "$f";; *) dash -n "$f";; esac || { echo "syntax: $f"; exit 1; }
+          done
+
   core:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -16,7 +51,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto lua-check python3-pip
-          sudo pip3 install --break-system-packages "paho-mqtt>=2"   # the apt package is 1.x (no CallbackAPIVersion)
+          sudo pip3 install --break-system-packages -r tools/openjooki/tests/requirements.txt
       - name: Unit specs
         run: lua5.1 core/spec/run.lua
       - name: Lint (no globals, no unused)
@@ -25,6 +60,8 @@ jobs:
         # Since ADR-0011 the core is its own file (/jooki/lib/core.lua), no longer bound by the host's
         # 200 KiB buffer; only the loader (player.lib) is. 400 KiB stays a guard against a runaway core.
         run: python3 tools/build/bundle.py --max-kib 400 && python3 tools/build/bundle.py --without services.streaming --out /tmp/lean
+      - name: The v2 contract document matches the code
+        run: lua5.1 tools/build/apidoc.lua | diff - docs/api-v2.md
       - name: Broker
         run: |
           sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)
@@ -41,44 +78,59 @@ jobs:
           name: core-build
           path: build/
 
-  # The 1.x bench suites (written for the patched Muuselabs program) run unchanged against the new core:
-  # this is the oracle of docs/21 §14.
+  # The bench suites against the built core, one step each so that every result is seen even when
+  # one fails (the order matters: test_security reads what e2e left). Endurance runs in nightly.yml.
   oracle:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     needs: core
     env:
-      PLAYWRIGHT_BROWSERS_PATH: /opt/pw   # installed with sudo, used by the bench as root: one path for both
+      CORE_BUILD: ${{ github.workspace }}/build
+      PLAYER_LUA: core
+    defaults:
+      run:
+        working-directory: tools/openjooki/tests
     steps:
       - uses: actions/checkout@v4
-      - name: Tools
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lua5.1 lua-socket lua-filesystem mosquitto ffmpeg python3-pip
-          sudo pip3 install --break-system-packages "paho-mqtt>=2" playwright
-          sudo -E python3 -m playwright install --with-deps chromium
-      - name: Build the core
-        run: python3 tools/build/bundle.py
-      - name: "Bench as root (it creates /jooki, /data/mode, /tmp/web_ctrl_dirs like the device)"
-        env:
-          CORE_BUILD: ${{ github.workspace }}/build
-          PLAYER_LUA: core
-        run: |
-          sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)
-          cd tools/openjooki/tests
-          chmod +x *.sh
-          sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null && sleep 1 \
-            && python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py \
-            && python3 test_security_backend.py && python3 e2e.py \
-            && python3 test_security.py && python3 test_spotify.py \
-            && python3 ../../../core/spec/integration/endurance.py 3 \
-            && python3 test_robustness.py && python3 test_loader.py && python3 test_httpd.py && python3 test_clock.py'
-      - name: "The Wi-Fi page (docs/wifi.html) against a scripted Jooki"
-        run: cd tools/openjooki/tests && sudo -E python3 test_wifi_page.py
+      - uses: ./.github/actions/bench
+      - name: backend
+        run: sudo -E python3 test_backend.py
+      - name: bedtime
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_bedtime.py
+      - name: net
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_net.py
+      - name: security backend
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_security_backend.py
+      - name: e2e (the page)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 e2e.py
+      - name: security (page)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_security.py
+      - name: spotify
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_spotify.py
+      - name: robustness
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_robustness.py
+      - name: loader
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_loader.py
+      - name: httpd
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_httpd.py
+      - name: clock
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_clock.py
+      - name: the Wi-Fi page (docs/wifi.html) against a scripted Jooki
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_wifi_page.py
       - name: Bench logs (on failure)
         if: failure()
         run: |
-          for f in /tmp/player.log /tmp/mosq.log /tmp/webctrl.log /tmp/fakeaudio.log; do echo "=== $f"; sudo tail -n 40 $f 2>/dev/null; done
+          for f in /tmp/player.log /tmp/mosq.log /tmp/fakeaudio.log; do echo "=== $f"; sudo tail -n 40 $f 2>/dev/null; done
           echo "=== web dirs"; sudo ls -la /tmp/web_ctrl_dirs/ /tmp/web_ctrl_dirs/public/ 2>&1 | head -30
-          echo "=== listeners"; sudo ss -ltnp | grep -E ':(1883|8000|8080|8090) ' || true
-          mosquitto -h | head -1
+          echo "=== listeners"; sudo ss -ltnp | grep -E ':(1883|8000|8090) ' || true

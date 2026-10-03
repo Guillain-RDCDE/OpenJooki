@@ -123,6 +123,17 @@ def install_firmware(host, image_path, on_step=None, on_progress=None, do_switch
     if a not in ("2", "3"):
         raise InstallError("Unexpected partition state (%r)." % a)
     s = jooki._spare(a); sdev = "/dev/mmcblk0p" + s
+    # The same two guards as jooki.ab_clone and the on-device self-updater: the running system
+    # really is on the partition U-Boot says, and the two system partitions are twins.
+    if ("root=/dev/mmcblk0p%s" % a) not in jooki.ssh(host, "cat /proc/cmdline").stdout:
+        raise InstallError("Safety: the running system is not on partition p%s. Refusing to write." % a)
+    sizes = {}
+    for line in jooki.ssh(host, "grep -E 'mmcblk0p[23] ' /proc/partitions").stdout.splitlines():
+        f = line.split()
+        if len(f) >= 4:
+            sizes[f[3]] = f[2]
+    if not sizes.get("mmcblk0p2") or sizes.get("mmcblk0p2") != sizes.get("mmcblk0p3"):
+        raise InstallError("Safety: partitions p2 and p3 differ in size (%r). Refusing to write." % sizes)
     psize = _partition_bytes(host, s)
     if psize <= 0:
         raise InstallError("Spare partition size unreadable.")

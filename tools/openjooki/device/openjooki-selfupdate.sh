@@ -1,12 +1,21 @@
 #!/bin/ash
 # OpenJooki — SAFE A/B self-install, run ON the Jooki (phone path / no-PC path).
-# Usage: openjooki-selfupdate.sh <image> [--dry]
+# Usage: openjooki-selfupdate.sh <image> [--dry] [--force-model]
 #   <image>: firmware already present on the Jooki (raw .img or .img.gz).
 #   --dry  : writes + verifies on the spare partition, WITHOUT activating (no reboot).
+#   --force-model : skips the hardware-model check (expert use only).
 # Guarantees: NEVER writes to the active partition nor to boot/factory;
 # verifies bit for bit (sha256); arms the U-Boot rollback (auto return if it doesn't start).
-IMG="$1"; MODE="$2"
+IMG="$1"; [ $# -gt 0 ] && shift
+DRY=0; FORCE=0
 log(){ echo "[openjooki] $*"; }
+for opt in "$@"; do
+  case "$opt" in
+    --dry) DRY=1;;
+    --force-model) FORCE=1;;
+    *) log "UNKNOWN OPTION: $opt"; exit 2;;
+  esac
+done
 [ -f "$IMG" ] || { log "IMAGE NOT FOUND: $IMG"; exit 2; }
 
 A=$(fw_printenv mender_boot_part 2>/dev/null | sed 's/.*=//')
@@ -22,7 +31,7 @@ P2=$(cat /sys/class/block/mmcblk0p2/size); P3=$(cat /sys/class/block/mmcblk0p3/s
 # --force-model skips the check (expert use only).
 DT=$(cat /data/mender/device_type 2>/dev/null || cat /var/lib/mender/device_type 2>/dev/null || cat /etc/mender/device_type 2>/dev/null)
 DT=${DT##*=}
-if [ "$MODE" != "--force-model" ] && [ "$2" != "--force-model" ] && [ "$3" != "--force-model" ]; then
+if [ "$FORCE" != 1 ]; then
   [ -n "$DT" ] || { log "SAFETY: cannot read device model (device_type) — aborting"; exit 2; }
   [ "$DT" = "ml-j2000" ] || { log "SAFETY: device model is '$DT', firmware is for 'ml-j2000' — aborting (wrong model)"; exit 2; }
   log "device model OK: $DT"
@@ -81,7 +90,7 @@ sync
 umount /mnt/spchk
 log "commit-on-boot hook installed on p$S"
 
-if [ "$MODE" = "--dry" ]; then
+if [ "$DRY" = 1 ]; then
   log "OK (--dry mode): firmware written and verified on p$S, NOT activated."; exit 0
 fi
 

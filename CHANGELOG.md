@@ -25,6 +25,8 @@
   `add-webui-to-image.py` require `--core`. The `player.lib` container codec lives in
   `tools/openjooki/playerlib.py`, shared by the build, the device tool, the release script and
   the loader test. A Jooki still on 1.x updates like any other (its page, the phone path, a card).
+- **An audiobook's "will resume at chapter…" line shows as soon as the page opens.** The first
+  state the page receives lacked the resume points; they only came with the next bedtime update.
 - **A change made right after another one reached the page late.** The Jooki sends its state at
   most four times a second; when a second change fell inside that window it waited for the next
   unrelated event instead of the end of the window. Mostly hidden by a timer that ticked every

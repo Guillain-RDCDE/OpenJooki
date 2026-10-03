@@ -77,7 +77,7 @@ function v1.state(doc)
   return { userMessages = PARTS.userMessages(doc), nfc = PARTS.nfc(doc), audio = PARTS.audio(doc), wifi = PARTS.wifi(doc),
            bt = (doc.bluetooth and doc.bluetooth.connected_mac) or "", bluetooth = PARTS.bluetooth(doc), power = PARTS.power(doc),
            mender = {}, spotify = doc.spotify or { active = false }, deezer = doc.deezer or {}, device = PARTS.device(doc),
-           jplay = {}, db = PARTS.db(doc), bedtime = doc.bedtime, net = doc.net, maintenance = PARTS.maintenance(doc) }
+           jplay = {}, db = PARTS.db(doc), bedtime = PARTS.bedtime(doc), net = doc.net, maintenance = PARTS.maintenance(doc) }
 end
 
 -- which 1.x sub-trees change when one of our keys changes

@@ -88,6 +88,11 @@ describe("api.v1", function()
     assert_eq(s.db.tracks["0123456789abcdef"].title, "old")
     assert_eq(s.device.flags, { "TOY_SAFE_OFF" }); assert_eq(s.device.ip, "10.0.0.2")
     assert_eq(s.wifi.ssid, "Box"); assert_eq(s.wifi.stat, "success")
+    -- the full state carries the audiobooks' resume points like the partial does (a page just
+    -- opened used to miss them until the next bedtime update)
+    doc.bedtime = { cfg = { enabled = true }, night = false }; doc.resume = { p = { id = "t", pos = 61000 } }
+    assert_eq(v1.state(doc).bedtime.resume, { p = { id = "t", pos = 61000 } })
+    assert_eq(v1.state(doc).bedtime, v1.partial(doc, { "bedtime" }).payload.bedtime)
   end)
 
   it("partial publishes map our keys to 1.x sub-trees", function()

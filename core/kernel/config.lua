@@ -51,6 +51,10 @@ config.defaults = {
   overheat_mc = 80000,
   -- streaming module (ADR-0009)
   streaming_enabled = true,
+  -- OpenJooki updates (services.update): where the Jooki reads the newest version and the installer.
+  -- The bench points both at its own web server (adapters.shell only accepts GitHub or 127.0.0.1).
+  update_manifest_url = "https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json",
+  update_script_url = "https://guillain-rdcde.github.io/OpenJooki/o.sh",
 }
 
 local current = {}

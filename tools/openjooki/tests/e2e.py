@@ -10,7 +10,19 @@ def check(n, c, info=""):
 subprocess.run(["bash", "setup.sh"], capture_output=True)
 subprocess.run(["python3", "seed_demo.py"], capture_output=True)
 subprocess.run(["./deploy_ui.sh"], capture_output=True)
+# The update check (E16) stays on this machine: the core fetches its "newest version" and its
+# installer from its own web server, never from GitHub (CI must not run the real o.sh as root).
+WEB_PUBLIC = "/tmp/web_ctrl_dirs/public"
+with open("/tmp/oj-core.json", "w") as f:
+    json.dump({"update_manifest_url": URL + "/oj-test/version.json", "update_script_url": URL + "/oj-test/o.sh"}, f)
+os.environ["OPENJOOKI_CONFIG"] = "/tmp/oj-core.json"
 subprocess.run(["./start_player.sh", LUA], capture_output=True); time.sleep(1)
+os.makedirs(WEB_PUBLIC + "/oj-test", exist_ok=True)   # the core rebuilt its public directory at boot
+with open(WEB_PUBLIC + "/oj-test/version.json", "w") as f:
+    json.dump({"version": "9.9.9", "file": "openjooki-firmware-9.9.9.img.gz", "sha256": "0" * 64, "device_type": "ml-j2000"}, f)
+with open(WEB_PUBLIC + "/oj-test/o.sh", "w") as f:   # an installer that fails on purpose, in the installer's own words
+    f.write("#!/bin/sh\nS=/jooki/app/www/public/openjooki-status.txt\n"
+            "echo '[openjooki] checking for updates...' >> $S\necho '[openjooki] ERROR: bench installer - nothing changed' >> $S\n")
 J = Jooki()
 def pl_by_title(t):
     for k, v in J.pls.items():
@@ -233,7 +245,7 @@ with sync_playwright() as p:
     pg.click("a.icon-btn[href='#/settings']"); pg.wait_for_selector("h1:text-is('Settings')")
     check("E12 language switch to English, back to Settings", pg.locator("h1").inner_text() == "Settings")
     pg.goto(URL + "/#/settings/language"); pg.click("text=Français"); pg.wait_for_selector("h1:text-is('Langue')")
-    # E16 update from the page (the Jooki checks GitHub itself; bench has no GitHub Pages access -> failure path)
+    # E16 update from the page (the core asks its own web server here, see the top of this file: a 9.9.9 is offered, its installer fails)
     pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=verline]", timeout=15000)
     ver = pg.locator("[data-k=verline]").inner_text()
     check("E16 settings shows the installed OpenJooki version", "OpenJooki 1.0.0" in ver, ver)
@@ -248,7 +260,7 @@ with sync_playwright() as p:
     pg.click("[data-k=updnow]"); pg.click("[data-k=ok]")
     pg.wait_for_selector("text=Mise à jour en cours", timeout=5000)
     pg.wait_for_selector("text=n'a pas pu se faire", timeout=90000)
-    check("E16 update start: progress shown, failure reported clearly (no GitHub Pages here)", True)
+    check("E16 update start: progress shown, the installer's failure reported clearly", True)
     # E17 bedtime settings (the page also sends the browser's time zone)
     pg.goto(URL + "/#/settings/night"); pg.wait_for_selector("[data-k=bedcard]")
     J.wait(lambda: J.state.get("bedtime", {}).get("cfg", {}).get("tzbase") is not None)

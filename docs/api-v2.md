@@ -6,12 +6,12 @@ Do not edit: regenerate with `lua5.1 tools/build/apidoc.lua > docs/api-v2.md`. D
 
 | Direction | Topic | Payload |
 |---|---|---|
-| page → Jooki | `/j/web/v2/cmd` | `{"v":2, "id":"<client id>", "type":"<command>", "payload":{…}}` |
+| page → Jooki | `/j/web/v2/cmd` | `{"v":2, "id":"<client id>", "type":"<command>", "payload":{…}, "code":"<parent code>"?}` |
 | Jooki → page | `/j/web/v2/reply` | `{"v":2, "id":…, "ok":true}` or `{"v":2, "id":…, "ok":false, "error":{"code","field","message"}}` |
 | Jooki → page | `/j/web/v2/state` | full: `{"v":2, "rev":n, "full":true, "state":{…}}` · patch: `{"v":2, "rev":n, "patch":{key: value}}` |
 | Jooki → page | `/j/web/v2/event` | `{"v":2, "type":"…", "payload":{…}}` |
 
-Error codes: `invalid_argument` (field names the culprit), `not_found`, `read_only`, `conflict`, `unavailable`, `internal`.
+Error codes: `invalid_argument` (field names the culprit), `not_found`, `forbidden` (the parent code, when one is set: `PARENT_CODE_REQUIRED`), `read_only`, `conflict`, `unavailable`, `internal`.
 
 The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.lua` for one release.
 

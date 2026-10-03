@@ -65,8 +65,10 @@ function uploads.on_hashed(doc, ev)
     if ref.playlistId then
       local r, err = library.mutate(doc, { playlists = true }, function(l) return library.ops.playlist_add_track(l, ref.playlistId, tid) end)
       if not r then
-        for _, c in ipairs(cmds) do table.insert(fail(ref, "UPLOAD_FAIL", err.message).commands, 1, c) end
-        return fail(ref, "UPLOAD_FAIL", err.message, ref.temp)
+        -- the temp goes (fail removes it); the "duplicate" line is still worth keeping in the log
+        local f = fail(ref, "UPLOAD_FAIL", err.message, ref.temp)
+        table.insert(f.commands, 2, cmds[2])
+        return f
       end
       for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end
       return finish({ state = r.state, commands = cmds }, ref)

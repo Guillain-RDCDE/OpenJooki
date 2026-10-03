@@ -160,6 +160,23 @@ describe("adapters.shell", function()
     end
     assert_eq(#calls, 2)
   end)
+
+  it("the updater fetches only from our GitHub or the bench's own server, at the configured address", function()
+    local ok = { "https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json",
+                 "https://guillain-rdcde.github.io/OpenJooki/o.sh", "http://127.0.0.1:8090/oj-test/o.sh" }
+    for _, u in ipairs(ok) do assert_true(shell.is_update_url(u), u) end
+    for _, bad in ipairs({ "https://example.com/o.sh", "http://127.0.0.1/o.sh", "https://github.com/someone/else/o.sh",
+                           "https://guillain-rdcde.github.io/OpenJooki/o.sh;reboot", "ftp://127.0.0.1:1/x", "", 7, nil }) do
+      assert_false(shell.is_update_url(bad), tostring(bad))
+    end
+    assert_eq(shell.run("update_check", { out = "/tmp/web_ctrl_dirs/public/oj-latest.json", url = ok[1] }), "out")
+    assert_eq(calls[1].argv[#calls[1].argv], ok[1])
+    local o, e = shell.run("update_check", { out = "/tmp/web_ctrl_dirs/public/oj-latest.json", url = "https://example.com/v.json" })
+    assert_nil(o); assert_match(e, "bad url")
+    o, e = shell.run("update_start", { status = "/jooki/app/www/public/openjooki-status.txt", link = "/tmp/web_ctrl_dirs/public/oj-status.txt" })
+    assert_nil(o); assert_match(e, "bad url")
+    assert_eq(#calls, 1)
+  end)
 end)
 
 describe("adapters.clock / host", function()

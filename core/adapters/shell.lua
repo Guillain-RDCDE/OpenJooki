@@ -17,6 +17,13 @@ local function is_pubkey(s)
 end
 shell.is_pubkey = is_pubkey
 local function is_hostname(s) return type(s) == "string" and #s <= 32 and (s:match("^[a-z0-9]$") or s:match("^[a-z0-9][a-z0-9%-]*[a-z0-9]$")) ~= nil end
+-- an address the updater may fetch from: our GitHub (releases, Pages) or the bench's own server
+local function is_update_url(s)
+  if type(s) ~= "string" or #s > 200 or not s:match("^[%w%-%._~:/%?=&%%]+$") then return false end
+  return (s:match("^https://github%.com/Guillain%-RDCDE/OpenJooki/") or s:match("^https://guillain%-rdcde%.github%.io/OpenJooki/")
+          or s:match("^http://127%.0%.0%.1:%d+/")) ~= nil
+end
+shell.is_update_url = is_update_url
 
 -- name -> { argv = function(args) -> list | nil, err ; background = bool }
 shell.ACTIONS = {
@@ -101,16 +108,19 @@ sync; echo ok]], "ssh_key_add", a.key } end },
 if [ "$1" = "on" ]; then touch /data/openjooki/mqtt_lan; else rm -f /data/openjooki/mqtt_lan; fi
 [ -x /etc/rcS.d/S57_oj-security.sh ] && /etc/rcS.d/S57_oj-security.sh >/dev/null 2>&1
 echo ok]], "mqtt_lan", (a.on == true) and "on" or "off" } end, background = true },
-  -- OpenJooki updates (docs/18): the Jooki itself fetches version.json / the installer from GitHub, in the background
+  -- OpenJooki updates (docs/18): the Jooki itself fetches version.json / the installer, in the background,
+  -- from the addresses the configuration gives (kernel.config update_*_url; the bench serves its own)
   update_check   = { argv = function(a) if not is_path(a.out) then return nil, "bad path" end
+                             if not is_update_url(a.url) then return nil, "bad url" end
                              return { "sh", "-c", [[
-O="$1"; echo '{"pending":true}' > "$O"
-if curl -fsSL --max-time 30 https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json -o "$O.tmp"; then mv "$O.tmp" "$O"; else echo '{"error":"offline"}' > "$O"; fi]], "update_check", a.out } end, background = true },
+O="$1"; U="$2"; echo '{"pending":true}' > "$O"
+if curl -fsSL --max-time 30 "$U" -o "$O.tmp"; then mv "$O.tmp" "$O"; else echo '{"error":"offline"}' > "$O"; fi]], "update_check", a.out, a.url } end, background = true },
   update_start   = { argv = function(a) if not (is_path(a.status) and is_path(a.link)) then return nil, "bad path" end
+                             if not is_update_url(a.url) then return nil, "bad url" end
                              return { "sh", "-c", [[
-S="$1"; L="$2"; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updating; : > "$S"; ln -sf "$S" "$L"
-if curl -fsSL --max-time 60 https://guillain-rdcde.github.io/OpenJooki/o.sh -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> "$S"; fi
-rm -f /tmp/oj-updating]], "update_start", a.status, a.link } end, background = true },
+S="$1"; L="$2"; U="$3"; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updating; : > "$S"; ln -sf "$S" "$L"
+if curl -fsSL --max-time 60 "$U" -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> "$S"; fi
+rm -f /tmp/oj-updating]], "update_start", a.status, a.link, a.url } end, background = true },
   df             = { argv = function(a) if not is_path(a.dir) then return nil, "bad path" end return { "df", "-k", a.dir } end },
   -- the logs the original system piled up (docs/20): the Papertrail queue and the never-rotated file, once at boot
   log_cleanup    = { argv = function() return { "sh", "-c", [[

@@ -79,6 +79,21 @@ describe("api.v2", function()
     assert_eq(r[1], { v = 2, id = "9", ok = false, error = { code = "read_only", field = "id", message = "TRASH" } })
   end)
 
+  it("asks the guard before running a command, and answers its error", function()
+    local seen = {}
+    api.command("playlist.delete", nil, function() seen[#seen + 1] = "ran"; return {} end)
+    api.set_guard(function(ctype, code)
+      if ctype == "playlist.delete" and code ~= "1234" then return { code = "forbidden", field = "code", message = "PARENT_CODE_REQUIRED" } end
+    end)
+    local r = call({ v = 2, id = "a", type = "playlist.delete" })
+    assert_eq(r[1], { v = 2, id = "a", ok = false, error = { code = "forbidden", field = "code", message = "PARENT_CODE_REQUIRED" } })
+    assert_eq(#seen, 0)
+    r = call({ v = 2, id = "b", type = "playlist.delete", code = "1234" })
+    assert_eq(r[1].ok, true); assert_eq(#seen, 1)
+    r = call({ v = 2, id = "c", type = "state.get" })      -- not covered by this guard
+    assert_eq(r[1].ok, true)
+  end)
+
   it("publishes patches with the revision", function()
     local cmds = api.publisher({ rev = 3, playback = { state = "playing" }, device = {} }, { "playback" })
     assert_eq(cmds[1].payload, { v = 2, rev = 3, patch = { playback = { state = "playing" } } })

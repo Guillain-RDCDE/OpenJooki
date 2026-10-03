@@ -1,7 +1,7 @@
 """Security switches over the bus, against the real core (docs/adr/0007):
 SSH one-hour toggle, MQTT-on-the-LAN toggle, and the parent-code gate.
   python3 test_security_backend.py"""
-import os, subprocess, sys, time
+import json, os, subprocess, sys, time
 from jk import Jooki
 LUA = os.environ.get("PLAYER_LUA", "player.patched.lua")
 R = []
@@ -31,10 +31,24 @@ check("MQTT on the LAN: on", maint().get("mqtt_lan") is True, maint())
 j.send("OJ_MQTT_LAN", {"on": False}); j.wait(lambda: maint().get("mqtt_lan") is False, 5)
 check("MQTT on the LAN: off", maint().get("mqtt_lan") is False, maint())
 
-# --- parent code gate ---
+# --- parent code gate (v1 messages and v2 commands alike) ---
+replies = []
+j.c.message_callback_add("/j/web/v2/reply", lambda c, u, m: replies.append(json.loads(m.payload.decode())))
+j.c.subscribe("/j/web/v2/reply")
+def v2(ident, typ, payload=None, code=None):
+    msg = {"v": 2, "id": ident, "type": typ, "payload": payload or {}}
+    if code: msg["code"] = code
+    j.c.publish("/j/web/v2/cmd", json.dumps(msg))
+def reply(ident):
+    j.wait(lambda: any(r.get("id") == ident for r in replies), 5)
+    return next((r for r in replies if r.get("id") == ident), {})
+
 j.send("PLAYLIST_NEW", {"title": "Gate test"}); j.wait(lambda: any(v.get("title") == "Gate test" for v in j.pls.values()), 5)
 pid = next((k for k, v in j.pls.items() if v.get("title") == "Gate test"), None)
 check("a playlist exists before the code is set", pid is not None, sorted(j.pls))
+v2("mk", "playlist.new", {"title": "Gate test v2"}); j.wait(lambda: any(v.get("title") == "Gate test v2" for v in j.pls.values()), 5)
+pid2 = next((k for k, v in j.pls.items() if v.get("title") == "Gate test v2"), None)
+check("v2 creates a playlist before the code is set", pid2 is not None and reply("mk").get("ok") is True, (sorted(j.pls), reply("mk")))
 
 j.send("OJ_PARENT_SET", {"code": "1234"}); j.wait(lambda: maint().get("parent") is True, 5)
 check("parent code set: enabled", maint().get("parent") is True, maint())
@@ -47,6 +61,15 @@ check("delete without the code is refused", refused and pid in j.pls, (refused, 
 j.errors[:] = []
 j.send("DO_PLAY", {}); time.sleep(0.8)
 check("playing music is never gated (no code required)", not any(isinstance(e, dict) and e.get("msg") == "PARENT_CODE_REQUIRED" for e in j.errors), j.errors)
+
+v2("d1", "playlist.delete", {"id": pid2}); r = reply("d1")
+check("v2: delete without the code is refused with a typed error", r.get("ok") is False and (r.get("error") or {}).get("message") == "PARENT_CODE_REQUIRED" and pid2 in j.pls, (r, pid2 in j.pls))
+v2("d2", "playlist.delete", {"id": pid2}, code="0000"); r = reply("d2")
+check("v2: a wrong code is refused too", r.get("ok") is False and (r.get("error") or {}).get("code") == "forbidden", r)
+v2("p1", "playback.pause"); r = reply("p1")
+check("v2: pausing is never gated", r.get("ok") is True, r)
+v2("d3", "playlist.delete", {"id": pid2}, code="1234"); j.wait(lambda: pid2 not in j.pls, 5)
+check("v2: delete with the code works", pid2 not in j.pls and reply("d3").get("ok") is True, (sorted(j.pls), reply("d3")))
 
 j.send("PLAYLIST_DELETE", {"playlistId": pid, "code": "1234"}); j.wait(lambda: pid not in j.pls, 5)
 check("delete with the code works", pid not in j.pls, sorted(j.pls))

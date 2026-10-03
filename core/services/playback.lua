@@ -4,7 +4,7 @@
 --     position_ms, now = { playlist, index, queue_pos, track, uri, service, audiobook,
 --                          title, album, artist, duration_ms, has_next, has_prev, image },
 --     paused_by, paused_at, resume_ms (pending seek), last = { [playlist] = index },
---     shuffle = { [playlist] = { order... } },
+--     shuffle = { [playlist] = { order... } }, seed (set at boot from the clock),
 --     sys = { name, after, resume_music } (a system sound in progress) }
 -- and state.resume (persisted as resume.json, 1.3 shape: { [playlist] = { id, pos, t } }).
 -- Talks to audio_ctrl: stream 7 = music, stream 3 = system sounds (docs/22 §4.4).
@@ -73,7 +73,7 @@ local function queue_for(doc, pb, playlist_id, p)
   end
   local q = pb.shuffle[playlist_id]
   if q and #q == n then return q end
-  q = shuffled(n, math.floor((doc.playback_seed or 0) + n * 7919))
+  q = shuffled(n, math.floor((pb.seed or 0) + n * 7919))
   pb.shuffle[playlist_id] = q
   return q
 end
@@ -449,7 +449,10 @@ function playback.on_boot(_, ev)
   for k, v in pairs(ev.resume or {}) do
     if type(v) == "table" and type(v.id) == "string" then resume[k] = { id = v.id, pos = tonumber(v.pos) or 0, t = v.t == true or nil } end
   end
-  return { state = { playback = { state = "idle", last = {}, shuffle = {} }, resume = resume, system = ev.system or { tracks = {} } },
+  -- the shuffle seed: the clock at boot, so that two starts (or two playlists of the same length)
+  -- do not play in the same "random" order
+  local seed = math.floor(tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483648
+  return { state = { playback = { state = "idle", last = {}, shuffle = {}, seed = seed }, resume = resume, system = ev.system or { tracks = {} } },
            commands = { { kind = "timer.every", name = "playback.save", seconds = 60 } } }
 end
 

@@ -5,7 +5,7 @@
 --   * mqtt_lan: MQTT exposed on the LAN for home automation (Home Assistant), with
 --     the per-Jooki password; a boot script rebuilds the broker config;
 --   * parent: whether a parent code is set (the code itself never reaches the page;
---     the gate that checks it lives in api.v1).
+--     the gate that checks it is security.gate, asked by api.v1 and api.v2).
 local security = {}
 
 local SSH_SECONDS = 60 * 60           -- maintenance SSH lifetime: one hour
@@ -16,8 +16,29 @@ local KEYS_FILE = "/data/openjooki/authorized_keys"
 -- the parent code, kept in memory only (never published in the state document).
 -- Loaded from PARENT_FILE at boot; set/cleared by the commands below.
 local parent_code = nil
-function security._parent_code() return parent_code end          -- for api.v1's gate and tests
+function security._parent_code() return parent_code end          -- tests only
 function security._set_parent_code(v) parent_code = v end          -- tests only
+
+-- The v2 commands a parent code protects (docs/adr/0007): what changes the Jooki's content or its
+-- set-up. Playing music, the volume and the sleep timer stay open for the children. api.v1 keeps its
+-- own list of message names; both ask security.gate.
+security.PROTECTED_V2 = {
+  ["playlist.new"] = true, ["playlist.delete"] = true, ["playlist.update"] = true,
+  ["playlist.add_track"] = true, ["playlist.add_stream"] = true, ["upload.add"] = true,
+  ["token.edit"] = true, ["token.forget"] = true,
+  ["device.set_config"] = true, ["device.toy_safe"] = true, ["device.set_wifi"] = true,
+  ["device.power_off"] = true, ["device.set_name"] = true, ["device.airplane"] = true,
+  ["bedtime.set"] = true, ["update.check"] = true, ["update.start"] = true,
+  ["spotify.new_playlist"] = true, ["deezer.get_playlists"] = true, ["deezer.set_config"] = true,
+}
+
+--- The parent-code gate: nil when `name` may run, else the typed error to answer with.
+--- `protected` is the set of names the code covers; `code` is what the caller sent.
+function security.gate(protected, name, code)
+  if not (parent_code and parent_code ~= "" and protected[name]) then return nil end
+  if tostring(code or "") == parent_code then return nil end
+  return { code = "forbidden", field = "code", message = "PARENT_CODE_REQUIRED" }
+end
 
 local function maint(doc)
   local m = {}

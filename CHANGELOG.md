@@ -1,5 +1,24 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The parent code now also guards the v2 commands.** Over the newer command channel the page
+  does not use yet (`/j/web/v2/cmd`), deleting a playlist, starting an update or changing a
+  setting went through without the parent code. The same gate now answers both channels
+  (`"code"` in the v2 envelope; error `forbidden` / `PARENT_CODE_REQUIRED`).
+- **Shuffle really shuffles.** The random order was seeded with a value never set, so a playlist
+  played in the same "random" order after every start, and two playlists of the same length in
+  the same one. The seed now comes from the clock at start-up.
+- **Dutch names for the characters.** The Dragon, the Fox and the others had no Dutch name and
+  showed up in French on a page in Dutch.
+- **The updater's addresses come from the configuration** (`update_manifest_url`,
+  `update_script_url`, restricted to our GitHub or the bench's own server). The bench no longer
+  reaches GitHub, and the CI no longer runs the real `o.sh` as root.
+- Fixes in the tools: `openjooki-selfupdate.sh --force-model --dry` really is a dry run (the
+  options were read by position); `installer.py` makes the same two checks as the other install
+  paths before writing (the running system is on the active partition, p2 and p3 are twins);
+  the "original card" tool also removes `/jooki/lib/core.lua`; a lost log line on a duplicate
+  upload whose playlist add fails.
+
 ## OpenJooki 2.2.5 (3 October 2026) — Settings pages stay still
 - **The pages inside Settings no longer blink.** Night mode, Update, Bluetooth, Wi-Fi and the
   other pages opened from Settings flickered, again and again, since 2.2.0: their small fade-in

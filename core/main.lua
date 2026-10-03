@@ -110,7 +110,9 @@ require("services.device").install(api, dispatch)
 require("services.uploads").install(api, dispatch)
 require("services.bedtime").install(api, dispatch)
 require("services.update").install(api, dispatch)
-require("services.security").install(api, dispatch)
+local security = require("services.security")
+security.install(api, dispatch)
+api.set_guard(function(ctype, code) return security.gate(security.PROTECTED_V2, ctype, code) end)
 -- optional (ADR-0009): disabled by configuration, or absent from a `--without services.streaming` build
 if config.get("streaming_enabled") and package.preload["services.streaming"] then
   require("services.streaming").install(api, dispatch)

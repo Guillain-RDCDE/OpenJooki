@@ -290,8 +290,7 @@ function v1.on_cmd(doc, ev)
   end
   local h = H[ev.name]
   if not h then return { commands = { err_cmd("unknown topic " .. tostring(ev.name)) } } end
-  local code = security._parent_code()
-  if code and code ~= "" and PROTECTED[ev.name] and tostring(payload.code or "") ~= code then
+  if security.gate(PROTECTED, ev.name, payload.code) then
     return { commands = { err_cmd("PARENT_CODE_REQUIRED") } }
   end
   local hok, result, err, force = pcall(h, doc, payload, ev)

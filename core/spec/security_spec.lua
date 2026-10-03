@@ -16,6 +16,19 @@ describe("services.security", function()
     security._files = nil
   end)
 
+  it("the gate: open without a code; with one, protected names need it, the others never do", function()
+    local P = security.PROTECTED_V2
+    assert_nil(security.gate(P, "playlist.delete", nil))
+    security._set_parent_code("1234")
+    assert_eq(security.gate(P, "playlist.delete", nil).message, "PARENT_CODE_REQUIRED")
+    assert_eq(security.gate(P, "update.start", "0000").code, "forbidden")
+    assert_nil(security.gate(P, "playlist.delete", "1234"))
+    assert_nil(security.gate(P, "playback.play", nil))
+    assert_nil(security.gate(P, "device.set_volume", nil))
+    assert_nil(security.gate(v1.PROTECTED, "DO_PLAY", nil))
+    assert_eq(security.gate(v1.PROTECTED, "PLAYLIST_DELETE", nil).message, "PARENT_CODE_REQUIRED")
+  end)
+
   it("SSH on: shell, one-hour timer, state with an end time", function()
     local r = security.on_ssh({}, { on = true, wall = 1000 })
     assert_true(r.state.maintenance.ssh)

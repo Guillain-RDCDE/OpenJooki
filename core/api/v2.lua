@@ -1,5 +1,6 @@
 -- api.v2: the contract with the page (ADR-0005), version 2.
--- Topics:  page -> Jooki   /j/web/v2/cmd      {"v":2,"id":"...","type":"...","payload":{...}}
+-- Topics:  page -> Jooki   /j/web/v2/cmd      {"v":2,"id":"...","type":"...","payload":{...},"code":"1234"?}
+--                          (code: the parent code, required by the protected commands when one is set)
 --          Jooki -> page   /j/web/v2/reply    {"v":2,"id":"...","ok":true} | {..."ok":false,"error":{code,field,message}}
 --                          /j/web/v2/state    full: {"v":2,"rev":n,"full":true,"state":{...}}  patch: {"v":2,"rev":n,"patch":{...}}
 --                          /j/web/v2/event    {"v":2,"type":"...","payload":{...}}
@@ -16,12 +17,17 @@ api.TOPIC_CMD, api.TOPIC_REPLY, api.TOPIC_STATE, api.TOPIC_EVENT =
 local ENVELOPE = {
   type = "object", required = { "v", "type" },
   properties = { v = { type = "integer", enum = { 2 } }, id = { type = "string", maxLength = 64 },
-                 type = { type = "string", pattern = "^[a-z_]+%.[a-z_]+$" }, payload = { type = "object" } },
+                 type = { type = "string", pattern = "^[a-z_]+%.[a-z_]+$" }, payload = { type = "object" },
+                 code = { type = "string", maxLength = 8 } },
 }
 
 local commands = {}     -- type -> { schema, fn }
+local guard = nil       -- fn(type, code) -> nil | error{code,field,message}: asked before any command runs
 
-function api.reset() commands = {} end
+function api.reset() commands = {}; guard = nil end
+
+--- The gate every command passes first (the parent code, services.security.gate).
+function api.set_guard(fn) guard = fn end
 
 --- Register a command: fn(doc, payload, event) -> result table (as a handler) | nil, error{code,field,message}
 function api.command(ctype, payload_schema, fn)
@@ -63,6 +69,10 @@ function api.handle(doc, event)
   local cmd = commands[msg.type]
   if not cmd then
     return { commands = { reply(id, false, { code = "not_found", field = "type", message = "unknown command " .. msg.type }) } }
+  end
+  local gerr = guard and guard(msg.type, msg.code)
+  if gerr then
+    return { commands = { reply(id, false, gerr) } }
   end
   local payload = msg.payload or {}
   if cmd.schema then

@@ -20,7 +20,7 @@ they were), removes what OpenJooki added, and checks the result:
 The Jooki's name and MAC address stay neutral (/etc/hostname, /etc/mac): the original system
 writes its own at every start. No mount: the ext4 image is edited with debugfs, like the release.
 """
-import argparse, hashlib, os, shutil, subprocess, sys, tarfile
+import argparse, hashlib, os, shutil, sys, tarfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_card_image import debugfs_cat, debugfs_exists, debugfs_ls, debugfs_w, run, scrub_rootfs, ungz  # noqa: E402
@@ -32,7 +32,8 @@ PUB_ORIG = "/jooki/app/www/public-openjooki-orig"
 ADDED = ("/etc/openjooki-version", "/etc/rcS.d/S57_oj-security.sh", "/etc/mosquitto/mosquitto.conf.openjooki-base",
          "/jooki/lib/core.lua",                             # the core itself since ADR-0011 (player.lib is the loader)
          PUB + "/app.js", PUB + "/app.css", PUB + "/mqtt.js", PUB + "/manifest.json", PUB + "/icon-192.png",
-         PUB + "/icon-512.png", PUB + "/apple-touch-icon.png", PUB + "/index.html", PUB + "/service-worker.js",
+         PUB + "/icon-512.png", PUB + "/apple-touch-icon.png", PUB + "/index.html",
+         PUB + "/service-worker.js",                           # shipped until 2.2.5: images of that age still carry it
          PUB + "/mp3-worker.js", PUB + "/lame.min.js", PUB + "/lame.LICENSE.txt",
          PUB + "/oj-auth.json", PUB + "/openjooki-status.txt")
 ADDED_DIRS = (PUB + "/tokimg",)                          # jooki.py WEBUI_DIRS: the token pictures

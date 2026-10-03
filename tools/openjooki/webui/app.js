@@ -56,25 +56,24 @@
       ed_tol: 'Tolérance', ed_rot: 'Rotation', ed_zoom: 'Zoom', ed_undo: 'Annuler le dernier', ed_reset: 'Tout remettre', ed_save: 'Enregistrer',
       ed_sending: 'Envoi de la photo…', photo_fail: 'La photo n\'a pas pu être enregistrée.', photo_bad: 'Ce fichier n\'est pas une image lisible.',
       pl_taken: function (pl, ch) { return '« ' + pl + ' » est lancée par ' + ch + '. La donner à ce jeton à la place ?'; },
-      seen_n: function (n) { return 'posé ' + n + ' fois'; }, on_jooki: 'Sur le Jooki',
+      on_jooki: 'Sur le Jooki',
       forget: 'Oublier', forget_q: 'Oublier ce jeton ?',
       forget_text: 'Il disparaît de la liste et réapparaîtra la prochaine fois qu\'il sera posé. La playlist du personnage ne change pas.',
       saved: 'Enregistré', no_tokens: 'Aucun jeton connu pour l\'instant.',
-      other_chars: 'Personnages sans jeton connu',
-      device: 'Appareil', device_name: 'Nom', battery: 'Batterie', charging: 'en charge', plugged: 'branché',
-      rename: 'Renommer', name_title: 'Nom du Jooki sur le réseau',
+      device_name: 'Nom', battery: 'Batterie', charging: 'en charge', plugged: 'branché',
+      name_title: 'Nom du Jooki sur le réseau',
       name_help: function (f) { return 'Lettres minuscules, chiffres et tirets. La page s\'ouvrira à l\'adresse nom.local. Laisse vide pour revenir au nom d\'origine (' + f + ').'; },
       name_invalid: 'Lettres minuscules, chiffres et tirets seulement (32 au plus), sans tiret au début ni à la fin.',
       name_done: function (n) { return 'Le Jooki s\'appelle maintenant ' + n; },
       name_text: function (u) { return 'Sa page est désormais à l\'adresse ' + u + ' — l\'ancienne ne répond plus. Garde ce lien en favori. Spotify affichera le nouveau nom au prochain redémarrage.'; },
       name_open: 'Ouvrir la nouvelle adresse',
-      wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', free: 'libres', version: 'Version',
-      playback: 'Lecture', toy_safe: 'Volume limité (mode enfant)', shuffle: 'Aléatoire', repeat: 'Répéter',
+      wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', version: 'Version',
+      toy_safe: 'Volume limité (mode enfant)', shuffle: 'Aléatoire', repeat: 'Répéter',
       language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
       power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
       air_title: 'Mode avion',
       air_help: 'Coupe le Wi-Fi et le Bluetooth du Jooki pour un temps donné. Les jetons et la musique marchent comme d\'habitude. Pendant ce temps, cette page ne peut plus le joindre.',
-      air_for: 'Pendant combien de temps ?', air_h: function (n) { return n + ' h'; },
+      air_h: function (n) { return n + ' h'; },
       air_morning: function (h) { return 'Jusqu\'au matin (' + h + ')'; }, air_boot: 'Jusqu\'à ce qu\'on l\'éteigne et le rallume',
       air_btn: 'Couper le Wi-Fi et le Bluetooth', air_q: 'Passer le Jooki en mode avion ?',
       air_text: function (w) { return 'Le Wi-Fi et le Bluetooth se rallumeront ' + w + '. Et dans tous les cas, éteindre puis rallumer le Jooki remet le Wi-Fi. En attendant, cette page ne peut plus joindre le Jooki ; les jetons et la musique continuent.'; },
@@ -82,7 +81,6 @@
       air_sent: 'Le Jooki passe en mode avion…',
       air_offline: function (w) { return 'Le Jooki est en mode avion : le Wi-Fi reviendra ' + w + '. Les jetons et la musique marchent. Pour le retrouver plus tôt, éteins le Jooki puis rallume-le.'; },
       air_back: 'Le Jooki est de retour sur le Wi-Fi.',
-      bt_title: 'Enceinte ou casque Bluetooth',
       bt_help: 'Allumez l\'enceinte ou le casque et mettez-le en mode appairage (en général : garder le bouton Bluetooth appuyé jusqu\'à ce que le voyant clignote vite). Puis cherchez.',
       bt_search: 'Chercher', bt_searching: 'Recherche… (15 secondes)', bt_connect: 'Connecter', bt_connecting: 'Connexion…',
       bt_none: 'Rien trouvé. Vérifiez que l\'enceinte clignote en mode appairage, puis cherchez encore.',
@@ -110,7 +108,6 @@
       clear_done: 'Masquer les envois terminés',
       up_retrying: function (n, m) { return 'Connexion perdue, nouvel essai (' + n + '/' + m + ')…'; }, up_retry: 'Réessayer',
       wifi_good: 'Signal bon', wifi_fair: 'Signal moyen', wifi_weak: 'Signal faible',
-      wifi_drops: function (n) { return n + (n > 1 ? ' coupures' : ' coupure') + ' depuis le démarrage'; },
       wifi_advice: 'Rapprochez le Jooki d\'une borne Wi-Fi. La musique marche sans Wi-Fi : seuls cette page et les envois en ont besoin.',
       wifi_bt: 'Déménagement, nouvelle box, nouveau mot de passe ? Reconnectez-le par Bluetooth depuis un téléphone Android ou un ordinateur : ',
       wifi_bt_name: function (n) { return 'Dans la liste, il s\'appelle ' + n + '.'; },
@@ -121,8 +118,6 @@
       err_gone: 'Cet élément n\'existe plus.',
       err_generic: 'Le Jooki a refusé l\'action.',
       err_unknown_char: 'Personnage inconnu.',
-      duration_total: function (s) { return s; },
-      mute_unsupported: '',
       files_hint: 'MP3, M4A, OGG, FLAC, WAV…',
       open_player: 'Ouvrir le lecteur',
       web_page: 'page', upd_check: 'Rechercher une mise à jour', upd_checking: 'Recherche…',
@@ -135,7 +130,7 @@
       upd_failed: 'La mise à jour n\'a pas pu se faire. Ton Jooki n\'a pas changé.', upd_banner: function (v) { return 'Mise à jour ' + v + ' disponible'; },
       upd_see: 'Voir',
       upd_steps: ['Recherche de la nouvelle version', 'Téléchargement', 'Vérification du téléchargement', 'Installation (ne débranche pas le Jooki)', 'Vérification de l\'installation', 'Redémarrage sur la nouvelle version'],
-      bedtime: 'Heure du coucher', sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
+      sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
       sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre',
       sleep_left: function (s) { return 'Arrêt dans ' + s; }, sleep_at_end: 'Arrêt à la fin de ce morceau',
       sleep_auto: 'automatique (mode nuit)', sleep_cancel: 'Annuler la minuterie',
@@ -152,8 +147,7 @@
       sort_apply: 'Fixer cet ordre', sort_same: 'La playlist est déjà dans cet ordre',
       my_jooki: 'Mon Jooki', bytes: ['o', 'Ko', 'Mo', 'Go'],
       n_tokens: function (n) { return n + ' jeton' + (n > 1 ? 's' : ''); },
-      sec_title: 'Sécurité',
-      ssh_label: 'Accès de maintenance (SSH)', ssh_help: 'Pour les bricoleurs. S\'éteint tout seul au bout d\'une heure.', ssh_on: 'activé (1 h)',
+      ssh_label: 'Accès de maintenance (SSH)', ssh_help: 'Pour les bricoleurs. S\'éteint tout seul au bout d\'une heure.',
       ssh_key_l: 'Clé publique SSH', ssh_key_help: 'Colle ta clé publique (une ligne qui commence par ssh-ed25519 ou ssh-rsa). Le Jooki la garde, même après une mise à jour.',
       ssh_key_add: 'Ajouter la clé', ssh_key_clear: 'Oublier les clés', ssh_key_added: 'Clé ajoutée',
       ssh_keys_n: function (n) { return n ? (n + (n > 1 ? ' clés enregistrées' : ' clé enregistrée')) : 'Aucune clé enregistrée'; },
@@ -161,7 +155,7 @@
       mqtt_label: 'Domotique (MQTT sur le réseau)', mqtt_help: 'Pour Home Assistant. Désactivée par défaut.',
       mqtt_host_l: 'Hôte', mqtt_port_l: 'Port', mqtt_user_l: 'Utilisateur', mqtt_pass_l: 'Mot de passe',
       parent_label: 'Code parent', parent_help: 'Un code à 4 chiffres empêche enfants et invités de changer les réglages (supprimer une playlist, le Wi-Fi, lancer une mise à jour).',
-      parent_set: 'Définir un code', parent_change: 'Changer le code', parent_off: 'Désactiver',
+      parent_change: 'Changer le code',
       parent_prompt: 'Entre le code parent', parent_new: 'Code à 4 chiffres', parent_cur: 'Code actuel', parent_bad: 'Code incorrect',
       parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.',
       flat_tok: 'Jeton plat', thanks_tok: 'Jeton Merci',
@@ -170,7 +164,7 @@
       lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
       lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },
       lib_n: function (n) { return n + (n > 1 ? ' images' : ' image'); }, lib_set: function (n) { return 'Image choisie : ' + n; },
-      s_listen: 'Écoute', s_kids: 'Mode enfant', s_bt: 'Enceinte ou casque', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
+      s_listen: 'Écoute', s_bt: 'Enceinte ou casque', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
       s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
       s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
       s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
@@ -238,25 +232,24 @@
       ed_tol: 'Tolerance', ed_rot: 'Rotation', ed_zoom: 'Zoom', ed_undo: 'Undo last', ed_reset: 'Start over', ed_save: 'Save',
       ed_sending: 'Sending the photo…', photo_fail: 'The photo could not be saved.', photo_bad: 'This file is not a readable image.',
       pl_taken: function (pl, ch) { return '“' + pl + '” is started by ' + ch + '. Give it to this token instead?'; },
-      seen_n: function (n) { return 'used ' + n + (n === 1 ? ' time' : ' times'); }, on_jooki: 'On the Jooki',
+      on_jooki: 'On the Jooki',
       forget: 'Forget', forget_q: 'Forget this token?',
       forget_text: 'It leaves the list and comes back next time it is used. The character\'s playlist does not change.',
       saved: 'Saved', no_tokens: 'No known token yet.',
-      other_chars: 'Characters without a known token',
-      device: 'Device', device_name: 'Name', battery: 'Battery', charging: 'charging', plugged: 'plugged in',
-      rename: 'Rename', name_title: 'Jooki name on the network',
+      device_name: 'Name', battery: 'Battery', charging: 'charging', plugged: 'plugged in',
+      name_title: 'Jooki name on the network',
       name_help: function (f) { return 'Lower-case letters, digits and hyphens. The page will open at name.local. Leave empty to go back to the original name (' + f + ').'; },
       name_invalid: 'Lower-case letters, digits and hyphens only (32 at most), no hyphen at the start or the end.',
       name_done: function (n) { return 'The Jooki is now called ' + n; },
       name_text: function (u) { return 'Its page is now at ' + u + ' — the old address no longer answers. Bookmark this link. Spotify will show the new name after the next restart.'; },
       name_open: 'Open the new address',
-      wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', free: 'free', version: 'Version',
-      playback: 'Playback', toy_safe: 'Limited volume (kids mode)', shuffle: 'Shuffle', repeat: 'Repeat',
+      wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', version: 'Version',
+      toy_safe: 'Limited volume (kids mode)', shuffle: 'Shuffle', repeat: 'Repeat',
       language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
       power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
       air_title: 'Airplane mode',
       air_help: 'Switches the Jooki\'s Wi-Fi and Bluetooth off for a while. Tokens and music work as usual. Meanwhile this page cannot reach it.',
-      air_for: 'For how long?', air_h: function (n) { return n + ' h'; },
+      air_h: function (n) { return n + ' h'; },
       air_morning: function (h) { return 'Until the morning (' + h + ')'; }, air_boot: 'Until it is switched off and on again',
       air_btn: 'Switch Wi-Fi and Bluetooth off', air_q: 'Put the Jooki in airplane mode?',
       air_text: function (w) { return 'Wi-Fi and Bluetooth will come back ' + w + '. And in any case, switching the Jooki off and on again brings the Wi-Fi back. Meanwhile this page cannot reach the Jooki; tokens and music carry on.'; },
@@ -264,7 +257,6 @@
       air_sent: 'The Jooki is going into airplane mode…',
       air_offline: function (w) { return 'The Jooki is in airplane mode: the Wi-Fi will be back ' + w + '. Tokens and music work. To get it back sooner, switch the Jooki off and on again.'; },
       air_back: 'The Jooki is back on the Wi-Fi.',
-      bt_title: 'Bluetooth speaker or headphones',
       bt_help: 'Switch the speaker or headphones on and put them in pairing mode (usually: hold the Bluetooth button until the light blinks fast). Then search.',
       bt_search: 'Search', bt_searching: 'Searching… (15 seconds)', bt_connect: 'Connect', bt_connecting: 'Connecting…',
       bt_none: 'Nothing found. Check that the speaker blinks in pairing mode, then search again.',
@@ -292,7 +284,6 @@
       clear_done: 'Hide finished uploads',
       up_retrying: function (n, m) { return 'Connection lost, retrying (' + n + '/' + m + ')…'; }, up_retry: 'Retry',
       wifi_good: 'Good signal', wifi_fair: 'Fair signal', wifi_weak: 'Weak signal',
-      wifi_drops: function (n) { return n + (n === 1 ? ' drop' : ' drops') + ' since start-up'; },
       wifi_advice: 'Move the Jooki closer to a Wi-Fi access point. Music works without Wi-Fi: only this page and uploads need it.',
       wifi_bt: 'Moved house, new box, new password? Reconnect it over Bluetooth from an Android phone or a computer: ',
       wifi_bt_name: function (n) { return 'In the list, it is called ' + n + '.'; },
@@ -303,8 +294,6 @@
       err_gone: 'This item no longer exists.',
       err_generic: 'The Jooki refused the action.',
       err_unknown_char: 'Unknown character.',
-      duration_total: function (s) { return s; },
-      mute_unsupported: '',
       files_hint: 'MP3, M4A, OGG, FLAC, WAV…',
       open_player: 'Open the player',
       web_page: 'page', upd_check: 'Check for updates', upd_checking: 'Checking…',
@@ -317,7 +306,7 @@
       upd_failed: 'The update could not be done. Your Jooki has not changed.', upd_banner: function (v) { return 'Update ' + v + ' available'; },
       upd_see: 'Show',
       upd_steps: ['Looking for the new version', 'Downloading', 'Checking the download', 'Installing (keep the Jooki plugged in)', 'Checking the installation', 'Restarting on the new version'],
-      bedtime: 'Bedtime', sleep_timer: 'Sleep timer', sleep_off: 'Off',
+      sleep_timer: 'Sleep timer', sleep_off: 'Off',
       sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
       sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
       sleep_auto: 'automatic (night mode)', sleep_cancel: 'Cancel the timer',
@@ -334,8 +323,7 @@
       sort_apply: 'Keep this order', sort_same: 'The playlist is already in this order',
       my_jooki: 'My Jooki', bytes: ['B', 'KB', 'MB', 'GB'],
       n_tokens: function (n) { return n + (n === 1 ? ' token' : ' tokens'); },
-      sec_title: 'Security',
-      ssh_label: 'Maintenance access (SSH)', ssh_help: 'For tinkerers. Turns itself off after an hour.', ssh_on: 'on (1 h)',
+      ssh_label: 'Maintenance access (SSH)', ssh_help: 'For tinkerers. Turns itself off after an hour.',
       ssh_key_l: 'SSH public key', ssh_key_help: 'Paste your public key (one line starting with ssh-ed25519 or ssh-rsa). The Jooki keeps it, even after an update.',
       ssh_key_add: 'Add the key', ssh_key_clear: 'Forget the keys', ssh_key_added: 'Key added',
       ssh_keys_n: function (n) { return n ? (n + (n > 1 ? ' keys saved' : ' key saved')) : 'No key saved'; },
@@ -343,7 +331,7 @@
       mqtt_label: 'Home automation (MQTT on the network)', mqtt_help: 'For Home Assistant. Off by default.',
       mqtt_host_l: 'Host', mqtt_port_l: 'Port', mqtt_user_l: 'User', mqtt_pass_l: 'Password',
       parent_label: 'Parent code', parent_help: 'A 4-digit code stops children and guests from changing settings (deleting a playlist, Wi-Fi, starting an update).',
-      parent_set: 'Set a code', parent_change: 'Change the code', parent_off: 'Turn off',
+      parent_change: 'Change the code',
       parent_prompt: 'Enter the parent code', parent_new: '4-digit code', parent_cur: 'Current code', parent_bad: 'Wrong code',
       parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.',
       flat_tok: 'Flat token', thanks_tok: 'Thank-you token',
@@ -352,7 +340,7 @@
       lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
       lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },
       lib_n: function (n) { return n + (n > 1 ? ' pictures' : ' picture'); }, lib_set: function (n) { return 'Picture chosen: ' + n; },
-      s_listen: 'Listening', s_kids: 'Kids mode', s_bt: 'Speaker or headphones', s_none: 'None', s_night_trip: 'Bedtime and travel',
+      s_listen: 'Listening', s_bt: 'Speaker or headphones', s_none: 'None', s_night_trip: 'Bedtime and travel',
       s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
       s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
       s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
@@ -420,25 +408,24 @@
       ed_tol: 'Tolerantie', ed_rot: 'Draaien', ed_zoom: 'Zoom', ed_undo: 'Laatste ongedaan maken', ed_reset: 'Opnieuw beginnen', ed_save: 'Opslaan',
       ed_sending: 'Foto wordt verstuurd…', photo_fail: 'De foto kon niet worden opgeslagen.', photo_bad: 'Dit bestand is geen leesbare afbeelding.',
       pl_taken: function (pl, ch) { return '“' + pl + '” wordt gestart door ' + ch + '. Aan dit figuurtje geven?'; },
-      seen_n: function (n) { return n + ' keer gebruikt'; }, on_jooki: 'Op de Jooki',
+      on_jooki: 'Op de Jooki',
       forget: 'Vergeten', forget_q: 'Dit figuurtje vergeten?',
       forget_text: 'Het verdwijnt uit de lijst en komt terug zodra het weer gebruikt wordt. De afspeellijst van het personage verandert niet.',
       saved: 'Opgeslagen', no_tokens: 'Nog geen bekend figuurtje.',
-      other_chars: 'Personages zonder bekend figuurtje',
-      device: 'Apparaat', device_name: 'Naam', battery: 'Batterij', charging: 'aan het opladen', plugged: 'aangesloten',
+      device_name: 'Naam', battery: 'Batterij', charging: 'aan het opladen', plugged: 'aangesloten',
       name_title: 'Naam van de Jooki op het netwerk',
       name_help: function (f) { return 'Kleine letters, cijfers en koppeltekens. De pagina wordt bereikbaar op naam.local. Laat leeg om terug te gaan naar de oorspronkelijke naam (' + f + ').'; },
       name_invalid: 'Alleen kleine letters, cijfers en koppeltekens (maximaal 32), geen koppelteken aan het begin of einde.',
       name_done: function (n) { return 'De Jooki heet nu ' + n; },
       name_text: function (u) { return 'De pagina staat nu op ' + u + ' — het oude adres antwoordt niet meer. Sla deze link op als bladwijzer. Spotify toont de nieuwe naam na de volgende herstart.'; },
       name_open: 'Het nieuwe adres openen',
-      wifi: 'Wifi', ip: 'IP-adres', storage: 'Opslag', free: 'vrij', version: 'Versie',
-      playback: 'Afspelen', toy_safe: 'Begrensd volume (kindermodus)', shuffle: 'Willekeurig', repeat: 'Herhalen',
+      wifi: 'Wifi', ip: 'IP-adres', storage: 'Opslag', version: 'Versie',
+      toy_safe: 'Begrensd volume (kindermodus)', shuffle: 'Willekeurig', repeat: 'Herhalen',
       language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
       power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
       air_title: 'Vliegtuigmodus',
       air_help: 'Zet de wifi en bluetooth van de Jooki een tijdje uit. Figuurtjes en muziek werken gewoon. Ondertussen kan deze pagina hem niet bereiken.',
-      air_for: 'Hoe lang?', air_h: function (n) { return n + ' u'; },
+      air_h: function (n) { return n + ' u'; },
       air_morning: function (h) { return 'Tot de ochtend (' + h + ')'; }, air_boot: 'Tot hij uit- en weer aangezet wordt',
       air_btn: 'Wifi en bluetooth uitzetten', air_q: 'De Jooki in vliegtuigmodus zetten?',
       air_text: function (w) { return 'Wifi en bluetooth komen terug ' + w + '. En hoe dan ook: de Jooki uit- en weer aanzetten brengt de wifi terug. Ondertussen kan deze pagina de Jooki niet bereiken; figuurtjes en muziek gaan gewoon door.'; },
@@ -446,7 +433,6 @@
       air_sent: 'De Jooki gaat in vliegtuigmodus…',
       air_offline: function (w) { return 'De Jooki staat in vliegtuigmodus: de wifi komt terug ' + w + '. Figuurtjes en muziek werken. Wil je hem eerder terug, zet de Jooki dan uit en weer aan.'; },
       air_back: 'De Jooki is terug op de wifi.',
-      bt_title: 'Bluetooth-speaker of koptelefoon',
       bt_help: 'Zet de speaker of koptelefoon aan en in koppelmodus (meestal: de bluetoothknop ingedrukt houden tot het lampje snel knippert). Zoek dan.',
       bt_search: 'Zoeken', bt_searching: 'Zoeken… (15 seconden)', bt_connect: 'Verbinden', bt_connecting: 'Verbinden…',
       bt_none: 'Niets gevonden. Kijk of de speaker knippert in koppelmodus en zoek opnieuw.',
@@ -474,7 +460,6 @@
       clear_done: 'Voltooide uploads verbergen',
       up_retrying: function (n, m) { return 'Verbinding verbroken, opnieuw proberen (' + n + '/' + m + ')…'; }, up_retry: 'Opnieuw',
       wifi_good: 'Goed signaal', wifi_fair: 'Matig signaal', wifi_weak: 'Zwak signaal',
-      wifi_drops: function (n) { return n + (n === 1 ? ' onderbreking' : ' onderbrekingen') + ' sinds het opstarten'; },
       wifi_advice: 'Zet de Jooki dichter bij een wifi-toegangspunt. Muziek werkt zonder wifi: alleen deze pagina en uploads hebben het nodig.',
       wifi_bt: 'Verhuisd, nieuwe router, nieuw wachtwoord? Verbind hem opnieuw via bluetooth vanaf een Android-telefoon of een computer: ',
       wifi_bt_name: function (n) { return 'In de lijst heet hij ' + n + '.'; },
@@ -485,8 +470,6 @@
       err_gone: 'Dit item bestaat niet meer.',
       err_generic: 'De Jooki heeft de actie geweigerd.',
       err_unknown_char: 'Onbekend personage.',
-      duration_total: function (s) { return s; },
-      mute_unsupported: '',
       files_hint: 'MP3, M4A, OGG, FLAC, WAV…',
       open_player: 'De speler openen',
       web_page: 'pagina', upd_check: 'Controleren op updates', upd_checking: 'Controleren…',
@@ -499,7 +482,7 @@
       upd_failed: 'De update is niet gelukt. Je Jooki is niet veranderd.', upd_banner: function (v) { return 'Update ' + v + ' beschikbaar'; },
       upd_see: 'Bekijken',
       upd_steps: ['Nieuwe versie zoeken', 'Downloaden', 'Download controleren', 'Installeren (laat de Jooki aangesloten)', 'Installatie controleren', 'Opnieuw opstarten met de nieuwe versie'],
-      bedtime: 'Bedtijd', sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
+      sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
       sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk',
       sleep_left: function (s) { return 'Stopt over ' + s; }, sleep_at_end: 'Stopt aan het einde van dit nummer',
       sleep_auto: 'automatisch (nachtmodus)', sleep_cancel: 'Timer annuleren',
@@ -516,8 +499,7 @@
       sort_apply: 'Deze volgorde vastleggen', sort_same: 'De afspeellijst staat al in deze volgorde',
       my_jooki: 'Mijn Jooki', bytes: ['B', 'kB', 'MB', 'GB'],
       n_tokens: function (n) { return n + (n === 1 ? ' figuurtje' : ' figuurtjes'); },
-      sec_title: 'Beveiliging',
-      ssh_label: 'Onderhoudstoegang (SSH)', ssh_help: 'Voor knutselaars. Gaat na een uur vanzelf uit.', ssh_on: 'aan (1 u)',
+      ssh_label: 'Onderhoudstoegang (SSH)', ssh_help: 'Voor knutselaars. Gaat na een uur vanzelf uit.',
       ssh_key_l: 'Openbare SSH-sleutel', ssh_key_help: 'Plak je openbare sleutel (één regel die begint met ssh-ed25519 of ssh-rsa). De Jooki bewaart hem, ook na een update.',
       ssh_key_add: 'Sleutel toevoegen', ssh_key_clear: 'Sleutels vergeten', ssh_key_added: 'Sleutel toegevoegd',
       ssh_keys_n: function (n) { return n ? (n + (n > 1 ? ' sleutels bewaard' : ' sleutel bewaard')) : 'Geen sleutel bewaard'; },
@@ -525,7 +507,7 @@
       mqtt_label: 'Domotica (MQTT op het netwerk)', mqtt_help: 'Voor Home Assistant. Standaard uit.',
       mqtt_host_l: 'Host', mqtt_port_l: 'Poort', mqtt_user_l: 'Gebruiker', mqtt_pass_l: 'Wachtwoord',
       parent_label: 'Oudercode', parent_help: 'Een 4-cijferige code voorkomt dat kinderen en gasten instellingen wijzigen (afspeellijst verwijderen, wifi, een update starten).',
-      parent_set: 'Code instellen', parent_change: 'Code wijzigen', parent_off: 'Uitschakelen',
+      parent_change: 'Code wijzigen',
       parent_prompt: 'Voer de oudercode in', parent_new: '4-cijferige code', parent_cur: 'Huidige code', parent_bad: 'Onjuiste code',
       parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.',
       flat_tok: 'Plat figuurtje', thanks_tok: 'Bedankt-figuurtje',
@@ -534,7 +516,7 @@
       lib_pick: 'Kies een plaatje', lib_search_ph: 'Zoek: kat, raket, slapen…', lib_loading: 'Plaatjes laden…',
       lib_fail: 'De plaatjes konden niet geladen worden. Probeer opnieuw.', lib_none: function (q) { return 'Geen plaatje voor “' + q + '”.'; },
       lib_n: function (n) { return n + (n > 1 ? ' plaatjes' : ' plaatje'); }, lib_set: function (n) { return 'Plaatje gekozen: ' + n; },
-      s_listen: 'Luisteren', s_kids: 'Kindermodus', s_bt: 'Speaker of koptelefoon', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
+      s_listen: 'Luisteren', s_bt: 'Speaker of koptelefoon', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
       s_general: 'Algemeen', s_parents: 'Ouders', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
       s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
       s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
@@ -640,7 +622,6 @@
         if (v === null || v === undefined || v === false) continue;
         if (k === 'class') el.className = v;
         else if (k === 'text') el.textContent = v;
-        else if (k === 'html') el.innerHTML = v; // only used with static SVG icons
         else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
         else if (k === 'value') el.value = v;
         else if (k === 'checked') el.checked = !!v;
@@ -675,14 +656,12 @@
     back: '<path d="M15 5l-7 7 7 7"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
     check: '<path d="M5 12l5 5 9-10"/>',
-    book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>',
     shuffle: '<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
     repeat: '<path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
     vol: '<path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
     power: '<path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>',
     plane: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
     note: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
-    link0: '<path d="M8 12h8"/>',
     moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
     contrast: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/>',
     sort: '<path d="M4 6h9M4 12h7M4 18h5M17 4v16M14 17l3 3 3-3"/>',
@@ -1481,7 +1460,7 @@
   window.addEventListener('hashchange', function () { ui.sel = {}; ui.search = ''; ui.editTitle = null; window.scrollTo(0, 0); render(); });
 
   /* ------------------------------------------------------------------ UI state */
-  var ui = { search: '', sel: {}, editTitle: null, dragging: false, libTab: 'all' };
+  var ui = { search: '', sel: {}, editTitle: null, dragging: false };
 
   /* ------------------------------------------------------------------ views */
   function viewPlaylists() {
@@ -1726,7 +1705,7 @@
     var items = Array.prototype.slice.call(ul.children);
     var from = items.indexOf(li);
     var rect = li.getBoundingClientRect();
-    drag = { li: li, ul: ul, from: from, to: from, startY: e.clientY, h: rect.height, id: playlistId, items: items, pointer: e.pointerId };
+    drag = { li: li, from: from, to: from, startY: e.clientY, h: rect.height, id: playlistId, items: items };
     ui.dragging = true;
     li.classList.add('dragging');
     try { li.setPointerCapture(e.pointerId); } catch (x) {}
@@ -2277,7 +2256,7 @@
   }
 
   /* ---------------- OpenJooki updates (the Jooki itself talks to GitHub) */
-  var upd = { state: 'idle', latest: null, lines: '', startedFrom: null };
+  var upd = { state: 'idle', latest: null, startedFrom: null };
   function vparts(v) { return String(v || '0').split(/[.-]/).map(function (x) { return parseInt(x, 10) || 0; }); }
   function newer(a, b) {
     var x = vparts(a), y = vparts(b);
@@ -2290,8 +2269,8 @@
     var x = new XMLHttpRequest();
     x.open('GET', path + (path.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now());
     x.timeout = 5000;
-    x.onload = function () { cb(x.status === 200 ? x.responseText : null, x.getResponseHeader('Last-Modified')); };
-    x.onerror = x.ontimeout = function () { cb(null, null); };
+    x.onload = function () { cb(x.status === 200 ? x.responseText : null); };
+    x.onerror = x.ontimeout = function () { cb(null); };
     x.send();
   }
   function checkUpdate() {
@@ -2317,14 +2296,13 @@
   function startUpdate() {
     confirmBox(t('upd_q', upd.latest), t('upd_text'), t('upd_now'), false).then(function (ok) {
       if (!ok) return;
-      upd.state = 'running'; upd.lines = ''; upd.startedFrom = installed(); upd.step = 0; upd.pct = null; upd.reboot = false;
+      upd.state = 'running'; upd.startedFrom = installed(); upd.step = 0; upd.pct = null; upd.reboot = false;
       send('OJ_UPDATE_START', {});
       render();
       setTimeout(function poll() {
         if (upd.state !== 'running') return;
         getText('/oj-status.txt', function (txt) {
           if (txt) {
-            upd.lines = txt;
             var p = updProgress(txt);
             upd.step = p.step; upd.pct = p.pct;
             // what the installer wrote before it asked for the reboot: later lines come from a dying process

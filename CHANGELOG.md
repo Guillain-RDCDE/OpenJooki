@@ -25,6 +25,10 @@
   `add-webui-to-image.py` require `--core`. The `player.lib` container codec lives in
   `tools/openjooki/playerlib.py`, shared by the build, the device tool, the release script and
   the loader test. A Jooki still on 1.x updates like any other (its page, the phone path, a card).
+- **A change made right after another one reached the page late.** The Jooki sends its state at
+  most four times a second; when a second change fell inside that window it waited for the next
+  unrelated event instead of the end of the window. Mostly hidden by a timer that ticked every
+  half-second; now the state goes out when the window ends, whatever else happens.
 - In English and Dutch the page no longer puts a French space before a colon ("Playlist : X").
 - **Dead code removed**, nothing visible: in the core (unused kernel helpers, four shell actions
   nobody called including `factory_reset`, bus subscriptions nothing handled, three config keys

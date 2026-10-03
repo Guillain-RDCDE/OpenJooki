@@ -22,7 +22,7 @@ function fakes.bus()
     if tr then self.up = (tr == "up") end
     return tr
   end
-  function b:poll() local out = self.incoming; self.incoming = {}; return out end
+  function b:poll(timeout) self.last_timeout = timeout; local out = self.incoming; self.incoming = {}; return out end
   function b:publish(topic, payload)
     if not self.up then return nil, "not connected" end
     self.published[#self.published + 1] = { topic = topic, payload = payload }

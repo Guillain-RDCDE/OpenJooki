@@ -78,6 +78,12 @@ function loop.step(wait)
     local due = timers.next_due(now)
     timeout = math.min(due or config.get("tick_s"), config.get("tick_s"))
     if #events > 0 then timeout = 0 end
+    -- a publication held back by the coalescing window must not wait for the next event (there may be
+    -- none for a long while): wake up when the window ends
+    if next(dirty_pending) ~= nil then
+      local left = config.get("state_publish_min_interval_s") - (now - last_publish)
+      timeout = math.min(timeout, left > 0 and left or 0)
+    end
   end
   local rsocks, wsocks
   if io_sources then rsocks, wsocks = io_sources() end

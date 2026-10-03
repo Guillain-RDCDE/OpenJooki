@@ -80,13 +80,22 @@ describe("kernel.loop", function()
     assert_eq(A.bus:last("/cmd"), "04AA")
     assert_eq(published_patches, { { "tokens" } })
     assert_eq(json.decode(A.bus:last("/state")).rev, 1)
-    -- a second change within the coalescing window waits for the next window
+    -- a second change within the coalescing window waits for the next window...
     A.bus:receive("/j/nfc/input/tag", "04BB")
     loop.step(0)
     assert_eq(#published_patches, 1)
-    A.clock.advance(0.3)
+    -- ...and the loop wakes up by itself when the window ends, even with no event in sight
+    -- (the permanent 0.5 s button tick used to hide this: without it a second command in a row
+    -- stayed unpublished until the next unrelated event)
+    A.clock.advance(0.1)
+    loop.step()
+    assert_true(A.bus.last_timeout ~= nil and A.bus.last_timeout <= 0.15 + 1e-9, A.bus.last_timeout)
+    assert_eq(#published_patches, 1)
+    A.clock.advance(0.2)
     loop.step(0)
     assert_eq(#published_patches, 2)
+    loop.step()
+    assert_true(A.bus.last_timeout >= 0.4, A.bus.last_timeout)   -- nothing pending: back to the long wait
   end)
 
   it("fires timers as events and lets emitted events run on the next turn", function()

@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.2.6 (3 October 2026) — tidied inside, and a handful of fixes
 - **The parent code now also guards the v2 commands.** Over the newer command channel the page
   does not use yet (`/j/web/v2/cmd`), deleting a playlist, starting an update or changing a
   setting went through without the parent code. The same gate now answers both channels

@@ -264,6 +264,19 @@ with sync_playwright() as p:
     pg.wait_for_selector("[data-k=nightstart]", state="detached", timeout=5000)
     check("E17 night mode can be turned off", J.state["bedtime"]["cfg"]["enabled"] is False and pg.locator("[data-k=nightstart]").count() == 0)
     pg.click("[data-k=nighton]"); J.wait(lambda: J.state["bedtime"]["cfg"]["enabled"] is True)
+    # E17 a topic page fades in once, not again at each message of the Jooki (2.2.0-2.2.4: it blinked)
+    pg.wait_for_selector("[data-k=nightdim]")
+    pg.evaluate("""window.__fades = 0; document.addEventListener('animationstart', function (e) {
+      if (e.target.classList && e.target.classList.contains('settings')) window.__fades++; }, true)""")
+    dim0 = J.state["bedtime"]["cfg"].get("dim")
+    pg.click("[data-k=nightdim]"); J.wait(lambda: J.state["bedtime"]["cfg"].get("dim") != dim0)
+    pg.click("[data-k=nightdim]"); J.wait(lambda: J.state["bedtime"]["cfg"].get("dim") == dim0)
+    time.sleep(1)
+    still = pg.evaluate("window.__fades")
+    pg.click("a.icon-btn[href='#/settings']"); pg.wait_for_selector("a[href='#/settings/night']")
+    pg.click("a[href='#/settings/night']"); pg.wait_for_selector("[data-k=nightdim]"); time.sleep(0.5)
+    check("E17 the night mode page stays still while the Jooki answers, and fades in once when opened",
+          still == 0 and pg.evaluate("window.__fades") == 1, (still, pg.evaluate("window.__fades")))
     # E18 sleep timer from the player
     comp = pl_by_title("Comptines 2")
     J.send("PLAYLIST_PLAY", {"playlistId": comp}); J.wait(lambda: J.state["audio"]["playback"].get("state") == "PLAYING")

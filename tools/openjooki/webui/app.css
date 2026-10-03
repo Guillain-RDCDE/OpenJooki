@@ -390,7 +390,8 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
 
 /* ---------- settings: a short page of grouped rows; each topic opens on a page of its own */
 .settings { max-width: 640px; margin: 0 auto; }
-.settings.sub { animation: fade .15s; }
+/* only on the way in: the page is rebuilt at each message of the Jooki, a fade on every rebuild blinks */
+.settings.sub.enter { animation: fade .15s; }
 .hero { background: var(--panel); border-radius: 20px; box-shadow: var(--shadow); padding: 16px; margin-bottom: 22px; }
 .avatar { width: 50px; height: 50px; border-radius: 15px; flex: none; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 22px;
   background: linear-gradient(145deg, #f39a45, #e2650f); box-shadow: inset 0 -3px 0 rgba(0,0,0,.12); }

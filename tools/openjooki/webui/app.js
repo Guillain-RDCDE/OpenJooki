@@ -2435,11 +2435,14 @@
   }
   var SUBS = { bluetooth: 's_bt', night: 'night_mode', airplane: 'air_title', wifi: 'wifi', update: 's_update', language: 'language',
                parent: 'parent_label', home: 's_home', maintenance: 's_maint', theme: 's_theme', mp3: 's_mp3' };
+  var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
     var body = sub === 'bluetooth' ? btPage() : sub === 'night' ? nightPage() : sub === 'airplane' ? airPage() : sub === 'wifi' ? wifiPage()
       : sub === 'update' ? updateCard() : sub === 'language' ? langPage() : sub === 'parent' ? parentPage() : sub === 'home' ? homePage()
       : sub === 'maintenance' ? maintPage() : sub === 'theme' ? themePage() : sub === 'mp3' ? mp3Page() : null;
-    return body ? h('div', { class: 'settings sub' }, body) : viewSettings();
+    var enter = sub !== shownSub;
+    shownSub = body ? sub : null;
+    return body ? h('div', { class: 'settings sub' + (enter ? ' enter' : '') }, body) : viewSettings();
   }
   function viewSettings() {
     var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config, m = obj(S.maintenance), b = obj(S.bluetooth), c = S.bedtime.cfg;
@@ -2993,6 +2996,7 @@
     pendingRender = false;
     var keep = captureFocus(root);
     var r = route();
+    if (r.name !== 'settings' || !SUBS[r.arg]) shownSub = null;
     var title, body, back = null;
     // an airplane mode asked from this browser: the Jooki is away on purpose (and if it is still
     // here half a minute later, the request did not go through: forget it)

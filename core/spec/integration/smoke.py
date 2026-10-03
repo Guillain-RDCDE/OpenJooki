@@ -5,62 +5,46 @@ Checks: boots, answers state.get, rejects a bad command with a typed error,
 publishes patches with increasing rev, idle bus traffic under budget, no shell
 process started, memory under budget, stops cleanly on SIGTERM."""
 import json, os, subprocess, sys, time
-import paho.mqtt.client as mqtt
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-R = []
-def check(n, c, info=""):
-    R.append((n, bool(c))); print(("PASS " if c else "FAIL ") + n + ("" if c else "  -> " + str(info)[:300]), flush=True)
+sys.path.insert(0, os.path.join(ROOT, "tools", "openjooki", "tests"))
+import bench as B  # noqa: E402
 
-HARNESS = r"""
-function c_syslog(level, msg) end
-function c_alsa_set_volume(v, x) return 0 end
-function c_isTerminating() return _G.__terminating == true end
-function c_sd_notify() io.stdout:write("READY\n") io.stdout:flush() end
-local src = assert(io.open(arg[1])):read('*a')
-local f = assert(loadstring(src, '=core'))
-f()
-"""
-open(os.path.join(ROOT, "build", "harness.lua"), "w").write(HARNESS)
+R = B.Results()
+check = R.check
 
+# the bundle brings its own harness (the 4 host stubs, then the core), the same the bench runs
 subprocess.run([sys.executable, os.path.join(ROOT, "tools", "build", "bundle.py")], check=True)
 # the bus client (and the fake esp32_ctrl) is up before the core starts, as on the device
 got = {"replies": [], "states": [], "events": [], "all": []}
-c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "smoke")
-def on_msg(cl, u, m):
-    try: d = json.loads(m.payload.decode())
-    except Exception: d = m.payload
-    got["all"].append((time.time(), m.topic))
-    if m.topic == "/j/web/v2/reply": got["replies"].append(d)
-    elif m.topic == "/j/web/v2/state": got["states"].append(d)
-    elif m.topic == "/j/web/v2/event": got["events"].append(d)
+def on_msg(topic, payload, cl):
+    try: d = json.loads(payload)
+    except Exception: d = payload
+    got["all"].append((time.time(), topic))
+    if topic == "/j/web/v2/reply": got["replies"].append(d)
+    elif topic == "/j/web/v2/state": got["states"].append(d)
+    elif topic == "/j/web/v2/event": got["events"].append(d)
     # the device's esp32_ctrl answers the knobs question (headphones out: nothing changes)
-    elif m.topic == "/j/esp32/output/knobs/state": cl.publish("/j/esp32/input/knobs/state", '{"hp_state":0}')
-c.on_message = on_msg
-c.connect("127.0.0.1", 1883); c.subscribe("/j/#"); c.loop_start()
+    elif topic == "/j/esp32/output/knobs/state": cl.publish("/j/esp32/input/knobs/state", '{"hp_state":0}')
+spy = B.Spy("/j/#", name="smoke", on=on_msg)
+c = spy.c
 env = dict(os.environ, OPENJOOKI_LOG="info", id="jooki-bench", hostname="jooki-bench.local", machine="bench")
 proc = subprocess.Popen(["lua5.1", os.path.join(ROOT, "build", "harness.lua"), os.path.join(ROOT, "build", "core.min.lua")],
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env, cwd=ROOT)
-lines = []
-ready = False
+out = B.Lines(proc)
 t0 = time.time()
-while time.time() - t0 < 10:
-    line = proc.stdout.readline()
-    if not line: break
-    lines.append(line.rstrip())
-    if line.startswith("READY"): ready = True; break
-check("S1 core boots and reports ready in < 10 s (%.2fs)" % (time.time() - t0), ready, lines[-5:])
-
-time.sleep(0.5)
+try: out.wait("READY", 10); ready = True
+except B.WaitTimeout: ready = False
+check("S1 core boots and reports ready in < 10 s (%.2fs)" % (time.time() - t0), ready, out.tail(5))
 
 def cmd(msg, wait=2.0):
     n = len(got["replies"])
     c.publish("/j/web/v2/cmd", json.dumps(msg) if isinstance(msg, dict) else msg)
-    t = time.time()
-    while time.time() - t < wait and len(got["replies"]) <= n: time.sleep(0.02)
+    B.poll(lambda: len(got["replies"]) > n, wait, every=0.02)
     return got["replies"][n] if len(got["replies"]) > n else None
 
-r = cmd({"v": 2, "id": "a1", "type": "state.get"})
+# READY comes before the core is on the bus: the first question is asked again until it answers
+r = B.wait_until(lambda: cmd({"v": 2, "id": "a1", "type": "state.get"}), 10, "an answer to state.get")
 check("S2 state.get answers ok with the id", r == {"v": 2, "id": "a1", "ok": True}, r)
 fulls = [s for s in got["states"] if isinstance(s, dict) and s.get("full")]   # a patch may follow the full state
 st = fulls[-1] if fulls else None
@@ -76,23 +60,18 @@ check("S4 core.version event", r and r["ok"] and got["events"] and got["events"]
 # a preset request while nothing plays is refused, the core stays alive
 n = len(got["states"])
 c.publish("/j/spotify/input/login", json.dumps({"username": "fake-spotify"}))
-t = time.time()
-while time.time() - t < 2 and len(got["states"]) <= n: time.sleep(0.02)
+B.poll(lambda: len(got["states"]) > n, 2, every=0.02)
 sp = [s for s in got["states"][n:] if s.get("patch", {}).get("spotify")]
 check("S8 spotify login from the daemon reaches the state", sp and sp[-1]["patch"]["spotify"]["username"] == "fake-spotify", got["states"][n:][-2:])
 r = cmd({"v": 2, "id": "a4", "type": "spotify.new_playlist", "payload": {"title": "x"}})
 check("S8 preset while idle -> unavailable, core alive", r and r["ok"] is False and r["error"]["code"] == "unavailable" and proc.poll() is None, r)
 
 # idle traffic budget: 10 s of silence
-before = len(got["all"]); time.sleep(10); idle = len(got["all"]) - before
+before = len(got["all"]); B.quiet(10, "the idle traffic budget is measured over 10 s of nothing"); idle = len(got["all"]) - before
 check("S5 idle bus traffic <= 0.5 msg/s (got %.2f)" % (idle / 10), idle <= 5, idle)
 
 # memory (RSS of the lua process)
-rss = None
-try:
-    for line in open("/proc/%d/status" % proc.pid):
-        if line.startswith("VmRSS"): rss = int(line.split()[1])
-except Exception: pass
+rss = B.rss_kb(proc.pid)
 # the 4 MB budget is for the device (32-bit MIPS, docs/21 §5); this x86-64 bench with the
 # full standard library and 64-bit pointers runs about 30 % larger
 check("S6 RSS under 6 MB on the bench (got %s kB)" % rss, rss is not None and rss < 6144, rss)
@@ -103,9 +82,5 @@ check("S6 RSS under 6 MB on the bench (got %s kB)" % rss, rss is not None and rs
 alive = proc.poll() is None
 proc.kill(); proc.wait(timeout=5)
 check("S7 core alive until stopped (no crash during the run)", alive)
-c.loop_stop()
-bad = [n for n, ok in R if not ok]
-print("\n%d/%d passed" % (len(R) - len(bad), len(R)))
-if bad:
-    print("--- core output (last 30 lines) ---"); print("\n".join(lines[-30:]))
-sys.exit(1 if bad else 0)
+spy.close()
+R.finish(on_fail=lambda: print("--- core output (last 30 lines) ---\n" + "\n".join(out.tail(30))))

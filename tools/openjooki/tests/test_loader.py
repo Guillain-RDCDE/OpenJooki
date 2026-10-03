@@ -8,10 +8,10 @@ file and a missing core file are refused, never run.
 
   CORE_BUILD=<repo>/build python3 test_loader.py      (defaults to ../../../build)
 """
-import os, subprocess, sys, tempfile, time
+import os, subprocess, sys, tempfile
+import bench as B
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+REPO = B.REPO
 BUILD = os.environ.get("CORE_BUILD", os.path.join(REPO, "build"))
 sys.path.insert(0, os.path.join(REPO, "tools", "openjooki"))
 import playerlib as L  # noqa: E402
@@ -61,22 +61,16 @@ def main():
 
     # 1) the good case: the loader boots the core to READY
     open(CORE_PATH, "wb").write(core)
-    # the loop runs forever; the timeout kills it, READY comes first
+    # the loop runs forever; the timeout kills it, READY comes first (within 10 s)
     p = subprocess.Popen(["lua5.1", HOSTSIM_FILE, loader],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                          env=dict(os.environ, OPENJOOKI_LOG="info", id="bench",
                                   hostname="jooki-bench.local", ip="10.0.0.2",
                                   wifi_mac="00:11:22:33:44:55", machine="ml-j2000", firmware="bench"))
-    ready = False
-    t0 = time.time()
     try:
-        while time.time() - t0 < 10:
-            line = p.stdout.readline()
-            if not line:
-                break
-            if "READY" in line:
-                ready = True
-                break
+        B.wait_line(p, "READY", 10); ready = True
+    except B.WaitTimeout:
+        ready = False
     finally:
         p.terminate()
         try: p.wait(timeout=3)

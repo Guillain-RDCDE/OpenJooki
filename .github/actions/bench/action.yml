@@ -26,4 +26,4 @@ runs:
       shell: bash
       run: |
         sudo systemctl stop mosquitto || true     # the apt package starts a system broker on 1883 (no websockets)
-        cd tools/openjooki/tests && sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null && sleep 1'
+        cd tools/openjooki/tests && sudo -E bash -c './make_media.sh >/dev/null && ./up.sh >/dev/null'

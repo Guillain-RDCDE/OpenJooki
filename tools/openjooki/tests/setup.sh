@@ -19,5 +19,8 @@ echo '{"_":{"version":1}}' > /jooki/app/system/playlists.json
 # user db
 for f in playlists tracks tokens; do echo '{"_":{"version":1}}' > /jooki/external/jooki/$f.json; done
 echo 1.0.0 > /etc/openjooki-version   # installed OpenJooki version (the page offers the GitHub latest)
-rm -f /tmp/oj-updating
+rm -f /tmp/oj-updating /tmp/oj-wifi.log   # no update in progress, no Wi-Fi chip log from an earlier suite
+# the security switches live on /data (they survive an update on the device): a fresh Jooki has none
+mkdir -p /data/openjooki
+rm -f /data/openjooki/parent_code /data/openjooki/mqtt_lan /data/openjooki/authorized_keys /home/root/.ssh/authorized_keys
 echo ok

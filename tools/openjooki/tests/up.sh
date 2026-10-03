@@ -9,6 +9,7 @@ mosquitto_passwd -c -b /tmp/oj_passwd jooki benchsecret 2>/dev/null || \
 # mosquitto drops to its own user and must be able to read it (hash only)
 chmod 640 /tmp/oj_passwd; chown mosquitto /tmp/oj_passwd 2>/dev/null || chmod 644 /tmp/oj_passwd
 pgrep -f "^mosquitto -c" >/dev/null || (setsid mosquitto -c mosquitto.conf >/tmp/mosq.log 2>&1 < /dev/null &)
-sleep 1
+for i in $(seq 1 50); do (exec 3<>/dev/tcp/127.0.0.1/1883) 2>/dev/null && break; sleep 0.1; done   # the broker listens
 pgrep -f "^python3 fake_audio" >/dev/null || (setsid python3 fake_audio.py >/tmp/fakeaudio.log 2>&1 < /dev/null &)
-sleep 0.5; pgrep -af "^mosquitto|^python3 fake_audio"
+for i in $(seq 1 50); do grep -q connected /tmp/fakeaudio.log 2>/dev/null && break; sleep 0.1; done  # the fake audio is on the bus
+pgrep -af "^mosquitto|^python3 fake_audio"

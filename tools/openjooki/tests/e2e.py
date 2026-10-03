@@ -1,46 +1,35 @@
 """End-to-end tests of the new web UI against the bench (real Lua app + mosquitto)."""
-import sys, time, json, os, subprocess
+import time, json, os, tempfile, urllib.request
 from playwright.sync_api import sync_playwright
-from jk import Jooki, PAGE
-LUA = os.environ.get("PLAYER_LUA", "core")
+import bench as B
+from jk import PAGE
 URL = PAGE
-R = []
-def check(n, c, info=""):
-    R.append((n, bool(c))); print(("PASS " if c else "FAIL ") + n + ("" if c else "  -> " + str(info)[:300]))
-subprocess.run(["bash", "setup.sh"], capture_output=True)
-subprocess.run(["python3", "seed_demo.py"], capture_output=True)
-subprocess.run(["./deploy_ui.sh"], capture_output=True)
+R = B.Results(); check = R.check
+B.setup(seed=True, ui=True)
 # The update check (E16) stays on this machine: the core fetches its "newest version" and its
 # installer from its own web server, never from GitHub (CI must not run the real o.sh as root).
-WEB_PUBLIC = "/tmp/web_ctrl_dirs/public"
-with open("/tmp/oj-core.json", "w") as f:
-    json.dump({"update_manifest_url": URL + "/oj-test/version.json", "update_script_url": URL + "/oj-test/o.sh"}, f)
-os.environ["OPENJOOKI_CONFIG"] = "/tmp/oj-core.json"
-subprocess.run(["./start_player.sh", LUA], capture_output=True); time.sleep(1)
+WEB_PUBLIC = B.WEB_PUBLIC
+CFG = B.core_config({"update_manifest_url": URL + "/oj-test/version.json", "update_script_url": URL + "/oj-test/o.sh"}, "core")
+B.start_core(config=CFG)
 os.makedirs(WEB_PUBLIC + "/oj-test", exist_ok=True)   # the core rebuilt its public directory at boot
 with open(WEB_PUBLIC + "/oj-test/version.json", "w") as f:
     json.dump({"version": "9.9.9", "file": "openjooki-firmware-9.9.9.img.gz", "sha256": "0" * 64, "device_type": "ml-j2000"}, f)
 with open(WEB_PUBLIC + "/oj-test/o.sh", "w") as f:   # an installer that fails on purpose, in the installer's own words
     f.write("#!/bin/sh\nS=/jooki/app/www/public/openjooki-status.txt\n"
             "echo '[openjooki] checking for updates...' >> $S\necho '[openjooki] ERROR: bench installer - nothing changed' >> $S\n")
-J = Jooki()
-def pl_by_title(t):
-    for k, v in J.pls.items():
-        if v.get("title") == t: return k
+J = B.Jooki()
+pl_by_title = J.pl_by_title
+def titles_of(p): return [J.tracks[x]["title"] for x in J.pls[p]["tracks"]]
 with sync_playwright() as p:
     b = p.chromium.launch()
     ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, locale="fr-FR", timezone_id="Europe/Paris", bypass_csp=True)
     pg = ctx.new_page(); errs = []
     pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_CONNECTION_RESET" not in m.text else None)
     pg.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
-    toasts = []
     pg.goto(URL + "/")
     try: pg.wait_for_selector(".pl[data-pl]")
     except Exception:
-        # say why before dying: what the page got, what it said, what the core has
-        print("E0 page never listed the playlists\n  console:", errs[-10:], "\n  html:", pg.content()[:1500].replace("\n", " "),
-              "\n  core playlists:", sorted(J.pls), "\n  http /:", subprocess.run(["curl", "-sI", URL + "/"], capture_output=True, text=True).stdout[:200], flush=True)
-        raise
+        B.page_diag(pg, J, errs, "E0 page never listed the playlists"); raise
     check("E0 home lists the 6 playlists", pg.locator(".pl[data-pl]").count() == 6, pg.locator(".pl[data-pl]").count())
     # E1 create
     pg.click("[data-k=newpl]"); pg.fill("[data-k=plname]", "  Histoires du soir "); pg.keyboard.press("Enter")
@@ -52,60 +41,61 @@ with sync_playwright() as p:
     pg.set_input_files("input[type=file]", ["media/song4.mp3", "media/song5.mp3", "media/notaudio.mp3", "media/garbage.mp3"])
     pg.wait_for_function("document.querySelectorAll('.up.done, .up.error').length >= 4", timeout=60000)
     done = pg.locator(".up.done").count(); err = pg.locator(".up.error").count()
-    J.wait(lambda: len(J.pls[pid]["tracks"]) == 2)
+    J.poll(lambda: len(J.pls[pid]["tracks"]) == 2)
     check("E2 upload: 2 added, 2 refused with a reason", done == 2 and err == 2 and len(J.pls[pid]["tracks"]) == 2, (done, err, J.pls[pid]))
     txt = pg.locator(".uploads").inner_text()
     check("E2 upload errors are explained in French", "trop petit" in txt and ("format audio" in txt), txt)
     # E3 rename
     pg.click("[data-k=renamebtn]"); pg.fill("[data-k=title]", "Histoires"); pg.keyboard.press("Enter")
-    J.wait(lambda: J.pls[pid].get("title") == "Histoires")
-    check("E3 rename with Enter", J.pls[pid].get("title") == "Histoires", J.pls[pid])
+    R.expect("E3 rename with Enter", lambda: J.pls[pid].get("title") == "Histoires", 5, lambda: J.pls[pid])
     # E4 character: take the Dragon (used by Pierre et le Loup) -> warning, then moved
     pierre = pl_by_title("Pierre et le Loup")
     pg.click("[data-k=tokbtn]"); pg.click("[data-char='Jooki.Dragon']")
     warn = pg.locator(".sheet .banner").inner_text()
     pg.click("[data-k=charsave]")
-    J.wait(lambda: J.pls[pid].get("star") == "Jooki.Dragon")
+    J.poll(lambda: J.pls[pid].get("star") == "Jooki.Dragon")
     check("E4 moving a character warns and moves it", "Pierre et le Loup" in warn and J.pls[pid].get("star") == "Jooki.Dragon" and not J.pls[pierre].get("star"), (warn, J.pls[pid], J.pls[pierre]))
     pg.click("[data-k=tokbtn]"); pg.click("[data-char='none']"); pg.click("[data-k=charsave]")
-    J.wait(lambda: not J.pls[pid].get("star"))
-    check("E4 unlink character", not J.pls[pid].get("star"), J.pls[pid])
-    J.send("PLAYLIST_UPDATE", {"playlist": {"id": pierre, "star": "Jooki.Dragon"}}); J.settle()
+    R.expect("E4 unlink character", lambda: not J.pls[pid].get("star"), 5, lambda: J.pls[pid])
+    J.send("PLAYLIST_UPDATE", {"playlist": {"id": pierre, "star": "Jooki.Dragon"}}); J.wait(lambda: J.pls[pierre].get("star") == "Jooki.Dragon")
     # E5 add from library
     pg.click("text=Depuis la bibliothèque"); pg.fill("[data-k=libq]", "cygne")
     pg.locator(".sheet li").first.click()
     pg.fill("[data-k=libq]", "hémiones"); pg.locator(".sheet li").first.click()
     pg.click("[data-k=libadd]")
     J.wait(lambda: len(J.pls[pid]["tracks"]) == 4)
-    names = [J.tracks[x]["title"] for x in J.pls[pid]["tracks"]]
+    names = titles_of(pid)
     check("E5 add 2 tracks from the library (search)", len(names) == 4 and "Le Cygne" in names and "Hémiones" in names, names)
     # E7 remove + undo
     before = list(J.pls[pid]["tracks"])
     pg.locator("[data-remove='0']").click()
     J.wait(lambda: len(J.pls[pid]["tracks"]) == 3)
     pg.locator(".toast button").click()
-    J.wait(lambda: J.pls[pid]["tracks"] == before)
-    check("E7 remove then undo", J.pls[pid]["tracks"] == before, J.pls[pid]["tracks"])
+    R.expect("E7 remove then undo", lambda: J.pls[pid]["tracks"] == before, 5, lambda: J.pls[pid]["tracks"])
     # E8 radio
     pg.click("text=Radio web"); pg.fill("[data-k=rname]", "FIP"); pg.fill("[data-k=rurl]", "fip.fr"); pg.keyboard.press("Enter")
     bad = pg.locator(".sheet .banner").inner_text()
     pg.fill("[data-k=rurl]", "https://icecast.radiofrance.fr/fip-hifi.aac"); pg.keyboard.press("Enter")
-    J.wait(lambda: len(J.pls[pid]["tracks"]) == 5)
+    J.poll(lambda: len(J.pls[pid]["tracks"]) == 5)
     check("E8 radio: bad URL explained, good URL added", "http" in bad and len(J.pls[pid]["tracks"]) == 5, bad)
     # E9 audiobook
-    pg.click("[data-k=audiobook]"); J.wait(lambda: J.pls[pid].get("audiobook") is True)
-    check("E9 audiobook toggle", J.pls[pid].get("audiobook") is True, J.pls[pid])
+    pg.click("[data-k=audiobook]")
+    R.expect("E9 audiobook toggle", lambda: J.pls[pid].get("audiobook") is True, 5, lambda: J.pls[pid])
     # E13 play from a track row + player bar + sheet
-    pg.locator("li[data-i='1']").click(); time.sleep(1.5)
-    np = J.state["audio"]["nowPlaying"]
+    pg.locator("li[data-i='1']").click()
+    J.poll(lambda: J.np.get("playlistId") == pid and J.np.get("trackIndex") == 2)
+    np = J.np
     check("E13 tap a track plays it", np.get("playlistId") == pid and np.get("trackIndex") == 2, np)
+    title = J.tracks[J.pls[pid]["tracks"][1]]["title"]
+    try: pg.wait_for_function("t => document.querySelector('.player .t') && document.querySelector('.player .t').textContent.trim() === t", arg=title, timeout=5000)
+    except Exception: pass
     bar = pg.locator(".player .t").inner_text()
-    check("E13 player bar shows the track", bar.strip() == J.tracks[J.pls[pid]["tracks"][1]]["title"], bar)
-    pg.click("[data-k=pp]"); J.wait(lambda: J.state["audio"]["playback"].get("state") == "PAUSED")
-    check("E13 pause from the bar", J.state["audio"]["playback"].get("state") == "PAUSED", J.state["audio"]["playback"])
+    check("E13 player bar shows the track", bar.strip() == title, bar)
+    pg.click("[data-k=pp]")
+    R.expect("E13 pause from the bar", lambda: J.pb == "PAUSED", 5, lambda: J.get("audio.playback"))
     pg.click(".player .info"); pg.wait_for_selector(".np")
-    pg.click("[data-k=nppp]"); J.wait(lambda: J.state["audio"]["playback"].get("state") == "PLAYING")
-    check("E13 play from the sheet", J.state["audio"]["playback"].get("state") == "PLAYING")
+    pg.click("[data-k=nppp]")
+    R.expect("E13 play from the sheet", lambda: J.pb == "PLAYING", 5, lambda: J.get("audio.playback"))
     pg.keyboard.press("Escape")
     # E6 reorder by drag (pointer events) on desktop-size page
     dctx = b.new_context(viewport={"width": 1200, "height": 900}, locale="fr-FR", bypass_csp=True); dp = dctx.new_page()
@@ -113,13 +103,14 @@ with sync_playwright() as p:
     dp.goto(URL + "/#/p/" + pid); dp.wait_for_selector("li[data-i='2']")
     dp.wait_for_selector("li[data-i='0'] .handle", state="visible")   # the handle renders after the row
     order = list(J.pls[pid]["tracks"])
-    h0 = dp.locator("li[data-i='0'] .handle").bounding_box(); h2 = dp.locator("li[data-i='2']").bounding_box()
+    # the page redraws its list when the Jooki's state comes in: a box read in between is None, so wait for both
+    h0 = B.wait_until(lambda: dp.locator("li[data-i='0'] .handle").bounding_box(), 5, "the first row's handle laid out")
+    h2 = B.wait_until(lambda: dp.locator("li[data-i='2']").bounding_box(), 5, "the third row laid out")
     dp.mouse.move(h0["x"] + 10, h0["y"] + 10); dp.mouse.down()
     for k in range(1, 11): dp.mouse.move(h0["x"] + 10, h0["y"] + 10 + (h2["y"] - h0["y"]) * k / 10)
     dp.mouse.up()
     exp = order[1:3] + order[0:1] + order[3:]
-    J.wait(lambda: J.pls[pid]["tracks"] == exp)
-    check("E6 drag to reorder", J.pls[pid]["tracks"] == exp, (order, J.pls[pid]["tracks"]))
+    R.expect("E6 drag to reorder", lambda: J.pls[pid]["tracks"] == exp, 5, lambda: (order, J.pls[pid]["tracks"]))
     # E10 delete playlist -> tracks become unused -> delete forever
     pg.goto(URL + "/#/p/" + pid); pg.wait_for_selector("text=Supprimer la playlist")
     pg.click("text=Supprimer la playlist"); pg.click("[data-k=ok]")
@@ -131,7 +122,7 @@ with sync_playwright() as p:
     victims = [x for x in un if J.tracks[x].get("userFilename") in ("song4.mp3", "song5.mp3")]
     for v in victims: pg.locator("li[data-track='%s']" % v).click()
     pg.click("text=Supprimer du Jooki"); pg.click("[data-k=ok]")
-    J.wait(lambda: all(v not in J.tracks for v in victims))
+    J.poll(lambda: all(v not in J.tracks for v in victims))
     check("E10 delete forever from Unused (files erased)", all(v not in J.tracks and not os.path.exists("/jooki/external/jooki/uploads/" + v) for v in victims), victims)
     # E11 tokens
     # the screen is a grid of tiles; a tile opens the character's sheet (playlist, tokens, names)
@@ -143,24 +134,27 @@ with sync_playwright() as p:
     inp = pg.locator("[data-k='name-%s']" % tag)
     inp.fill("Dragon de Léo"); inp.press("Enter")
     J.wait(lambda: J.tokens[tag].get("name") == "Dragon de Léo")
-    inp = pg.locator("[data-k='name-%s']" % tag); inp.fill("Dragon de Léo"); inp.press("Enter"); time.sleep(0.8)
+    inp = pg.locator("[data-k='name-%s']" % tag); inp.fill("Dragon de Léo"); inp.press("Enter")
+    B.quiet(0.8, "the same name a second time must raise no error toast: there is nothing to wait for")
     errtoast = pg.locator(".toast.error").count()
     check("E11 naming a token (twice) works, no error", J.tokens[tag].get("name") == "Dragon de Léo" and errtoast == 0, (J.tokens[tag], errtoast))
     check("E11 naming does not steal the playlist", J.pls[pierre].get("star") == "Jooki.Dragon" and not J.pls[pierre].get("tagId"), J.pls[pierre])
-    pg.keyboard.press("Escape"); time.sleep(0.3)
-    pg.fill("[data-k=tokq]", "léo"); time.sleep(0.4)
+    pg.keyboard.press("Escape"); pg.wait_for_selector(".sheet", state="detached", timeout=5000)
+    pg.fill("[data-k=tokq]", "léo")
+    try: pg.wait_for_function("document.querySelectorAll('[data-char]').length === 1", timeout=5000)
+    except Exception: pass
     check("E11 search by a token's name keeps only its character", pg.locator("[data-char]").count() == 1 and pg.locator("[data-char='Jooki.Dragon']").count() == 1, pg.locator("[data-char]").count())
-    pg.fill("[data-k=tokq]", ""); time.sleep(0.4)
+    pg.fill("[data-k=tokq]", ""); pg.wait_for_function("document.querySelectorAll('[data-char]').length >= 6", timeout=5000)
     tri = pl_by_title("Chansons de marins")   # started by the Knight in the seed: taking it asks first
     pg.click("[data-char='Jooki.Black.Whale']"); pg.wait_for_selector("[data-char-select='Jooki.Black.Whale']")
     pg.select_option("[data-char-select='Jooki.Black.Whale']", tri)
     pg.wait_for_selector("[data-k=ok]"); asked = pg.locator(".sheet").inner_text(); pg.click("[data-k=ok]")
-    J.wait(lambda: J.pls[tri].get("star") == "Jooki.Black.Whale")
+    J.poll(lambda: J.pls[tri].get("star") == "Jooki.Black.Whale")
     check("E11 link a character to a playlist from the tokens page (asks when the playlist is taken)", "Chevalier" in asked and J.pls[tri].get("star") == "Jooki.Black.Whale", (asked, J.pls[tri]))
     if not pg.locator("[data-tag='04000000B00002'] button").count(): pg.click("[data-char='Jooki.Black.Whale']")   # the sheet comes back after the question
     pg.wait_for_selector("[data-tag='04000000B00002'] button")
     pg.locator("[data-tag='04000000B00002'] button").click(); pg.click("[data-k=ok]")
-    J.wait(lambda: "04000000B00002" not in J.tokens)
+    J.poll(lambda: "04000000B00002" not in J.tokens)
     check("E11 forget a token keeps the character's playlist", "04000000B00002" not in J.tokens and J.pls[tri].get("star") == "Jooki.Black.Whale", J.pls[tri])
     if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
     # E11b a foreign NFC tag (an amiibo): its own tile, linked like a character, then it plays
@@ -174,21 +168,21 @@ with sync_playwright() as p:
     pg.wait_for_selector("[data-k=ok]"); pg.click("[data-k=ok]")   # taken from the Black whale: asks
     J.wait(lambda: J.pls[tri].get("star") == fch)
     # E11c a photo for the tag: a red disc on white -> background removed in the browser -> 128 px PNG on the Jooki
-    import struct, zlib
-    def png(w, hgt, px):
-        raw = b"".join(b"\x00" + b"".join(px(x, y) for x in range(w)) for y in range(hgt))
-        def chunk(k, d): return struct.pack(">I", len(d)) + k + d + struct.pack(">I", zlib.crc32(k + d) & 0xffffffff)
-        return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, hgt, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
-    open("media/tag_photo.png", "wb").write(png(200, 160, lambda x, y: b"\xe0\x30\x20" if (x - 100) ** 2 + (y - 80) ** 2 < 55 ** 2 else b"\xff\xff\xff"))
+    photo = os.path.join(tempfile.gettempdir(), "oj-e2e-tag_photo.png")
+    open(photo, "wb").write(B.png(200, 160, lambda x, y: b"\xe0\x30\x20" if (x - 100) ** 2 + (y - 80) ** 2 < 55 ** 2 else b"\xff\xff\xff"))
     if not pg.locator("[data-k=photo]").count(): pg.click("[data-char='%s']" % fch)
     pg.wait_for_selector("[data-k=photo]", state="attached")
-    pg.set_input_files("[data-k=photo]", "media/tag_photo.png")
-    pg.wait_for_selector("[data-k=edsave]"); time.sleep(0.8)
-    pg.click("[data-k=edbg]"); time.sleep(0.5)
-    alpha = pg.evaluate("(function(){var c=document.querySelector('.edcanvas'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;var a=0;for(var i=3;i<d.length;i+=4)if(d[i]>200)a++;return a/(d.length/4);})()")
-    check("E11c the background is removed in the browser (most of the frame is transparent)", 0.02 < alpha < 0.5, alpha)
+    pg.set_input_files("[data-k=photo]", photo)
+    pg.wait_for_selector("[data-k=edsave]")
+    ALPHA = "(function(){var c=document.querySelector('.edcanvas');if(!c||!c.width)return null;var d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;var a=0;for(var i=3;i<d.length;i+=4)if(d[i]>200)a++;return a/(d.length/4);})()"
+    pg.wait_for_function(ALPHA + " > 0", timeout=10000)          # the photo is drawn on the editor's canvas
+    pg.click("[data-k=edbg]")
+    try: pg.wait_for_function(ALPHA + " < 0.5", timeout=10000)   # the background removal went through
+    except Exception: pass
+    alpha = pg.evaluate(ALPHA)
+    check("E11c the background is removed in the browser (most of the frame is transparent)", alpha is not None and 0.02 < alpha < 0.5, alpha)
     pg.click("[data-k=edsave]")
-    J.wait(lambda: (J.tokens.get(amiibo) or {}).get("image"), 15)
+    J.poll(lambda: (J.tokens.get(amiibo) or {}).get("image"), 15)
     img = (J.tokens.get(amiibo) or {}).get("image") or ""
     path = "/jooki/external/jooki/artwork/tok_%s.png" % amiibo
     check("E11c the photo is saved on the Jooki and linked to the tag", img.startswith("/artwork/tok_%s.png?v=" % amiibo) and os.path.exists(path) and 0 < os.path.getsize(path) < 40000, (img, os.path.exists(path) and os.path.getsize(path)))
@@ -198,20 +192,19 @@ with sync_playwright() as p:
     # a picture of the library instead of the photo: the photo's file goes
     pg.click("[data-k=libpick]"); pg.wait_for_selector(".libcell[data-img='unicorn']")
     pg.click(".libcell[data-img='unicorn']")
-    J.wait(lambda: (J.tokens.get(amiibo) or {}).get("image") == "lib:unicorn")
+    J.poll(lambda: (J.tokens.get(amiibo) or {}).get("image") == "lib:unicorn")
     check("E11c a library picture replaces the photo, whose file goes", (J.tokens.get(amiibo) or {}).get("image") == "lib:unicorn" and not os.path.exists(path),
           ((J.tokens.get(amiibo) or {}).get("image"), os.path.exists(path)))
     pg.wait_for_selector("[data-k=photo-remove]", timeout=10000)
     pg.click("[data-k=photo-remove]")
-    J.wait(lambda: not (J.tokens.get(amiibo) or {}).get("image"))
-    check("E11c removing the picture", not (J.tokens.get(amiibo) or {}).get("image"), J.tokens.get(amiibo))
+    R.expect("E11c removing the picture", lambda: not (J.tokens.get(amiibo) or {}).get("image"), 5, lambda: J.tokens.get(amiibo))
     if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
-    J.nfc_foreign(amiibo); J.wait(lambda: J.state["audio"]["nowPlaying"].get("playlistId") == tri)
-    check("E11b the linked foreign tag starts its playlist", J.pls[tri].get("star") == fch and J.state["audio"]["nowPlaying"].get("playlistId") == tri, (J.pls[tri], J.state["audio"].get("nowPlaying")))
+    J.nfc_foreign(amiibo); J.poll(lambda: J.np.get("playlistId") == tri)
+    check("E11b the linked foreign tag starts its playlist", J.pls[tri].get("star") == fch and J.np.get("playlistId") == tri, (J.pls[tri], J.np))
     # E22 flat tokens: one code (512) for all of them, but each one is its own tile; a picture from the library
     CAT, ELE = "04A1B2C3D49C41", "04A1B2C3D477A0"
-    J.nfc(CAT, "200"); J.wait(lambda: CAT in J.tokens); J.nfc_off(); J.settle()
-    J.nfc(ELE, "200"); J.wait(lambda: ELE in J.tokens); J.nfc_off(); J.settle()
+    J.nfc(CAT, "200"); J.wait(lambda: CAT in J.tokens); J.nfc_off(); J.wait(lambda: not J.nfc_state)
+    J.nfc(ELE, "200"); J.wait(lambda: ELE in J.tokens); J.nfc_off(); J.wait(lambda: not J.nfc_state)
     pg.goto(URL + "/#/tokens"); pg.wait_for_selector("[data-char='flat.%s']" % ELE)
     tcat = pg.locator("[data-char='flat.%s'] .title" % CAT).inner_text()
     check("E22 two flat tokens, two tiles, named by the part of their id that differs", pg.locator("[data-char='flat.%s']" % ELE).count() == 1 and tcat.strip().endswith("A1B2"), tcat)
@@ -219,11 +212,13 @@ with sync_playwright() as p:
     pg.click("[data-k=libpick]"); pg.wait_for_selector(".libcell[data-img]", timeout=10000)
     ncell = pg.locator(".libcell[data-img]").count()
     check("E22 the library opens with all its pictures, by family", ncell > 600 and pg.locator(".libcats button").count() >= 10, (ncell, pg.locator(".libcats button").count()))
-    pg.fill("[data-k=imgq]", "minou"); time.sleep(0.4)
+    pg.fill("[data-k=imgq]", "minou")
+    try: pg.wait_for_function("(function(){var e=Array.from(document.querySelectorAll('.libcell[data-img]'));return e.length>0&&e.length<=6&&e.every(function(x){return x.getAttribute('data-img').indexOf('cat')>=0;});})()", timeout=5000)
+    except Exception: pass
     hits = pg.locator(".libcell[data-img]").evaluate_all("els => els.map(e => e.getAttribute('data-img'))")
     check("E22 the search knows children's words ('minou' finds the cats)", "cat" in hits and 0 < len(hits) <= 6 and all("cat" in x for x in hits), hits)
     pg.click(".libcell[data-img='cat']")
-    J.wait(lambda: J.tokens[CAT].get("image") == "lib:cat")
+    J.poll(lambda: J.tokens[CAT].get("image") == "lib:cat")
     check("E22 the picture is set; the unnamed token takes its name", J.tokens[CAT].get("image") == "lib:cat" and J.tokens[CAT].get("name") == "Chat", J.tokens[CAT])
     if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
     # the round token's own picture is an <img> too: wait for the library one, loaded
@@ -231,13 +226,12 @@ with sync_playwright() as p:
     src = pg.locator("[data-char='flat.%s'] .tok img" % CAT).get_attribute("src")
     loaded = pg.evaluate("(function(){var i=document.querySelector(\"[data-char='flat.%s'] .tok img\");return i.complete && i.naturalWidth;})()" % CAT)
     check("E22 the tile shows the picture, served by the Jooki", src == "/tokimg/cat.webp" and loaded == 128, (src, loaded))
-    import urllib.request
     with urllib.request.urlopen(URL + "/tokimg/cat.webp") as r:
         check("E22 the Jooki serves the pictures as WebP the phone may keep", r.headers.get("Content-Type") == "image/webp" and "max-age" in (r.headers.get("Cache-Control") or ""), dict(r.headers))
     # E12 settings
     pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=shuffle]")
-    pg.click("[data-k=shuffle]"); J.wait(lambda: J.state["audio"]["config"].get("shuffle_mode") is True)
-    check("E12 shuffle toggle", J.state["audio"]["config"].get("shuffle_mode") is True, J.state["audio"]["config"])
+    pg.click("[data-k=shuffle]")
+    R.expect("E12 shuffle toggle", lambda: J.get("audio.config.shuffle_mode") is True, 5, lambda: J.get("audio.config"))
     check("E12 the settings page is short: the topics open on their own pages",
           pg.locator("[data-k=nightstart]").count() == 0 and pg.locator("[data-k=sshkey]").count() == 0 and pg.locator("a[href='#/settings/night']").count() == 1)
     pg.click("[data-k=langnav]"); pg.wait_for_url("**/#/settings/language")
@@ -263,45 +257,48 @@ with sync_playwright() as p:
     check("E16 update start: progress shown, the installer's failure reported clearly", True)
     # E17 bedtime settings (the page also sends the browser's time zone)
     pg.goto(URL + "/#/settings/night"); pg.wait_for_selector("[data-k=bedcard]")
-    J.wait(lambda: J.state.get("bedtime", {}).get("cfg", {}).get("tzbase") is not None)
+    J.wait(lambda: J.get("bedtime.cfg.tzbase") is not None)
     txt = pg.locator("[data-k=bedcard]").inner_text()
     check("E17 night mode shown with its defaults", "Mode nuit" in txt and pg.locator("[data-k=nightstart]").input_value() == "20:00"
           and pg.locator("[data-k=nightstop]").input_value() == "07:00" and pg.locator("[data-k=nighttimer]").input_value() == "20", txt[:200])
     pg.fill("[data-k=nightstart]", "19:45"); pg.locator("[data-k=nightstart]").dispatch_event("change")
     pg.select_option("[data-k=nighttimer]", "30")
-    J.wait(lambda: J.state["bedtime"]["cfg"]["start"] == 19 * 60 + 45 and J.state["bedtime"]["cfg"]["timer"] == 30)
-    check("E17 start time and automatic timer changed from the page", J.state["bedtime"]["cfg"]["start"] == 1185 and J.state["bedtime"]["cfg"]["timer"] == 30, J.state["bedtime"]["cfg"])
-    check("E17 time zone sent by the page (Paris)", J.state["bedtime"]["cfg"]["tzbase"] == 60 and J.state["bedtime"]["cfg"]["tzdst"] == "EU", J.state["bedtime"]["cfg"])
-    pg.click("[data-k=nighton]"); J.wait(lambda: J.state["bedtime"]["cfg"]["enabled"] is False)
+    cfg = lambda: J.get("bedtime.cfg", {})
+    R.expect("E17 start time and automatic timer changed from the page", lambda: cfg()["start"] == 1185 and cfg()["timer"] == 30, 5, cfg)
+    check("E17 time zone sent by the page (Paris)", cfg()["tzbase"] == 60 and cfg()["tzdst"] == "EU", cfg())
+    pg.click("[data-k=nighton]"); J.poll(lambda: cfg()["enabled"] is False)
     pg.wait_for_selector("[data-k=nightstart]", state="detached", timeout=5000)
-    check("E17 night mode can be turned off", J.state["bedtime"]["cfg"]["enabled"] is False and pg.locator("[data-k=nightstart]").count() == 0)
-    pg.click("[data-k=nighton]"); J.wait(lambda: J.state["bedtime"]["cfg"]["enabled"] is True)
+    check("E17 night mode can be turned off", cfg()["enabled"] is False and pg.locator("[data-k=nightstart]").count() == 0)
+    pg.click("[data-k=nighton]"); J.wait(lambda: cfg()["enabled"] is True)
     # E17 a topic page fades in once, not again at each message of the Jooki (2.2.0-2.2.4: it blinked)
     pg.wait_for_selector("[data-k=nightdim]")
     pg.evaluate("""window.__fades = 0; document.addEventListener('animationstart', function (e) {
       if (e.target.classList && e.target.classList.contains('settings')) window.__fades++; }, true)""")
-    dim0 = J.state["bedtime"]["cfg"].get("dim")
-    pg.click("[data-k=nightdim]"); J.wait(lambda: J.state["bedtime"]["cfg"].get("dim") != dim0)
-    pg.click("[data-k=nightdim]"); J.wait(lambda: J.state["bedtime"]["cfg"].get("dim") == dim0)
-    time.sleep(1)
+    dim0 = cfg().get("dim")
+    pg.click("[data-k=nightdim]"); J.wait(lambda: cfg().get("dim") != dim0)
+    pg.click("[data-k=nightdim]"); J.wait(lambda: cfg().get("dim") == dim0)
+    B.quiet(1, "the page must stay still while the Jooki's answers come in: a fade here is the bug")
     still = pg.evaluate("window.__fades")
     pg.click("a.icon-btn[href='#/settings']"); pg.wait_for_selector("a[href='#/settings/night']")
-    pg.click("a[href='#/settings/night']"); pg.wait_for_selector("[data-k=nightdim]"); time.sleep(0.5)
+    pg.click("a[href='#/settings/night']"); pg.wait_for_selector("[data-k=nightdim]")
+    try: pg.wait_for_function("window.__fades >= 1", timeout=5000)
+    except Exception: pass
+    B.quiet(0.3, "a second fade, the bug of 2.2.0-2.2.4, would follow the first one at once")
     check("E17 the night mode page stays still while the Jooki answers, and fades in once when opened",
           still == 0 and pg.evaluate("window.__fades") == 1, (still, pg.evaluate("window.__fades")))
     # E18 sleep timer from the player
     comp = pl_by_title("Comptines 2")
-    J.send("PLAYLIST_PLAY", {"playlistId": comp}); J.wait(lambda: J.state["audio"]["playback"].get("state") == "PLAYING")
+    J.send("PLAYLIST_PLAY", {"playlistId": comp}); J.wait_state("audio.playback.state", "PLAYING")
     pg.goto(URL + "/#/"); pg.click(".player .info"); pg.wait_for_selector("[data-sleep-min='20']")
     pg.click("[data-sleep-min='20']")
-    J.wait(lambda: (J.state["bedtime"].get("sleep") or {}).get("total") == 1200)
+    J.poll(lambda: J.get("bedtime.sleep.total") == 1200)
     pg.wait_for_function("document.querySelector('[data-sleep]') && /Arrêt dans (20:00|19:)/.test(document.querySelector('[data-sleep]').textContent)", timeout=5000)
-    check("E18 20-minute timer started, countdown shown", (J.state["bedtime"].get("sleep") or {}).get("total") == 1200)
+    check("E18 20-minute timer started, countdown shown", J.get("bedtime.sleep.total") == 1200)
     check("E18 moon + countdown in the player bar", pg.locator(".player .sleepmini").count() == 1)
-    pg.click("[data-k=sleepoff]"); J.wait(lambda: not J.state["bedtime"].get("sleep"))
+    pg.click("[data-k=sleepoff]"); J.poll(lambda: not J.get("bedtime.sleep"))
     pg.wait_for_selector(".player .sleepmini", state="detached", timeout=5000)
-    check("E18 timer cancelled", not J.state["bedtime"].get("sleep") and pg.locator(".player .sleepmini").count() == 0)
-    pg.click("[data-sleep-min='track']"); J.wait(lambda: (J.state["bedtime"].get("sleep") or {}).get("mode") == "track")
+    check("E18 timer cancelled", not J.get("bedtime.sleep") and pg.locator(".player .sleepmini").count() == 0)
+    pg.click("[data-sleep-min='track']"); J.wait(lambda: J.get("bedtime.sleep.mode") == "track")
     pg.wait_for_selector("text=Arrêt à la fin de ce morceau")
     check("E18 'end of chapter' timer", True)
     pg.click("[data-k=sleepoff]"); pg.keyboard.press("Escape")
@@ -313,23 +310,22 @@ with sync_playwright() as p:
     pg.click("[data-k=sortbtn]"); pg.wait_for_selector("[data-k=sortby-title]")
     pg.click("[data-k=sortby-title]"); pg.click("[data-k=sortok]")
     J.wait(lambda: J.pls[pierre]["tracks"] != shuffled)
-    titles = [J.tracks[x]["title"] for x in J.pls[pierre]["tracks"]]
+    titles = titles_of(pierre)
     check("E19 'sort by title' puts the chapters back in order", titles == sorted(titles, key=str.lower), titles)
     # the same criterion twice reverses the order; the preview and the button follow
     pg.click("[data-k=sortbtn]"); pg.wait_for_selector("[data-k=sortby-title]")
     pg.click("[data-k=sortby-title]"); pg.click("[data-k=sortby-title]"); pg.click("[data-k=sortok]")
-    J.wait(lambda: [J.tracks[x]["title"] for x in J.pls[pierre]["tracks"]] == sorted(titles, key=str.lower, reverse=True))
-    check("E19 second tap reverses the order", True)
+    R.expect("E19 second tap reverses the order", lambda: titles_of(pierre) == sorted(titles, key=str.lower, reverse=True), 5, lambda: titles_of(pierre))
     pg.click("[data-k=sortbtn]"); pg.wait_for_selector("[data-k=sortby-title]")
     pg.click("[data-k=sortby-title]"); pg.click("[data-k=sortok]")
-    J.wait(lambda: [J.tracks[x]["title"] for x in J.pls[pierre]["tracks"]] == sorted(titles, key=str.lower))
-    J.send("PLAYLIST_PLAY", {"playlistId": pierre, "trackIndex": 3}); J.wait(lambda: J.state["audio"]["nowPlaying"].get("trackIndex") == 3)
-    J.send("SEEK", {"position_ms": 65000}); time.sleep(1.5); J.send("DO_PAUSE", {})
+    J.wait(lambda: titles_of(pierre) == sorted(titles, key=str.lower))
+    J.send("PLAYLIST_PLAY", {"playlistId": pierre, "trackIndex": 3}); J.wait(lambda: J.np.get("trackIndex") == 3)
+    J.send("SEEK", {"position_ms": 65000}); J.wait(lambda: J.get("audio.playback.position_ms", 0) >= 65000); J.send("DO_PAUSE", {})
     pg.wait_for_function("document.querySelector('[data-k=resume]') && /chapitre 3 · 0:5/.test(document.querySelector('[data-k=resume]').textContent)", timeout=8000)
     rtxt = pg.locator("[data-k=resume]").inner_text()
     check("E19 resume shown: chapter 3 at 0:50", "chapitre 3" in rtxt and "0:5" in rtxt, rtxt)
     pg.click("[data-k=resumereset]"); pg.wait_for_selector("text=Reprendra au chapitre 1")
-    check("E19 start again from the beginning", pierre not in (J.state["bedtime"].get("resume") or {}))
+    check("E19 start again from the beginning", pierre not in (J.get("bedtime.resume") or {}))
     # E20 weak Wi-Fi: the transfer is cut twice, then goes through on its own
     comp = pl_by_title("Comptines 3"); n0 = len(J.pls[comp]["tracks"])
     cuts = {"n": 0, "max": 2}
@@ -341,7 +337,7 @@ with sync_playwright() as p:
     pg.set_input_files("input[type=file]", ["media/song6.mp3"])
     pg.wait_for_selector("text=nouvel essai", timeout=10000)
     pg.wait_for_selector(".up.done", timeout=60000)
-    J.wait(lambda: len(J.pls[comp]["tracks"]) == n0 + 1)
+    J.poll(lambda: len(J.pls[comp]["tracks"]) == n0 + 1)
     check("E20 upload cut twice by the network: retried on its own and added once", cuts["n"] == 2 and len(J.pls[comp]["tracks"]) == n0 + 1, (cuts, len(J.pls[comp]["tracks"])))
     cuts.update(n=0, max=4)
     pg.set_input_files("input[type=file]", ["media/song3.mp3"])
@@ -349,8 +345,7 @@ with sync_playwright() as p:
     check("E20 still failing after 4 tries: clear error + 'Réessayer'", cuts["n"] == 4 and pg.locator(".up.error").count() >= 1)
     pg.locator("[data-k^=upretry]").first.click()
     pg.wait_for_function("document.querySelectorAll('.up.done').length >= 2", timeout=60000)
-    J.wait(lambda: len(J.pls[comp]["tracks"]) == n0 + 2)
-    check("E20 'Réessayer' sends it", len(J.pls[comp]["tracks"]) == n0 + 2, len(J.pls[comp]["tracks"]))
+    R.expect("E20 'Réessayer' sends it", lambda: len(J.pls[comp]["tracks"]) == n0 + 2, 5, lambda: len(J.pls[comp]["tracks"]))
     pg.unroute("**/upload")
     # E21 Wi-Fi quality in the settings
     J.c.publish("/j/esp32/input/net/sta/config", json.dumps({"ssid": "Box", "signal": -84, "stat": "success", "ip": "10.0.0.2"}))
@@ -378,36 +373,31 @@ with sync_playwright() as p:
     # E23 the Christmas tree (OpenJooki 2 core only): 5 s of colours on the lights, then back to normal
     pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=langnav]", timeout=15000)
     if pg.locator("[data-k=party]").count():
-        import paho.mqtt.client as mqtt
-        leds = []
-        spy = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "e2e-leds")
-        spy.on_message = lambda c, u, m: leds.append((time.time(), m.payload.decode(errors="replace")))
-        spy.connect("127.0.0.1", 1883); spy.subscribe("/j/led/output/set_raw"); spy.loop_start(); time.sleep(0.3)
-        pg.click("[data-k=party]"); time.sleep(6.5); spy.loop_stop(); spy.disconnect()
-        rings = [p for t, p in leds if p.startswith("RING,")]
-        check("E23 the Christmas tree runs through many colours on the ring", len(set(rings)) >= 6, rings[:12])
-        # white (idle), off (a token plays) or dimmed white (night): anything but a rainbow colour
-        check("E23 then the ring goes back to its real colour", rings and rings[-1] in ("RING,200,200,200", "RING,0,0,0", "RING,10,10,10"), rings[-3:])
+        NORMAL = ("RING,200,200,200", "RING,0,0,0", "RING,10,10,10")   # white (idle), off (a token plays) or dimmed white (night)
+        spy = B.Spy("/j/led/output/set_raw", name="e2e-leds")
+        def rings(): return [p for t, p in spy.since() if p.startswith("RING,")]
+        pg.click("[data-k=party]")
+        # the show is over once the ring is back to a real colour and nothing has followed for a while
+        B.poll(lambda: len(set(rings())) >= 6 and rings()[-1] in NORMAL and time.time() - spy.last_time() > 0.7, 10)
+        shown = rings(); spy.close()
+        check("E23 the Christmas tree runs through many colours on the ring", len(set(shown)) >= 6, shown[:12])
+        check("E23 then the ring goes back to its real colour", shown and shown[-1] in NORMAL, shown[-3:])
     # E25 discs: FLAC (24 bit / 96 kHz) turned into MP3 in the browser, tags and a small cover kept
-    def probe(path):
-        r = subprocess.run(["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", path], capture_output=True, text=True)
-        try: return json.loads(r.stdout)
-        except Exception: return {}
     FLAC1 = "media/Disque FLAC/b - première.flac"
-    pid = J.pls and [k for k, v in J.pls.items() if k != "TRASH" and not v.get("spotify")][0]
+    pid = pl_by_title("Comptines 1")
     pg.goto(URL + "/#/p/" + pid); pg.wait_for_selector("input[type=file]", state="attached", timeout=15000)
     n0 = len(J.pls[pid]["tracks"])
     pg.set_input_files("input[type=file]", [FLAC1])
-    seen_conv = False
-    for _ in range(240):
-        if pg.locator(".up.converting").count(): seen_conv = True
-        if len(J.pls[pid]["tracks"]) > n0: break
-        time.sleep(0.25)
+    seen = {"conv": False}
+    def arrived():
+        if pg.locator(".up.converting").count(): seen["conv"] = True
+        return len(J.pls[pid]["tracks"]) > n0
+    B.poll(arrived, 60, every=0.25)
     new = J.pls[pid]["tracks"][-1] if len(J.pls[pid]["tracks"]) > n0 else None
     tr = J.tracks.get(new, {}) if new else {}
-    check("E25 a FLAC sent from the page arrives as an MP3, converted in the browser", tr.get("codec2") == "mp3" and seen_conv, (seen_conv, tr))
+    check("E25 a FLAC sent from the page arrives as an MP3, converted in the browser", tr.get("codec2") == "mp3" and seen["conv"], (seen["conv"], tr))
     check("E25 ... with its tags (title, artist, album)", tr.get("title") == "Première piste" and tr.get("artist") == "Les Testeurs" and tr.get("album") == "Disque d'essai", tr)
-    pr = probe(tr.get("filename") or "")
+    pr = B.ffprobe(tr.get("filename") or "")
     st = [s for s in pr.get("streams", []) if s.get("codec_type") == "audio"]
     pic = [s for s in pr.get("streams", []) if s.get("codec_type") == "video"]
     tags = {k.lower(): v for k, v in (pr.get("format", {}).get("tags") or {}).items()}
@@ -425,11 +415,11 @@ with sync_playwright() as p:
     check("E25 the playlists page offers 'Ajouter des disques' and a drop zone for folders on a computer",
           dpg.locator("[data-k=discadd]").count() == 1 and dpg.locator("[data-k=discdrop]").count() == 1)
     dpg.set_input_files("[data-k=discinput]", "media/Disque FLAC")
-    disc = None
-    for _ in range(360):
+    def disc_done():
         disc = pl_by_title("Disque d'essai")
-        if disc and len(J.pls[disc]["tracks"]) >= 2 and not dpg.locator(".up.converting, .up.uploading").count(): break
-        time.sleep(0.25)
+        return disc and len(J.pls[disc]["tracks"]) >= 2 and not dpg.locator(".up.converting, .up.uploading").count()
+    B.poll(disc_done, 90, every=0.25)
+    disc = pl_by_title("Disque d'essai")
     titles = [J.tracks.get(x, {}).get("title") for x in (J.pls[disc]["tracks"] if disc else [])]
     check("E25 ... a playlist 'Disque d'essai' with its 2 tracks in disc order (not file-name order)", titles == ["Première piste", "Deuxième piste"], titles)
     dpg.wait_for_function("document.querySelector('[data-k=discs]') && /2 \\/ 2/.test(document.querySelector('[data-k=discs]').textContent)", timeout=30000)
@@ -437,13 +427,13 @@ with sync_playwright() as p:
           and all(J.tracks.get(x, {}).get("codec2") == "mp3" for x in J.pls[disc]["tracks"]), dpg.locator("[data-k=discs]").inner_text())
     dctx.close()
     # E14 offline / reconnect
-    subprocess.run(["pkill", "-f", "^mosquitto -c"]); time.sleep(2.5)
+    B.kill_brokers()
+    pg.wait_for_function("document.querySelector('.conn') && !document.querySelector('.conn').classList.contains('on')", timeout=20000)
     off = pg.locator(".conn").inner_text()
-    subprocess.Popen(["mosquitto","-c","mosquitto.conf"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True); time.sleep(1)
-    subprocess.run(["./start_player.sh", LUA], capture_output=True)
+    B.start_broker()
+    B.start_core(config=CFG)
     pg.wait_for_function("document.querySelector('.conn') && document.querySelector('.conn').classList.contains('on')", timeout=20000)
     check("E14 shows offline and reconnects by itself", "Hors ligne" in off and pg.locator(".conn").inner_text().strip() == "Connecté", off)
     check("E15 no JavaScript errors", not errs, errs)
     b.close()
-bad = [n for n, ok in R if not ok]
-print("\n%d/%d passed" % (len(R) - len(bad), len(R))); sys.exit(1 if bad else 0)
+R.finish()

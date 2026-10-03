@@ -11,10 +11,10 @@ It drives the real Lua adapter on a test port and checks, over real HTTP:
 
   python3 test_httpd.py         (needs lua5.1 + LuaSocket, both on the bench)
 """
-import http.client, os, shutil, socket, subprocess, sys, tempfile, time
+import http.client, os, shutil, socket, subprocess, tempfile
+import bench as B
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+REPO = B.REPO
 
 DRIVER = r"""
 package.path = (os.getenv("OJ_CORE") or ".") .. "/?.lua;" .. package.path
@@ -42,16 +42,28 @@ end
 """
 
 PORT = 8099
-FAILS = []
-TOTAL = 0
+R = B.Results(limit=0, lead="")
+check = R.check
 
 
-def check(name, ok, detail=""):
-    global TOTAL
-    TOTAL += 1
-    print(("PASS " if ok else "FAIL ") + name + ("" if ok else "  -> " + str(detail)))
-    if not ok:
-        FAILS.append(name)
+def ready(p, t=10):
+    """READY on the driver's stdout within t s; on failure its stderr, read once it is stopped
+    (a live child never closes it)."""
+    try:
+        B.wait_line(p, "READY", t)
+        return True, ""
+    except B.WaitTimeout as e:
+        p.terminate()
+        return False, "%s\n%s" % (e, p.stderr.read()[-800:])
+
+
+def status(port):
+    try:
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
+        c.request("GET", "/"); r = c.getresponse(); r.read(); c.close()
+        return r.status
+    except OSError:
+        return None
 
 
 def get(path, host=None, method="GET", body=None, headers=None):
@@ -91,18 +103,14 @@ def port_taken_at_start():
     p = subprocess.Popen(["lua5.1", drv, str(port), docroot, work, "retry"],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
     try:
-        ready = "READY" in (p.stdout.readline() or "")
-        check("port taken at start: the core keeps running", ready and p.poll() is None, p.poll())
+        ok, err = ready(p)
+        check("port taken at start: the core keeps running", ok and p.poll() is None, (p.poll(), err))
         holder.close()
-        t0, st = time.time(), None
-        while time.time() - t0 < 12 and st != 200:
-            time.sleep(0.5)
-            try:
-                c = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
-                c.request("GET", "/"); r = c.getresponse(); st = r.status; r.read(); c.close()
-            except OSError:
-                pass
-        check("port freed: the page comes back by itself (within the 5 s retry)", st == 200, st)
+        got = {}
+        def back():
+            got["st"] = status(port); return got["st"] == 200
+        B.poll(back, 12, every=0.5)
+        check("port freed: the page comes back by itself (within the 5 s retry)", got.get("st") == 200, got.get("st"))
     finally:
         p.terminate()
         try:
@@ -129,16 +137,15 @@ def restart_right_after_serving():
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
     p = run()
     try:
-        p.stdout.readline(); time.sleep(0.2)
+        ready(p)
         for _ in range(3):
             c = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
             c.request("GET", "/"); c.getresponse().read(); c.close()
-        time.sleep(0.3)
+        B.quiet(0.3, "the connections just closed must be sitting in TIME_WAIT when the server stops")
         p.terminate(); p.wait(timeout=3)
         p = run()
-        line = p.stdout.readline()
-        err = "" if "READY" in line else p.stderr.read()
-        check("restart right after serving: the new server binds at once (no 'address in use')", "READY" in line, err)
+        ok, err = ready(p)
+        check("restart right after serving: the new server binds at once (no 'address in use')", ok, err)
     finally:
         p.terminate()
         try:
@@ -171,22 +178,10 @@ def main():
     p = subprocess.Popen(["lua5.1", drv, str(PORT), docroot, uploads],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
     try:
-        # wait for READY
-        ready = False
-        t0 = time.time()
-        while time.time() - t0 < 10:
-            line = p.stdout.readline()
-            if not line:
-                break
-            if "READY" in line:
-                ready = True
-                break
-        if not ready:
-            err = p.stderr.read() if p.stderr else ""
-            check("httpd starts", False, err)
+        ok, err = ready(p)
+        check("httpd starts", ok, err)
+        if not ok:
             raise SystemExit(1)
-        check("httpd starts", True)
-        time.sleep(0.3)
 
         st, body = get("/")
         check("GET / serves index.html", st == 200 and body == index, (st, len(body)))
@@ -266,11 +261,7 @@ def main():
 
     port_taken_at_start()
     restart_right_after_serving()
-    print("%d/%d passed" % (TOTAL - len(FAILS), TOTAL))
-    if FAILS:
-        print("FAILED: " + ", ".join(FAILS))
-        sys.exit(1)
-    print("OK: adapters.httpd verified (page, upload, and /ll + /cmd are gone)")
+    R.finish(list_failed=True, ok_line="OK: adapters.httpd verified (page, upload, and /ll + /cmd are gone)")
 
 
 if __name__ == "__main__":

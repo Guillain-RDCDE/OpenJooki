@@ -12,8 +12,9 @@ def on_msg(cl, u, m):
     elif cmd == "cont" and st["id"] is not None: st.update(playing=True, t=time.time()); pub("playing")
     elif cmd == "stop" and st["id"] is not None: st["playing"] = False; pub("stopped")
     elif cmd == "seek": st.update(pos=int(parts[1]), t=time.time()); pub("position", pos=st["pos"])
-c.on_message = on_msg
-c.on_connect = lambda cl, u, f, rc, pr=None: cl.subscribe("/j/audio/out/#")
+def on_connect(cl, u, f, rc, pr=None):
+    cl.subscribe("/j/audio/out/#"); print("connected", flush=True)     # up.sh waits for this line
+c.on_message = on_msg; c.on_connect = on_connect
 c.connect("127.0.0.1", 1883); c.loop_start()
 while True:
     time.sleep(1)

@@ -6,13 +6,12 @@ Covers: no Web Bluetooth, find + scan (sorted, one per name, open network, empty
 remembered networks, password guard, good password, wrong password (chip says AuthError), network
 not found, chip silent (timeout), a Bluetooth read failing once, the handshake before every set-up,
 forget (confirmed / cancelled), Bluetooth off."""
-import os, sys, threading, http.server, functools
+import os, threading, http.server, functools
 from playwright.sync_api import sync_playwright
+import bench as B
 
-DOCS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "docs")
-R = []
-def check(n, c, info=""):
-    R.append((n, bool(c))); print(("PASS " if c else "FAIL ") + n + ("" if c else "  -> " + str(info)[:300]), flush=True)
+DOCS = os.path.join(B.REPO, "docs")
+R = B.Results(); check = R.check
 
 MOCK = r"""
 (function () {
@@ -181,7 +180,7 @@ with sync_playwright() as p:
     before = pg.locator("[data-forget]").evaluate_all("els => els.map(e => e.getAttribute('data-forget'))")
     accept["v"] = False
     pg.click("[data-forget='Old box']")
-    pg.wait_for_timeout(300)
+    B.quiet(0.3, "cancelled: nothing must change, so there is nothing to wait for")
     known = pg.locator("[data-forget]").evaluate_all("els => els.map(e => e.getAttribute('data-forget'))")
     check("W10 forget asks first; cancelled = nothing changes", len(dialogs) == 1 and "Old box" in dialogs[0] and known == before and "Old box" in before, (dialogs, known, before))
     accept["v"] = True
@@ -192,7 +191,9 @@ with sync_playwright() as p:
     # W11 the chooser closed without a choice: no error shown
     pg.evaluate("window.__jooki.cancel = true"); pg.click("#again"); pg.evaluate("document.getElementById('device') || null")
     pg2 = ctx.new_page(); pg2.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
-    pg2.goto(URL); pg2.evaluate("window.__jooki.cancel = true"); pg2.click("#find"); pg2.wait_for_timeout(300)
+    pg2.goto(URL); pg2.evaluate("window.__jooki.cancel = true"); pg2.click("#find")
+    pg2.wait_for_function("!!window.__jooki.request")        # the chooser was asked (and closed by the mock)
+    B.quiet(0.3, "an error, had the page shown one, would follow the closed chooser at once")
     check("W11 closing the chooser shows no error", pg2.locator("#err").is_hidden() and pg2.locator("#step1").is_visible())
     # W12 Bluetooth off
     pg3 = ctx.new_page(); pg3.add_init_script("navigator.bluetooth.available = false")
@@ -200,5 +201,4 @@ with sync_playwright() as p:
     check("W12 Bluetooth off is said plainly", "Bluetooth is off" in pg3.locator("#etitle").inner_text())
     check("W13 no page error", not errs, errs)
     b.close()
-print("\n%d/%d passed" % (sum(1 for _, ok in R if ok), len(R)))
-sys.exit(0 if all(ok for _, ok in R) else 1)
+R.finish()

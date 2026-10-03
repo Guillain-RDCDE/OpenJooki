@@ -71,7 +71,7 @@ describe("kernel.loop", function()
     local published_patches = {}
     loop.init(A, {
       translate = function(topic, payload) if topic == "/j/nfc/input/tag" then return { type = "nfc.tag", uid = payload } end end,
-      publisher = function(doc, keys) published_patches[#published_patches + 1] = keys; return { { kind = "bus.publish", topic = "/state", payload = state.patch(keys) } } end,
+      publisher = function(doc, keys) published_patches[#published_patches + 1] = keys; return { { kind = "bus.publish", topic = "/state", payload = { rev = doc.rev, keys = keys } } } end,
     })
     A.bus:receive("/j/nfc/input/tag", "04AA")
     A.bus:receive("/j/other", "ignored")

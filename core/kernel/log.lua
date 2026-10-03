@@ -81,6 +81,4 @@ end
 --- A sink that writes to stdout (one line per call).
 function log.stdout_sink(line) io.write(line, "\n") end
 
-log.LEVELS = LEVELS
-log.SEVERITY = SEVERITY
 return log

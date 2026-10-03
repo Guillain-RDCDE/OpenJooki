@@ -95,11 +95,7 @@ function bus_events.translate(topic, payload)
     if dz == "now_playing" then return { type = "deezer.now_playing", data = d } end
     return { type = "deezer." .. dz }
   end
-  local dhcp = topic:match("^/j/net/dhcp/(%w+)$")
-  if dhcp then return { type = "net.dhcp", event = dhcp } end
   if topic == "/j/event" then return { type = "system.event", name = tostring(payload) } end
-  if topic == "/j/mender/shutdown_app" then return { type = "mender.shutdown" } end
-  if topic == "/j/mender" then return { type = "mender", raw = tostring(payload) } end
   local v1 = topic:match("^/j/web/input/(.+)$")
   if v1 then return { type = "v1.cmd", name = v1, raw = payload } end
   return nil

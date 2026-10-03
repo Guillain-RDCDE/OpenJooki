@@ -112,8 +112,4 @@ function commands.execute(adapters, list)
   return ctx
 end
 
-commands.KINDS = {}
-for k in pairs(executors) do commands.KINDS[#commands.KINDS + 1] = k end
-table.sort(commands.KINDS)
-
 return commands

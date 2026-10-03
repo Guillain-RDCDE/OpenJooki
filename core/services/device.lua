@@ -14,7 +14,6 @@ local LED = "/j/led/output/"
 local COLOURS = { WHITE = { 200, 200, 200 }, BLACK = { 0, 0, 0 }, RED = { 200, 0, 0 }, GREEN = { 0, 200, 0 },
                   BLUE = { 0, 0, 200 }, YELLOW = { 200, 200, 0 }, ORANGE = { 200, 40, 0 }, LO_ORANGE = { 50, 10, 0 },
                   LIGHTBLUE = { 0, 10, 200 } }
-device.COLOURS = COLOURS
 
 local function copy(v)
   if type(v) ~= "table" then return v end

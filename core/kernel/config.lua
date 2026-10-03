@@ -38,11 +38,7 @@ config.defaults = {
   -- loop
   tick_s = 0.5,                               -- longest wait when nothing is due
   state_publish_min_interval_s = 0.25,        -- coalescing window for state patches
-  state_full_interval_s = 60,                 -- full state re-sent to subscribed pages
   error_budget_per_minute = 20,               -- a handler over budget is disabled
-  -- files
-  save_interval_s = 1,                        -- dirty files flushed at most once a second
-  sync_min_interval_s = 5,                    -- "sync" process at most every 5 s, and at shutdown
   -- power (from the original program, docs/22 §3.6)
   inactivity_warn_s = 14 * 60,
   inactivity_off_s = 15 * 60,

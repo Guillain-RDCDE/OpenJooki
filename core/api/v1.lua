@@ -19,7 +19,6 @@ if not has_streaming then
   local off = function() return nil, { code = "unavailable", field = "", message = "streaming not built in" } end
   streaming = { on_new_spotify_playlist = off, on_deezer_get_playlists = off, on_deezer_set_cfg = off }
 end
-local schema = require("api.schema")
 local v1 = {}
 
 v1.TOPIC_STATE, v1.TOPIC_ERROR = "/j/web/output/state", "/j/web/output/error"
@@ -153,7 +152,6 @@ H.PLAYLIST_UPDATE = function(doc, p)
   if pl.tracks ~= nil and type(pl.tracks) ~= "table" then return nil, { code = "invalid_argument", field = "tracks", message = "invalid tracks" } end
   if pl.title ~= nil and type(pl.title) ~= "string" then return nil, { code = "invalid_argument", field = "title", message = "invalid title type" } end
   local star = pl.star
-  if pl.tagId and not star then star = nil end
   local r, err = lib(doc, { playlists = true, tracks = true }, function(l)
     local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, tracks = pl.tracks }
     if pl.tagId and star == nil and pl.star == nil then
@@ -260,7 +258,6 @@ H.OJ_SSH_KEY = function(doc, p) return security.on_ssh_key(doc, { key = p.key, c
 H.OJ_MQTT_LAN = function(doc, p) return security.on_mqtt_lan(doc, { on = p.on == true }) end
 H.OJ_PARENT_SET = function(doc, p) return security.on_parent_set(doc, { code = p.code, current = p.current }) end
 H.OJ_PARENT_CLEAR = function(doc, p) return security.on_parent_clear(doc, { current = p.current }) end
-v1.handlers = H
 
 -- Parent code (docs/adr/0007): when a code is set, the page must carry it to change
 -- anything (delete a playlist, change Wi-Fi, start an update, flip a switch...).
@@ -337,5 +334,4 @@ function v1.install(dispatch)
   dispatch.on("upload.done", "v1", v1.on_upload_done)
 end
 
-v1.schema = schema
 return v1

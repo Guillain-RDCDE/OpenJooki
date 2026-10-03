@@ -29,7 +29,6 @@ function bus.new(opts)
   }, bus)
 end
 
-function bus:socket() return self.up and self.sock or nil end
 function bus:connected() return self.up end
 
 local function send(self, data)
@@ -160,7 +159,7 @@ function bus:publish(topic, payload)
     if drop(self, "publish failed: " .. tostring(err)) then self.next_attempt = self.last_sent + self.min_backoff end
     return nil, err
   end
-  self.last_sent = self.last_sent   -- publish does not count as a ping for the broker
+  -- (last_sent is left alone: a publish does not count as a ping for the broker)
   return true
 end
 

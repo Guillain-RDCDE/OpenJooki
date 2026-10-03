@@ -32,7 +32,6 @@ local function deep_copy(v)
   for k, x in pairs(v) do out[k] = deep_copy(x) end
   return out
 end
-library.copy = deep_copy
 
 local function used_track_ids(lib)
   local used = {}
@@ -68,12 +67,6 @@ function ops.playlist_for(lib, star, uid)
   return nil
 end
 
-function ops.user_playlist_ids(lib)
-  local out = {}
-  for id in pairs(lib.playlists) do if id ~= TRASH and id ~= SYSTEM then out[#out + 1] = id end end
-  table.sort(out)
-  return out
-end
 
 -- ------------------------------------------------------------------ maintenance
 function ops.rebuild_trash(lib)

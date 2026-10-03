@@ -69,8 +69,7 @@ local bus = require("adapters.bus").new({
   client_id = config.get("mqtt_client_id"), keepalive = config.get("mqtt_keepalive_s"),
   min_backoff = config.get("mqtt_reconnect_min_s"), max_backoff = config.get("mqtt_reconnect_max_s"),
   topics = { api.TOPIC_CMD, "/j/web/input/#", "/j/audio/input/#", "/j/nfc/input/#", "/j/gpio/input/#",
-             "/j/power/input/#", "/j/esp32/input/#", "/j/net/dhcp/#", "/j/event", "/j/mender", "/j/mender/shutdown_app",
-             "/j/spotify/input/#", "/j/deezer/input/#" },
+             "/j/power/input/#", "/j/esp32/input/#", "/j/event", "/j/spotify/input/#", "/j/deezer/input/#" },
 })
 local mdns = require("adapters.mdns").new()
 -- the broker has no other keeper (on a Jooki; on the bench only when a test asks for it)

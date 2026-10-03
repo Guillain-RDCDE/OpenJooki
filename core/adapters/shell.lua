@@ -30,11 +30,8 @@ shell.ACTIONS = {
   sync           = { argv = function() return { "sync" } end },
   probe_audio    = { argv = function(a) if not (is_path(a.file) and is_path(a.image) and is_path(a.out)) then return nil, "bad path" end
                              return { "/jooki/app/services/ml-audio-probe-wrapper.sh", a.file, a.image, a.out } end },
-  artwork        = { argv = function(a) if not (is_path(a.file) and is_path(a.out)) then return nil, "bad path" end
-                             return { "ffmpeg", "-loglevel", "error", "-i", a.file, "-f", "image2", "-sn", "-an", "-dn", "-vcodec", "copy", a.out } end },
   set_lang       = { argv = function(a) if not is_lang(a.lang) then return nil, "bad lang" end return { "/jooki/app/services/lang_set.sh", a.lang } end },
   toysafe_update = { argv = function() return { "/jooki/app/services/toy_safe_update.sh" } end },
-  errorbeep      = { argv = function() return { "/jooki/app/services/errorbeep.sh" } end },
   speak_info     = { argv = function() return { "/jooki/app/services/speak_info.sh" } end, background = true },
   radio          = { argv = function(a) return { "/jooki/app/services/radio.sh", a.wifi and "true" or "false", a.bt and "true" or "false" } end },
   -- the phone's time while the Jooki's own clock is unset (services.device on_clock): whole UTC seconds, 2024-2099
@@ -42,7 +39,6 @@ shell.ACTIONS = {
                              if type(u) ~= "number" or u ~= math.floor(u) or u < 1704067200 or u >= 4102444800 then return nil, "bad time" end
                              return { "date", "-u", "-s", "@" .. string.format("%d", u) } end },
   power_overheat = { argv = function() return { "/jooki/app/services/power_overheat.sh" } end, background = true },
-  factory_reset  = { argv = function() return { "/jooki/app/services/factory_reset.sh" } end },
   -- the broker, when the core cannot reach it (adapters.broker_watch): started again only if it is not
   -- running, exactly as /etc/rcS.d/S58_mosquitto.sh starts it at boot
   -- The hardware controllers stop "cleanly" (exit 0) when the broker goes, and their launcher only
@@ -77,7 +73,6 @@ elif $C remove_ap mnet2 >/dev/null 2>&1; then R=removed; fi
 logger -t openjooki-core "info network.factory_network result=\"$R\""
 echo "$R"]] } end, background = true },
   poweroff       = { argv = function() return { "/sbin/poweroff" } end },
-  reboot         = { argv = function() return { "/sbin/reboot" } end },
   -- the Wi-Fi watchdog's restart (services.network): never during an OpenJooki update
   watchdog_reboot = { argv = function() return { "sh", "-c", [[
 if [ -e /tmp/oj-updating ]; then rm -f /data/openjooki/quiet_boot; echo updating; exit 0; fi

@@ -487,11 +487,8 @@ function playback.install(api, dispatch)
   dispatch.on("boot", "playback", playback.on_boot)
   dispatch.on("playback.request", "playback", playback.on_request)
   dispatch.on("playback.pause_request", "playback", playback.on_pause)
-  dispatch.on("playback.resume_request", "playback", playback.on_resume)
-  dispatch.on("playback.toggle", "playback", playback.on_toggle)
   dispatch.on("playback.next", "playback", playback.on_next)
   dispatch.on("playback.prev", "playback", playback.on_prev)
-  dispatch.on("playback.stop", "playback", playback.on_stop)
   for _, k in ipairs({ "starting", "playing", "paused", "stopped", "ended", "position" }) do
     dispatch.on("audio." .. k, "playback", playback.on_audio)
   end
@@ -511,7 +508,6 @@ function playback.install(api, dispatch)
   api.command("playback.skip", S.skip, function(doc, p) return playback.on_skip(doc, { seconds = p.seconds }) or {} end)
   api.command("playback.stop", nil, function(doc) return playback.on_stop(doc) or {} end)
   api.command("playback.resume_reset", S.playlist, function(doc, p) return playback.on_resume_reset(doc, p.playlist) end)
-  playback.start = start
 end
 
 playback.MUSIC, playback.SOUND = MUSIC, SOUND

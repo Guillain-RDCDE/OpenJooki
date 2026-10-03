@@ -177,10 +177,8 @@ function security.install(_, dispatch)
   security._files = require("adapters.files")
   dispatch.on("boot", "security", security.on_boot)
   dispatch.on("timer", "security", security.on_timer)
-  dispatch.on("security.ssh", "security", security.on_ssh)
-  dispatch.on("security.ssh_key", "security", security.on_ssh_key)
-  dispatch.on("security.mqtt_lan", "security", security.on_mqtt_lan)
-  dispatch.on("security.parent_set", "security", security.on_parent_set)
+  -- the page's switches arrive through api.v1, which calls the handlers above directly;
+  -- only the physical reset (services.device) comes as an event
   dispatch.on("security.parent_clear", "security", security.on_parent_clear)
 end
 

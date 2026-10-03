@@ -4,7 +4,7 @@ stubs, against a real mosquitto, then talk v2 to it and measure the budgets.
 Checks: boots, answers state.get, rejects a bad command with a typed error,
 publishes patches with increasing rev, idle bus traffic under budget, no shell
 process started, memory under budget, stops cleanly on SIGTERM."""
-import json, os, signal, subprocess, sys, time
+import json, os, subprocess, sys, time
 import paho.mqtt.client as mqtt
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))

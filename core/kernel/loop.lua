@@ -22,7 +22,6 @@ local pending = {}           -- events queued for the next turn
 local last_publish = -1
 local dirty_pending = {}
 local stopped = nil
-local turns = 0
 
 function loop.init(adapters, opts)
   A = adapters
@@ -32,12 +31,11 @@ function loop.init(adapters, opts)
   each_turn = opts.each_turn
   io_sources = opts.io_sources
   io_ready = opts.io_ready
-  pending, dirty_pending, stopped, turns, last_publish = {}, {}, nil, 0, -1
+  pending, dirty_pending, stopped, last_publish = {}, {}, nil, -1
 end
 
 function loop.emit(event) pending[#pending + 1] = event end
 function loop.stopped() return stopped end
-function loop.turns() return turns end
 
 local function merge_dirty(keys)
   for _, k in ipairs(keys) do dirty_pending[k] = true end
@@ -67,7 +65,6 @@ end
 
 --- One turn of the loop. `wait` = max seconds to wait for bus data (default: until next timer).
 function loop.step(wait)
-  turns = turns + 1
   local now = A.clock.now()
   local transition = A.bus:maintain(now)
   if transition then pending[#pending + 1] = { type = "bus." .. transition, now = now } end

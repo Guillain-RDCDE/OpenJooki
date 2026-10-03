@@ -162,5 +162,4 @@ function files.flag(name, set)
   return true
 end
 
-files.adler32 = adler32
 return files

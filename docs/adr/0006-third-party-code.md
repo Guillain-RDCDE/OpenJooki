@@ -1,6 +1,6 @@
 # ADR-0006 — Third-party code: minimal, vendored, pinned
 
-Status: proposed (2026-09-26)
+Status: accepted (2026-09-26); built and shipped in 2.0.0 (2026-09-27)
 
 ## Context
 The old program embeds 1 423 lines of third-party Lua (JSON.lua, an old Paho

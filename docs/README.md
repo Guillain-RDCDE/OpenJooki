@@ -65,7 +65,7 @@ What it does at start and after a cut (the command that crashed it at every boot
 network it sticks to, the Wi-Fi watchdog, the broker keeper):
 [20-network-health.md](20-network-health.md), *A safer start*.
 
-## The page and the fixes (1.x)
+## The page and the fixes (1.x, history)
 
 A local page (no framework, no external request) replaces the 2018 app, and the
 Jooki's own program is fixed in place: token links by character, protected
@@ -118,7 +118,10 @@ page (the 1.x one is kept), atomic data files shared with 1.x.
   the page a proper home-screen icon. A factory Jooki's data was checked to survive the
   move to 2.0 and the way back. **2.0.1** (same day) makes the update screen show plain
   steps instead of a raw download meter, and no longer reports a failed update on a
-  brief network drop.
+  brief network drop. Since then: **2.1** (the core serves the page itself, `/ll` closed,
+  password on the WebSocket, parent code), **2.2** (flat tokens, a picture library for tokens,
+  FLAC and WAV turned into MP3 in the browser, `jooki.local` every time). Every version:
+  [CHANGELOG.md](../CHANGELOG.md); how a release is made: [28-release.md](28-release.md).
 
 ## Layout
 
@@ -128,10 +131,10 @@ tools/openjooki/          the command-line tool, the web installer, the auditabl
 tools/openjooki/webui/    the local web page served by the Jooki
 tools/openjooki/system/   system files OpenJooki installs (originals kept)
 tools/openjooki/tests/    off-device test bench (real application + browser)
-tools/openjooki/device/   scripts that run on the Jooki (self-install, OTA)
+docs/*.sh                 scripts the Jooki fetches from GitHub Pages (b.sh, o.sh, OTA, self-update)
 tools/build/              builds the core into the Jooki's program format
 tools/sdcard/             the bigger-SD-card tool: Python (Mac, Linux), the Mac app; Windows: docs/Jooki-SD-card.cmd
-scripts/                  release images
+scripts/                  versions and releases (bump-version, release, publish-release, check-card)
 docs/                     analysis, architecture, runbooks, audit (this page)
 ```
 

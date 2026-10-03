@@ -1,6 +1,6 @@
 # ADR-0005 — A versioned contract with revisioned state and typed errors; v1 kept for one release
 
-Status: proposed (2026-09-26)
+Status: accepted (2026-09-26); built and shipped in 2.0.0 (2026-09-27)
 
 ## Context
 The page and the Jooki talk over MQTT with ~40 message types inherited from

@@ -1,9 +1,10 @@
-# New web page + application fixes (`patch webui`)
+# The web page (and, in 1.x, the fixes of the original program)
 
-> **Since firmware 1.1.0 this is included in OpenJooki**: installing or updating
-> from the phone installer page is enough. `patch webui` remains for a Jooki you
-> manage from a computer, and `scripts/add-webui-to-image.py` applies the same
-> changes to a firmware image.
+> The page is what every OpenJooki serves at `http://jooki.local/`; its code is
+> `tools/openjooki/webui/`. The "application fixes" below are **history (1.x)**: since 2.0
+> the behaviour lives in our own core (`core/`, [21-architecture-2.0.md](21-architecture-2.0.md)),
+> and `jooki.py patch webui --core` / `scripts/add-webui-to-image.py --core` install that core
+> with the page ([ADR-0012](adr/0012-retire-1x.md)).
 
 The Jooki serves its own management page at `http://<jooki-ip>/`. The original
 page (a 2018 React app by Muuselabs) still worked locally, but it had many bugs,
@@ -122,22 +123,16 @@ sha256 check, rollback armed.
 
 ## Tests
 
-- **Bench** (off-device): the real decoded Lua program runs under Lua 5.1 with
-  stubs for the 4 C functions, a real mosquitto, an emulation of `web_ctrl`, a
-  fake audio engine, and Chromium (Playwright). 38 backend checks + 30
-  end-to-end page checks, all green.
+- **Bench** (off-device, `tools/openjooki/tests/`): the built core runs under Lua 5.1 with
+  stubs for the 4 C functions, a real mosquitto, a fake audio engine and Chromium
+  (Playwright): 48 backend checks, 80 end-to-end page checks and the other suites, in CI.
 - **On the device** after install: file checksums, application answering over
   MQTT, page served, then non-destructive checks (migration, token rename,
   create/upload/reorder/delete a temporary playlist, "Unused tracks" protection,
   malformed messages without crash).
 
-## Known limits (not changed here)
+## Security
 
-`web_ctrl` and mosquitto have no authentication. Any device on your Wi-Fi can
-use the page (as before), and `web_ctrl` answers plain `GET` requests on
-`/ll?action=` (root command, used by the OpenJooki installer) and
-`/cmd/{poweroff,factory_reset,sdcard_format,…}`. A web page you visit could
-therefore send such requests to the Jooki if your browser lets public sites
-reach local addresses (recent Chrome asks for permission first). Closing this
-means changing how the phone installer talks to the Jooki; it is tracked as a
-separate decision.
+Since 2.1.0 the core serves the page itself and `web_ctrl` (with its root `/ll` and `/cmd`)
+is no longer started; the broker listens on localhost, the page's WebSocket needs the
+per-Jooki password, and a parent code can guard the changes: [ADR-0007](adr/0007-security-model.md).

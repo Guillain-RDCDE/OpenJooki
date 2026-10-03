@@ -1,6 +1,6 @@
 # ADR-0001 — Keep the C host and Lua 5.1 for the 2.0 core
 
-Status: proposed (2026-09-26)
+Status: accepted (2026-09-26); built and shipped in 2.0.0 (2026-09-27)
 
 ## Context
 The Jooki's application is loaded by a closed C program (`/jooki/bin/player`)

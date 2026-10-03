@@ -1,6 +1,6 @@
 # ADR-0004 — Keep the 1.x data files and formats (reversibility)
 
-Status: proposed (2026-09-26)
+Status: accepted (2026-09-26); built and shipped in 2.0.0 (2026-09-27)
 
 ## Context
 The family's library lives in `/jooki/external/jooki/` as JSON files

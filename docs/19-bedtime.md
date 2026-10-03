@@ -53,8 +53,8 @@ the end.
 
 ## How it is built
 
-One small Lua module (`ojbed`, in `tools/openjooki/lua_patches.py`) plus a few
-hooks in the Jooki program, applied like the other fixes (A/B, rollback armed).
+Since 2.0, `core/services/bedtime.lua` (its spec: `core/spec/bedtime_spec.lua`). In 1.x it was a
+small module hooked into the Jooki's program ([ADR-0012](adr/0012-retire-1x.md)).
 
 - **Volume**: the knob sends its position every second and the program applies
   it at once, so a limit or a fade set anywhere else would be overwritten. They

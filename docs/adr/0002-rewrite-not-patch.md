@@ -1,6 +1,6 @@
 # ADR-0002 — Rewrite the application from scratch instead of patching it further
 
-Status: proposed (2026-09-26)
+Status: accepted (2026-09-26); built and shipped in 2.0.0 (2026-09-27)
 
 ## Context
 1.0–1.3 change Muuselabs' minified program with 49 exact text replacements

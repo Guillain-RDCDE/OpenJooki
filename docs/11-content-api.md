@@ -1,5 +1,9 @@
 # Jooki content API (reverse-engineered, static)
 
+> **This is the v1 contract** (`/j/web/input/*`, `/j/web/output/*`), the one the 2018 app spoke and
+> the one the page still uses; the core serves it from `core/api/v1.lua`. The newer, versioned
+> contract is [api-v2.md](api-v2.md) (ADR-0005).
+
 The web interface drives the library through an **MQTT bus** (mosquitto broker,
 port 1883) and an HTTP upload endpoint. Reconstructed from the original JS bundle.
 

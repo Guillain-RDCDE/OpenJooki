@@ -60,10 +60,9 @@ browser searches the web or tries https.
   (installed by `jooki.py patch webui` and by `scripts/add-webui-to-image.py`;
   checked with the Jooki's own `syslog-ng --syntax-only`). Wi-Fi events are also
   copied to `/tmp/oj-wifi.log` (RAM).
-- Module `ojnet` in `lua_patches.py`: log cleanup at boot, Wi-Fi state (drops and
-  beacon losses from `/tmp/oj-wifi.log`, access point from the chip's own status)
-  published in the state as `net`, and the mDNS responder (non-blocking UDP
-  socket polled by the main loop).
+- Since 2.0: `core/services/network.lua` (log cleanup at boot, Wi-Fi state published as
+  `net`, the Wi-Fi watchdog) and `core/adapters/mdns.lua` (the `.local` name, answered and
+  announced from the loop). In 1.x the same lived in a module hooked into the Jooki's program.
 - The page (`webui/app.js`): upload queue with retries, stall watchdog and
   after-reconnect check; Wi-Fi row in Settings.
 

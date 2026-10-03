@@ -1,6 +1,6 @@
 # ADR-0003 — One event loop, pure handlers, ports and adapters
 
-Status: proposed (2026-09-26)
+Status: accepted (2026-09-26); built and shipped in 2.0.0 (2026-09-27)
 
 ## Context
 The old program is single-threaded already, but handlers read the clock, run

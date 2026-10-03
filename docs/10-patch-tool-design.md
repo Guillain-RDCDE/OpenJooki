@@ -1,5 +1,9 @@
 # OpenJooki Tool — tool design (computer side)
 
+> **History (1.x).** This page describes how OpenJooki 1.0–1.3 patched the Jooki's original program.
+> Since 2.0 the Jooki runs our own core (`core/`, [21-architecture-2.0.md](21-architecture-2.0.md));
+> the 1.x tooling left with [ADR-0012](adr/0012-retire-1x.md). Kept as a record of what was learnt.
+
 Goal: a **simple, auditable tool that cannot brick** a Jooki, to share on GitHub.
 It runs on a computer (Mac/Linux/Windows) and talks to the Jooki over the local
 network. It replaces the dead app AND lets you patch the firmware **by relying on

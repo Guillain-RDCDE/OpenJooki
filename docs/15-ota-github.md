@@ -18,8 +18,10 @@ signing infrastructure to manage).
 The device downloads the scripts from Pages and the firmware from the Release.
 
 ## Flow on the Jooki
-1. **Front door**: the phone installer page (`docs/index.html`) fires one command
-   at the Jooki's local web control (`/ll`) — see `docs/16-phone-install.md`.
+1. **Front door**: on an OpenJooki 2.x, the page's *Update* button (the core's `update_start`
+   action fetches `o.sh` from the address in its configuration); on a factory Jooki, the phone
+   installer page (`docs/index.html`) fires one command at the factory web control (`/ll`,
+   gone from OpenJooki since 2.1) — see `docs/16-phone-install.md`.
 2. `b.sh`/`o.sh` pull `openjooki-ota.sh` + `openjooki-selfupdate.sh` from Pages
    into `/data/openjooki/`.
 3. `openjooki-ota.sh` reads the installed version (`/etc/openjooki-version`),

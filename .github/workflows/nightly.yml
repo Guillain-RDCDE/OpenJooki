@@ -26,7 +26,9 @@ jobs:
       - uses: ./.github/actions/bench
       - name: Unit specs and smoke, as a reminder of the day
         working-directory: .
-        run: lua5.1 core/spec/run.lua && python3 core/spec/integration/smoke.py
+        # smoke as root like the suites after it: /tmp is sticky, and root may not overwrite a log
+        # file (bench_vol.log) that another user created there
+        run: lua5.1 core/spec/run.lua && sudo -E python3 core/spec/integration/smoke.py
       - name: The bench suites, in CI order
         run: |
           sudo -E bash -c 'python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py \

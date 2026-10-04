@@ -188,17 +188,18 @@ def scrub_rootfs(img, forget=()):
     for d in LEFTOVER_DIRS:
         if debugfs_exists(img, d):
             _rm_tree(img, d, removed)
-    # e2fsck only discards the free blocks of a filesystem it found clean: a pass that repaired
-    # something (return code 1, usual right after the removals above) leaves them as they were, with
-    # the deleted files' bytes still in them. So: again, until a pass has nothing to repair.
-    for _ in range(3):
+    # One e2fsck -E discard pass right after the removals above does not empty every freed block
+    # (measured: the deleted files' bytes were still there, and a second pass cleared them; the new-card
+    # image only ever passed its --forget scan because it scrubbed an image scrubbed once already).
+    # So: at least two passes, and the last one must have had nothing to repair.
+    for n in range(1, 5):
         r = subprocess.run(["e2fsck", "-f", "-y", "-E", "discard", img], capture_output=True, text=True)
         if r.returncode not in (0, 1):
             raise SystemExit("e2fsck -E discard:\n" + r.stdout + r.stderr)
-        if r.returncode == 0:
+        if r.returncode == 0 and n >= 2:
             break
     else:
-        raise SystemExit("e2fsck still repairs the image after three passes:\n" + r.stdout[-400:])
+        raise SystemExit("e2fsck still repairs the image after four passes:\n" + r.stdout[-400:])
     run(["e2fsck", "-fn", img])
     scan_forbidden(img, forget, quiet=True)
     return removed

@@ -1,7 +1,7 @@
 #!/bin/bash
 # OpenJooki — write the next version number everywhere it is written by hand, in one go.
 #   scripts/bump-version.sh 2.2.6 "Settings pages stay still" "the pages inside Settings no longer blink"
-# Changes: webui/app.js VERSION, webui/index.html (three ?v=), CHANGELOG.md ("## Next release" becomes
+# Changes: the page's VERSION (webui/src/00-config.js, then app.js rebuilt), webui/index.html (three ?v=), CHANGELOG.md ("## Next release" becomes
 # the release heading, dated today), README.md ("New in X" line: the new one on top, the old one demoted).
 # Then scripts/check_versions.py --release confirms. Commit the result as "Release X: title".
 set -e
@@ -14,7 +14,8 @@ OLD=$(sed -n "s/^  var VERSION = '\([^']*\)';/\1/p" tools/openjooki/webui/app.js
 [ -n "$OLD" ] || { echo "no VERSION in app.js"; exit 1; }
 DATE=$(LC_ALL=C date "+%-d %B %Y")
 
-sed -i "s/^  var VERSION = '$OLD';/  var VERSION = '$V';/" tools/openjooki/webui/app.js
+sed -i "s/^  var VERSION = '$OLD';/  var VERSION = '$V';/" tools/openjooki/webui/src/00-config.js
+python3 tools/openjooki/webui/build.py >/dev/null
 sed -i "s/?v=$OLD\"/?v=$V\"/g" tools/openjooki/webui/index.html
 sed -i "s/^## Next release$/## OpenJooki $V ($DATE) — $TITLE/" CHANGELOG.md
 # README: "**New in OLD:** text" -> "**New in V:** summary." then "OLD: text"

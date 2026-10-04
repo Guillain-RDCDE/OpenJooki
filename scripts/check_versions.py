@@ -4,7 +4,7 @@
   python3 scripts/check_versions.py                 # the page, its cache keys, the README and the changelog agree
   python3 scripts/check_versions.py --release 2.2.6 # and the changelog's top entry is that very release
 
-Places: tools/openjooki/webui/app.js (VERSION), tools/openjooki/webui/index.html (three ?v=),
+Places: tools/openjooki/webui/app.js (VERSION; built from webui/src, which build.py --check guards), tools/openjooki/webui/index.html (three ?v=),
 README.md ("**New in X:**"), CHANGELOG.md (first "## " heading: "## Next release" while work is
 in progress, "## OpenJooki X (date) — title" once released). The firmware images and manifests
 take the version from the build arguments (scripts/release.sh), not from here.

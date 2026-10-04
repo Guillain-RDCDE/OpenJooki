@@ -7,6 +7,8 @@
   when it comes back in front, and every ten seconds during an update, and connects again. If
   nothing has moved for three minutes it says why that can happen and offers *Reload the page*,
   which stops nothing; the phone that started the update shows it again after a reload.
+- Inside: the page's script (3 000 lines in one file) is now edited as 28 small files, one per
+  subject, put end to end into the same single `app.js` the Jooki serves. Nothing changes on the Jooki.
 
 ## OpenJooki 2.2.6 (3 October 2026) — tidied inside, and a handful of fixes
 - **The parent code now also guards the v2 commands.** Over the newer command channel the page

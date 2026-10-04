@@ -1,7 +1,8 @@
 # The web page (and, in 1.x, the fixes of the original program)
 
 > The page is what every OpenJooki serves at `http://jooki.local/`; its code is
-> `tools/openjooki/webui/`. The "application fixes" below are **history (1.x)**: since 2.0
+> `tools/openjooki/webui/` (the script is edited in `src/`, one file per subject, and put end to end
+> into `app.js` by `build.py`). The "application fixes" below are **history (1.x)**: since 2.0
 > the behaviour lives in our own core (`core/`, [21-architecture-2.0.md](21-architecture-2.0.md)),
 > and `jooki.py patch webui --core` / `scripts/add-webui-to-image.py --core` install that core
 > with the page ([ADR-0012](adr/0012-retire-1x.md)).

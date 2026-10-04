@@ -26,9 +26,12 @@ jobs:
         run: python3 scripts/check_versions.py
       - name: Python (ruff, undefined names and unused imports only)
         run: pip install -q ruff==0.15.14 && ruff check --select F tools scripts core/spec/integration
+      - name: app.js is what webui/src gives
+        run: python3 tools/openjooki/webui/build.py --check
       - name: The page parses and stays small (app.js <= 256 KiB, app.css <= 64 KiB)
         run: |
           node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js
+          for f in tools/openjooki/webui/src/*.js; do node --check "$f" || exit 1; done
           python3 - <<'EOF'
           import os, sys
           caps = {"tools/openjooki/webui/app.js": 256, "tools/openjooki/webui/app.css": 64}

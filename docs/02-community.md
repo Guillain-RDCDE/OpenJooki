@@ -1,5 +1,8 @@
 # What the community built around the Jooki (state as of 2026-09-09)
 
+> **History: a survey dated 2026-09-09**, before OpenJooki existed; not updated since. What
+> OpenJooki itself provides today is on the [main page](../README.md) and in [README.md](README.md).
+
 Summary: after Muuselabs shut down, the community mostly produced
 (1) Home Assistant integrations, (2) a Wi-Fi re-provisioning tool,
 (3) a local API library, (4) NFC token tools, and

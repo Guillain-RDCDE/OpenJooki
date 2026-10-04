@@ -21,8 +21,9 @@ written. Every system file OpenJooki replaces is kept once as `<file>.openjooki-
 ## Installing from the phone
 
 The installer page ([github.io](https://guillain-rdcde.github.io/OpenJooki/)) sends
-the install command to the Jooki, which downloads the latest release from this
-repository, verifies it, writes it to the spare partition and restarts. A tiny
+the install command to a **factory** Jooki, which downloads the latest release from this
+repository, verifies it, writes it to the spare partition and restarts. (A Jooki that
+already runs OpenJooki updates from its own page: *Settings → Update*.) A tiny
 throwaway `ok` tab may flash up when the command is sent: the page is served over
 HTTPS and the Jooki answers over plain HTTP, so the browser won't let the command
 fire completely invisibly. Details: [16-phone-install.md](16-phone-install.md);
@@ -40,18 +41,21 @@ A browser page opens: drop the firmware on it, click **Install safely**: the sam
 A/B install, with a progress bar ([14-cross-platform-installer.md](14-cross-platform-installer.md)).
 
 The command-line tool does the rest over the local network, with the Python
-standard library only ([tools/openjooki/README.md](../tools/openjooki/README.md)):
+standard library (plus `paho-mqtt` to open the maintenance SSH of a 2.1+ Jooki;
+[tools/openjooki/README.md](../tools/openjooki/README.md)):
 
 ```sh
 python3 tools/openjooki/jooki.py --host <jooki-ip> info                          # what is running
 python3 tools/openjooki/jooki.py --host <jooki-ip> backup                        # full backup first
-python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui --dry-run         # build and check only
-python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui                   # page + fixes (A/B)
-python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui --core build/player.lib   # the 2.0 core (A/B)
+python3 tools/build/bundle.py                                                    # builds the core into build/
+python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui --core build/player.lib --dry-run   # build and check only
+python3 tools/openjooki/jooki.py --host <jooki-ip> patch webui --core build/player.lib   # the core + the page (A/B)
 python3 tools/openjooki/jooki.py --host <jooki-ip> patch switch <2|3>            # go back
 ```
 
-Release images get exactly the same changes with `scripts/add-webui-to-image.py`.
+`patch webui` without `--core` is refused: the 1.x "page + fixes" install left with
+[ADR-0012](adr/0012-retire-1x.md). Release images get exactly the same changes with
+`scripts/add-webui-to-image.py`, run by `scripts/release.sh` ([28-release.md](28-release.md)).
 
 The SD card: [the tool's page](sdcard.html) and [how it works](../tools/sdcard/README.md); it copies the Jooki's card to a
 bigger one (Windows, Mac, Linux) and grows the music partition (GPT) to the end of the card, or writes a **new card
@@ -111,8 +115,11 @@ page (the 1.x one is kept), atomic data files shared with 1.x.
 
 - Design: [21-architecture-2.0.md](21-architecture-2.0.md); decisions: [adr/](adr/README.md);
   the contract, generated from the code: [api-v2.md](api-v2.md); the code: [core/](../core/README.md).
-- The test bench of 1.x is the oracle: its integration checks pass unchanged on
-  the new core, in CI, with the core's own unit specs, lint, size and memory budgets.
+- Tests: 250 unit specs, lint, size and memory budgets, and the off-device bench
+  (`tools/openjooki/tests/`: the built core, a real broker, the page in Chromium), all in
+  CI. The 1.x bench was the oracle for the switch to 2.0 (the new core had to pass its
+  checks unchanged); it left with the 1.x program (ADR-0012) and the bench now tests the
+  core alone.
 - **Released as OpenJooki 2.0.0 on 27 September 2026**, after a day on a family Jooki:
   it starts faster than 1.x, lets the family choose the Jooki's network name, and gives
   the page a proper home-screen icon. A factory Jooki's data was checked to survive the
@@ -126,20 +133,26 @@ page (the 1.x one is kept), atomic data files shared with 1.x.
 ## Layout
 
 ```
-core/                     OpenJooki 2.0: the new core (Lua), its specs and build
-tools/openjooki/          the command-line tool, the web installer, the auditable fixes
-tools/openjooki/webui/    the local web page served by the Jooki
+core/                     the OpenJooki core (Lua) and its specs
+tools/build/              builds the core into the Jooki's program format (bundle.py); apidoc.lua writes docs/api-v2.md
+tools/openjooki/          the command-line tool (jooki.py), the web installer, the player.lib codec
+tools/openjooki/webui/    the local web page served by the Jooki (script edited in src/, see its README)
 tools/openjooki/system/   system files OpenJooki installs (originals kept)
-tools/openjooki/tests/    off-device test bench (real application + browser)
+tools/openjooki/tests/    off-device test bench (the built core + a browser)
+tools/sdcard/             the SD-card tool: Python (Mac, Linux), the Mac app; Windows: docs/Jooki-SD-card.cmd
+tools/wifi/               Wi-Fi over Bluetooth from a terminal (the page is docs/wifi.html)
+tools/diagrams/           generates docs/img/arch/*.svg (gen_arch_diagrams.py) and the guide's phone screenshots
+scripts/                  versions and releases: bump-version.sh, check_versions.py, release.sh
+                          (which runs add-webui-to-image.py and make-release.sh), publish-release.sh, check-card.sh
 docs/*.sh                 scripts the Jooki fetches from GitHub Pages (b.sh, o.sh, OTA, self-update)
-tools/build/              builds the core into the Jooki's program format
-tools/sdcard/             the bigger-SD-card tool: Python (Mac, Linux), the Mac app; Windows: docs/Jooki-SD-card.cmd
-scripts/                  versions and releases (bump-version, release, publish-release, check-card)
-docs/                     analysis, architecture, runbooks, audit (this page)
+docs/                     analysis, architecture, runbooks, audit (this page); docs/adr/ the decisions
+guide/                    the parents' guide
+.github/                  CI: workflows/ci.yml, workflows/nightly.yml, actions/bench
 ```
 
 ## Everything else in docs/
 
+History and early notes, each labelled as such at its top:
 [01-notes.md](01-notes.md) (first findings), [02-community.md](02-community.md)
 (what others found), [03-maintenance-plan.md](03-maintenance-plan.md),
 [04-architecture.md](04-architecture.md) (hardware and data model),

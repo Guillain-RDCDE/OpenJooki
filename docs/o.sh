@@ -1,7 +1,7 @@
 #!/bin/ash
 # OpenJooki — UPDATE entrypoint. Run ON a Jooki that already has OpenJooki.
-# Self-contained: always pulls the newest updater scripts from the GitHub
-# release, then checks for a newer firmware and installs it safely
+# Self-contained: always pulls the newest updater scripts from GitHub Pages
+# ($PAGES), then checks the latest release for a newer firmware and installs it safely
 # (A/B partition + armed U-Boot rollback). It CANNOT brick the device, and
 # if you are already on the latest version it simply does nothing.
 REPO="Guillain-RDCDE/OpenJooki"

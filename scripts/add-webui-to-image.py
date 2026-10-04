@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenJooki — add the new web page + application fixes to a firmware image.
+"""OpenJooki — put the OpenJooki core and its web page into a firmware image.
 
 Takes an OpenJooki firmware image (ext4 rootfs, .img or .img.gz), applies exactly
 what `jooki.py patch webui --core` applies on a live Jooki, and writes a new image:
@@ -22,7 +22,7 @@ then checks it with `e2fsck -fn` and reads every written file back.
 
 Usage: add-webui-to-image.py <in.img[.gz]> <out.img> <version> --core build/player.lib [--forget <s>]...
        --core: the core to install (tools/build/bundle.py; core.min.lua must sit next to it)
-Then:  scripts/make-release.sh <out.img> <version>
+Run by scripts/release.sh, which then calls scripts/make-release.sh <out.img> <version> (docs/28-release.md).
 """
 import gzip, hashlib, os, shutil, subprocess, sys, tempfile
 

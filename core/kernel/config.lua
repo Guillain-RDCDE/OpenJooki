@@ -1,6 +1,7 @@
 -- kernel.config: every tunable in one place, with its default and its meaning.
--- Values can be overridden by a table (the bench) or by a JSON file on the
--- device (/jooki/external/jooki/core.json), never by code elsewhere.
+-- Values can be overridden by a table (config.load) that main.lua reads from the
+-- JSON file named by the OPENJOOKI_CONFIG environment variable (the bench sets it;
+-- a Jooki has none), never by code elsewhere. Handlers read the copy in doc.config.
 local config = {}
 
 config.defaults = {

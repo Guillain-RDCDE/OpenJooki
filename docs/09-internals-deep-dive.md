@@ -1,5 +1,10 @@
 # Jooki v2 — fine-grained decompiled analysis (ESP32 + all internals)
 
+> **Reverse-engineering reference, still valid**: the ESP32 protocol, the boot and the
+> partitions of the original firmware, which OpenJooki keeps. Where it describes the original
+> application or `web_ctrl`, read it as history: the application is our own core since 2.0 and
+> `web_ctrl` is no longer started since 2.1.0 ([21-architecture-2.0.md](21-architecture-2.0.md)).
+
 _Static analysis of the original firmware (root SSH, without opening the device).
 Original sources: `ml-jooki-controllers` (Muuselabs), C + Lua, git 3f3ed7dca7._
 

@@ -81,10 +81,13 @@ changed.
 
 ## Tests
 
-- `tests/unit_bedtime.py`: the module alone under Lua 5.1 with a fake clock
-  (summer-time changes, night window, fade, timer, resume, lights): 57 checks.
-- `tests/test_bedtime.py`: the real program on the bench (volume sent to the
+- `core/spec/bedtime_spec.lua`: the module alone with a fake clock: 8 unit specs
+  (the resume rules have their own, `core/spec/playback_resume_spec.lua`). The 1.x
+  module had a Python harness of 57 checks, `unit_bedtime.py`; it left with the 1.x
+  program (ADR-0012).
+- `tools/openjooki/tests/test_bedtime.py`: the core on the bench (volume sent to the
   hardware, lights, timer, end of chapter, resume across a restart): 24 checks.
-- `tests/e2e.py`: the page (settings, timer, countdown, resume, sorting): 41 checks.
+- `tools/openjooki/tests/e2e.py`: the page, bedtime included (settings, timer,
+  countdown, resume, sorting), 83 checks in all.
 - On a real Jooki v2: resume after pause and after a long pause, dimmed lights,
   timer pausing the real player, settings saved.

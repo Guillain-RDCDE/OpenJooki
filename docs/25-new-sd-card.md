@@ -71,6 +71,14 @@ p3 and the bootloader read back identical to their sources, the settings are at
 rest in both copies, and the forbidden strings are absent. It writes the `.img.gz`
 and `sdcard.json` (name, sizes and SHA-256 of both the archive and the raw image).
 
+The system image it starts from has been scrubbed first (`scrub_rootfs`, in the same
+file, called by `scripts/add-webui-to-image.py`): the leftovers of the Jooki the base
+image was read from are removed, then the free blocks are emptied with
+`e2fsck -E discard`, because a deleted file's bytes live on in them. One pass is not
+enough (measured: the bytes were still there after one, gone after two), so it runs at
+least two, until a pass has nothing left to repair, and only then scans for the
+forbidden strings.
+
 ## Where it lives, and when it changes
 
 The two files are attached to a GitHub release of their own, **`sdcard`**, on purpose
@@ -86,10 +94,14 @@ version. Should it ever lag (a release made in a hurry), the Jooki still catches
 itself: once it starts and finds its Wi-Fi, its own page offers the newest version and
 installs it, by the update path every Jooki already uses.
 
-To rebuild: `make_card_image.py` with the same three pieces (kept off the repository)
-and the new release image, then `gh release upload sdcard <the .gz> sdcard.json --clobber`,
-remove the previous image from the `sdcard` release (one image there, always), and a
-line in its notes saying which OpenJooki is inside.
+To rebuild: nothing is done by hand any more. `scripts/release.sh <version>` builds the
+card image right after the firmware image (it runs `make_card_image.py` with the same
+three pieces, kept off the repository: `OJ_NEWCARD`, `OJ_DATA_TAR`) into
+`release-sdcard-<version>/`; `scripts/publish-release.sh <version>` uploads it to the
+`sdcard` release, removes the previous image (one image there, always) and updates the
+line in its notes saying which OpenJooki is inside; `scripts/check-card.sh <version>`
+then has the SD tool fetch it from the real release and write a test "card" that is
+checked. The whole procedure: [28-release.md](28-release.md).
 
 The tools then do what they already did for a bigger card: write, read back and
 compare, grow the last partition, verify both GPT headers. What has been tested is

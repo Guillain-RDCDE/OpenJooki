@@ -1,5 +1,11 @@
 # Can we maintain the Jooki COMPLETELY? — Plan
 
+> **History: the first plan (September 2026)**, written before the Jooki had been read in full.
+> Its phases were overtaken by OpenJooki 1.x and then by our own core, and some of its guesses
+> were wrong (the Jooki v2 is an Ingenic X1000, not a Raspberry Pi Compute Module:
+> [04-architecture.md](04-architecture.md)). The "next concrete action" at the end was done long
+> ago. Current state: [README.md](README.md), [21-architecture-2.0.md](21-architecture-2.0.md).
+
 _Short answer: YES, in the sense that matters (full control, complete backups,
 the ability to modify/restore every software layer, and independence from the
 dead Muuselabs servers). The only layer we "freeze and preserve" instead of

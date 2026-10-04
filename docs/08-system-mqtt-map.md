@@ -1,5 +1,11 @@
 # Jooki v2 — system map (the "everything laid flat" view)
 
+> **Reverse-engineering reference, still valid** for the original system and the closed daemons
+> (their topics have not changed). What changed with OpenJooki: the application `player.lib` is
+> now a loader for our own core (`/jooki/lib/core.lua`), `web_ctrl` is no longer started (2.1.0),
+> and the broker listens on localhost with a password on its WebSocket
+> ([21-architecture-2.0.md](21-architecture-2.0.md) §3 and §12).
+
 _Inferred from the on-device code (root SSH, without opening the device, without
 decrypting the ESP32). Original project: `ml-jooki-controllers` (Muuselabs), in
 C + Lua._

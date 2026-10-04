@@ -1,5 +1,10 @@
 # Jooki v3 — open source firmware: feasibility & roadmap
 
+> **History: a roadmap of September 2026** for a whole open firmware ("Jooki v3"). That
+> project was not pursued: OpenJooki kept the original system and replaced the application
+> only, first by patches (1.x), then with its own core
+> ([21-architecture-2.0.md](21-architecture-2.0.md)). The hardware findings in it remain true.
+
 ## Verdict
 **Yes, it's feasible.** The Jooki v2 is a standard embedded Linux computer
 (Ingenic X1000 SoC, MIPS) that **boots from a removable SD card**. That detail

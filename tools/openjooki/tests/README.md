@@ -6,8 +6,9 @@ and the web page end to end. It needs root (it creates `/jooki`, `/data/mode`,
 `/tmp/web_ctrl_dirs` like on the device): use a throwaway VM, container or WSL distribution.
 The CI runs exactly this (`.github/workflows/ci.yml`, job *oracle*).
 
-Requirements: `lua5.1`, `lua-socket`, `mosquitto`, `ffmpeg`/`ffprobe`,
-Python 3 with `paho-mqtt` and `playwright` (Chromium).
+Requirements: `lua5.1`, `lua-socket`, `lua-filesystem`, `mosquitto`, `ffmpeg`/`ffprobe`,
+Python 3 with `paho-mqtt` and `playwright` (Chromium), at the versions pinned in
+`requirements.txt` (what CI installs, `.github/actions/bench`).
 
 | On the device | On the bench |
 |---|---|
@@ -28,8 +29,12 @@ python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py
 python3 test_security_backend.py && python3 e2e.py && python3 test_security.py
 python3 test_spotify.py && python3 test_robustness.py && python3 test_loader.py
 python3 test_httpd.py && python3 test_clock.py && python3 test_wifi_page.py
-python3 ../../../core/spec/integration/endurance.py 3
+python3 ../../../core/spec/integration/endurance.py 3     # minutes (default 10, what nightly.yml runs)
 ```
+
+What runs where: the suites above on every push to `main` and every pull request (CI job
+*oracle*); the endurance run only in `nightly.yml` (every night and on release tags), for
+10 minutes.
 
 Each suite runs on its own as well as in this order: it builds its own fresh Jooki (`setup.sh`),
 starts its own core and waits for it, and `test_security.py` deploys the page itself when `e2e.py`

@@ -2,16 +2,21 @@
 
 The front door is a single static page — `docs/index.html`, served at
 `https://guillain-rdcde.github.io/OpenJooki/`. It lets anyone move a **factory
-Jooki v2** to OpenJooki, or update one, from a phone on the same Wi-Fi, with no
-computer. Proven end-to-end on a real device: factory Muuselabs → tap → download
+Jooki v2** to OpenJooki from a phone on the same Wi-Fi, with no computer. (Updating a
+Jooki that already runs OpenJooki is not this page's job any more: open the Jooki's own
+page, *Settings → Update*.) Proven end-to-end on a real device: factory Muuselabs → tap → download
 → sha256 verify → A/B write → self-reboot → OpenJooki running, music intact.
 
 ## How the page talks to the Jooki
 The Jooki's built-in web control (`web_ctrl`, port 80) exposes `/ll?action=<cmd>`,
 which runs a short root shell command and always replies just `ok` (no stdout,
 ~90-char limit). The page sends **one** command:
-- **Update**: `curl … /o.sh; sh /tmp/o &`
 - **Install**: `curl … /b.sh; sh /tmp/b &`
+
+The page used to have an **Update** button too (`curl … /o.sh; sh /tmp/o &`). It only
+ever worked through `/ll`, that is on a factory Jooki or an OpenJooki older than 2.1,
+and it is being removed from the page in favour of "open the Jooki's page, *Settings →
+Update*"; *Install* stays, for factory Jookis.
 
 Everything else (download, verify, flash, reboot) happens on the device, detached
 — it survives the browser tab closing.

@@ -13,11 +13,11 @@ Do not edit: regenerate with `lua5.1 tools/build/apidoc.lua > docs/api-v2.md`. D
 
 Error codes: `invalid_argument` (field names the culprit), `not_found`, `forbidden` (the parent code, when one is set: `PARENT_CODE_REQUIRED`), `read_only`, `conflict`, `unavailable`, `internal`.
 
-The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.lua` for one release.
+The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/api/v1.lua`: it is the one the page speaks (docs/11-content-api.md). The security switches (SSH, parent code, MQTT on the LAN), Bluetooth and a token's photo exist only there.
 
 ## State document keys
 
-`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
+`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
 
 ## Commands (37)
 
@@ -650,7 +650,7 @@ No payload.
 
 ### `upload.add`
 
-Imports a file web_ctrl received on /upload (uploadId = the multipart field name).
+Imports a file the Jooki's web server received on /upload (uploadId = the multipart field name).
 
 Payload schema:
 

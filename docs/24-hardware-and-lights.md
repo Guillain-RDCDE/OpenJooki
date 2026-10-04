@@ -23,7 +23,7 @@ The Jooki 2 has four groups of lights: the **ring** around the top plate, the
   the application never sets it, and OpenJooki does not change it;
 - **the application** (Muuselabs' `player`, or OpenJooki 2): the ring, the side
   dots and the heart at power-off. OpenJooki 2 keeps the original light language
-  ([22-core-inventory.md](22-core-inventory.md) §3.7, `core/services/device.lua`),
+  ([22-core-inventory.md](22-core-inventory.md) §3.7, `core/services/device/lights.lua`),
   with one addition for the battery.
 
 ## 2. What the lights mean
@@ -228,7 +228,7 @@ USB-C to jack cables and USB headphones are a separate story
 owners keep running into: **charging and wired headphones through the same
 port do not mix**. When the cable goes in, the program only puts the
 multiplexer on the charger side if headphones are *not* enabled
-(`usb_mux`, in the original program and in `core/services/device.lua` alike),
+(`usb_mux`, in the original program and in `core/services/device/power.lua` alike),
 which matches what owners see: with a splitter, the headphones work and the
 charging does not (u/Rubman tried five). Muuselabs' own updater refuses to write
 a firmware while the battery is low; OpenJooki asks you to keep the Jooki
@@ -305,8 +305,10 @@ copy, which OpenJooki's page then offers to update again. The factory copy
 - Firmware read from our Jooki 2: `ht_ctrl` (strings: topics, charge states,
   colour names), `player.lib` (the light code, [22-core-inventory.md](22-core-inventory.md)),
   `ota2.sh`, `factory_reset.sh`, `power_overheat.sh`, the U-Boot environment.
-- OpenJooki 2: `core/services/device.lua`, `core/kernel/config.lua`, unit specs
-  `core/spec/device_spec.lua` (lights, battery thresholds, overheat).
+- OpenJooki 2: `core/services/device.lua` and its sub-modules
+  `core/services/device/lights.lua` and `core/services/device/power.lua`,
+  `core/kernel/config.lua`; unit specs `core/spec/device_lights_spec.lua` (lights) and
+  `core/spec/device_power_spec.lua` (battery thresholds, overheat).
 - Muuselabs: the charging notice of May 2024 (r/jooki), the user guide
   (manuals.plus), the update script's colour table.
 - r/jooki: the threads linked above, and u/nv1t's blog

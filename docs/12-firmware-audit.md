@@ -1,5 +1,11 @@
 # Jooki v2 firmware audit (existing) — report
 
+> **History: the audit of the original firmware's shell scripts (1.x).** The findings stand
+> as a record. The "application status" section at the end names the 1.x commands
+> `patch cut-cloud` and `patch harden` and their files (`tools/openjooki/patches/`): both are
+> **gone**, retired with [ADR-0012](adr/0012-retire-1x.md). The security model of today is
+> [ADR-0007](adr/0007-security-model.md).
+
 _Professional static audit of the 51 shell scripts in the firmware (busybox/ash, MIPS).
 The binaries (player, web_ctrl, esp32_ctrl…) are compiled and out of scope.
 Principle: reconcile every finding with the fact that **this firmware ships and
@@ -72,7 +78,7 @@ discarded as false positives._
   impact); fractional `sleep 0.2` (variable busybox support); predictable temp
   files not cleaned up (record.sh); double sysfs write (ml-start-app-audio.sh:49).
 
-## Application status (v0.1.1)
+## Application status (v0.1.1) — history; these commands and `tools/openjooki/patches/` no longer exist (ADR-0012)
 
 **Applied and 100% verified on the device** (A/B flow, rollback preserved):
 - #1 heartbeat RCE `## ML_OTA` — via `patch cut-cloud`.

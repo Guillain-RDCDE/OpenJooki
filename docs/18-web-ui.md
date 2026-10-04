@@ -10,13 +10,15 @@
 The Jooki serves its own management page at `http://<jooki-ip>/`. The original
 page (a 2018 React app by Muuselabs) still worked locally, but it had many bugs,
 dead cloud features and trackers. The logic behind it (the Lua program inside
-`/jooki/lib/player.lib`) had real data-loss bugs too. `patch webui` replaces the
-page and fixes the program, through the same A/B mechanism as `harden`.
+`/jooki/lib/player.lib`) had real data-loss bugs too. In 1.x, `patch webui` replaced
+the page and fixed that program in place; since 2.0 it installs the page with our own
+core, through the same A/B mechanism, and is refused without `--core`:
 
 ```sh
-python3 tools/openjooki/jooki.py --host <ip> patch webui --dry-run   # build + check only
-python3 tools/openjooki/jooki.py --host <ip> patch webui             # install (A/B, rollback armed)
-python3 tools/openjooki/jooki.py --host <ip> patch switch <2|3>      # go back to the previous system
+python3 tools/build/bundle.py                                                       # the core, into build/
+python3 tools/openjooki/jooki.py --host <ip> patch webui --core build/player.lib --dry-run   # build + check only
+python3 tools/openjooki/jooki.py --host <ip> patch webui --core build/player.lib    # install (A/B, rollback armed)
+python3 tools/openjooki/jooki.py --host <ip> patch switch <2|3>                     # go back to the previous system
 ```
 
 Your music, playlists and tokens are not touched (they live on the data
@@ -24,21 +26,27 @@ partition). A safety backup of the database is taken first anyway.
 
 ## How the Jooki works (short)
 
-- `web_ctrl` (C, Mongoose) serves static files from `/jooki/app/www/public`
-  (symlinked into `/tmp/web_ctrl_dirs/public` when the app starts) and receives
-  uploads on `POST /upload` (multipart, field name = numeric upload id, stored as
-  `uploads/upload_<id>`).
-- The page talks to the application over **MQTT** (mosquitto, TCP 1883 and
-  WebSocket 8000): it publishes JSON on `/j/web/input/<TYPE>` and receives the
-  state on `/j/web/output/state` (full or partial) and errors on
-  `/j/web/output/error`. See `docs/11-content-api.md`.
-- The application is **Lua 5.1 source** stored in `player.lib`: zlib-compressed,
-  with its first 2 bytes XOR-ed with its last 2 bytes (the `player` binary undoes
-  that and loads it). `tools/openjooki/lua_patches.py` decodes it, applies
-  targeted replacements — each must match exactly, otherwise nothing is applied —
-  and re-encodes it. Only the fragments to change are in this repository; the
-  original program is patched in place on your own Jooki and never distributed.
-  The original is kept on the device as `player.lib.openjooki-orig`.
+Today (2.1 and later):
+
+- The core's own web server (`core/adapters/httpd.lua`, port 80) serves the page's
+  files from `/tmp/web_ctrl_dirs/public` (links to `/jooki/app/www/public`, rebuilt at
+  every start) and receives uploads on `POST /upload` (multipart, field name = numeric
+  upload id, stored as `uploads/upload_<id>`). Nothing else: no `/ll`, no `/cmd`.
+- The page talks to the core over **MQTT** on the WebSocket (mosquitto, port 8000,
+  with the per-Jooki password it reads at `/oj-auth.json`): it publishes JSON on
+  `/j/web/input/<TYPE>` and receives the state on `/j/web/output/state` (full or
+  partial) and errors on `/j/web/output/error`. See `docs/11-content-api.md`.
+- The application is our core, `/jooki/lib/core.lua`; `player.lib` is a small loader
+  for it (ADR-0011). `player.lib` is zlib-compressed, with its first 2 bytes XOR-ed
+  with its last 2 bytes (the `player` binary undoes that and loads it);
+  `tools/openjooki/playerlib.py` is the codec.
+
+In 1.x (history): the closed `web_ctrl` (C, Mongoose) served those files and
+`/upload`, and the application was Muuselabs' Lua program inside `player.lib`.
+A tool, `lua_patches.py` (gone with ADR-0012), decoded it, applied targeted
+replacements — each had to match exactly, otherwise nothing was applied — and
+re-encoded it; the original program was patched in place on each Jooki and never
+distributed. It is still kept on the device as `player.lib.openjooki-orig`.
 
 ## Tokens: one rule
 
@@ -50,7 +58,10 @@ as soon as you named a token, so the other tokens of that character stopped
 working. That is gone. Existing per-token links are converted to character links
 at boot (if the character is free).
 
-## Application fixes (Lua)
+## Application fixes (Lua) — history (1.x)
+
+What the 1.x patches changed in the original program. The core written for 2.0
+behaves like the "After" column from the start.
 
 | Area | Before | After |
 |---|---|---|
@@ -68,7 +79,9 @@ at boot (if the character is free).
 
 ## The new page
 
-Plain HTML/CSS/JS served by the Jooki, no framework, no build step, **no external
+Plain HTML/CSS/JS served by the Jooki, no framework, no bundler and no minifier
+(`webui/build.py` only puts the files of `webui/src/` end to end into `app.js`, and CI
+checks that `app.js` is what `src/` gives), **no external
 request at all** (no Google Fonts, no analytics, no tracking pixel, no link to the
 dead `jooki.rocks` domain). English by default; French or Dutch when the browser is set to that language (switchable in Settings).
 
@@ -95,8 +108,8 @@ dead `jooki.rocks` domain). English by default; French or Dutch when the browser
   Since 2.2 the Settings page is short: a "My Jooki" card (name, battery,
   storage, version) and grouped rows that show their value; each topic opens on
   a page of its own, `#/settings/<topic>` (`bluetooth`, `night`, `airplane`,
-  `wifi`, `update`, `language`, `parent`, `home`, `maintenance`), with the back
-  button of the top bar.
+  `wifi`, `update`, `language`, `theme`, `mp3`, `parent`, `home`, `maintenance`),
+  with the back button of the top bar.
 - **Updates** (since 1.2.0): Settings shows the installed OpenJooki version and
   checks GitHub for a newer release (also once when the page opens). If there
   is one, a banner appears on the home page and **Update now** installs it from
@@ -106,7 +119,13 @@ dead `jooki.rocks` domain). English by default; French or Dutch when the browser
   automatic reconnection, keyboard accessible.
 
 The old page is kept on the device in `/jooki/app/www/public-openjooki-orig/`
-(not served). A `service-worker.js` that unregisters itself replaces the old one.
+(not served). The old page's service worker is not replaced by a file any more: the
+page unregisters any service worker it finds when it starts (`src/23-boot.js`).
+
+What a render asks again and again (the user's playlists sorted by title, the playlist
+each character starts) is derived from the state once and kept in an index
+(`src/04-state.js`, `index()`), dropped whenever the library part of the state or the
+language changes.
 
 ## Updating from the page
 
@@ -115,18 +134,34 @@ the background, so the player never waits on the network):
 
 | Message | What the Jooki does | What the page reads |
 |---|---|---|
-| `/j/web/input/OJ_UPDATE_CHECK` | writes `{"pending":true}`, then downloads `version.json` of the latest GitHub release (`{"error":"offline"}` if it can't) | `/oj-latest.json` |
-| `/j/web/input/OJ_UPDATE_START` | runs the same `o.sh` as the phone installer (once at a time) | `/oj-status.txt` (the installer's log) |
+| `/j/web/input/OJ_UPDATE_CHECK` | writes `{"pending":true}`, then downloads the manifest at `update_manifest_url` (by default `version.json` of the latest GitHub release; `{"error":"offline"}` if it can't) | `/oj-latest.json` |
+| `/j/web/input/OJ_UPDATE_START` | downloads the script at `update_script_url` (by default `o.sh` on GitHub Pages, the same as the phone installer's) and runs it, once at a time | `/oj-status.txt` (the installer's log) |
+
+The two addresses are keys of the core's configuration (`core/kernel/config.lua`), and
+the shell actions that fetch them (`core/adapters/shell.lua`, `is_update_url`) accept
+only our GitHub (`https://github.com/Guillain-RDCDE/OpenJooki/…`,
+`https://guillain-rdcde.github.io/OpenJooki/…`) or `http://127.0.0.1:<port>/…`, which
+is how the bench serves its own. The same two actions answer the v2 commands
+`update.check` and `update.start`.
 
 The installed version comes from `/etc/openjooki-version` and is sent in the
 state as `device.openjooki`. The install itself is unchanged: spare partition,
 sha256 check, rollback armed.
 
+The update screen (`src/17-update.js`) reads `/oj-status.txt` every 3 s. While an
+update runs, every 10 s it also checks that the connection is alive (`checkAlive` in
+`src/05-connection.js`: it asks for the state and reconnects when nothing answers
+within 5 s; also when the page comes back in front) and draws the screen again; when
+nothing has moved for 3 minutes it says what to do. The browser that started an update
+remembers it (`localStorage`, key `oj.upd`, for an hour), so a reloaded page takes the
+update up where it is.
+
 ## Tests
 
 - **Bench** (off-device, `tools/openjooki/tests/`): the built core runs under Lua 5.1 with
   stubs for the 4 C functions, a real mosquitto, a fake audio engine and Chromium
-  (Playwright): 48 backend checks, 80 end-to-end page checks and the other suites, in CI.
+  (Playwright): 48 backend checks, 83 end-to-end page checks and the other suites
+  ([21-architecture-2.0.md](21-architecture-2.0.md) §14), in CI.
 - **On the device** after install: file checksums, application answering over
   MQTT, page served, then non-destructive checks (migration, token rename,
   create/upload/reorder/delete a temporary playlist, "Unused tracks" protection,

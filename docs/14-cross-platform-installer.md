@@ -1,5 +1,13 @@
 # OpenJooki installer — cross-platform & "from the phone"
 
+> **History, with two parts still current.** §1 and §2 (the desktop installer
+> `tools/openjooki/installer_web.py` and its `--lan` option) are built and still in the tree.
+> §3 ("the Jooki updates itself from a page it serves", `openjooki.html`) was **never built**:
+> it was superseded by `b.sh` / `o.sh` and the phone installer page
+> ([16-phone-install.md](16-phone-install.md)), then by the *Update* button of the Jooki's own
+> page ([18-web-ui.md](18-web-ui.md)); and since 2.1.0 `web_ctrl` and its `/ll` are no longer
+> started on an OpenJooki ([ADR-0007](adr/0007-security-model.md)).
+
 Goal: update the Jooki safely from any device, using the same proven anti-brick
 engine (write to the spare partition, bit-perfect verification, A/B activation
 with armed U-Boot rollback).
@@ -24,7 +32,7 @@ prints an address `http://<mac-ip>:PORT/`. You open it **from the phone**
 (same WiFi): you drive the whole install from the mobile, while the computer
 does the work. Bluetooth is not used (see §4).
 
-## 3. Phone WITHOUT a PC — the Jooki updates itself  🔬 FEASIBILITY CONFIRMED, to be finalized
+## 3. Phone WITHOUT a PC — the Jooki updates itself  (never built in this form; see the note at the top)
 Target: from the phone, go to `http://jooki2-A1B2C3.local/openjooki.html`,
 drop the firmware, and **the Jooki installs it on itself**.
 
@@ -47,7 +55,7 @@ What we confirmed on the device:
   web_ctrl/Mongoose, which avoids any origin issue (page served by the Jooki
   itself = same origin as `/upload` and `/ll`).
 
-Still to do (next milestone): `openjooki.html` (same UI as the desktop) dropped
+Planned then, never done (superseded, see the note at the top): `openjooki.html` (same UI as the desktop) dropped
 in `/jooki/app/www/public/`, wiring `/upload` → file on disk → `/ll` launches
 `selfupdate.sh`, and progress rendered via a small state file served statically.
 Then a real install test from the phone. Watch point: max size accepted by
@@ -65,5 +73,5 @@ payload. The right pipe for firmware is **WiFi**.
 |---|---|---|
 | Desktop Mac/PC/Linux (drag & drop) | ✅ done & verified | WiFi (PC→Jooki) |
 | Phone drives the PC (`--lan`) | ✅ done | WiFi |
-| Phone without a PC (Jooki self-update) | 🔬 feasibility confirmed, core written | WiFi (web_ctrl) |
+| Phone without a PC (Jooki self-update) | not built in this form: done by `b.sh` / `o.sh` (docs/16) and the page's *Update* | WiFi |
 | Bluetooth for firmware | ⛔ ruled out (too slow) | — |

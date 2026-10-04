@@ -1,7 +1,10 @@
 # Connect a Jooki to Wi-Fi without the app
 
+> **Parents**: use [the Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html).
+> This file is for those who want the terminal tool or the details.
+
 A Jooki 2 only learnt its Wi-Fi network from the old app, at the first start. Move
-house, change the box or its password, and it goes red and silent. Its Wi-Fi chip
+house, change the box or its password, and its side dots stay orange: no Wi-Fi, no page. Its Wi-Fi chip
 also speaks Bluetooth, though, and always offers the same set-up the app used:
 Espressif's provisioning (protocol v1.1, no security, `wifi_scan`), plus Muuselabs'
 own list of remembered networks. Two things speak it:
@@ -30,7 +33,7 @@ network (`connect`), or until it restarts: on the charger it does so by itself a
 minutes (OpenJooki 2.0.8 or later). `list` and `forget` do not.
 
 Bluetooth must be on. Several Jookis around: `--name JOOKI2_XXXXXX` (the name is
-`JOOKI2_` + the end of the Jooki's serial, shown on its page under Settings).
+`JOOKI2_` + the end of the Jooki's serial, shown on its page under *Settings → Wi-Fi → Change network*).
 
 ## What was found on a real Jooki (28 September 2026)
 

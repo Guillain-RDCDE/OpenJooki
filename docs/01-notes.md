@@ -1,5 +1,9 @@
 # Jooki v2 — Recovery notes
 
+> **History: dated notes (9 September 2026).** The first session on the household Jooki, before
+> OpenJooki existed; kept as written. What a Jooki runs today:
+> [21-architecture-2.0.md](21-architecture-2.0.md); the parents' guide: the [main page](../README.md).
+
 _Session of September 9, 2026 — regained access to the household Jooki._
 
 ## In one sentence

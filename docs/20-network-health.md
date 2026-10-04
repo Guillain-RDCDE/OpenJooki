@@ -31,9 +31,9 @@ configuration is kept as `/etc/syslog-ng/syslog-ng.conf.openjooki-orig`.
 `<hostname>.local` (for example `jooki2-a1b2c3.local`, shown in Settings): the
 page opens at `http://jooki2-a1b2c3.local/` from macOS, iOS, Windows 10+ and
 recent Android, even when the router gives the Jooki another address. An
-*extra* name (alias) is not possible: the Jooki's web server (`web_ctrl`,
-closed) serves only the system's own hostname and redirects any other one to
-Muuselabs' dead setup site. So with the 2.0 core the name itself can be
+*extra* name (alias) was not possible when this was built: the Jooki's web server of
+the time (`web_ctrl`, closed, no longer started since 2.1.0) served only the system's
+own hostname and redirected any other one to Muuselabs' dead setup site. So with the 2.0 core the name itself can be
 **changed** (Settings > Name > Rename, command `OJ_SET_NAME` / `device.set_name`):
 lower-case letters, digits and inner hyphens, applied at once and kept in
 `/data/openjooki/hostname`. At boot `ml-jooki-hostname.sh` applies it, and so
@@ -57,14 +57,15 @@ browser searches the web or tries https.
 ## How it is built
 
 - `tools/openjooki/system/syslog-ng.conf` replaces `/etc/syslog-ng/syslog-ng.conf`
-  (installed by `jooki.py patch webui` and by `scripts/add-webui-to-image.py`;
+  (installed by `jooki.py patch webui --core` and by `scripts/add-webui-to-image.py`;
   checked with the Jooki's own `syslog-ng --syntax-only`). Wi-Fi events are also
   copied to `/tmp/oj-wifi.log` (RAM).
 - Since 2.0: `core/services/network.lua` (log cleanup at boot, Wi-Fi state published as
   `net`, the Wi-Fi watchdog) and `core/adapters/mdns.lua` (the `.local` name, answered and
   announced from the loop). In 1.x the same lived in a module hooked into the Jooki's program.
-- The page (`webui/app.js`): upload queue with retries, stall watchdog and
-  after-reconnect check; Wi-Fi row in Settings.
+- The page (`tools/openjooki/webui/src/08-uploads.js`: upload queue with retries,
+  stall watchdog and after-reconnect check; `src/18-settings.js`: the Wi-Fi row in
+  Settings; `app.js` is built from `src/`).
 
 ## What we learned about the Jooki's Wi-Fi (26/09/2026)
 

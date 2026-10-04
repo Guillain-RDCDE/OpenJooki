@@ -55,7 +55,7 @@ local DESC = {
   ["device.party"] = "Just for fun: for 5 s the ring and the side dots run through the colour wheel, then go back to their real state.",
   ["device.clock"] = "The phone's time (UTC seconds). Taken only while the Jooki's clock is unset (no Internet since the start: no NTP, no RTC); the page sends it at every connection.",
   ["device.airplane"] = "Switches Wi-Fi and Bluetooth off for `minutes` (1–1440) or, without minutes, until the next start; either way the next start switches them back on. `cancel` switches them back on now. The page loses the Jooki meanwhile.",
-  ["upload.add"] = "Imports a file web_ctrl received on /upload (uploadId = the multipart field name).",
+  ["upload.add"] = "Imports a file the Jooki's web server received on /upload (uploadId = the multipart field name).",
   ["bedtime.sleep"] = "Starts (seconds or minutes, or mode = track) or cancels the sleep timer.",
   ["bedtime.set"] = "Night mode settings: enabled, start/stop (\"HH:MM\" or minutes), timer (min), maxvol, dim, tzbase (minutes), tzdst (EU|none).",
   ["update.check"] = "Asks the Jooki to fetch the latest version.json from GitHub (result in /oj-latest.json).",
@@ -72,8 +72,8 @@ io.write("| Jooki → page | `" .. api.TOPIC_REPLY .. "` | `{\"v\":2, \"id\":…
 io.write("| Jooki → page | `" .. api.TOPIC_STATE .. "` | full: `{\"v\":2, \"rev\":n, \"full\":true, \"state\":{…}}` · patch: `{\"v\":2, \"rev\":n, \"patch\":{key: value}}` |\n")
 io.write("| Jooki → page | `" .. api.TOPIC_EVENT .. "` | `{\"v\":2, \"type\":\"…\", \"payload\":{…}}` |\n\n")
 io.write("Error codes: `invalid_argument` (field names the culprit), `not_found`, `forbidden` (the parent code, when one is set: `PARENT_CODE_REQUIRED`), `read_only`, `conflict`, `unavailable`, `internal`.\n\n")
-io.write("The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is served by `core/api/v1.lua` for one release.\n\n")
-io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
+io.write("The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/api/v1.lua`: it is the one the page speaks (docs/11-content-api.md). The security switches (SSH, parent code, MQTT on the LAN), Bluetooth and a token's photo exist only there.\n\n")
+io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
 io.write("## Commands (" .. #api.commands() .. ")\n\n")
 local cmds = api.commands()
 for _, name in ipairs(cmds) do

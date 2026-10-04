@@ -1,6 +1,6 @@
 -- services.network: what the page needs to know about the Wi-Fi, and the
--- Jooki's name on the network (docs/20). The Wi-Fi manager (safe switch,
--- preferred networks) is 2.1.
+-- Jooki's name on the network (docs/20), plus the Wi-Fi watchdog. The Wi-Fi manager once
+-- planned (safe switch, preferred networks) was never built (docs/21 §15).
 -- Owns state.net = { ssid, bssid, channel, signal, connected, ip, ap, drops, beacons, name, since }
 -- (state.bluetooth belongs to services.bluetooth)
 -- Reads /tmp/oj-wifi.log (Wi-Fi events copied there by syslog-ng, see

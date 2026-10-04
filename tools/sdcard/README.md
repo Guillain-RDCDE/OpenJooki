@@ -1,7 +1,11 @@
-# The Jooki's SD card: a bigger one, or a new one (Windows, Mac, Linux)
+# The Jooki's SD card: a bigger one, a new one, or the original one (Windows, Mac, Linux)
 
-The Jooki v2 keeps everything on a micro SD card inside it: 8 GB, of which about
-5 GB is for music. The tool does two things, chosen on its first screen:
+> **Parents**: everything you need is on [the tool's page](https://guillain-rdcde.github.io/OpenJooki/sdcard.html).
+> This file is for those who want to know how the tool works.
+
+The Jooki 2 keeps everything on a micro SD card inside it: 8 GB, of which about
+5 GB is for music. The tool does three things, chosen on its first screen (the third, the
+original Jooki, is described further down):
 
 - **a bigger card**: it copies the Jooki's card to a bigger one, for more music;
 - **a new card from scratch**: for a Jooki that no longer starts because its card is
@@ -20,8 +24,8 @@ The Jooki v2 keeps everything on a micro SD card inside it: 8 GB, of which about
 ## What you need
 
 - A Windows 10/11 computer, a Mac or a Linux computer, with a card reader (built in, or a small USB one).
-- A new micro SD card, **bigger than 8 GB**. Up to 32 GB is the same kind of card as
-  the Jooki's own; bigger cards (SDXC) have not been tried in a Jooki yet.
+- A new micro SD card: **bigger than 8 GB** for a bigger card, **4 GB or more** for a new
+  card or the original Jooki. Up to 32 GB is the same kind of card as the Jooki's own; bigger cards (SDXC) have not been tried in a Jooki yet.
 - About 8 GB free in your Documents folder.
 
 ## How to
@@ -76,7 +80,10 @@ formats Windows cannot read.
   write: erase the table, write, read back and compare, grow `content` to the end of
   the card, verify both GPT headers. A card image already downloaded and checked is
   reused as is.
-- Only cards of 3 GB or more are offered for a new card.
+- Only cards of 4 GB or more are meant for a new card (what the page and the error message
+  say). The test in the code is 3 × 10⁹ bytes (`MIN_NEW_CARD` in `jooki_sd.py`, `$MinNewCard`
+  in `docs/Jooki-SD-card.cmd`): "a new card must hold the image and then some", and the
+  image is about 2.4 GB.
 
 ### The original Jooki
 

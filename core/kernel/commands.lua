@@ -10,6 +10,12 @@
 --       with `reply`, the output comes back as an event { type = reply, out, rc, ref = c.ref }
 --   { kind = "files.read_text", path = "...", reply = "event.type", ref = any }
 --       -> event { type = reply, path, text (nil when missing), ref }
+--   { kind = "files.write_text", path = "...", text = "..." }          (a failure is logged)
+--   { kind = "files.flag", name = "LETTERS_AND_DIGITS", set = bool }   (a flag file of the device)
+--   { kind = "files.rename", from = "...", to = "...", reply = "event.type"?, ref = any }
+--       -> event { type = reply, ok, err, size, ref }
+--   { kind = "files.stat", path = "...", reply = "event.type", ref = any }
+--       -> event { type = reply, path, exists, size, ref }
 --   { kind = "timer.every" | "timer.once", name = "...", seconds = n }
 --   { kind = "timer.cancel", name = "..." }
 --   { kind = "emit", event = table }                -- an internal event for the next turn

@@ -1,5 +1,9 @@
 # Jooki v1 (J1000): recovery through the serial console (UART)
 
+> **Field notes on a Jooki v1 (J1000), a model OpenJooki does not install on.** Still valid as
+> a recovery method. Where it refers to v2 tooling of the time (the `cut-cloud` patch), that
+> tooling is gone ([ADR-0012](adr/0012-retire-1x.md)).
+
 Goal: get back into a **Jooki v1** whose Wi-Fi refuses every network (the setup
 portal fails at once and the device goes back to "setup" mode). The usual ways in
 are closed: Wi-Fi fails, USB shows nothing on the computer side, and there is **no
@@ -153,7 +157,7 @@ Depending on what shows:
 At the same time, apply what was learned on the v2 so that the fix holds:
 
 - **Neutralise the dead cloud** (prevents reboots and reverts caused by
-  `my.jooki.rocks`): the `cut-cloud` patch.
+  `my.jooki.rocks`): the `cut-cloud` patch (a 1.x command of `jooki.py`, since retired: ADR-0012).
 - **Lasting root access**: SSH key + dropbear at boot (as in docs/06), so that the
   rest can be done **over the network**, without the console.
 

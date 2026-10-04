@@ -1,5 +1,12 @@
 # The current core, function by function (inventory for the 2.0 rewrite)
 
+> **History: the inventory of the ORIGINAL application** (Muuselabs' `player.lib` with the
+> OpenJooki 1.3.0 patches), read in full on 26/09/2026 before the rewrite. "The current core"
+> in its title means that program, not ours. It is still the reference for how the original
+> behaved and for the data formats; its "2.0" notes and columns are the **plan** as it stood
+> that day. What was built: [21-architecture-2.0.md](21-architecture-2.0.md) (§15 lists what
+> was planned and never built).
+
 Source: the Jooki v2 application `player.lib` (Muuselabs, firmware
 `n20221206-5ce8778-70b40631`), 5 508 lines of minified Lua 5.1 once decoded,
 plus the 49 OpenJooki patches of 1.3.0 (5 673 lines). Read in full on

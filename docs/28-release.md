@@ -16,6 +16,17 @@ What `release.sh` needs on the bench, by environment variable (defaults in the s
 1.3.0 base image (`OJ_BASE_IMAGE`), the pieces of a new card (`OJ_NEWCARD`: `boot.bin`, `p1.img`;
 `OJ_DATA_TAR`), and optionally `OJ_FORGET_FILE`, one string per line that must not appear in any
 image (the source Jooki's own name, address and network: the build fails if one is found).
+The defaults point under `run/` at the repository root, which is not in git (`.gitignore`).
+`OJ_WORK` (default `/root/ojrel`) is where `release.sh` copies the tree and builds, and where
+`check-card.sh` writes its test card; both scripts put `/opt/v/bin`, `/usr/sbin` and `/sbin`
+first on the `PATH`.
+
+Inside, `release.sh` checks the version (`check_versions.py --release`), builds the core
+(`bundle.py --max-kib 400`), runs `scripts/add-webui-to-image.py` (the core, the page and the
+system files into the base image, then `scrub_rootfs`: leftovers removed and the free blocks
+emptied with `e2fsck -E discard`, at least two passes), checks the version, the page, the
+loader and the core inside the image, runs `scripts/make-release.sh` (the `.img.gz` and
+`version.json`), then `tools/sdcard/make_card_image.py` for the new-card image.
 
 CI (`.github/workflows/ci.yml`) must be green on the pushed commit before step 4; the tag then
 runs the long `nightly.yml` (the whole bench plus 10 minutes of endurance). Where the files go

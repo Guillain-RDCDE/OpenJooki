@@ -28,7 +28,7 @@ OpenJooki release image and:
 1. gives every `.openjooki-orig` its name back (the same inode: owner, mode and
    dates as they were);
 2. removes what OpenJooki added (the version file, the security start script,
-   the new page's files);
+   the core itself, `/jooki/lib/core.lua`, and the new page's files);
 3. puts the 2018 web app back in the served folder;
 4. checks that nothing named *openjooki* is left, zeroes the free blocks and
    runs `e2fsck`.

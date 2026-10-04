@@ -39,4 +39,4 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <text x="480" y="250" text-anchor="middle" class="t">state published to the page: nowPlaying, playback, bedtime.sleep  —  lights: playing</text>
 <path d="M480 170 L480 220" class="arrow"/>
 <text x="30" y="310" text-anchor="start" class="s">Empty playlist → the &quot;empty&quot; sound, no error beep.   Unknown character → learned, shown on the page, nothing plays.</text>
-<text x="30" y="327" text-anchor="start" class="s">Any failure → logged, lights show an error, the loop goes on.</text></svg>
+<text x="30" y="327" text-anchor="start" class="s">Any failure → logged, the loop goes on.</text></svg>

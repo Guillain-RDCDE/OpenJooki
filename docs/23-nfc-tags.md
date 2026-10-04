@@ -58,7 +58,8 @@ into `nfc.tag { uid, foreign = true }`:
   page would show it on the Jooki forever), and taking it off does not pause;
 - it can carry a picture: the page edits the photo in the browser (flood-fill
   background removal, rotation, zoom, circle) and sends a 128 px PNG through
-  web_ctrl's `/upload`, then `TOKEN_SET_IMAGE { tagId, uploadId }`. The core
+  the Jooki's `/upload` (the core's own web server since 2.1, `core/adapters/httpd.lua`;
+  `web_ctrl` before), then `TOKEN_SET_IMAGE { tagId, uploadId }`. The core
   moves the file to `<data_dir>/artwork/tok_<UID>.png` (served at `/artwork/`)
   and stores its address in `tokens.json` (`image`, with the file size as a
   cache key). `TOKEN_EDIT { image: false }` removes both.

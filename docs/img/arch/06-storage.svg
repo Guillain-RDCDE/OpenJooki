@@ -9,7 +9,7 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <marker id="b" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M10 0L0 5L10 10z" fill="#333"/></marker></defs><rect width="960" height="360" fill="#fff"/><text x="20" y="30" text-anchor="start" class="h">Data: same files as 1.x, written so that a power cut can never lose them</text>
 <rect x="30" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
 <text x="100" y="92" text-anchor="middle" class="t">playlists.json</text>
-<text x="100" y="108" text-anchor="middle" class="s">v1 → v2 migration</text>
+<text x="100" y="108" text-anchor="middle" class="s">title, tracks, character</text>
 <rect x="185" y="70" width="140" height="60" rx="6" fill="#dfeef8" class="box"/>
 <text x="255" y="92" text-anchor="middle" class="t">tracks.json</text>
 <text x="255" y="108" text-anchor="middle" class="s">one entry per file</text>
@@ -42,7 +42,7 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-
 <path d="M600 230 L630 230" class="arrow"/>
 <rect x="830" y="190" width="100" height="80" rx="10" fill="#fff8d6" class="box"/>
 <text x="880" y="222" text-anchor="middle" class="t">on load</text>
-<text x="880" y="238" text-anchor="middle" class="s">schema version</text>
-<text x="880" y="253" text-anchor="middle" class="s">→ migrate</text>
+<text x="880" y="238" text-anchor="middle" class="s">version and</text>
+<text x="880" y="253" text-anchor="middle" class="s">sum checked</text>
 <text x="30" y="300" text-anchor="start" class="s">Read: file → if unreadable, .bak → if unreadable, empty database + loud log line (never a crash).</text>
-<text x="30" y="317" text-anchor="start" class="s">Write: only when something changed, at most once per second, and always before power-off.</text></svg>
+<text x="30" y="317" text-anchor="start" class="s">Write: with the command that changes the data (the audiobook position: at most once a minute); a sync before power-off.</text></svg>

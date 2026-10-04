@@ -13,7 +13,9 @@ Jooki on your local network.
   boot**, U-Boot (`bootlimit=1`) **returns on its own** to the old one — no
   computer, just a power-cycle. When it boots, the trial is **committed**
   automatically.
-- The code is **fully readable** (a single file, standard library).
+- The code is **fully readable**: `jooki.py` and the small `playerlib.py` (the `player.lib`
+  codec), Python standard library. One optional package, `paho-mqtt`, is used for one thing:
+  opening the maintenance SSH of a Jooki that runs OpenJooki 2.1 or later (see below).
 
 > **Every write command is tested on a real Jooki before release.**
 > Music writes only to the content area; system patches go through A/B (spare
@@ -21,7 +23,10 @@ Jooki on your local network.
 
 ## Requirements
 - Python 3, and `ssh` (built in on macOS / Linux / Windows 10+).
-- The Jooki powered on, on the same Wi-Fi network as the computer.
+- `paho-mqtt` (`pip install paho-mqtt`) for a Jooki on OpenJooki 2.1 or later; not needed
+  for a factory Jooki.
+- The Jooki powered on, on the same Wi-Fi network as the computer (`--host <ip>`, or the
+  `JOOKI_HOST` environment variable).
 
 ## Usage
 ```sh
@@ -50,7 +55,12 @@ Backups go to `~/.openjooki/backups/`. A dedicated SSH key is created in
 - The Jooki is an embedded Linux (Ingenic X1000 SoC, MIPS) + an ESP32 co-processor
   (Wi-Fi/BT/NFC). Everything is driven by an internal MQTT bus.
 - Root access is via an **RSA** key (the original SSH server, dropbear, does not
-  accept ed25519) on a service started on **port 2222**.
+  accept ed25519) on a service started on **port 2222**. How the tool starts it: on a
+  factory Jooki (or OpenJooki before 2.1), through the factory web control's `/ll`; since
+  2.1 `/ll` is gone, so the tool does what the page's *Settings → Maintenance* does: it
+  reads the WebSocket password at `/oj-auth.json` and publishes `OJ_SSH_ON` on the MQTT
+  WebSocket (port 8000), which opens the maintenance SSH for one hour (`_ws_ssh_on` in
+  `jooki.py`). When a parent code is set, open it from the page instead.
 - See the repo's `docs/` folder for the full analysis and design.
 
 ## Install a firmware — "zero-effort", Mac / PC / phone
@@ -66,8 +76,8 @@ the previous version. Nothing can brick it.
 
 **From your phone**: `python3 installer_web.py --lan` prints an address
 `http://<mac-ip>:PORT/` to open on the phone (same Wi-Fi) — you drive everything
-from the phone. (The "no PC at all" path is in progress, see
-`docs/14-cross-platform-installer.md`.)
+from the phone. (With no computer at all: the phone installer page for a factory Jooki,
+`docs/16-phone-install.md`, and the *Update* button of the Jooki's own page afterwards.)
 
 Command line (advanced): `python3 installer.py <firmware>`
 (`--no-switch` to write+verify without activating, `--selftest` for a safe test).

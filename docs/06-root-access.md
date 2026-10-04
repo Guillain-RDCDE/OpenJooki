@@ -1,5 +1,12 @@
 # Root access to the Jooki — the method that works (09/2026)
 
+> **History, and still the way in on a factory Jooki.** The `/ll` method below works on the
+> factory firmware and on OpenJooki before 2.1. Since 2.1.0 `web_ctrl` is not started and `/ll`
+> is gone: root access is the maintenance SSH opened from the page (*Settings → Maintenance*,
+> one hour, port 2222, keys kept on `/data`) or by `tools/openjooki/jooki.py`, which sends
+> `OJ_SSH_ON` over the WebSocket ([ADR-0007](adr/0007-security-model.md)). The "Phase 1"
+> announced below never came in that form.
+
 ## Summary
 SSH root access obtained. Two firmware pitfalls, both worked around:
 1. The SSH server (**dropbear**, BusyBox 1.31.1) runs on port 22 with the

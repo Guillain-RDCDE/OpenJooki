@@ -126,6 +126,8 @@
       upd_q: function (v) { return 'Mettre à jour vers OpenJooki ' + v + ' ?'; },
       upd_text: 'Le Jooki télécharge la nouvelle version et redémarre tout seul : jusqu\'à 10 minutes. Garde-le branché. Ta musique et tes jetons sont conservés, et il revient tout seul à l\'ancienne version si quelque chose se passe mal.',
       upd_running: 'Mise à jour en cours…', upd_keep: 'Garde le Jooki branché. Cette page se reconnecte toute seule.',
+      upd_stuck: 'Rien ne bouge depuis un moment ? Le Jooki se déconnecte puis se reconnecte pendant la mise à jour, et le téléphone peut perdre le fil. Tu peux actualiser la page : ça n\'arrête rien.',
+      upd_reload: 'Actualiser la page', upd_wait: 'Le Jooki redémarre encore. Réessaie dans une minute.',
       upd_rebooting: 'Le Jooki redémarre sur la nouvelle version…', upd_done: function (v) { return 'Jooki mis à jour : OpenJooki ' + v; },
       upd_failed: 'La mise à jour n\'a pas pu se faire. Ton Jooki n\'a pas changé.', upd_banner: function (v) { return 'Mise à jour ' + v + ' disponible'; },
       upd_see: 'Voir',
@@ -303,6 +305,8 @@
       upd_q: function (v) { return 'Update to OpenJooki ' + v + '?'; },
       upd_text: 'The Jooki downloads the new version and restarts on its own: up to 10 minutes. Keep it plugged in. Your music and tokens are kept, and it goes back to the previous version by itself if anything goes wrong.',
       upd_running: 'Updating…', upd_keep: 'Keep the Jooki plugged in. This page reconnects by itself.',
+      upd_stuck: 'Nothing moving for a while? The Jooki disconnects and reconnects during the update, and the phone can lose track. You can reload the page: it stops nothing.',
+      upd_reload: 'Reload the page', upd_wait: 'The Jooki is still restarting. Try again in a minute.',
       upd_rebooting: 'The Jooki is restarting on the new version…', upd_done: function (v) { return 'Jooki updated: OpenJooki ' + v; },
       upd_failed: 'The update could not be done. Your Jooki has not changed.', upd_banner: function (v) { return 'Update ' + v + ' available'; },
       upd_see: 'Show',
@@ -480,6 +484,8 @@
       upd_q: function (v) { return 'Bijwerken naar OpenJooki ' + v + '?'; },
       upd_text: 'De Jooki downloadt de nieuwe versie en start vanzelf opnieuw: tot 10 minuten. Laat hem aangesloten. Je muziek en figuurtjes blijven bewaard, en hij gaat vanzelf terug naar de vorige versie als er iets misgaat.',
       upd_running: 'Bijwerken…', upd_keep: 'Laat de Jooki aangesloten. Deze pagina maakt vanzelf opnieuw verbinding.',
+      upd_stuck: 'Gebeurt er al een tijdje niets? De Jooki verbreekt en herstelt de verbinding tijdens de update, en de telefoon kan de draad kwijtraken. Je kunt de pagina vernieuwen: dat stopt niets.',
+      upd_reload: 'Pagina vernieuwen', upd_wait: 'De Jooki start nog opnieuw op. Probeer het over een minuut opnieuw.',
       upd_rebooting: 'De Jooki start opnieuw op met de nieuwe versie…', upd_done: function (v) { return 'Jooki bijgewerkt: OpenJooki ' + v; },
       upd_failed: 'De update is niet gelukt. Je Jooki is niet veranderd.', upd_banner: function (v) { return 'Update ' + v + ' beschikbaar'; },
       upd_see: 'Bekijken',
@@ -894,8 +900,24 @@
     var busy = upd.state === 'running' || upd.state === 'rebooting';   // just updated: let the "done" toast show first
     setTimeout(function () { location.replace(location.pathname + '?v=' + encodeURIComponent(v) + location.hash); }, busy ? 3000 : 0);
   }
+  // A connection the browser dropped without telling (a phone that slept, an iPhone tab left behind)
+  // still looks open, and nothing ever tries again: the update screen then waits for ever. So when
+  // the page comes back in front, and every 10 s during an update, ask for the state; if nothing
+  // answers, connect again.
+  var lastRx = 0, aliveTimer = null;
+  function checkAlive() {
+    if (!client || aliveTimer) return;
+    if (!online) { retryDelay = 1000; connect(); return; }
+    var asked = Date.now();
+    client.publish('/j/web/input/GET_STATE', '{}');
+    aliveTimer = setTimeout(function () { aliveTimer = null; if (lastRx < asked) connect(); }, 5000);
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) checkAlive(); });
+  window.addEventListener('pageshow', checkAlive);
+  window.addEventListener('online', checkAlive);
   function onMessage(topic, text) {
     var data;
+    lastRx = Date.now();
     try { data = JSON.parse(text); } catch (e) { return; }
     if (topic === '/j/web/output/state') {
       var posOnly = data && Object.keys(data).length === 1 && data.audio && Object.keys(data.audio).length === 1 && data.audio.playback &&
@@ -903,7 +925,7 @@
       mergeState(data);
       if (posOnly) return;
       waiters = waiters.filter(function (w) { return !w(data); });
-      if (!autoChecked && S.device.openjooki) { autoChecked = true; setTimeout(checkUpdate, 1500); }
+      if (!autoChecked && S.device.openjooki) { autoChecked = true; resumeUpdate(function (running) { if (!running) setTimeout(checkUpdate, 1500); }); }
       reloadIfStale();
       syncClock();
       handleUserMessages();
@@ -2318,31 +2340,63 @@
       });
     }, 1500);
   }
+  var UPD_BAD = /ERROR|SAFETY|INVALID|not performed|did not complete|download failed|no network|invalid manifest/i;
+  // this browser remembers that it started an update (oj.upd, a time), to take it up again after a reload
+  function updBegin() { upd.state = 'running'; upd.startedFrom = installed(); upd.step = 0; upd.pct = null; upd.reboot = false; upd.movedAt = Date.now(); lsSet('oj.upd', String(Date.now())); }
+  function updOver(state) { upd.state = state; lsSet('oj.upd', ''); }
+  // read the installer's report every 3 s while it runs
+  function pollUpdate() {
+    if (upd.state !== 'running') return;
+    getText('/oj-status.txt', function (txt) {
+      if (txt) {
+        var p = updProgress(txt);
+        if (p.step !== upd.step || p.pct !== upd.pct) upd.movedAt = Date.now();
+        upd.step = p.step; upd.pct = p.pct;
+        // what the installer wrote before it asked for the reboot: later lines come from a dying process
+        var before = txt.split('REBOOT_NOW')[0];
+        if (/already up to date/i.test(txt)) { updOver('checked'); toast(t('upd_uptodate')); render(); return; }
+        if (!p.reboot && UPD_BAD.test(before) && !/retry/i.test(before.split('\n').filter(Boolean).pop() || '')) {
+          updOver('failed'); render(); return;
+        }
+        upd.reboot = p.reboot;
+      }
+      render();
+      setTimeout(pollUpdate, 3000);
+    });
+  }
   function startUpdate() {
     confirmBox(t('upd_q', upd.latest), t('upd_text'), t('upd_now'), false).then(function (ok) {
       if (!ok) return;
-      upd.state = 'running'; upd.startedFrom = installed(); upd.step = 0; upd.pct = null; upd.reboot = false;
+      updBegin();
       send('OJ_UPDATE_START', {});
       render();
-      setTimeout(function poll() {
-        if (upd.state !== 'running') return;
-        getText('/oj-status.txt', function (txt) {
-          if (txt) {
-            var p = updProgress(txt);
-            upd.step = p.step; upd.pct = p.pct;
-            // what the installer wrote before it asked for the reboot: later lines come from a dying process
-            var before = txt.split('REBOOT_NOW')[0];
-            if (/already up to date/i.test(txt)) { upd.state = 'checked'; toast(t('upd_uptodate')); render(); return; }
-            if (!p.reboot && /ERROR|SAFETY|INVALID|not performed|did not complete|download failed|no network|invalid manifest/i.test(before) && !/retry/i.test(before.split('\n').filter(Boolean).pop() || '')) {
-              upd.state = 'failed'; render(); return;
-            }
-            upd.reboot = p.reboot;
-          }
-          render();
-          setTimeout(poll, 3000);
-        });
-      }, 1500);
+      setTimeout(pollUpdate, 1500);
     });
+  }
+  // The page that started an update, reloaded while the Jooki is installing, takes the update where
+  // it is: the installer's report is there and says neither "done" nor "failed". Only that browser
+  // asks (within the hour): the report does not exist otherwise, and asking for it would be an error
+  // in every other page's console. cb(true) when an update is running.
+  function resumeUpdate(cb) {
+    if (upd.state === 'running' || upd.state === 'rebooting') { cb(true); return; }
+    var since = Number(lsGet('oj.upd')) || 0;
+    if (!since || Date.now() - since > 3600000) { cb(false); return; }
+    getText('/oj-status.txt', function (txt) {
+      var live = !!txt && /\S/.test(txt) && !/already up to date/i.test(txt) && !UPD_BAD.test(txt.split('REBOOT_NOW')[0]);
+      if (live) { updBegin(); render(); pollUpdate(); } else lsSet('oj.upd', '');
+      cb(live);
+    });
+  }
+  // while an update runs: a dead connection is noticed (checkAlive), and the screen is drawn again
+  // so that the "nothing moving" help can appear even when no message comes
+  setInterval(function () {
+    if (upd.state !== 'running' && upd.state !== 'rebooting') return;
+    checkAlive();
+    if (route().name === 'settings') render();
+  }, 10000);
+  // "Reload the page", only once the Jooki answers (a reload while it restarts shows the browser's error page)
+  function reloadWhenThere() {
+    getText('/index.html', function (txt) { if (txt) location.reload(); else toast(t('upd_wait')); });
   }
   // The installer's report (oj-status.txt, its own words and curl's meter) -> which step, how far.
   // Steps: 0 looking, 1 downloading, 2 checking the download, 3 installing, 4 checking the install, 5 restarting.
@@ -2368,6 +2422,7 @@
         h('span', null, n + (now && i === 1 && upd.pct !== null ? ' … ' + upd.pct + ' %' : now ? '…' : '')));
     }));
   }
+  var UPD_STUCK_MS = CFG.updStuckMs || 180000;
   // the Update page's body (Settings > Update)
   function updateCard() {
     var cur = installed();
@@ -2376,7 +2431,10 @@
         h('div', { class: 'row' }, h('div', { class: 'spinner', style: 'width:28px;height:28px;border-width:3px;margin:0' }),
           h('b', { class: 'grow' }, upd.state === 'rebooting' ? t('upd_rebooting') : t('upd_running'))),
         updSteps(),
-        h('p', { class: 'small muted' }, t('upd_keep')));
+        h('p', { class: 'small muted' }, t('upd_keep')),
+        // three minutes without any progress: say what may be going on, and offer a way out
+        Date.now() - (upd.movedAt || 0) > UPD_STUCK_MS ? [h('p', { class: 'small', 'data-k': 'updstuck' }, t('upd_stuck')),
+          h('button', { class: 'btn block', 'data-k': 'updreload', onclick: reloadWhenThere }, t('upd_reload'))] : null);
     }
     var avail = upd.state === 'checked' && updateAvailable();
     var bad = upd.state === 'failed' || upd.state === 'offline';
@@ -2394,17 +2452,17 @@
   function watchUpdateReconnect() {
     // only once the installer has asked for the reboot: before that, a lost connection (a busy Jooki,
     // a hiccup of the Wi-Fi) is not a restart, and the report is simply read again when it comes back
-    if (upd.state === 'running' && !online && lastOnline && upd.reboot) upd.state = 'rebooting';
+    if (upd.state === 'running' && !online && lastOnline && upd.reboot) { upd.state = 'rebooting'; upd.movedAt = Date.now(); }
     var busy = upd.state === 'running' || upd.state === 'rebooting';
     // back with the new version: done, whether or not we saw the "restarting" line (read every 3 s)
     if (busy && online && gotState && installed() && installed() !== upd.startedFrom) {
-      upd.state = 'checked'; toast(t('upd_done', installed())); upd.latest = installed(); backAt = 0;
+      updOver('checked'); toast(t('upd_done', installed())); upd.latest = installed(); backAt = 0;
     }
     // back with the old version after an announced restart: the Jooki went back on its own
     if (upd.state === 'rebooting' && online && gotState && installed()) {
       if (!backAt) {
         backAt = Date.now();
-        setTimeout(function () { if (upd.state === 'rebooting' && installed() === upd.startedFrom) { upd.state = 'failed'; render(); } }, 90000);
+        setTimeout(function () { if (upd.state === 'rebooting' && installed() === upd.startedFrom) { updOver('failed'); render(); } }, 90000);
       }
     }
     lastOnline = online;

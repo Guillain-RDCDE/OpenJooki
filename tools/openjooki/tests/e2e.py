@@ -255,6 +255,25 @@ with sync_playwright() as p:
     pg.wait_for_selector("text=Mise à jour en cours", timeout=5000)
     pg.wait_for_selector("text=n'a pas pu se faire", timeout=90000)
     check("E16 update start: progress shown, the installer's failure reported clearly", True)
+    # E16 a page opened while an installer runs takes the update where it is; when nothing has moved
+    # for a while (3 minutes on a Jooki, 1.5 s here) it says so and offers to reload, which stops nothing
+    STATUS = "/jooki/app/www/public/openjooki-status.txt"
+    with open(STATUS, "w") as f: f.write("[openjooki] checking for updates...\n[ota] downloading openjooki-firmware-9.9.9.img.gz\n")
+    uctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, locale="fr-FR", bypass_csp=True)
+    uctx.add_init_script("window.OJ_CONFIG = { updStuckMs: 1500 }; try { localStorage.setItem('oj.upd', String(Date.now())); } catch (e) {}")   # the phone that started it
+    up = uctx.new_page(); up.goto(URL + "/#/settings/update")
+    try: up.wait_for_selector("text=Mise à jour en cours", timeout=10000); resumed = True
+    except Exception: resumed = False
+    check("E16 a page opened during an install shows the install, not 'update available'", resumed and up.locator("[data-k=updnow]").count() == 0, up.locator("main").inner_text()[:200])
+    try: up.wait_for_selector("[data-k=updreload]", timeout=10000); stuck = up.locator("[data-k=updstuck]").inner_text()
+    except Exception: stuck = ""
+    check("E16 nothing moving: the page says the Jooki reconnects and offers to reload", "actualiser la page" in stuck, stuck)
+    up.click("[data-k=updreload]")
+    try: up.wait_for_load_state("load"); up.wait_for_selector("text=Mise à jour en cours", timeout=10000); again = True
+    except Exception: again = False
+    check("E16 ... and after the reload the install is still shown", again, up.locator("main").inner_text()[:200])
+    with open(STATUS, "w") as f: f.write("")       # no installer any more: later pages start as usual
+    uctx.close()
     # E17 bedtime settings (the page also sends the browser's time zone)
     pg.goto(URL + "/#/settings/night"); pg.wait_for_selector("[data-k=bedcard]")
     J.wait(lambda: J.get("bedtime.cfg.tzbase") is not None)

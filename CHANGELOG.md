@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The update screen no longer looks stuck for ever.** On a phone that went to sleep during an
+  update (an iPhone above all), the page kept believing it was connected, never tried again and
+  stayed on "Installing" long after the Jooki was back. The page now notices a dead connection
+  when it comes back in front, and every ten seconds during an update, and connects again. If
+  nothing has moved for three minutes it says why that can happen and offers *Reload the page*,
+  which stops nothing; the phone that started the update shows it again after a reload.
+
 ## OpenJooki 2.2.6 (3 October 2026) — tidied inside, and a handful of fixes
 - **The parent code now also guards the v2 commands.** Over the newer command channel the page
   does not use yet (`/j/web/v2/cmd`), deleting a playlist, starting an update or changing a

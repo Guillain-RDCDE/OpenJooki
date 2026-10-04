@@ -12,7 +12,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | My Jooki works, but the app doesn't any more | **[Install OpenJooki](guide/install.md)** · 15 min, from your phone |
 | I have OpenJooki: playlists, tokens, bedtime, Bluetooth speaker… | **[Use it](guide/use.md)** |
 | I use Spotify on my phone | **[Spotify on the Jooki](guide/use.md#spotify)** |
-| A new version is out | **[Update it](guide/update.md)** · one tap |
+| A new version is out | **[Update it](guide/update.md)** · from the Jooki's page |
 | My Jooki doesn't start any more | **[A new SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#new)** · 10 min with a computer |
 | No more room for music | **[A bigger SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#bigger)** · with a computer |
 | It lost its Wi-Fi (moved house, new box, new password) | **[Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html)** · Android phone or computer |
@@ -21,22 +21,13 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.2.7:** the update screen notices when the phone lost the Jooki, and says what to do when nothing moves.
-2.2.6: shuffle really shuffles, the characters have Dutch names, an audiobook's resume line shows at once, the parent code guards every command channel; and the code was tidied from top to bottom.
-2.2.5: the pages inside Settings (night mode, update…) no longer blink.
-2.2.4: a disc keeps converting while its tab is behind another one.
-2.2.3: your discs in FLAC go onto the Jooki as MP3, three times lighter, converted by
-the page itself; on a computer, drop an album folder and it becomes a playlist.
-2.2.2: `http://jooki.local/` opens the page every time (type `http://` in front).
-2.2.1: the page in dark or light, your choice (*Settings > Appearance*); and a
-*Christmas tree* button, just for fun: all the colours of the lights for 5 seconds.
-2.2.0: each round flat token can start its own story; 659 ready-made pictures for
-your tokens (no Internet needed); a new, shorter Settings page.
-2.1.5: Spotify's album covers show on the page. 2.1.4: night mode works away from
-home — open the page once and the Jooki takes your phone's time ([Away from home](guide/travel.md)).
-2.1.3: the real fix for the Jooki going silent;
-2.1.1: the side lights glow while it looks for Wi-Fi; 2.1.0: the Jooki serves its own page and the
-old hidden command channel is closed.
+**New in 2.2.7:** the update screen no longer looks stuck: it finds the Jooki again by itself.
+2.2.6: shuffle really shuffles; the characters have Dutch names; an audiobook says at once where it will resume.
+2.2.5: the pages inside Settings no longer blink.
+2.2.3: FLAC albums go onto the Jooki as MP3, three times lighter; on a computer, drop an album folder and it becomes a playlist.
+2.2.2: the page opens by the Jooki's name every time (`http://` + its name + `.local`).
+2.2.1: the page in dark or light, your choice; and a *Christmas tree* button, just for fun.
+2.2.0: each flat token can start its own story; 659 ready-made pictures for flat tokens and NFC tags; a shorter Settings page.
 [All the changes](CHANGELOG.md)
 
 ---

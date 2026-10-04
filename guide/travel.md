@@ -45,7 +45,8 @@ Internet is fine (a holiday home's box, a campsite).
 
 - **A new Wi-Fi** (holiday home): give it to the Jooki with the
   [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), from an Android phone
-  or a computer. Then open `http://jooki.local` (or the name you gave it).
+  or a computer. Then open its page as usual: `http://` + its name + `.local` (for example
+  `http://jooki.local` if you named it `jooki`).
 - **Your phone's own Wi-Fi (hotspot)**: do it **at home, before leaving**. Switch the
   hotspot on; on an iPhone also switch on *Maximize Compatibility* (the Jooki only sees
   2.4 GHz Wi-Fi). Give that Wi-Fi to the Jooki with the Wi-Fi page. Away from home, switch

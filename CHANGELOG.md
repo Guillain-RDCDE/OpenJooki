@@ -1,58 +1,65 @@
 # OpenJooki — Changelog
 
+## Next release
+- The page's own text and the guides now say how long an update really takes: ten to twenty minutes.
+- The install page (guillain-rdcde.github.io/OpenJooki) no longer has an *Update* button: it had
+  stopped working with 2.1. Updating is done from the Jooki's own page, *Settings > Update*.
+- The Wi-Fi page gives the Jooki's real address once it is connected (its own name, not always
+  `jooki.local`).
+- The guides were rewritten for the page as it is today (Use it, Update it, Questions, the lights).
+
 ## OpenJooki 2.2.7 (4 October 2026) — the update screen no longer looks stuck
 - **The update screen no longer looks stuck for ever.** On a phone that went to sleep during an
-  update (an iPhone above all), the page kept believing it was connected, never tried again and
-  stayed on "Installing" long after the Jooki was back. The page now notices a dead connection
-  when it comes back in front, and every ten seconds during an update, and connects again. If
-  nothing has moved for three minutes it says why that can happen and offers *Reload the page*,
-  which stops nothing; the phone that started the update shows it again after a reload.
-- Inside: the page's script (3 000 lines in one file) is now edited as 28 small files, one per
-  subject, put end to end into the same single `app.js` the Jooki serves. Nothing changes on the Jooki.
+  update (an iPhone above all), the page stayed on "Installing" long after the Jooki was back.
+  It now finds the Jooki again by itself. If nothing has moved for three minutes, it says why
+  that can happen and offers *Reload the page*, which stops nothing.
+- For the tinkerers: the page asks for the state when it comes back in front and every ten
+  seconds during an update, and connects again when nothing answers (iOS drops a sleeping tab's
+  WebSocket without a close event); the phone that started the update remembers it
+  (`localStorage oj.upd`) and shows it again after a reload. The page's script (3 000 lines in
+  one file) is now edited as 28 small files in `webui/src/`, put end to end by `webui/build.py`
+  into the same single `app.js` the Jooki serves.
 
 ## OpenJooki 2.2.6 (3 October 2026) — tidied inside, and a handful of fixes
-- **The parent code now also guards the v2 commands.** Over the newer command channel the page
-  does not use yet (`/j/web/v2/cmd`), deleting a playlist, starting an update or changing a
-  setting went through without the parent code. The same gate now answers both channels
-  (`"code"` in the v2 envelope; error `forbidden` / `PARENT_CODE_REQUIRED`).
-- **Shuffle really shuffles.** The random order was seeded with a value never set, so a playlist
-  played in the same "random" order after every start, and two playlists of the same length in
-  the same one. The seed now comes from the clock at start-up.
-- **Dutch names for the characters.** The Dragon, the Fox and the others had no Dutch name and
-  showed up in French on a page in Dutch.
-- **The updater's addresses come from the configuration** (`update_manifest_url`,
-  `update_script_url`, restricted to our GitHub or the bench's own server). The bench no longer
-  reaches GitHub, and the CI no longer runs the real `o.sh` as root.
-- **The firmware image no longer carries traces of the Jooki it was built from.** The name and
-  Wi-Fi address of the maintainer's own Jooki survived in unused blocks of the images of 2.0 to
-  2.2.5 (the new-card image was checked for them, the firmware image was not): the clean-up
-  skipped those blocks whenever it had just repaired the filesystem. The build now cleans until
-  nothing is left and refuses to produce an image where they can be found.
-- Fixes in the tools: `openjooki-selfupdate.sh --force-model --dry` really is a dry run (the
-  options were read by position); `installer.py` makes the same two checks as the other install
-  paths before writing (the running system is on the active partition, p2 and p3 are twins);
-  the "original card" tool also removes `/jooki/lib/core.lua`; a lost log line on a duplicate
-  upload whose playlist add fails.
-- **The 1.x patched program and its tooling are retired (ADR-0012).** `lua_patches.py`, the
-  `patches/` folder, the 1.x bench and the `playlist` / `music add` / `patch cut-cloud` /
-  `patch harden` commands of `jooki.py` are gone (the page does all of that; the two content
-  commands had stopped working when 2.1 closed the broker). `patch webui` and
-  `add-webui-to-image.py` require `--core`. The `player.lib` container codec lives in
-  `tools/openjooki/playerlib.py`, shared by the build, the device tool, the release script and
-  the loader test. A Jooki still on 1.x updates like any other (its page, the phone path, a card).
-- **An audiobook's "will resume at chapter…" line shows as soon as the page opens.** The first
-  state the page receives lacked the resume points; they only came with the next bedtime update.
-- **A change made right after another one reached the page late.** The Jooki sends its state at
-  most four times a second; when a second change fell inside that window it waited for the next
-  unrelated event instead of the end of the window. Mostly hidden by a timer that ticked every
-  half-second; now the state goes out when the window ends, whatever else happens.
+- **Shuffle really shuffles.** A playlist played in the same "random" order after every start.
+- **Dutch names for the characters.** The Dragon, the Fox and the others showed up in French on
+  a page in Dutch.
+- **An audiobook says at once where it will resume.** The "will resume at chapter…" line was
+  missing just after opening the page.
+- **A change made right after another one shows at once.** Renaming twice in a row, or adding two
+  things quickly, could leave the page one step behind until something else happened.
+- **The parent code guards every way of sending a command to the Jooki**, not only the page.
 - In English and Dutch the page no longer puts a French space before a colon ("Playlist : X").
-- **Dead code removed**, nothing visible: in the core (unused kernel helpers, four shell actions
-  nobody called including `factory_reset`, bus subscriptions nothing handled, three config keys
-  never read, handler registrations no event reached), in the page (48 translations never shown,
-  two icons, unused CSS rules, the service worker that only unregistered itself: the page already
-  does that), and in the tools (an abandoned Tk installer, duplicate copies of the device scripts,
-  a stale backup script, the stray `version.json` at the repository root).
+- **A big tidy-up inside**, nothing visible: about 2 000 lines of old code removed, the same thing
+  written once instead of several times, many more automatic tests.
+- For the tinkerers:
+  - the parent-code gate also answers the v2 channel (`/j/web/v2/cmd`: `"code"` in the envelope,
+    error `forbidden` / `PARENT_CODE_REQUIRED`);
+  - the shuffle seed comes from the clock at start-up (it was never set);
+  - the full v1 state carries `bedtime.resume` like the partial updates;
+  - the loop wakes up when the state-publication window ends, instead of at the next event;
+  - the updater's addresses come from the configuration (`update_manifest_url`,
+    `update_script_url`, restricted to our GitHub or 127.0.0.1): the bench no longer reaches
+    GitHub and the CI no longer runs the real `o.sh` as root;
+  - the 1.x patched program and its tooling are retired (ADR-0012): `lua_patches.py`, `patches/`,
+    the 1.x bench and `jooki.py`'s `playlist` / `music add` / `patch cut-cloud` / `patch harden`
+    are gone; `patch webui` and `add-webui-to-image.py` require `--core`; the `player.lib` codec is
+    `tools/openjooki/playerlib.py`;
+  - the core: `services/util.lua`, `device` and `playback` split into sub-modules, timers by
+    name, no file reading in `security`, one `device.update_config`, no private sub-tree
+    published on v2, 250 unit specs;
+  - dead code removed (unused kernel helpers, the shell actions `artwork`, `errorbeep`,
+    `factory_reset` and `reboot`, the `mender` and `net.dhcp` subscriptions, three config keys,
+    48 unused translations, the service worker that only unregistered itself, an abandoned Tk
+    installer, duplicate copies of the device scripts);
+  - the bench has one shared module and no fixed sleep; CI checks the version number, the
+    page's size and syntax, and runs each suite as its own step; a nightly run adds endurance;
+    releases are built and published by scripts (docs/28-release.md);
+  - the release build cleans the free blocks of the firmware image until nothing of the Jooki
+    it was built from is left (the new-card image was already checked for it);
+  - tools: `openjooki-selfupdate.sh --force-model --dry` really is a dry run; `installer.py`
+    checks the active partition and the twin sizes before writing; the "original card" tool also
+    removes `/jooki/lib/core.lua`.
 
 ## OpenJooki 2.2.5 (3 October 2026) — Settings pages stay still
 - **The pages inside Settings no longer blink.** Night mode, Update, Bluetooth, Wi-Fi and the

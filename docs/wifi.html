@@ -67,7 +67,7 @@
   <div id="step1">
     <div class="card">
       <b>1. Put the Jooki next to this device, switched on.</b>
-      <p class="muted" style="margin:.4em 0 0">Its lights may be red or blinking: that is the Jooki looking for Wi-Fi. Bluetooth must be on here.</p>
+      <p class="muted" style="margin:.4em 0 0">Its two side dots may be orange or glowing left and right: that is the Jooki looking for Wi-Fi. Bluetooth must be on here.</p>
       <button class="btn" id="find" type="button">Find my Jooki</button>
       <p class="tiny center">A list opens: pick <b>JOOKI2_…</b> then <b>Pair</b> (or <b>Connect</b>).</p>
     </div>
@@ -109,7 +109,7 @@
     <div class="center big" id="rico"></div>
     <p id="rtitle" style="font-weight:700;margin:0;text-align:center"></p>
     <p id="rtext" style="margin:.5em 0 0"></p>
-    <a class="btn" id="openpage" href="http://jooki.local/" hidden>Open my Jooki's page</a>
+    <a class="btn" id="openpage" href="#" hidden>Open my Jooki's page</a>
     <button class="btn ghost" id="again" type="button">Try another network</button>
   </div>
 
@@ -128,12 +128,12 @@
       <li>The password travels over Bluetooth, over a few metres, without encryption (that is how the Jooki was built). Do it at home.</li>
       <li><b>Why not from an iPhone or iPad?</b> Apple does not let any web page use Bluetooth, in any browser (Chrome on an iPhone is Safari underneath). The only way round would be an app on the App Store, which OpenJooki does not have. So this one step needs an Android phone or a computer; everything else works from the iPhone.</li>
       <li>The Jooki only does <b>2.4 GHz</b> Wi-Fi. If your box only shows a 5 GHz network, turn its 2.4 GHz one on.</li>
-      <li>Once connected, the Jooki's page is at <code>http://jooki.local</code> (or the address your box shows for it), from any phone or computer on that Wi-Fi.</li>
+      <li>Once connected, the Jooki's page is at <code>http://</code> + its name + <code>.local</code>, from any phone or computer on that Wi-Fi. Its name is <code>jooki2-…</code> (the name in the Bluetooth list, in small letters, with a hyphen), unless you gave it another one on its page. The address your box shows for it works too.</li>
       <li>Prefer a terminal? <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/wifi">jooki_wifi.py</a> does the same on Windows, Mac and Linux.</li>
     </ul>
   </details>
 
-  <footer><a href="./">OpenJooki</a> · community firmware for the Jooki v2 · not affiliated with the original maker</footer>
+  <footer><a href="./">OpenJooki</a> · made by a parent for the Jooki 2 · not affiliated with the original maker</footer>
 </main>
 <script>
 (function () {
@@ -392,7 +392,10 @@
     show('openpage', ok);
     if (ok) {
       $('rtitle').textContent = 'Your Jooki is on "' + ssid + '"';
-      $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://jooki.local</code> (with the <code>http://</code>), or the address your box shows for it. The Jooki remembers this network from now on.';
+      // its page answers to its own name: jooki2-xxxxxx (the Bluetooth name, lower case, with a hyphen) unless the family renamed it
+      var host = String(device && device.name || '').toLowerCase().replace(/_/g, '-').replace(/[^a-z0-9-]/g, '') || 'jooki';
+      $('openpage').href = 'http://' + host + '.local/';
+      $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://' + host + '.local</code> (with the <code>http://</code>). If you gave your Jooki another name on its page, use that name instead; the address your box shows for it works too. The Jooki remembers this network from now on.';
       $('again').textContent = 'Give it another network';
     } else {
       var why = st.state === 'failed' ? (st.reason === 0 ? 'The Jooki says the password is wrong. Check capitals, spaces and symbols, then try again: until then it stays off Wi-Fi.'

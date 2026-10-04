@@ -41,9 +41,9 @@
 <main>
   <div id="controls">
     <h1>OpenJooki</h1>
-    <p class="sub">For your Jooki&nbsp;v2 &mdash; from your phone.</p>
+    <p class="sub">For your Jooki&nbsp;2 &mdash; from your phone.</p>
 
-    <label for="ip">Your Jooki's IP address</label>
+    <label for="ip">Your Jooki's address</label>
     <input id="ip" inputmode="decimal" placeholder="192.168.1.61" autocomplete="off">
     <p class="hint">Phone on the same Wi-Fi as the Jooki.</p>
 
@@ -53,17 +53,14 @@
       <button class="btn ghost" id="ccancel" type="button">Cancel</button>
     </div>
 
-    <button class="btn" id="bu" type="button" disabled>Update</button>
-    <p class="tiny">Already on OpenJooki. Safe anytime. You can also tap <b>Update now</b> on the Jooki's own page.</p>
+    <button class="btn" id="bi" type="button" disabled>Install OpenJooki</button>
+    <p class="tiny">For a Jooki&nbsp;2 that still has its original program. Keeps your music. If anything goes wrong, the Jooki goes back by itself.</p>
+
+    <button class="btn ghost" id="bu" type="button" disabled>Already on OpenJooki? Open its page to update</button>
+    <p class="tiny">Updates are done from the Jooki's own page: <b>Settings</b>, then <b>Update</b>.</p>
 
     <details>
-      <summary>First install (factory Jooki)</summary>
-      <button class="btn ghost" id="bi" type="button" disabled>Install OpenJooki</button>
-      <p class="tiny">Keeps your music. If anything goes wrong, the Jooki goes back by itself. Jooki&nbsp;v2 only.</p>
-    </details>
-
-    <details>
-      <summary>Where do I find the IP?</summary>
+      <summary>Where do I find this address?</summary>
       <p>In your internet box's page or app, look at the list of connected devices: the one whose name starts with <b>jooki</b>. It looks like <code>192.168.1.42</code>.</p>
     </details>
 
@@ -86,19 +83,17 @@
     <span class="wwarn" id="wwarn">⚡ Keep it plugged in &mdash; don't unplug</span>
   </div>
 
-  <footer>Community firmware for the Jooki v2 &middot; not affiliated with the original maker<br><a href="sdcard.html" style="color:inherit">Out of room? A bigger SD card · Jooki dead? A new card</a> · <a href="wifi.html" style="color:inherit">Lost its Wi-Fi?</a></footer>
+  <footer>Made by a parent for the Jooki&nbsp;2 &middot; not affiliated with the original maker<br><a href="sdcard.html" style="color:inherit">Out of room? A bigger SD card · Jooki dead? A new card</a> · <a href="wifi.html" style="color:inherit">Lost its Wi-Fi?</a></footer>
 </main>
 <script>
   var C={
-    bu:"curl -fsSLo /tmp/o https://guillain-rdcde.github.io/OpenJooki/o.sh;sh /tmp/o&",
     bi:"curl -fsSLo /tmp/b https://guillain-rdcde.github.io/OpenJooki/b.sh;sh /tmp/b&"
   };
   var CONF={
-    bu:"<b>Update your Jooki now?</b><br><br>For up to <b>10&nbsp;minutes, nothing happens on screen &mdash; that is normal</b>. Your Jooki checks for a newer version by itself and restarts if it finds one. A tiny <code>ok</code> tab may flash up &mdash; <b>ignore it, it's harmless</b>. <b>Keep it plugged in.</b>",
     bi:"<b>Install OpenJooki now?</b><br><br>For about <b>10&ndash;15 minutes, nothing happens on screen &mdash; that is completely normal</b>. Your Jooki does everything by itself and <b>restarts on its own</b> at the end. A tiny <code>ok</code> tab may flash up &mdash; <b>ignore it, it's harmless and closes by itself</b>. This screen is the one that matters.<br><br><b>Do not unplug it.</b> Your music is kept; if anything goes wrong, the Jooki goes back to how it was by itself."
   };
-  var SECS={bu:600, bi:900};
-  var WT={bu:"Updating your Jooki…", bi:"Installing OpenJooki…"};
+  var SECS={bi:900};
+  var WT={bi:"Installing OpenJooki…"};
 
   var ip=document.getElementById('ip'), cur=null, timer=null;
   var confirmBox=document.getElementById('confirm'), cmsg=document.getElementById('cmsg'),
@@ -130,7 +125,9 @@
     confirmBox.hidden=false;
     try{confirmBox.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
   }
-  document.getElementById('bu').addEventListener('click',function(){if(!this.disabled)ask('bu');});
+  // Updating is the Jooki's own page's job (Settings > Update): this button only opens it. The old
+  // way (a command sent to the Jooki from here) stopped working with OpenJooki 2.1, which closed that door.
+  document.getElementById('bu').addEventListener('click',function(){if(!this.disabled)location.href='http://'+normIP(ip.value)+'/#/settings/update';});
   document.getElementById('bi').addEventListener('click',function(){if(!this.disabled)ask('bi');});
   document.getElementById('ccancel').addEventListener('click',function(){confirmBox.hidden=true;});
 

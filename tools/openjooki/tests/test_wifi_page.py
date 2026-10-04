@@ -150,7 +150,7 @@ with sync_playwright() as p:
     att = pg.evaluate("window.__jooki.attempts")
     check("W5 Enter sends exactly the chosen network and password", att == [{"ssid": "Home", "pw": "goodpassword"}], att)
     check("W5 a new session was opened before the set-up (handshake)", pg.evaluate("window.__jooki.sessions") >= 2, pg.evaluate("window.__jooki.sessions"))
-    check("W5 success card names the network and offers the Jooki's page", "ok" in pg.locator("#result").get_attribute("class") and "Home" in pg.locator("#rtitle").inner_text() and pg.locator("#openpage").is_visible() and "jooki.local" in pg.locator("#openpage").get_attribute("href"))
+    check("W5 success card names the network and offers the Jooki's page at its own name (not jooki.local)", "ok" in pg.locator("#result").get_attribute("class") and "Home" in pg.locator("#rtitle").inner_text() and pg.locator("#openpage").is_visible() and pg.locator("#openpage").get_attribute("href") == "http://jooki2-test01.local/" and "jooki2-test01.local" in pg.locator("#rtext").inner_text(), pg.locator("#openpage").get_attribute("href"))
     check("W5 progress card shown the network while connecting", "Home" in pg.locator("#ptitle").inner_text(), pg.locator("#ptitle").inner_text())
     # W6 wrong password -> AuthError
     pg.click("#again"); pg.wait_for_selector("#step2:not([hidden])")

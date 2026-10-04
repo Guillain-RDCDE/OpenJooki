@@ -113,7 +113,7 @@
     upd_uptodate: 'Your Jooki is up to date.', upd_offline: 'Cannot reach GitHub (is the Jooki online?).',
     upd_available: function (v) { return 'New version ' + v + ' available'; }, upd_now: 'Update now',
     upd_q: function (v) { return 'Update to OpenJooki ' + v + '?'; },
-    upd_text: 'The Jooki downloads the new version and restarts on its own: up to 10 minutes. Keep it plugged in. Your music and tokens are kept, and it goes back to the previous version by itself if anything goes wrong.',
+    upd_text: 'The Jooki downloads the new version and restarts on its own: count 10 to 20 minutes. Keep it plugged in. Your music and tokens are kept, and it goes back to the previous version by itself if anything goes wrong.',
     upd_running: 'Updating…', upd_keep: 'Keep the Jooki plugged in. This page reconnects by itself.',
     upd_stuck: 'Nothing moving for a while? The Jooki disconnects and reconnects during the update, and the phone can lose track. You can reload the page: it stops nothing.',
     upd_reload: 'Reload the page', upd_wait: 'The Jooki is still restarting. Try again in a minute.',

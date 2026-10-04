@@ -4,10 +4,10 @@
 No. They live on a part of the Jooki that updates never touch.
 
 **What if something goes wrong?**
-Unplug the Jooki and plug it back in: it goes back to the previous version by itself.
+Switch the Jooki off and on again: it goes back to the previous version by itself.
 
 **My Jooki does not start at all, whatever I do.**
-Nine times out of ten its memory card is dead.
+Nine times out of ten its memory card (the SD card inside it) is dead.
 [A new card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#new) brings it back;
 the music has to be added again.
 
@@ -40,7 +40,23 @@ it takes your phone's time. [Away from home](travel.md).
 **Why can't I reconnect the Wi-Fi from my iPhone?**
 A Jooki without Wi-Fi only listens over Bluetooth, and Apple does not let any web page use
 Bluetooth on an iPhone or iPad, in any browser. That one step takes an Android phone or a
-computer with Chrome, once; everything else works from the iPhone.
+computer with Chrome or Edge, once; everything else works from the iPhone.
+
+**What is the address of my Jooki's page?**
+`http://` followed by the address your internet box shows for it (like `http://192.168.1.19`),
+or by its name and `.local`. Its name is `jooki2-…` until you give it another one: in
+*Settings*, tap **Rename**. With the name `jooki`, the page is at `http://jooki.local`.
+
+**Can I add a whole album at once?**
+Yes, from a computer: **Add albums**, or drop the album's folder on the page. On a phone,
+add the songs with **Add files**. [Use it](use.md).
+
+**Does Spotify work? And Deezer?**
+Spotify does: choose the Jooki in the Spotify app ([Use it](use.md#spotify)). Deezer does
+not.
+
+**What are *Home automation* and *Maintenance access* in Settings?**
+Two switches for tinkerers. Leave them off.
 
 **And the Jooki 1?**
 It's on the way, but it's a much more closed box: it takes more work.

@@ -2,24 +2,78 @@
 
 **Open the Jooki's page:** on your phone, type **`http://`** followed by its address, for
 example `http://192.168.1.19`. Don't forget the `http://`: without it, some phones search
-the web instead.
+the web instead. The phone must be on the same Wi-Fi as the Jooki.
 
-![The OpenJooki page on a phone](../docs/img/openjooki-web.png)
+The page has four tabs at the bottom: **Playlists**, **Tokens**, **Library**, **Settings**.
 
 ## The first two things to do
 
-- **Give it a name**: Settings → Name → **Rename**, for example `jooki`. From then on,
-  open `http://jooki.local`, whatever the address.
+- **Give it a short name**: in **Settings**, tap **Rename** next to its name, at the top.
+  Choose for example `jooki`. From then on its page is at `http://jooki.local`, whatever
+  its address. (Without a name of yours, it is called `jooki2-…`: *Settings → Wi-Fi* shows
+  the page's address.)
 - **Put it on your home screen**: on iPhone, Share → *Add to Home Screen*; on Android,
   menu ⋮ → *Add to Home screen*. One tap opens it.
 
-## Every day
+## Playlists
 
-- **Playlists**: create one, add songs straight from your phone, play, pause, volume.
-- **Tokens**: choose which character plays which playlist. An **amiibo or an NFC
-  sticker** works too, with its own photo (taking it off does not pause).
-- **Bedtime**: audiobooks pick up where your child fell asleep, a sleep timer fades the
-  music out, and a night mode keeps the volume low and the lights dim.
+- **New playlist**, then **Add files**: pick songs on your phone or computer (MP3, M4A,
+  OGG, FLAC, WAV…). Keep the page open while they are sent.
+- **Choose the character** that starts the playlist. Every token of the same character
+  starts it (all your black dragons do the same thing).
+- **From the library** adds songs that are already on the Jooki. **Web radio** adds a
+  radio by its address.
+- Put the songs in order: drag them, or tap **Sort** (by file name, title, artist, album
+  or duration), then **Keep this order**.
+- Remove a song from the playlist with the ✕: an **Undo** button shows for a few seconds.
+- **Delete playlist** removes the playlist only. Its songs stay on the Jooki, under
+  *Unused* in the Library.
+
+### Whole albums, from a computer
+
+On a computer, **Add albums** (or drop album folders on the page): each folder becomes a
+playlist, in the album's order. FLAC and WAV files are turned into MP3 by the page before
+they are sent, so an album takes three times less room. Keep the tab in front while it
+works. The quality is in *Settings → MP3 quality* (256 kbps is the recommended one).
+On a phone, add the songs with **Add files** instead.
+
+### Audiobooks
+
+Switch **Audiobook** on in a playlist: it always resumes where it stopped, and is never
+shuffled. The playlist says *Will resume at chapter…*; **Start again from the beginning**
+puts it back to chapter 1.
+
+## Tokens
+
+- The **Tokens** tab shows your characters. Put a token on the Jooki to see it there. Tap
+  a character to choose its playlist and give it a nickname.
+- **Flat tokens** (the round ones) and the **Thank-you token** can each have their own
+  name, picture and playlist. A flat token without a playlist of its own plays the one
+  shared by all flat tokens.
+- **An amiibo or an NFC sticker** works too: put it on, and it shows up in Tokens. Taking
+  it off does **not** pause (use the button), and another object has to go on the Jooki
+  between two uses of the same one.
+- **A picture** for a flat token or an NFC tag: **Choose a picture** (659 ready-made ones,
+  with a search, no Internet needed) or **My photo** (take or pick a photo, then **Remove
+  the background**).
+
+## The Library
+
+Every song on the Jooki, with a search. **Unused** lists the songs that are in no
+playlist. Tick songs, then **Add to…** a playlist, or **Delete from Jooki** to erase them
+for good.
+
+## While it plays
+
+The bar at the bottom shows what is playing. Tap it for the volume, shuffle and repeat,
+and the **sleep timer**: 10, 20, 30, 45 or 60 minutes, or **End of chapter**. The music
+fades out at the end.
+
+## Bedtime
+
+*Settings → Night mode*: choose the hours (**From**, **To**). During those hours every
+listen stops by itself after the **Automatic timer**, the volume stays under the
+**Maximum volume**, and the lights are dim (**Dimmed lights**).
 
 ## Spotify
 
@@ -35,14 +89,40 @@ the web instead.
 
 ## In Settings
 
-- **Bluetooth speaker or headphones**: put them in pairing mode, then **Search** →
+At the top: the Jooki's name (**Rename**), its battery, the room left for music, and its
+version.
+
+**Listening**
+- **Limited volume (kids mode)**, **Shuffle**, **Repeat**.
+- **MP3 quality**: for the FLAC and WAV files you send (see *Whole albums* above).
+- **Speaker or headphones** (Bluetooth): put them in pairing mode, then **Search** →
   **Connect**. The sound goes to the speaker, and comes back to the Jooki when you switch
   the speaker off. Next time, just switch the speaker on: the Jooki reconnects by itself.
-- **Airplane mode**: Wi-Fi and Bluetooth off for the time you choose (a few hours, until
-  the morning, or until the next start). The Jooki brings them back by itself; tokens and
-  music work the whole time. Meanwhile, this page cannot reach it: that's expected.
-- **Parent code** (under *Security*): a 4-digit code so that children can play music but
-  not change anything. Forgotten? Hold ◀ and ▶ together on the Jooki for ten seconds.
-- **Limited volume (kids mode)**, shuffle, repeat, language.
+  **Stop using this speaker** ends that.
+
+**Bedtime and travel**
+- **Night mode**: see *Bedtime* above.
+- **Airplane mode**: Wi-Fi and Bluetooth off for the time you choose (1, 2, 4 or 8 hours,
+  until the morning, or until it is switched off and on again). The Jooki brings them back
+  by itself; tokens and music work the whole time. Meanwhile, this page cannot reach it:
+  that's expected.
+
+**General**
+- **Wi-Fi**: the network, the signal and the page's address. Moved house or changed the
+  box? See [Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html).
+- **Update**: see [Update it](update.md).
+- **Language**: English, Français or Nederlands. The page picks your phone's language by
+  itself.
+- **Appearance**: Automatic (like the phone), Light or Dark.
+- **Christmas tree**: just for fun, all the colours of the lights for 5 seconds.
+
+**Parents**
+- **Parent code**: a 4-digit code so that children and guests can play music but not
+  change anything (delete a playlist, change the Wi-Fi, start an update). Forgotten? Hold
+  ◀ and ▶ together on the Jooki for ten seconds.
+
+**Advanced** (*Home automation* and *Maintenance access*): for tinkerers. Leave them off.
+
+**Turn off the Jooki**, at the bottom: its button turns it back on.
 
 [← Back](../README.md)

@@ -113,7 +113,7 @@
     upd_uptodate: 'Je Jooki is up-to-date.', upd_offline: 'GitHub is niet bereikbaar (is de Jooki online?).',
     upd_available: function (v) { return 'Nieuwe versie ' + v + ' beschikbaar'; }, upd_now: 'Nu bijwerken',
     upd_q: function (v) { return 'Bijwerken naar OpenJooki ' + v + '?'; },
-    upd_text: 'De Jooki downloadt de nieuwe versie en start vanzelf opnieuw: tot 10 minuten. Laat hem aangesloten. Je muziek en figuurtjes blijven bewaard, en hij gaat vanzelf terug naar de vorige versie als er iets misgaat.',
+    upd_text: 'De Jooki downloadt de nieuwe versie en start vanzelf opnieuw: reken op 10 tot 20 minuten. Laat hem aangesloten. Je muziek en figuurtjes blijven bewaard, en hij gaat vanzelf terug naar de vorige versie als er iets misgaat.',
     upd_running: 'Bijwerken…', upd_keep: 'Laat de Jooki aangesloten. Deze pagina maakt vanzelf opnieuw verbinding.',
     upd_stuck: 'Gebeurt er al een tijdje niets? De Jooki verbreekt en herstelt de verbinding tijdens de update, en de telefoon kan de draad kwijtraken. Je kunt de pagina vernieuwen: dat stopt niets.',
     upd_reload: 'Pagina vernieuwen', upd_wait: 'De Jooki start nog opnieuw op. Probeer het over een minuut opnieuw.',

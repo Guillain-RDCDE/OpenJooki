@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.2.7 (4 October 2026) — the update screen no longer looks stuck
 - **The update screen no longer looks stuck for ever.** On a phone that went to sleep during an
   update (an iPhone above all), the page kept believing it was connected, never tried again and
   stayed on "Installing" long after the Jooki was back. The page now notices a dead connection

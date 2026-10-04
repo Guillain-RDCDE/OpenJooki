@@ -21,7 +21,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.2.6:** shuffle really shuffles, the characters have Dutch names, an audiobook's resume line shows at once, the parent code guards every command channel; and the code was tidied from top to bottom.
+**New in 2.2.7:** the update screen notices when the phone lost the Jooki, and says what to do when nothing moves.
+2.2.6: shuffle really shuffles, the characters have Dutch names, an audiobook's resume line shows at once, the parent code guards every command channel; and the code was tidied from top to bottom.
 2.2.5: the pages inside Settings (night mode, update…) no longer blink.
 2.2.4: a disc keeps converting while its tab is behind another one.
 2.2.3: your discs in FLAC go onto the Jooki as MP3, three times lighter, converted by

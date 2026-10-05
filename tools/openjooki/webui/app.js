@@ -178,6 +178,7 @@
     disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' pistes' : ' piste'); },
     disc_errors: function (n) { return n + (n > 1 ? ' pistes n\'ont pas pu être envoyées' : ' piste n\'a pas pu être envoyée'); },
     disc_created: function (n) { return 'Playlist créée : ' + n; },
+    story_rec: 'Enregistrer une histoire', story_default: 'Mon histoire', story_got: function (n) { return 'Histoire reçue : ' + n; },
     s_mp3: 'Qualité des MP3', s_mp3_sub: 'Pour les FLAC et WAV envoyés', s_mp3_192: '192 kbps — le plus léger', s_mp3_256: '256 kbps — recommandé', s_mp3_320: '320 kbps — le plus fin',
     s_mp3_foot: 'Les FLAC et WAV envoyés au Jooki sont convertis en MP3 sur ton ordinateur ou ton téléphone : un disque prend trois fois moins de place. 256 kbps suffit largement pour l\'enceinte du Jooki et un casque Bluetooth. Ce choix ne vaut que pour cet appareil.',
     s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
@@ -357,6 +358,7 @@
     disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' tracks' : ' track'); },
     disc_errors: function (n) { return n + (n > 1 ? ' tracks could not be sent' : ' track could not be sent'); },
     disc_created: function (n) { return 'Playlist created: ' + n; },
+    story_rec: 'Record a story', story_default: 'My story', story_got: function (n) { return 'Story received: ' + n; },
     s_mp3: 'MP3 quality', s_mp3_sub: 'For the FLAC and WAV you send', s_mp3_192: '192 kbps — lightest', s_mp3_256: '256 kbps — recommended', s_mp3_320: '320 kbps — finest',
     s_mp3_foot: 'FLAC and WAV files sent to the Jooki are turned into MP3 on your computer or phone: an album takes three times less space. 256 kbps is plenty for the Jooki\'s speaker and Bluetooth headphones. This choice is for this device only.',
     s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
@@ -536,6 +538,7 @@
     disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' nummers' : ' nummer'); },
     disc_errors: function (n) { return n + (n > 1 ? ' nummers konden niet verstuurd worden' : ' nummer kon niet verstuurd worden'); },
     disc_created: function (n) { return 'Afspeellijst gemaakt: ' + n; },
+    story_rec: 'Een verhaal opnemen', story_default: 'Mijn verhaal', story_got: function (n) { return 'Verhaal ontvangen: ' + n; },
     s_mp3: 'MP3-kwaliteit', s_mp3_sub: 'Voor de FLAC en WAV die je verstuurt', s_mp3_192: '192 kbps — het lichtst', s_mp3_256: '256 kbps — aanbevolen', s_mp3_320: '320 kbps — het fijnst',
     s_mp3_foot: 'FLAC- en WAV-bestanden die naar de Jooki gaan, worden op je computer of telefoon omgezet naar MP3: een album neemt drie keer minder ruimte in. 256 kbps is ruim genoeg voor de luidspreker van de Jooki en een Bluetooth-koptelefoon. Deze keuze geldt alleen voor dit apparaat.',
     s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
@@ -657,6 +660,7 @@
     prev: '<path d="M19 5L9 12l10 7zM6 5v14" fill="currentColor"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     upload: '<path d="M12 16V4M6 10l6-6 6 6M4 20h16"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
     radio: '<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
@@ -1502,6 +1506,40 @@
       function (dt) { groupsFromDrop(dt).then(function (g) { addDiscs(g, null); }); });
   }
 
+  /* ------------------------------------------------------------------ the story studio */
+  // A story is read aloud on the project's site, in a tab this page opens: a page served by the Jooki
+  // (http) has no right to the microphone, and a page of the site (https) has no right to write to the
+  // Jooki. So the studio hands the finished story back from tab to tab (docs/studio.html, "oj-story").
+  var STUDIO = 'https://guillain-rdcde.github.io', storySeen = {};
+  function openStudio() { window.open(STUDIO + '/OpenJooki/studio.html#jooki=' + encodeURIComponent(location.origin)); }
+  // this tab slept behind the studio's: the connection to the Jooki comes back a moment after it is shown again
+  function whenOnline(fn, tries) {
+    if (online) fn();
+    else if (tries > 0) setTimeout(function () { whenOnline(fn, tries - 1); }, 500);
+    else toast(t('offline'), 'error');
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (e.origin !== STUDIO || !d || d.type !== 'oj-story' || !Array.isArray(d.files)) return;
+    var title = String(d.title || '').slice(0, 100) || t('story_default');
+    var files = d.files.filter(function (f) { return f && f.blob instanceof Blob && f.blob.size; })
+      .map(function (f) { return new File([f.blob], String(f.name || 'page.mp3').slice(0, 120), { type: 'audio/mpeg' }); });
+    if (!files.length) return;
+    try { e.source.postMessage({ type: 'oj-story-got' }, STUDIO); } catch (err) { /* the studio's tab is gone: the story is here anyway */ }
+    // the same story sent twice (a second tap in the studio) is added once
+    var sig = title + '/' + files.map(function (f) { return f.size; }).join(',');
+    if (storySeen[sig] && Date.now() - storySeen[sig] < 120000) return;
+    storySeen[sig] = Date.now();
+    whenOnline(function () {
+      createPlaylist(title).then(function (id) {
+        send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: true } });
+        enqueue(files, id);
+        toast(t('story_got', title));
+        go('#/p/' + encodeURIComponent(id));
+      }, function () { delete storySeen[sig]; toast(t('up_fail') + t('colon') + title, 'error'); });
+    }, 60);
+  });
+
   /* ------------------------------------------------------------------ token visuals */
   function tokVisual(starId, cls, live) {
     var c = charInfo(starId);
@@ -1563,7 +1601,8 @@
       list.length ? null : h('div', { class: 'empty' }, h('div', { class: 'big' }, '🎵'), t('no_playlists')),
       h('div', { class: 'plgrid' }, cards),
       discsBlock(),
-      addDisc ? h('div', { class: 'actions', style: 'margin-top:14px' }, addDisc) : null,
+      h('div', { class: 'actions', style: 'margin-top:14px' },
+        h('button', { class: 'btn', 'data-k': 'story', onclick: openStudio }, icon('mic'), t('story_rec')), addDisc),
       discDrop()
     ];
   }

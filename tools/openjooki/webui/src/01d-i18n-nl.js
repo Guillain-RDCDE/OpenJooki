@@ -166,6 +166,7 @@
     disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' nummers' : ' nummer'); },
     disc_errors: function (n) { return n + (n > 1 ? ' nummers konden niet verstuurd worden' : ' nummer kon niet verstuurd worden'); },
     disc_created: function (n) { return 'Afspeellijst gemaakt: ' + n; },
+    story_rec: 'Een verhaal opnemen', story_default: 'Mijn verhaal', story_got: function (n) { return 'Verhaal ontvangen: ' + n; },
     s_mp3: 'MP3-kwaliteit', s_mp3_sub: 'Voor de FLAC en WAV die je verstuurt', s_mp3_192: '192 kbps — het lichtst', s_mp3_256: '256 kbps — aanbevolen', s_mp3_320: '320 kbps — het fijnst',
     s_mp3_foot: 'FLAC- en WAV-bestanden die naar de Jooki gaan, worden op je computer of telefoon omgezet naar MP3: een album neemt drie keer minder ruimte in. 256 kbps is ruim genoeg voor de luidspreker van de Jooki en een Bluetooth-koptelefoon. Deze keuze geldt alleen voor dit apparaat.',
     s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',

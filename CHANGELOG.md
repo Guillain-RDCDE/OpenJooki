@@ -1,6 +1,28 @@
 # OpenJooki — Changelog
 
 ## Next release
+- **Read a story yourself, the Jooki plays it back.** On the playlists page, *Record a story* opens
+  the story studio on your phone: give the story a title, read it page by page, choose the sound
+  that tells the child to turn the page (a little bell, chimes, a music box, or none). The studio
+  checks your voice (too loud, too far, noise around), sets every reader at the same volume and
+  cuts the silences. *Send to the Jooki* brings the story back as a playlist, as an audiobook: it
+  resumes where the child stopped. Give it a token, and Grandma reads the bedtime story.
+- **A grandparent far away can read too**: the studio is a page of the OpenJooki site, it works
+  without a Jooki. *Send or save the story* gives one file per page, to send by message; at home,
+  *New playlist*, then *Add files*.
+- An *Advanced mode* in the studio: cut the start or the end of a page, continue a page, a
+  shorter or longer pause after each page.
+- Nothing is sent anywhere: the voice stays on the phone until it goes to the Jooki. The phone
+  needs the Internet to open the studio; the Jooki does not.
+- For the tinkerers: the studio is `docs/studio.html` (https, hence the microphone; the Jooki's
+  page is http and has none). It measures the take (voice and noise levels, clipping), filters and
+  levels it (high-pass 90 Hz, compressor, about -19 dB), resamples to 44.1 kHz and encodes each
+  page as MP3 mono 96 kbps with lamejs in a Web Worker; the end of a page (silence, sound, pause)
+  is encoded once and put after the voice, frame after frame. The draft lives in IndexedDB. The
+  page opens it with `window.open(…/studio.html#jooki=<its origin>)`; the studio answers with
+  `postMessage({type: 'oj-story', title, files})` to that origin only, the page accepts it from
+  `https://guillain-rdcde.github.io` only, answers `oj-story-got`, creates the playlist and
+  queues the files (`webui/src/08b-story.js`, test E26).
 - The page's own text and the guides now say how long an update really takes: ten to twenty minutes.
 - The install page (guillain-rdcde.github.io/OpenJooki) no longer has an *Update* button: it had
   stopped working with 2.1. Updating is done from the Jooki's own page, *Settings > Update*.

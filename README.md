@@ -11,6 +11,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 |---|---|
 | My Jooki works, but the app doesn't any more | **[Install OpenJooki](guide/install.md)** · 15 min, from your phone |
 | I have OpenJooki: playlists, tokens, bedtime, Bluetooth speaker… | **[Use it](guide/use.md)** |
+| I want to read a story myself (or Grandma, from far away) | **[A story read by you](guide/use.md#a-story-read-by-you)** |
 | I use Spotify on my phone | **[Spotify on the Jooki](guide/use.md#spotify)** |
 | A new version is out | **[Update it](guide/update.md)** · from the Jooki's page |
 | My Jooki doesn't start any more | **[A new SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#new)** · 10 min with a computer |

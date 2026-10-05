@@ -23,6 +23,7 @@ when it was one file of 3 000 lines. The order matters only for what runs while 
 | `05-connection.js` | MQTT over WebSocket, the parent code, messages in and out |
 | `06-toasts-modals.js` | toasts, modals, the form helpers |
 | `07-discs.js`, `08-uploads.js` | FLAC/WAV to MP3 in the browser, albums; the upload queue |
+| `08b-story.js` | a story read in the studio (`docs/studio.html`, another tab) comes back as an audiobook playlist |
 | `09-token-visuals.js`, `10-routing.js` | a token's picture; the hash routes and the UI state |
 | `11`…`14-view-*.js`, `12-drag-reorder.js` | the screens: playlists, a playlist, the library, the tokens |
 | `15-picture-library.js`, `16-token-photo.js` | the pictures for tokens; the photo editor |

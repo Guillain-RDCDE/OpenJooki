@@ -3,9 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
 <title>OpenJooki · story studio</title>
-<meta name="description" content="Trial page: read a story aloud, page by page, and get it ready for the Jooki.">
+<meta name="description" content="Read a story aloud, page by page, and get it ready for the Jooki. Nothing is sent: your voice stays on your device.">
 <style>
   :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a;--okbg:#e8f6ec;--bad:#c0392b;--badbg:#fbeaea;--warn:#b26a00;--warnbg:#fdf1dc;--ring:#d9d4cc}
   @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333;--ok:#3fbf68;--okbg:#12301c;--bad:#e8695b;--badbg:#3a1a1a;--warn:#e0a040;--warnbg:#33260f;--ring:#4a4640}}
@@ -87,7 +86,6 @@
     <button type="button" data-l="nl" aria-label="Nederlands" title="Nederlands"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#ae1c28"/><rect y="5.33" width="24" height="5.34" fill="#fff"/><rect y="10.66" width="24" height="5.34" fill="#21468b"/></svg></button>
   </div>
   <h1 data-t="h1">The story studio</h1>
-  <p class="sub"><span class="pill" data-t="pill">Trial page</span></p>
 
   <div id="intro">
     <p class="center" data-t="sub" style="margin:0 0 14px">Read a story aloud. The Jooki plays it back, page by page.</p>
@@ -438,7 +436,7 @@
 
   var T = {
     en: {
-      title: "OpenJooki · story studio", h1: "The story studio", pill: "Trial page",
+      title: "OpenJooki · story studio", h1: "The story studio",
       sub: "Read a story aloud. The Jooki plays it back, page by page.",
       title_ph: "Title of the story", start: "Start", untitled: "My story", test: "Test my voice (10 seconds)",
       no_pages: "No page yet.", rec: "Record page {n}", page: "Page",
@@ -485,7 +483,7 @@
       n_agc: "auto volume", yes: "yes", no: "no"
     },
     fr: {
-      title: "OpenJooki · studio d'histoires", h1: "Le studio d'histoires", pill: "Page d'essai",
+      title: "OpenJooki · studio d'histoires", h1: "Le studio d'histoires",
       sub: "Lis une histoire à voix haute. Le Jooki la rejoue, page par page.",
       title_ph: "Titre de l'histoire", start: "Commencer", untitled: "Mon histoire", test: "Tester ma voix (10 secondes)",
       no_pages: "Aucune page pour l'instant.", rec: "Enregistrer la page {n}", page: "Page",
@@ -532,7 +530,7 @@
       n_agc: "volume auto", yes: "oui", no: "non"
     },
     nl: {
-      title: "OpenJooki · verhalenstudio", h1: "De verhalenstudio", pill: "Proefpagina",
+      title: "OpenJooki · verhalenstudio", h1: "De verhalenstudio",
       sub: "Lees een verhaal voor. De Jooki speelt het af, bladzijde per bladzijde.",
       title_ph: "Titel van het verhaal", start: "Beginnen", untitled: "Mijn verhaal", test: "Mijn stem testen (10 seconden)",
       no_pages: "Nog geen bladzijde.", rec: "Bladzijde {n} opnemen", page: "Bladzijde",

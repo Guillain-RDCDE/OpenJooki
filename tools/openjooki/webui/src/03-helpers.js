@@ -33,6 +33,7 @@
     prev: '<path d="M19 5L9 12l10 7zM6 5v14" fill="currentColor"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     upload: '<path d="M12 16V4M6 10l6-6 6 6M4 20h16"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
     radio: '<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',

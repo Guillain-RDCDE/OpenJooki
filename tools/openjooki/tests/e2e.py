@@ -1,5 +1,5 @@
 """End-to-end tests of the new web UI against the bench (real Lua app + mosquitto)."""
-import time, json, os, tempfile, urllib.request
+import time, json, os, tempfile, urllib.request, base64
 from playwright.sync_api import sync_playwright
 import bench as B
 from jk import PAGE
@@ -445,6 +445,29 @@ with sync_playwright() as p:
     check("E25 ... the cover.jpg and the .cue are left out, no error", "pas pu" not in dpg.locator("[data-k=discs]").inner_text()
           and all(J.tracks.get(x, {}).get("codec2") == "mp3" for x in J.pls[disc]["tracks"]), dpg.locator("[data-k=discs]").inner_text())
     dctx.close()
+    # E26 a story read in the studio (another tab, on the project's site) comes back as an audiobook playlist
+    pg.goto(URL + "/"); pg.wait_for_selector("[data-k=story]", timeout=15000)
+    check("E26 the playlists page offers 'Enregistrer une histoire'", pg.locator("[data-k=story]").inner_text().strip() == "Enregistrer une histoire")
+    pages64 = [base64.b64encode(open("media/" + f, "rb").read()).decode() for f in ("song1.mp3", "song2.mp3")]
+    hand_over = """([origin, title, pages]) => {
+      const files = pages.map((b, i) => ({ name: '0' + (i + 1) + ' ' + title + '.mp3',
+        blob: new Blob([Uint8Array.from(atob(b), c => c.charCodeAt(0))], { type: 'audio/mpeg' }) }));
+      window.dispatchEvent(new MessageEvent('message', { origin: origin, data: { type: 'oj-story', v: 1, title: title, files: files } }));
+    }"""
+    pg.evaluate(hand_over, ["https://evil.example", "Histoire volée", pages64])
+    pg.evaluate(hand_over, ["https://guillain-rdcde.github.io", "Le petit renard", pages64])
+    pg.evaluate(hand_over, ["https://guillain-rdcde.github.io", "Le petit renard", pages64])   # a second tap in the studio
+    def story_done():
+        s = pl_by_title("Le petit renard")
+        return s and len(J.pls[s]["tracks"]) >= 2 and not pg.locator(".up.uploading, .up.processing").count()
+    B.poll(story_done, 60, every=0.25)
+    story = pl_by_title("Le petit renard")
+    names = [J.tracks.get(x, {}).get("userFilename") for x in (J.pls[story]["tracks"] if story else [])]
+    check("E26 the story arrives as a playlist with its pages in order", names == ["01 Le petit renard.mp3", "02 Le petit renard.mp3"], names)
+    check("E26 ... an audiobook, opened on the page", story and J.pls[story].get("audiobook") is True and pg.url.endswith("/#/p/" + story), (J.pls.get(story), pg.url))
+    J.barrier()
+    check("E26 ... added once, and nothing from another website", len([p for p in J.pls.values() if p.get("title") == "Le petit renard"]) == 1
+          and not pl_by_title("Histoire volée"), [p.get("title") for p in J.pls.values()])
     # E14 offline / reconnect
     B.kill_brokers()
     pg.wait_for_function("document.querySelector('.conn') && !document.querySelector('.conn').classList.contains('on')", timeout=20000)

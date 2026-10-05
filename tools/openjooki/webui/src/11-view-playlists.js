@@ -26,7 +26,8 @@
       list.length ? null : h('div', { class: 'empty' }, h('div', { class: 'big' }, '🎵'), t('no_playlists')),
       h('div', { class: 'plgrid' }, cards),
       discsBlock(),
-      addDisc ? h('div', { class: 'actions', style: 'margin-top:14px' }, addDisc) : null,
+      h('div', { class: 'actions', style: 'margin-top:14px' },
+        h('button', { class: 'btn', 'data-k': 'story', onclick: openStudio }, icon('mic'), t('story_rec')), addDisc),
       discDrop()
     ];
   }

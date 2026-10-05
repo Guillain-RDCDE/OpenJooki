@@ -166,6 +166,7 @@
     disc_progress: function (d, n) { return d + ' / ' + n + (n > 1 ? ' pistes' : ' piste'); },
     disc_errors: function (n) { return n + (n > 1 ? ' pistes n\'ont pas pu être envoyées' : ' piste n\'a pas pu être envoyée'); },
     disc_created: function (n) { return 'Playlist créée : ' + n; },
+    story_rec: 'Enregistrer une histoire', story_default: 'Mon histoire', story_got: function (n) { return 'Histoire reçue : ' + n; },
     s_mp3: 'Qualité des MP3', s_mp3_sub: 'Pour les FLAC et WAV envoyés', s_mp3_192: '192 kbps — le plus léger', s_mp3_256: '256 kbps — recommandé', s_mp3_320: '320 kbps — le plus fin',
     s_mp3_foot: 'Les FLAC et WAV envoyés au Jooki sont convertis en MP3 sur ton ordinateur ou ton téléphone : un disque prend trois fois moins de place. 256 kbps suffit largement pour l\'enceinte du Jooki et un casque Bluetooth. Ce choix ne vaut que pour cet appareil.',
     s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',

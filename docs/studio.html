@@ -113,7 +113,7 @@
         <button type="button" data-c="none" data-t="none">None</button>
       </div>
     </div>
-    <div class="card" id="advbox" hidden>
+    <div class="card">
       <b data-t="pause_title">The pause after each page</b>
       <div class="seg" id="pauses">
         <button type="button" data-z="0" data-t="pause_0">Short</button>
@@ -219,8 +219,8 @@
   var FRAME_S = 0.02;
   var OUT_SR = 44100;    // every page leaves at this rate, whatever the microphone gave
   var PAGE_MAX_S = 300;  // a page stops by itself after five minutes (the phone's memory)
-  var GAP_S = 0.6;       // silence between the voice and the page-turn sound
-  var PAUSES = [1.5, 2.5, 4];   // then the time to turn the page: short, normal, long
+  var PAUSES = [1, 2, 4];   // the silence before the voice, and between the voice and the page-turn sound: short, normal, long
+  var AFTER_S = 1.5;        // silence after the page-turn sound
   var KBPS = 96;         // mono voice
 
   // ---- measuring ---------------------------------------------------------
@@ -382,13 +382,15 @@
     return out;
   }
 
-  // what follows the voice at the end of a page: a short silence, the sound, then the time to turn the page
+  // A page is: silence, the voice, silence, the page-turn sound, a last short silence.
+  // tail() is what follows the voice; the silence before it is silence(pause).
   function tail(kind, sr, pause) {
-    var gap = Math.round(GAP_S * sr), c = kind === 'none' ? new Float32Array(0) : chime(kind, sr);
-    var out = new Float32Array(gap + c.length + Math.round(pause * sr));
+    var gap = Math.round(pause * sr), c = kind === 'none' ? new Float32Array(0) : chime(kind, sr);
+    var out = new Float32Array(gap + c.length + Math.round(AFTER_S * sr));
     out.set(c, gap);
     return out;
   }
+  function silence(sr, pause) { return new Float32Array(Math.round(pause * sr)); }
 
   function join(a, b) { var out = new Uint8Array(a.length + b.length); out.set(a, 0); out.set(b, a.length); return out; }
 
@@ -451,7 +453,7 @@
       share: "Send or save the story", files_t: "Save the files:",
       done_hint: "Then, on the Jooki's page: New playlist, Add files, and switch Audiobook on.",
       listen_all: "Listen to the whole story", adv: "Advanced mode", cut: "Cut", more: "Continue",
-      pause_title: "The pause after each page", pause_0: "Short", pause_1: "Normal", pause_2: "Long",
+      pause_title: "The silence before and after the reading", pause_0: "Short (1 s)", pause_1: "Normal (2 s)", pause_2: "Long (4 s)",
       cut_start: "Start", cut_end: "End", cut_hint: "Move the two sliders to remove the start or the end.", keep: "Keep",
       send_jooki: "Send to the Jooki", j_sent: "Sent. Go back to the Jooki's page.",
       j_back: "Go back to the Jooki's tab: the story is waiting for it.",
@@ -498,7 +500,7 @@
       share: "Envoyer ou garder l'histoire", files_t: "Garde les fichiers :",
       done_hint: "Ensuite, sur la page du Jooki : Nouvelle playlist, Ajouter des fichiers, et active Livre audio.",
       listen_all: "Écouter toute l'histoire", adv: "Mode avancé", cut: "Couper", more: "Continuer",
-      pause_title: "La pause après chaque page", pause_0: "Courte", pause_1: "Normale", pause_2: "Longue",
+      pause_title: "Le blanc avant et après la lecture", pause_0: "Court (1 s)", pause_1: "Normal (2 s)", pause_2: "Long (4 s)",
       cut_start: "Début", cut_end: "Fin", cut_hint: "Déplace les deux curseurs pour enlever le début ou la fin.", keep: "Garder",
       send_jooki: "Envoyer sur le Jooki", j_sent: "Envoyé. Reviens sur la page du Jooki.",
       j_back: "Reviens sur l'onglet du Jooki : l'histoire l'attend.",
@@ -545,7 +547,7 @@
       share: "Het verhaal versturen of bewaren", files_t: "Bewaar de bestanden:",
       done_hint: "Daarna, op de pagina van de Jooki: Nieuwe afspeellijst, Bestanden toevoegen, en zet Luisterboek aan.",
       listen_all: "Het hele verhaal beluisteren", adv: "Geavanceerde modus", cut: "Knippen", more: "Verder lezen",
-      pause_title: "De pauze na elke bladzijde", pause_0: "Kort", pause_1: "Normaal", pause_2: "Lang",
+      pause_title: "De stilte voor en na het lezen", pause_0: "Kort (1 s)", pause_1: "Normaal (2 s)", pause_2: "Lang (4 s)",
       cut_start: "Begin", cut_end: "Einde", cut_hint: "Verschuif de twee schuifjes om het begin of het einde weg te halen.", keep: "Bewaren",
       send_jooki: "Naar de Jooki sturen", j_sent: "Verstuurd. Ga terug naar de pagina van de Jooki.",
       j_back: "Ga terug naar het tabblad van de Jooki: het verhaal wacht daar.",
@@ -578,7 +580,7 @@
     }
   };
 
-  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, join: join, PAUSES: PAUSES, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
+  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, join: join, silence: silence, PAUSES: PAUSES, AFTER_S: AFTER_S, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
   if (typeof document === 'undefined') return;
 
   // ---- the page ----------------------------------------------------------
@@ -684,10 +686,10 @@
   function tailKey() { return story.chime + '-' + story.pause; }
   function makeTails() {
     var z = story.pause;
-    return Promise.all(CHIMES.concat('none').map(function (k) {
+    return Promise.all(CHIMES.concat('none', 'lead').map(function (k) {
       var key = k + '-' + z;
       if (tails[key]) return null;
-      if (!tailJobs[key]) tailJobs[key] = encode(tail(k, OUT_SR, PAUSES[z])).then(function (m) { tails[key] = m; }, function () { delete tailJobs[key]; });
+      if (!tailJobs[key]) tailJobs[key] = encode(k === 'lead' ? silence(OUT_SR, PAUSES[z]) : tail(k, OUT_SR, PAUSES[z])).then(function (m) { tails[key] = m; }, function () { delete tailJobs[key]; });
       return tailJobs[key];
     }));
   }
@@ -722,7 +724,8 @@
   }
 
   function pageParts(p) {
-    return tails[tailKey()] ? [p.mp3, tails[tailKey()]] : [p.mp3];
+    var lead = tails['lead-' + story.pause], end = tails[tailKey()];
+    return (lead ? [lead] : []).concat([p.mp3], end ? [end] : []);
   }
 
   // ---- recording ---------------------------------------------------------
@@ -986,7 +989,6 @@
     Array.prototype.forEach.call($('chimes').children, function (c) { c.classList.toggle('on', c.getAttribute('data-c') === story.chime); });
     $('delstory').textContent = sureDel ? t('sure') : t('del_story');
     Array.prototype.forEach.call($('pauses').children, function (c) { c.classList.toggle('on', +c.getAttribute('data-z') === story.pause); });
-    $('advbox').hidden = !adv;
     $('advbtn').classList.toggle('on', adv); $('advbtn').setAttribute('aria-pressed', adv ? 'true' : 'false');
     var ready = story.pages.filter(function (p) { return !p.pending; }).length;
     $('listen_all').hidden = ready < 2;
@@ -1055,7 +1057,7 @@
 
   function finishStory() {
     stopPlaying();
-    var wait = tails[tailKey()] ? Promise.resolve() : makeTails();
+    var wait = tails[tailKey()] && tails['lead-' + story.pause] ? Promise.resolve() : makeTails();
     $('finish').disabled = true;
     wait.then(function () {
       if (!story) return;

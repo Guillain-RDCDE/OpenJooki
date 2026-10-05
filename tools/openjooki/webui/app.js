@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.3.0';
+  var VERSION = '2.3.1';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -1592,6 +1592,7 @@
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
+    cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), t('story_rec')));
     var addDisc = discButton();
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),
@@ -1601,8 +1602,7 @@
       list.length ? null : h('div', { class: 'empty' }, h('div', { class: 'big' }, '🎵'), t('no_playlists')),
       h('div', { class: 'plgrid' }, cards),
       discsBlock(),
-      h('div', { class: 'actions', style: 'margin-top:14px' },
-        h('button', { class: 'btn', 'data-k': 'story', onclick: openStudio }, icon('mic'), t('story_rec')), addDisc),
+      addDisc ? h('div', { class: 'actions', style: 'margin-top:14px' }, addDisc) : null,
       discDrop()
     ];
   }

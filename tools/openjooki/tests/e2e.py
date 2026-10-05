@@ -447,7 +447,8 @@ with sync_playwright() as p:
     dctx.close()
     # E26 a story read in the studio (another tab, on the project's site) comes back as an audiobook playlist
     pg.goto(URL + "/"); pg.wait_for_selector("[data-k=story]", timeout=15000)
-    check("E26 the playlists page offers 'Enregistrer une histoire'", pg.locator("[data-k=story]").inner_text().strip() == "Enregistrer une histoire")
+    check("E26 the playlists page offers 'Enregistrer une histoire', a card next to 'Nouvelle playlist'",
+          pg.locator(".plgrid [data-k=newpl] + [data-k=story]").count() == 1 and pg.locator("[data-k=story]").inner_text().strip() == "Enregistrer une histoire")
     pages64 = [base64.b64encode(open("media/" + f, "rb").read()).decode() for f in ("song1.mp3", "song2.mp3")]
     hand_over = """([origin, title, pages]) => {
       const files = pages.map((b, i) => ({ name: '0' + (i + 1) + ' ' + title + '.mp3',

@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.3.1 (5 October 2026) — Record a story, easier to find
+- ***Record a story* is easier to find.** It was a button at the very bottom of the playlists
+  page, under all the playlists. It is now a card of its own, right next to *New playlist*.
+
 ## OpenJooki 2.3.0 (5 October 2026) — read a story yourself, the Jooki plays it back
 - **Read a story yourself, the Jooki plays it back.** On the playlists page, *Record a story* opens
   the story studio on your phone: give the story a title, read it page by page, choose the sound

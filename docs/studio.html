@@ -61,6 +61,10 @@
   .acts button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
   .seg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
   .seg button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+  canvas{display:block;width:100%;height:90px;margin-bottom:10px}
+  input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0 12px}
+  label{font-weight:600;display:flex;justify-content:space-between;gap:10px}
+  label .muted{font-weight:400;font-variant-numeric:tabular-nums}
   .notice{color:var(--warn);font-weight:600;text-align:center;margin:10px 0 0}
 
   .verdict{font-size:1.5em;font-weight:800;margin:0 0 .2em;text-align:center}
@@ -111,9 +115,34 @@
         <button type="button" data-c="none" data-t="none">None</button>
       </div>
     </div>
+    <div class="card" id="advbox" hidden>
+      <b data-t="pause_title">The pause after each page</b>
+      <div class="seg" id="pauses">
+        <button type="button" data-z="0" data-t="pause_0">Short</button>
+        <button type="button" data-z="1" data-t="pause_1">Normal</button>
+        <button type="button" data-z="2" data-t="pause_2">Long</button>
+      </div>
+    </div>
+    <button class="btn ghost" id="listen_all" type="button" hidden></button>
     <button class="btn ghost" id="finish" type="button" data-t="finish">Finish the story</button>
     <button class="btn quiet" id="test1" type="button" data-t="test">Test my voice (10 seconds)</button>
+    <button class="btn quiet" id="advbtn" type="button" data-t="adv" aria-pressed="false">Advanced mode</button>
     <button class="btn quiet" id="delstory" type="button"></button>
+  </div>
+
+  <div id="cut" hidden>
+    <h2 id="ctitle"></h2>
+    <div class="card">
+      <canvas id="wave"></canvas>
+      <label for="cut_a"><span data-t="cut_start">Start</span><span class="muted" id="cut_at"></span></label>
+      <input type="range" id="cut_a" min="0" step="0.05">
+      <label for="cut_b"><span data-t="cut_end">End</span><span class="muted" id="cut_bt"></span></label>
+      <input type="range" id="cut_b" min="0" step="0.05">
+      <p class="tiny" data-t="cut_hint"></p>
+      <button class="btn ghost" id="cut_play" type="button"></button>
+    </div>
+    <button class="btn" id="cut_keep" type="button" data-t="keep">Keep</button>
+    <button class="btn quiet" id="cut_cancel" type="button" data-t="cancel">Cancel</button>
   </div>
 
   <div id="problem" class="card bad" hidden>
@@ -166,6 +195,8 @@
       <p class="verdict" data-t="done_t">Your story is ready</p>
       <p class="center" id="dsum" style="margin:0"></p>
     </div>
+    <button class="btn" id="send" type="button" data-t="send_jooki" hidden>Send to the Jooki</button>
+    <p class="notice" id="jmsg" aria-live="polite" hidden></p>
     <button class="btn" id="share" type="button" data-t="share">Send or save the story</button>
     <div id="links" hidden>
       <p style="margin:14px 0 0;font-weight:600" data-t="files_t">Save the files:</p>
@@ -190,7 +221,8 @@
   var FRAME_S = 0.02;
   var OUT_SR = 44100;    // every page leaves at this rate, whatever the microphone gave
   var PAGE_MAX_S = 300;  // a page stops by itself after five minutes (the phone's memory)
-  var GAP_S = 0.45;      // silence between the voice and the page-turn sound
+  var GAP_S = 0.6;       // silence between the voice and the page-turn sound
+  var PAUSES = [1.5, 2.5, 4];   // then the time to turn the page: short, normal, long
   var KBPS = 96;         // mono voice
 
   // ---- measuring ---------------------------------------------------------
@@ -352,12 +384,15 @@
     return out;
   }
 
-  // the short silence, then the sound: what follows the voice at the end of a page
-  function tail(kind, sr) {
-    var gap = Math.round(GAP_S * sr), c = chime(kind, sr), out = new Float32Array(gap + c.length);
+  // what follows the voice at the end of a page: a short silence, the sound, then the time to turn the page
+  function tail(kind, sr, pause) {
+    var gap = Math.round(GAP_S * sr), c = kind === 'none' ? new Float32Array(0) : chime(kind, sr);
+    var out = new Float32Array(gap + c.length + Math.round(pause * sr));
     out.set(c, gap);
     return out;
   }
+
+  function join(a, b) { var out = new Uint8Array(a.length + b.length); out.set(a, 0); out.set(b, a.length); return out; }
 
   function wav(x, sr) {
     var b = new ArrayBuffer(44 + x.length * 2), v = new DataView(b);
@@ -417,6 +452,11 @@
       done_t: "Your story is ready", pages_1: "1 page", pages_n: "{n} pages",
       share: "Send or save the story", files_t: "Save the files:",
       done_hint: "Then, on the Jooki's page: New playlist, Add files, and switch Audiobook on.",
+      listen_all: "Listen to the whole story", adv: "Advanced mode", cut: "Cut", more: "Continue",
+      pause_title: "The pause after each page", pause_0: "Short", pause_1: "Normal", pause_2: "Long",
+      cut_start: "Start", cut_end: "End", cut_hint: "Move the two sliders to remove the start or the end.", keep: "Keep",
+      send_jooki: "Send to the Jooki", j_sent: "Sent. Go back to the Jooki's page.",
+      j_back: "Go back to the Jooki's tab: the story is waiting for it.",
       back_story: "Back to the story", new_story: "New story", back: "Back", retry: "Try again",
       readlabel: "Read aloud:",
       sentence: "“Once upon a time, deep in a great forest, there was a little fox who could not fall asleep. So every evening, he listened to a story.”",
@@ -459,6 +499,11 @@
       done_t: "Ton histoire est prête", pages_1: "1 page", pages_n: "{n} pages",
       share: "Envoyer ou garder l'histoire", files_t: "Garde les fichiers :",
       done_hint: "Ensuite, sur la page du Jooki : Nouvelle playlist, Ajouter des fichiers, et active Livre audio.",
+      listen_all: "Écouter toute l'histoire", adv: "Mode avancé", cut: "Couper", more: "Continuer",
+      pause_title: "La pause après chaque page", pause_0: "Courte", pause_1: "Normale", pause_2: "Longue",
+      cut_start: "Début", cut_end: "Fin", cut_hint: "Déplace les deux curseurs pour enlever le début ou la fin.", keep: "Garder",
+      send_jooki: "Envoyer sur le Jooki", j_sent: "Envoyé. Reviens sur la page du Jooki.",
+      j_back: "Reviens sur l'onglet du Jooki : l'histoire l'attend.",
       back_story: "Revenir à l'histoire", new_story: "Nouvelle histoire", back: "Retour", retry: "Réessayer",
       readlabel: "Lis à voix haute :",
       sentence: "« Il était une fois, au fond d'une grande forêt, un petit renard qui n'arrivait pas à dormir. Alors, chaque soir, il écoutait une histoire. »",
@@ -501,6 +546,11 @@
       done_t: "Je verhaal is klaar", pages_1: "1 bladzijde", pages_n: "{n} bladzijden",
       share: "Het verhaal versturen of bewaren", files_t: "Bewaar de bestanden:",
       done_hint: "Daarna, op de pagina van de Jooki: Nieuwe afspeellijst, Bestanden toevoegen, en zet Luisterboek aan.",
+      listen_all: "Het hele verhaal beluisteren", adv: "Geavanceerde modus", cut: "Knippen", more: "Verder lezen",
+      pause_title: "De pauze na elke bladzijde", pause_0: "Kort", pause_1: "Normaal", pause_2: "Lang",
+      cut_start: "Begin", cut_end: "Einde", cut_hint: "Verschuif de twee schuifjes om het begin of het einde weg te halen.", keep: "Bewaren",
+      send_jooki: "Naar de Jooki sturen", j_sent: "Verstuurd. Ga terug naar de pagina van de Jooki.",
+      j_back: "Ga terug naar het tabblad van de Jooki: het verhaal wacht daar.",
       back_story: "Terug naar het verhaal", new_story: "Nieuw verhaal", back: "Terug", retry: "Opnieuw proberen",
       readlabel: "Lees hardop:",
       sentence: "‘Er was eens, diep in een groot bos, een kleine vos die maar niet kon slapen. Daarom luisterde hij elke avond naar een verhaal.’",
@@ -530,21 +580,32 @@
     }
   };
 
-  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
+  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, join: join, PAUSES: PAUSES, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
   if (typeof document === 'undefined') return;
 
   // ---- the page ----------------------------------------------------------
 
   var $ = function (id) { return document.getElementById(id); };
   var AC = window.AudioContext || window.webkitAudioContext;
-  var VIEWS = ['intro', 'story', 'problem', 'live', 'result', 'done'];
+  var VIEWS = ['intro', 'story', 'cut', 'problem', 'live', 'result', 'done'];
   var CHIMES = ['bell', 'carillon', 'box'];
   var VERDICT_CARD = { ok: 'ok', loud: 'bad', far: 'warn', noisy: 'warn', silent: 'bad' };
-  var story = null;          // {title, chime, pages: [{mp3: Uint8Array, dur, verdict, pending}]}
-  var tails = {};            // the three page-turn sounds as MP3, made once
+  var story = null;          // {title, chime, pause, pages: [{mp3: Uint8Array, dur, verdict, pending, orig, cut}]}
+                             // a cut page keeps what was recorded in orig and its two cut points in cut
+  var tails = {}, tailJobs = {};   // the ends of page as MP3, by sound and pause, made once
+  var cutting = null;        // the page being cut: {index, page, pcm, dur, peaks}
+  var adv = false;
+  try { adv = localStorage.getItem('oj.studio.adv') === '1'; } catch (e) {}
+  // opened from a Jooki's page (studio.html#jooki=http://its-address): the finished story can go straight back to it
+  var jooki = (function () {
+    var m = /[#&]jooki=([^&]+)/.exec(location.hash || ''), o;
+    if (!m || !window.opener) return null;
+    try { o = decodeURIComponent(m[1]); } catch (e) { return null; }
+    return /^http:\/\/[a-z0-9.\-]+(:\d+)?$/i.test(o) ? { origin: o, state: '' } : null;
+  })();
   var run = null;            // the take being recorded
   var take = null;           // the last voice test: {sr, read, polished, m, settings}
-  var last = { mode: 'check', index: -1 };
+  var last = { mode: 'check', index: -1, append: false };
   var view = 'intro', problem = null, liveKey = '', notice = '';
   var playing = null, playUrl = null, sure = -1, sureDel = false, sureNew = false;
   var doneFiles = [], doneUrls = [], lock = null;
@@ -560,6 +621,7 @@
 
   function t(k) { return T[lang][k]; }
   function clock(s) { s = Math.round(s); return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
+  function clock1(s) { var d = Math.round(s * 10); return Math.floor(d / 600) + ':' + (d % 600 < 100 ? '0' : '') + (d % 600 / 10).toFixed(1); }
   function say(key) { liveKey = key; $('say').textContent = key ? t(key) : ''; }
   function home() { return story ? 'story' : 'intro'; }
 
@@ -585,8 +647,8 @@
 
   function saveDraft() {
     var v = story ? {
-      title: story.title, chime: story.chime,
-      pages: story.pages.filter(function (p) { return p.mp3; }).map(function (p) { return { mp3: p.mp3, dur: p.dur, verdict: p.verdict }; })
+      title: story.title, chime: story.chime, pause: story.pause,
+      pages: story.pages.filter(function (p) { return p.mp3; }).map(function (p) { return { mp3: p.mp3, dur: p.dur, verdict: p.verdict, orig: p.orig || null, cut: p.cut || null }; })
     } : null;
     idb().then(function (d) {
       var tx = d.transaction('kv', 'readwrite');
@@ -621,12 +683,25 @@
     });
   }
 
-  var tailsReady = null;
+  function tailKey() { return story.chime + '-' + story.pause; }
   function makeTails() {
-    if (!tailsReady) tailsReady = Promise.all(CHIMES.map(function (k) {
-      return encode(tail(k, OUT_SR)).then(function (m) { tails[k] = m; });
-    })).catch(function () { tailsReady = null; });
-    return tailsReady;
+    var z = story.pause;
+    return Promise.all(CHIMES.concat('none').map(function (k) {
+      var key = k + '-' + z;
+      if (tails[key]) return null;
+      if (!tailJobs[key]) tailJobs[key] = encode(tail(k, OUT_SR, PAUSES[z])).then(function (m) { tails[key] = m; }, function () { delete tailJobs[key]; });
+      return tailJobs[key];
+    }));
+  }
+
+  function decode(mp3) {
+    return new Promise(function (ok, ko) {
+      var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      if (!OAC) { ko(new Error('no decoder')); return; }
+      var oc = new OAC(1, 1, OUT_SR), buf = mp3.buffer.slice(mp3.byteOffset, mp3.byteOffset + mp3.byteLength);
+      var p = oc.decodeAudioData(buf, function (b) { ok(new Float32Array(b.getChannelData(0))); }, ko);
+      if (p && p.catch) p.catch(function () {});
+    });
   }
 
   // ---- listening ---------------------------------------------------------
@@ -649,9 +724,7 @@
   }
 
   function pageParts(p) {
-    var parts = [p.mp3];
-    if (story.chime !== 'none' && tails[story.chime]) parts.push(tails[story.chime]);
-    return parts;
+    return tails[tailKey()] ? [p.mp3, tails[tailKey()]] : [p.mp3];
   }
 
   // ---- recording ---------------------------------------------------------
@@ -703,15 +776,16 @@
     if (key !== liveKey) say(key);
   }
 
-  // mode 'check': the ten-second voice test. mode 'page': a page of the story (index = the page to redo, or -1).
-  function begin(mode, index) {
+  // mode 'check': the ten-second voice test. mode 'page': a page of the story
+  // (index = the page to redo, or to continue when append is set, or -1 for a new page).
+  function begin(mode, index, append) {
     stopPlaying();
     if (run) stopRun(run);
-    last = { mode: mode, index: index };
+    last = { mode: mode, index: index, append: !!append };
     problem = null; notice = ''; sure = -1; sureDel = false;
     if (mode === 'check') take = null;
     if (!AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { fail('nomic'); return; }
-    var r = run = { mode: mode, index: index, chunks: [], n: 0, done: false };
+    var r = run = { mode: mode, index: index, append: !!append, chunks: [], n: 0, done: false };
     try { r.ctx = new AC(); } catch (e) { fail('nomic'); return; }
     disp = 0; lastGood = 0; lastLoud = 0; heard = false;
     $('ring').className = 'ring'; $('ring').style.setProperty('--lvl', 0);
@@ -781,7 +855,19 @@
     if (!story || r.n < 0.7 * sr) { show(home()); return; }
     var m = analyse(x, sr, 0);
     if (m.silent) { notice = 'n_unheard'; show('story'); return; }
-    var page = { mp3: null, dur: 0, verdict: m.verdict, pending: true };
+    var more = r.append && story.pages[r.index];
+    if (more && more.mp3) {
+      more.pending = true;
+      show('story');
+      polish(x, sr).then(function (p) {
+        return encode(p).then(function (mp3) {
+          more.mp3 = join(more.mp3, mp3); more.dur += p.length / OUT_SR; more.orig = null; more.cut = null;
+          if (m.verdict !== 'ok') more.verdict = m.verdict;
+        });
+      }).catch(function () { notice = 'n_failed'; }).then(function () { more.pending = false; saveDraft(); refresh(); });
+      return;
+    }
+    var page = { mp3: null, dur: 0, verdict: m.verdict, pending: true, orig: null, cut: null };
     if (r.index >= 0 && r.index < story.pages.length) story.pages[r.index] = page; else story.pages.push(page);
     show('story');
     polish(x, sr).then(function (p) { page.dur = p.length / OUT_SR; return encode(p); }).then(function (mp3) {
@@ -792,6 +878,76 @@
       var i = story ? story.pages.indexOf(page) : -1;
       if (i >= 0) { story.pages.splice(i, 1); notice = 'n_failed'; refresh(); }
     });
+  }
+
+  // ---- cutting the start or the end of a page ----------------------------
+
+  function openCut(i) {
+    var p = story.pages[i];
+    stopPlaying();
+    p.pending = true; refresh();
+    decode(p.orig || p.mp3).then(function (pcm) {
+      p.pending = false;
+      var dur = pcm.length / OUT_SR;
+      cutting = { index: i, page: p, pcm: pcm, dur: dur, peaks: null };
+      $('cut_a').max = $('cut_b').max = dur.toFixed(2);
+      $('cut_a').value = p.cut ? p.cut.a : 0;
+      $('cut_b').value = p.cut ? p.cut.b : dur.toFixed(2);
+      show('cut');
+    }, function () { p.pending = false; notice = 'n_failed'; refresh(); });
+  }
+
+  function cutPart() {
+    var c = cutting, a = Math.round(+$('cut_a').value * OUT_SR), b = Math.min(c.pcm.length, Math.round(+$('cut_b').value * OUT_SR));
+    var seg = new Float32Array(c.pcm.subarray(a, b)), fade = Math.min(Math.round(0.02 * OUT_SR), seg.length >> 1);
+    for (var i = 0; i < fade; i++) { seg[i] *= i / fade; seg[seg.length - 1 - i] *= i / fade; }
+    return seg;
+  }
+
+  function drawCut() {
+    var c = cutting, a = +$('cut_a').value, b = +$('cut_b').value;
+    $('ctitle').textContent = t('page') + ' ' + (c.index + 1);
+    $('cut_at').textContent = clock1(a); $('cut_bt').textContent = clock1(b);
+    $('cut_play').textContent = playing === 'cut' ? t('stop') : t('listen_b') + ' · ' + clock1(b - a);
+    $('cut_play').classList.toggle('on', playing === 'cut');
+    var cv = $('wave'), w = Math.max(50, Math.round(cv.clientWidth || 300)), h = 90, dpr = window.devicePixelRatio || 1, x;
+    if (!c.peaks || c.peaks.length !== w) {
+      c.peaks = new Float32Array(w);
+      var per = c.pcm.length / w, top = 0;
+      for (x = 0; x < w; x++) {
+        var pk = 0, end = Math.min(c.pcm.length, Math.floor((x + 1) * per));
+        for (var k = Math.floor(x * per); k < end; k++) { var v = c.pcm[k] < 0 ? -c.pcm[k] : c.pcm[k]; if (v > pk) pk = v; }
+        c.peaks[x] = pk; if (pk > top) top = pk;
+      }
+      for (x = 0; x < w; x++) c.peaks[x] /= top || 1;
+    }
+    cv.width = w * dpr; cv.height = h * dpr;
+    var g = cv.getContext('2d'), css = getComputedStyle(document.documentElement);
+    var kept = css.getPropertyValue('--accent').trim() || '#f26b21', gone = css.getPropertyValue('--ring').trim() || '#ccc';
+    g.scale(dpr, dpr);
+    for (x = 0; x < w; x++) {
+      var at = (x + 0.5) / w * c.dur, bar = Math.max(2, c.peaks[x] * (h - 4));
+      g.fillStyle = at >= a && at <= b ? kept : gone;
+      g.fillRect(x, (h - bar) / 2, 1, bar);
+    }
+  }
+
+  function keepCut() {
+    var c = cutting, p = c.page, a = +$('cut_a').value, b = +$('cut_b').value;
+    stopPlaying();
+    cutting = null;
+    if (a <= 0.02 && b >= c.dur - 0.06) {          // nothing removed: back to what was recorded
+      if (p.orig) { p.mp3 = p.orig; p.orig = null; p.cut = null; p.dur = c.dur; saveDraft(); }
+      show('story');
+      return;
+    }
+    cutting = c; var seg = cutPart(); cutting = null;
+    p.pending = true;
+    show('story');
+    encode(seg).then(function (mp3) {
+      if (!p.orig) p.orig = p.mp3;
+      p.mp3 = mp3; p.cut = { a: a, b: b }; p.dur = seg.length / OUT_SR;
+    }, function () { notice = 'n_failed'; }).then(function () { p.pending = false; saveDraft(); refresh(); });
   }
 
   // ---- drawing -----------------------------------------------------------
@@ -818,6 +974,10 @@
           if (sure !== i) { sure = i; refresh(); return; }
           sure = -1; stopPlaying(); story.pages.splice(i, 1); saveDraft(); refresh();
         }));
+        if (adv) {
+          acts.appendChild(act(t('cut'), false, function () { openCut(i); }));
+          acts.appendChild(act(t('more'), false, function () { begin('page', i, true); }));
+        }
         li.appendChild(acts);
       }
       list.appendChild(li);
@@ -827,6 +987,13 @@
     $('finish').disabled = !story.pages.length || story.pages.some(function (p) { return p.pending; });
     Array.prototype.forEach.call($('chimes').children, function (c) { c.classList.toggle('on', c.getAttribute('data-c') === story.chime); });
     $('delstory').textContent = sureDel ? t('sure') : t('del_story');
+    Array.prototype.forEach.call($('pauses').children, function (c) { c.classList.toggle('on', +c.getAttribute('data-z') === story.pause); });
+    $('advbox').hidden = !adv;
+    $('advbtn').classList.toggle('on', adv); $('advbtn').setAttribute('aria-pressed', adv ? 'true' : 'false');
+    var ready = story.pages.filter(function (p) { return !p.pending; }).length;
+    $('listen_all').hidden = ready < 2;
+    $('listen_all').textContent = playing === 'all' ? t('stop') : t('listen_all');
+    $('listen_all').classList.toggle('on', playing === 'all');
   }
 
   function drawResult() {
@@ -861,6 +1028,10 @@
     story.pages.forEach(function (p) { total += p.dur; });
     $('dsum').textContent = story.title + ' · ' + (n === 1 ? t('pages_1') : t('pages_n').replace('{n}', n)) + ' · ' + clock(total);
     $('newstory').textContent = sureNew ? t('sure') : t('new_story');
+    $('send').hidden = !jooki;
+    $('share').classList.toggle('ghost', !!jooki);
+    var msg = jooki && (jooki.state === 'sent' ? 'j_sent' : jooki.state === 'wait' ? 'j_back' : '');
+    $('jmsg').hidden = !msg; $('jmsg').textContent = msg ? t(msg) : '';
   }
 
   function refresh() {
@@ -874,18 +1045,19 @@
     if (story) drawStory();
     if (take && take.polished) drawResult();
     if (story && view === 'done') drawDone();
+    if (cutting && view === 'cut') drawCut();
   }
 
   // ---- the finished story ------------------------------------------------
 
   function leaveDone() {
     doneUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    doneUrls = []; doneFiles = []; sureNew = false;
+    doneUrls = []; doneFiles = []; sureNew = false; if (jooki) jooki.state = '';
   }
 
   function finishStory() {
     stopPlaying();
-    var wait = story.chime === 'none' || tails[story.chime] ? Promise.resolve() : makeTails();
+    var wait = tails[tailKey()] ? Promise.resolve() : makeTails();
     $('finish').disabled = true;
     wait.then(function () {
       if (!story) return;
@@ -923,7 +1095,7 @@
     refresh();
   });
   function startStory() {
-    story = { title: $('title').value.replace(/\s+/g, ' ').trim() || t('untitled'), chime: 'bell', pages: [] };
+    story = { title: $('title').value.replace(/\s+/g, ' ').trim() || t('untitled'), chime: 'bell', pause: 1, pages: [] };
     saveDraft(); makeTails();
     show('story');
   }
@@ -934,7 +1106,7 @@
   $('rec').addEventListener('click', function () { begin('page', -1); });
   $('stop').addEventListener('click', function () { if (run && !run.done && run.n) finish(run); });
   $('cancel').addEventListener('click', cancel);
-  $('retry0').addEventListener('click', function () { begin(last.mode, last.index); });
+  $('retry0').addEventListener('click', function () { begin(last.mode, last.index, last.append); });
   $('back0').addEventListener('click', function () { problem = null; show(home()); });
   $('back1').addEventListener('click', function () { stopPlaying(); show(home()); });
   $('again').addEventListener('click', function () { begin('check', -1); });
@@ -948,7 +1120,51 @@
     stopPlaying();
     refresh();
     // tapping a sound plays it alone, at once
+    makeTails();
     if (story.chime !== 'none') playParts('chime', [wav(chime(story.chime, OUT_SR), OUT_SR)], 'audio/wav');
+  });
+  $('pauses').addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (!b || !story) return;
+    story.pause = +b.getAttribute('data-z');
+    saveDraft(); stopPlaying(); makeTails(); refresh();
+  });
+  $('advbtn').addEventListener('click', function () {
+    adv = !adv;
+    try { localStorage.setItem('oj.studio.adv', adv ? '1' : '0'); } catch (e) {}
+    refresh();
+  });
+  $('listen_all').addEventListener('click', function () {
+    var parts = [];
+    story.pages.forEach(function (p) { if (!p.pending) parts = parts.concat(pageParts(p)); });
+    playParts('all', parts, 'audio/mpeg');
+  });
+  function cutMoved(ev) {
+    var a = $('cut_a'), b = $('cut_b');
+    if (+b.value - +a.value < 0.3) { if (ev.target === a) a.value = Math.max(0, +b.value - 0.3); else b.value = Math.min(+b.max, +a.value + 0.3); }
+    if (playing === 'cut') stopPlaying(); else drawCut();
+  }
+  $('cut_a').addEventListener('input', cutMoved);
+  $('cut_b').addEventListener('input', cutMoved);
+  $('cut_play').addEventListener('click', function () { if (cutting) playParts('cut', [wav(cutPart(), OUT_SR)], 'audio/wav'); });
+  $('cut_keep').addEventListener('click', function () { if (cutting) keepCut(); });
+  $('cut_cancel').addEventListener('click', function () { stopPlaying(); cutting = null; show('story'); });
+  window.addEventListener('resize', function () { if (cutting && view === 'cut') drawCut(); });
+  $('send').addEventListener('click', function () {
+    if (!jooki) return;
+    jooki.state = 'asked';
+    try {
+      window.opener.postMessage({ type: 'oj-story', v: 1, title: story.title, files: doneFiles.map(function (f) { return { name: f.name, blob: f }; }) }, jooki.origin);
+    } catch (e) { jooki.state = 'wait'; }
+    // a Jooki's page asleep behind this one answers only when it is shown again
+    setTimeout(function () { if (jooki.state === 'asked') { jooki.state = 'wait'; refresh(); } }, 4000);
+    refresh();
+  });
+  window.addEventListener('message', function (ev) {
+    if (!jooki || ev.origin !== jooki.origin || !ev.data || ev.data.type !== 'oj-story-got') return;
+    jooki.state = 'sent';
+    refresh();
+    setTimeout(function () { try { window.close(); } catch (e) {} }, 1500);
   });
   $('finish').addEventListener('click', finishStory);
   $('delstory').addEventListener('click', function () {
@@ -980,7 +1196,9 @@
   refresh();
   loadDraft().then(function (d) {
     if (!d || story || view !== 'intro') return;
-    story = { title: d.title, chime: d.chime || 'bell', pages: (d.pages || []).map(function (p) { return { mp3: new Uint8Array(p.mp3), dur: p.dur, verdict: p.verdict || 'ok', pending: false }; }) };
+    story = { title: d.title, chime: d.chime || 'bell', pause: d.pause >= 0 && d.pause < PAUSES.length ? d.pause : 1, pages: (d.pages || []).map(function (p) {
+      return { mp3: new Uint8Array(p.mp3), dur: p.dur, verdict: p.verdict || 'ok', pending: false, orig: p.orig ? new Uint8Array(p.orig) : null, cut: p.cut || null };
+    }) };
     makeTails();
     show('story');
   });

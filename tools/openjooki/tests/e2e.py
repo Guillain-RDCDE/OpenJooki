@@ -24,7 +24,7 @@ with sync_playwright() as p:
     b = p.chromium.launch()
     ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, locale="fr-FR", timezone_id="Europe/Paris", bypass_csp=True)
     pg = ctx.new_page(); errs = []
-    pg.on("console", lambda m: errs.append(m.text) if m.type == "error" and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_CONNECTION_RESET" not in m.text else None)
+    pg.on("console", lambda m: errs.append(m.text + " " + str((m.location or {}).get("url", ""))) if m.type == "error" and "ERR_CONNECTION_REFUSED" not in m.text and "ERR_CONNECTION_RESET" not in m.text else None)
     pg.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
     pg.goto(URL + "/")
     try: pg.wait_for_selector(".pl[data-pl]")
@@ -447,8 +447,9 @@ with sync_playwright() as p:
     dctx.close()
     # E26 a story read in the studio (another tab, on the project's site) comes back as an audiobook playlist
     pg.goto(URL + "/"); pg.wait_for_selector("[data-k=story]", timeout=15000)
-    check("E26 the playlists page offers 'Enregistrer une histoire', a card next to 'Nouvelle playlist'",
-          pg.locator(".plgrid [data-k=newpl] + [data-k=story]").count() == 1 and pg.locator("[data-k=story]").inner_text().strip() == "Enregistrer une histoire")
+    check("E26 the playlists page offers Jookistory ('Enregistrer une histoire'), a card next to 'Nouvelle playlist'",
+          pg.locator(".plgrid [data-k=newpl] + [data-k=story]").count() == 1
+          and pg.locator("[data-k=story]").inner_text().split() == "Jookistory Enregistrer une histoire".split(), pg.locator("[data-k=story]").inner_text())
     pages64 = [base64.b64encode(open("media/" + f, "rb").read()).decode() for f in ("song1.mp3", "song2.mp3")]
     hand_over = """([origin, title, pages]) => {
       const files = pages.map((b, i) => ({ name: '0' + (i + 1) + ' ' + title + '.mp3',
@@ -469,6 +470,21 @@ with sync_playwright() as p:
     J.barrier()
     check("E26 ... added once, and nothing from another website", len([p for p in J.pls.values() if p.get("title") == "Le petit renard"]) == 1
           and not pl_by_title("Histoire volée"), [p.get("title") for p in J.pls.values()])
+    # E27 the same story added by hand (its files saved from the studio, chosen in no order): in order, and an audiobook
+    byhand = tempfile.mkdtemp()
+    for n, src in (("01 Mon conte.mp3", "song1.mp3"), ("02 Mon conte.mp3", "song2.mp3")):
+        with open(os.path.join(byhand, n), "wb") as f: f.write(open("media/" + src, "rb").read() + n.encode())   # not the bytes E26 sent
+    pg.goto(URL + "/"); pg.wait_for_selector("[data-k=newpl]", timeout=15000)
+    pg.click("[data-k=newpl]"); pg.fill("[data-k=plname]", "Conte à la main"); pg.keyboard.press("Enter")
+    pg.wait_for_url("**/#/p/*", timeout=5000)
+    hand = pg.url.split("/#/p/")[1]
+    J.wait(lambda: hand in J.pls)
+    pg.wait_for_selector("input[type=file]", state="attached", timeout=15000)
+    pg.set_input_files("input[type=file]", [os.path.join(byhand, "02 Mon conte.mp3"), os.path.join(byhand, "01 Mon conte.mp3")])
+    B.poll(lambda: len(J.pls[hand].get("tracks") or []) >= 2, 60, every=0.25)
+    names = [J.tracks.get(x, {}).get("userFilename") for x in (J.pls[hand].get("tracks") or [])]
+    check("E27 a story's files chosen in no order arrive in name order", names == ["01 Mon conte.mp3", "02 Mon conte.mp3"], names)
+    check("E27 ... and their playlist becomes an audiobook", J.pls[hand].get("audiobook") is True, J.pls[hand])
     # E14 offline / reconnect
     B.kill_brokers()
     pg.wait_for_function("document.querySelector('.conn') && !document.querySelector('.conn').classList.contains('on')", timeout=20000)

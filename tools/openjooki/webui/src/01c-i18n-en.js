@@ -167,6 +167,7 @@
     disc_errors: function (n) { return n + (n > 1 ? ' tracks could not be sent' : ' track could not be sent'); },
     disc_created: function (n) { return 'Playlist created: ' + n; },
     story_rec: 'Record a story', story_default: 'My story', story_got: function (n) { return 'Story received: ' + n; },
+    story_book: 'A story: this playlist is now an audiobook',
     s_mp3: 'MP3 quality', s_mp3_sub: 'For the FLAC and WAV you send', s_mp3_192: '192 kbps — lightest', s_mp3_256: '256 kbps — recommended', s_mp3_320: '320 kbps — finest',
     s_mp3_foot: 'FLAC and WAV files sent to the Jooki are turned into MP3 on your computer or phone: an album takes three times less space. 256 kbps is plenty for the Jooki\'s speaker and Bluetooth headphones. This choice is for this device only.',
     s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',

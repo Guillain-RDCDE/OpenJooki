@@ -17,7 +17,8 @@
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
-    cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), t('story_rec')));
+    cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), 'Jookistory',
+      h('div', { class: 'small', style: 'font-weight:400' }, t('story_rec'))));
     var addDisc = discButton();
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),

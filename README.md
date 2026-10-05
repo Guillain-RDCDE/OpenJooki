@@ -11,7 +11,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 |---|---|
 | My Jooki works, but the app doesn't any more | **[Install OpenJooki](guide/install.md)** · 15 min, from your phone |
 | I have OpenJooki: playlists, tokens, bedtime, Bluetooth speaker… | **[Use it](guide/use.md)** |
-| I want to read a story myself (or Grandma, from far away) | **[A story read by you](guide/use.md#a-story-read-by-you)** |
+| I want to read a story myself (or Grandma, from far away) | **[Jookistory: a story read by you](guide/use.md#a-story-read-by-you)** |
 | I use Spotify on my phone | **[Spotify on the Jooki](guide/use.md#spotify)** |
 | A new version is out | **[Update it](guide/update.md)** · from the Jooki's page |
 | My Jooki doesn't start any more | **[A new SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#new)** · 10 min with a computer |
@@ -22,7 +22,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.3.1:** *Record a story* is now a card right next to *New playlist*.
+**New in 2.3.2:** the story studio is called Jookistory; a story is never shuffled, even added by hand; shuffle in the Spotify app no longer shuffles the tokens.
+2.3.1: *Record a story* is now a card right next to *New playlist*.
 2.3.0: read a story yourself, page by page, and the Jooki plays it back: *Record a story* on the playlists page.
 2.2.7: the update screen no longer looks stuck: it finds the Jooki again by itself.
 2.2.6: shuffle really shuffles; the characters have Dutch names; an audiobook says at once where it will resume.

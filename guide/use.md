@@ -45,20 +45,22 @@ puts it back to chapter 1.
 
 ### A story read by you
 
-On the **Playlists** tab, tap **Record a story**. The story studio opens in a new tab (the
-phone needs the Internet for this).
+On the **Playlists** tab, tap **Jookistory** (*Record a story*), the card next to **New
+playlist**. The story studio opens in a new tab (the phone needs the Internet for this).
 
 - Give the story a title, then **Start**.
 - **Record page 1**, read, then **Page finished**. And so on, page after page. Each page can
   be listened to, redone or removed.
-- Choose **the sound at the end of each page**: it tells the child to turn the page.
+- Choose **the sound at the end of each page**: it tells the child to turn the page. And
+  **the silence before and after the reading**: 1, 2 or 4 seconds.
 - **Finish the story**, then **Send to the Jooki**: back on the Jooki's page, the story is a
   new playlist, already an audiobook. Choose its character.
 
 A grandparent far away can read too, at
 [guillain-rdcde.github.io/OpenJooki/studio.html](https://guillain-rdcde.github.io/OpenJooki/studio.html):
 **Send or save the story** gives one file per page, to send by message. At home, **New
-playlist**, then **Add files**, and switch **Audiobook** on.
+playlist**, then **Add files**: the pages go in order and the playlist becomes an audiobook
+by itself.
 
 If **Send to the Jooki** does not show (it can happen when the Jooki's page was opened from
 the home screen), use **Send or save the story**, then **Add files** in a new playlist.

@@ -1,5 +1,22 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.3.2 (5 October 2026) — Jookistory, and a story is never shuffled
+- **The story studio has a name: Jookistory.** Its card on the playlists page says so.
+- **A story is never shuffled any more.** Its pages, added by hand with *Add files* (the files
+  saved from Jookistory), now go in order whatever order the phone hands them over, and their
+  playlist becomes an audiobook by itself: it resumes where the child stopped and is never
+  shuffled. (A story sent with *Send to the Jooki* already was.)
+- **Shuffle in the Spotify app no longer shuffles the tokens.** Shuffle or repeat switched on in
+  the Spotify app, while Spotify played on the Jooki, became the Jooki's own setting: afterwards
+  every token's playlist was shuffled, and nothing said why. The Jooki's *Shuffle* and *Repeat*
+  (in *Settings*) now only change when you change them there.
+- Files chosen together with *Add files* go in name order.
+- In Jookistory: a silence before the reading and before the sound at the end of the page
+  (1, 2 or 4 seconds, your choice).
+- For the tinkerers: `services.streaming` ignores the Spotify daemon's `set_cfg` (test SP11);
+  `pickedFiles` in `webui/src/08-uploads.js` sorts a pick with the page's collator and recognises
+  a story by its file names, `01 Title.mp3`, `02 Title.mp3`… (test E27).
+
 ## OpenJooki 2.3.1 (5 October 2026) — Record a story, easier to find
 - ***Record a story* is easier to find.** It was a button at the very bottom of the playlists
   page, under all the playlists. It is now a card of its own, right next to *New playlist*.

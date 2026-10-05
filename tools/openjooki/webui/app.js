@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.3.1';
+  var VERSION = '2.3.2';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -179,6 +179,7 @@
     disc_errors: function (n) { return n + (n > 1 ? ' pistes n\'ont pas pu être envoyées' : ' piste n\'a pas pu être envoyée'); },
     disc_created: function (n) { return 'Playlist créée : ' + n; },
     story_rec: 'Enregistrer une histoire', story_default: 'Mon histoire', story_got: function (n) { return 'Histoire reçue : ' + n; },
+    story_book: 'Une histoire : cette playlist passe en livre audio',
     s_mp3: 'Qualité des MP3', s_mp3_sub: 'Pour les FLAC et WAV envoyés', s_mp3_192: '192 kbps — le plus léger', s_mp3_256: '256 kbps — recommandé', s_mp3_320: '320 kbps — le plus fin',
     s_mp3_foot: 'Les FLAC et WAV envoyés au Jooki sont convertis en MP3 sur ton ordinateur ou ton téléphone : un disque prend trois fois moins de place. 256 kbps suffit largement pour l\'enceinte du Jooki et un casque Bluetooth. Ce choix ne vaut que pour cet appareil.',
     s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
@@ -359,6 +360,7 @@
     disc_errors: function (n) { return n + (n > 1 ? ' tracks could not be sent' : ' track could not be sent'); },
     disc_created: function (n) { return 'Playlist created: ' + n; },
     story_rec: 'Record a story', story_default: 'My story', story_got: function (n) { return 'Story received: ' + n; },
+    story_book: 'A story: this playlist is now an audiobook',
     s_mp3: 'MP3 quality', s_mp3_sub: 'For the FLAC and WAV you send', s_mp3_192: '192 kbps — lightest', s_mp3_256: '256 kbps — recommended', s_mp3_320: '320 kbps — finest',
     s_mp3_foot: 'FLAC and WAV files sent to the Jooki are turned into MP3 on your computer or phone: an album takes three times less space. 256 kbps is plenty for the Jooki\'s speaker and Bluetooth headphones. This choice is for this device only.',
     s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
@@ -539,6 +541,7 @@
     disc_errors: function (n) { return n + (n > 1 ? ' nummers konden niet verstuurd worden' : ' nummer kon niet verstuurd worden'); },
     disc_created: function (n) { return 'Afspeellijst gemaakt: ' + n; },
     story_rec: 'Een verhaal opnemen', story_default: 'Mijn verhaal', story_got: function (n) { return 'Verhaal ontvangen: ' + n; },
+    story_book: 'Een verhaal: deze afspeellijst wordt een luisterboek',
     s_mp3: 'MP3-kwaliteit', s_mp3_sub: 'Voor de FLAC en WAV die je verstuurt', s_mp3_192: '192 kbps — het lichtst', s_mp3_256: '256 kbps — aanbevolen', s_mp3_320: '320 kbps — het fijnst',
     s_mp3_foot: 'FLAC- en WAV-bestanden die naar de Jooki gaan, worden op je computer of telefoon omgezet naar MP3: een album neemt drie keer minder ruimte in. 256 kbps is ruim genoeg voor de luidspreker van de Jooki en een Bluetooth-koptelefoon. Deze keuze geldt alleen voor dit apparaat.',
     s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
@@ -1449,9 +1452,19 @@
     z.addEventListener('drop', function (e) { e.preventDefault(); z.classList.remove('over'); if (e.dataTransfer && e.dataTransfer.files.length) onDrop(e.dataTransfer); });
     return z;
   }
+  // Files chosen together go in name order (a phone hands them over in no order). The pages of a story made
+  // in Jookistory ("01 Title.mp3", "02 Title.mp3"…) make their playlist an audiobook: resumed, never shuffled.
+  function pickedFiles(files, playlistId) {
+    var list = Array.prototype.slice.call(files).sort(function (a, b) { return collator().compare(a.name, b.name); });
+    var m = list.map(function (f) { return /^(\d\d) (.+)\.mp3$/i.exec(f.name); });
+    var story = list.length > 1 && m.every(function (x, i) { return x && x[2] === m[0][2] && Number(x[1]) === i + 1; });
+    var p = playlistId && pls()[playlistId];
+    if (story && p && !p.audiobook) { send('PLAYLIST_UPDATE', { playlist: { id: playlistId, audiobook: true } }); toast(t('story_book')); }
+    enqueue(list, playlistId);
+  }
   function fileButton(label, playlistId, primary) {
     return pickerButton({ label: label, primary: primary, input: { accept: 'audio/*,.mp3,.m4a,.m4b,.aac,.ogg,.oga,.flac,.wav,.wma' },
-      onFiles: function (files) { enqueue(files, playlistId); } });
+      onFiles: function (files) { pickedFiles(files, playlistId); } });
   }
   function dropZone(playlistId) {
     // folders too: their files go into this playlist, folder after folder, in disc order
@@ -1592,7 +1605,8 @@
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
-    cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), t('story_rec')));
+    cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), 'Jookistory',
+      h('div', { class: 'small', style: 'font-weight:400' }, t('story_rec'))));
     var addDisc = discButton();
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),

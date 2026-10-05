@@ -144,7 +144,9 @@ function streaming.on_spotify(doc, ev)
   elseif kind == "volume" then
     return nil   -- 1.x ignored the app's volume and re-applied its own
   elseif kind == "set_cfg" then
-    return { commands = { emit("device.set_config_request", { shuffle_mode = ev.shuffle_mode, repeat_mode = ev.repeat_mode }) } }
+    -- the app's shuffle and repeat stay the app's: saved as the Jooki's own (what 1.x did), a shuffle left
+    -- on in the Spotify app shuffled every token's playlist afterwards, bedtime stories included
+    return nil
   elseif kind == "new_preset" then
     local pending = doc.streaming_int and doc.streaming_int.preset_for
     if not pending then return { commands = { { kind = "log", level = "warn", key = "streaming.preset_unexpected" } } } end

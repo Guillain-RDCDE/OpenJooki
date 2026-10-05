@@ -189,6 +189,12 @@ with sync_playwright() as p:
     check("SP10 no security-policy refusal in the page", not csp and not viol, (csp, viol))
     ctx2.close()
 
+    # SP11 shuffle and repeat set in the Spotify app do not become the Jooki's own (they shuffled the tokens' playlists)
+    J.send("SET_CFG", {"shuffle_mode": False, "repeat_mode": 0}); J.wait(lambda: J.get("audio.config.shuffle_mode") is False)
+    daemon("set_cfg", {"shuffle_mode": 1, "repeat_mode": 2}); J.barrier()
+    check("SP11 the app's shuffle and repeat leave the Jooki's own setting alone", J.get("audio.config.shuffle_mode") is False
+          and J.get("audio.config.repeat_mode") == 0, J.get("audio.config"))
+
     check("SP7 no page error", not errs, errs)
     b.close()
 spy.close(); J.nfc_off(); J.close()

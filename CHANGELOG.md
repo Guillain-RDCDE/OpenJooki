@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.3.0 (5 October 2026) — read a story yourself, the Jooki plays it back
 - **Read a story yourself, the Jooki plays it back.** On the playlists page, *Record a story* opens
   the story studio on your phone: give the story a title, read it page by page, choose the sound
   that tells the child to turn the page (a little bell, chimes, a music box, or none). The studio

@@ -22,7 +22,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.2.7:** the update screen no longer looks stuck: it finds the Jooki again by itself.
+**New in 2.3.0:** read a story yourself, page by page, and the Jooki plays it back: *Record a story* on the playlists page.
+2.2.7: the update screen no longer looks stuck: it finds the Jooki again by itself.
 2.2.6: shuffle really shuffles; the characters have Dutch names; an audiobook says at once where it will resume.
 2.2.5: the pages inside Settings no longer blink.
 2.2.3: FLAC albums go onto the Jooki as MP3, three times lighter; on a computer, drop an album folder and it becomes a playlist.

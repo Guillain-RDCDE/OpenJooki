@@ -4,59 +4,74 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>OpenJooki · voice check</title>
-<meta name="description" content="Trial page: check in ten seconds that your voice comes through well before you read a story for the Jooki.">
+<title>OpenJooki · story studio</title>
+<meta name="description" content="Trial page: read a story aloud, page by page, and get it ready for the Jooki.">
 <style>
   :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a;--okbg:#e8f6ec;--bad:#c0392b;--badbg:#fbeaea;--warn:#b26a00;--warnbg:#fdf1dc;--ring:#d9d4cc}
   @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333;--ok:#3fbf68;--okbg:#12301c;--bad:#e8695b;--badbg:#3a1a1a;--warn:#e0a040;--warnbg:#33260f;--ring:#4a4640}}
   *{box-sizing:border-box}
   body{margin:0;font:17px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:0 20px 60px}
   main{max-width:620px;margin:0 auto}
-  h1{color:var(--accent);font-size:1.8em;margin:.8em 0 .05em;text-align:center;text-wrap:balance}
+  h1{color:var(--accent);font-size:1.8em;margin:.5em 0 .05em;text-align:center;text-wrap:balance}
+  h2{font-size:1.3em;margin:1em 0 .2em;text-align:center;text-wrap:balance;overflow-wrap:anywhere}
   .sub{color:var(--muted);margin:0 0 1.4em;text-align:center}
   .pill{display:inline-block;background:var(--warnbg);color:var(--warn);border-radius:99px;padding:2px 12px;font-size:.8em;font-weight:700}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
   .card.ok{background:var(--okbg);border-color:var(--ok)}
   .card.bad{background:var(--badbg);border-color:var(--bad)}
   .card.warn{background:var(--warnbg);border-color:var(--warn)}
-  .btn{display:block;width:100%;text-align:center;background:var(--accent);color:#fff;padding:15px;border:none;border-radius:12px;font-weight:700;margin:14px 0 4px;font-size:1.1em;font-family:inherit;cursor:pointer}
+  .btn{display:block;width:100%;text-align:center;text-decoration:none;background:var(--accent);color:#fff;padding:15px;border:none;border-radius:12px;font-weight:700;margin:14px 0 4px;font-size:1.1em;font-family:inherit;cursor:pointer;overflow-wrap:anywhere}
   .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-size:1em}
+  .btn.quiet{background:transparent;color:var(--muted);font-weight:400;font-size:.95em;padding:10px}
   .btn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-  .btn:focus-visible,.seg button:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .btn:disabled{opacity:.35;cursor:default}
+  .btn:focus-visible,.seg button:focus-visible,.acts button:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  input[type=text]{width:100%;padding:13px;font-size:1.1em;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font-family:inherit}
   .tiny{color:var(--muted);font-size:.85em;margin:4px 0 0}
   .center{text-align:center}
   .muted{color:var(--muted)}
-  ol{padding-left:1.3em;margin:.4em 0}li{margin:.35em 0}
+
+  .langs{display:flex;justify-content:flex-end;gap:6px;padding-top:12px}
+  .langs button{width:44px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:2px solid transparent;border-radius:9px;cursor:pointer}
+  .langs button[aria-pressed=true]{border-color:var(--accent)}
+  .langs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .langs svg{width:27px;height:18px;border-radius:3px;display:block;box-shadow:0 0 0 1px var(--line)}
 
   /* the level meter: the Jooki's light ring */
   .ringbox{display:flex;justify-content:center;padding:26px 0 18px}
-  .ring{--lvl:0;--c:var(--ring);width:150px;height:150px;border-radius:50%;border:14px solid var(--c);
+  .ring{--lvl:0;--c:var(--ring);width:150px;height:150px;border-radius:50%;border:14px solid var(--c);display:flex;align-items:center;justify-content:center;
         box-shadow:0 0 calc(var(--lvl)*46px) calc(var(--lvl)*14px) var(--c);transform:scale(calc(.9 + var(--lvl)*.14));
         transition:border-color .2s,box-shadow .09s linear,transform .09s linear}
   .ring.good{--c:var(--ok)} .ring.loud{--c:var(--bad)} .ring.quiet{--c:var(--warn)}
+  .ring span{font-size:1.5em;font-weight:700;font-variant-numeric:tabular-nums}
   @media (prefers-reduced-motion:reduce){.ring{transform:none;transition:border-color .2s}}
   .say{font-size:1.25em;font-weight:700;text-align:center;margin:0;min-height:1.5em}
   .read{font-size:1.2em;line-height:1.55;margin:0}
   .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:16px 0 0}
   .bar i{display:block;height:100%;width:0;background:var(--accent)}
 
+  .pages{list-style:none;margin:0;padding:0}
+  .pages li{padding:10px 0;border-top:1px solid var(--line)}
+  .pages li:first-child{border-top:none}
+  .prow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .prow .muted{font-variant-numeric:tabular-nums}
+  .warnpill{background:var(--warnbg);color:var(--warn);border-radius:99px;padding:1px 10px;font-size:.8em;font-weight:700}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .acts button,.seg button{flex:1 1 auto;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:.95em;cursor:pointer}
+  .acts button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
+  .seg button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+  .notice{color:var(--warn);font-weight:600;text-align:center;margin:10px 0 0}
+
   .verdict{font-size:1.5em;font-weight:800;margin:0 0 .2em;text-align:center}
-  .checks{display:grid;gap:0;margin:0;padding:0;list-style:none}
-  .checks li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line);margin:0}
+  .checks{margin:0;padding:0;list-style:none}
+  .checks li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
   .checks li:first-child{border-top:none}
   .checks b{font-weight:600}
   .tag{font-weight:700;color:var(--ok)} .tag.no{color:var(--bad)}
-  .seg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
-  .seg button{flex:1 1 auto;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:.95em;cursor:pointer}
-  .seg button.on{border-color:var(--accent);color:var(--accent);font-weight:700}
   details{margin:14px 0}summary{cursor:pointer;color:var(--accent)}
   pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.8em;overflow-x:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0}
   footer{color:var(--muted);font-size:.78em;text-align:center;margin-top:40px}
-  .langs{display:flex;justify-content:flex-end;gap:6px;padding-top:12px}
-  .langs button{width:44px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:2px solid transparent;border-radius:9px;cursor:pointer}
-  .langs button[aria-pressed=true]{border-color:var(--accent)}
-  .langs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-  .langs svg{width:27px;height:18px;border-radius:3px;display:block;box-shadow:0 0 0 1px var(--line)}
   [hidden]{display:none!important}
 </style>
 </head>
@@ -67,35 +82,57 @@
     <button type="button" data-l="fr" aria-label="Français" title="Français"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="8" height="16" fill="#0055a4"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#ef4135"/></svg></button>
     <button type="button" data-l="nl" aria-label="Nederlands" title="Nederlands"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#ae1c28"/><rect y="5.33" width="24" height="5.34" fill="#fff"/><rect y="10.66" width="24" height="5.34" fill="#21468b"/></svg></button>
   </div>
-  <h1 data-t="h1">The voice check</h1>
-  <p class="sub"><span class="pill" data-t="pill">Trial page</span><br><span data-t="sub">Before you read a story for the Jooki, check in ten seconds that your voice comes through well.</span></p>
+  <h1 data-t="h1">The story studio</h1>
+  <p class="sub"><span class="pill" data-t="pill">Trial page</span></p>
 
   <div id="intro">
+    <p class="center" data-t="sub" style="margin:0 0 14px">Read a story aloud. The Jooki plays it back, page by page.</p>
     <div class="card">
-      <ol>
-        <li data-t="s1">Sit in a quiet room.</li>
-        <li data-t="s2">Hold the phone a hand's width from your mouth.</li>
-        <li data-t="s3">Tap the button, then read the sentence that appears.</li>
-      </ol>
-      <button class="btn" id="go" type="button" data-t="go">Start the check</button>
-      <p class="tiny center" data-h="allow">The phone asks to use the microphone: answer <b>Allow</b>.</p>
+      <input id="title" type="text" maxlength="60" autocomplete="off" data-p="title_ph" aria-label="Title of the story">
+      <button class="btn" id="start" type="button" data-t="start">Start</button>
     </div>
+    <button class="btn quiet" id="test0" type="button" data-t="test">Test my voice (10 seconds)</button>
+  </div>
+
+  <div id="story" hidden>
+    <h2 id="stitle"></h2>
+    <div class="card">
+      <p class="muted center" id="nopages" data-t="no_pages" style="margin:0">No page yet.</p>
+      <ul class="pages" id="pages"></ul>
+    </div>
+    <p class="notice" id="notice" aria-live="polite" hidden></p>
+    <button class="btn" id="rec" type="button"></button>
+    <div class="card">
+      <b data-t="chime_title">The sound at the end of each page</b>
+      <div class="seg" id="chimes">
+        <button type="button" data-c="bell" data-t="bell">Little bell</button>
+        <button type="button" data-c="carillon" data-t="carillon">Chimes</button>
+        <button type="button" data-c="box" data-t="box">Music box</button>
+        <button type="button" data-c="none" data-t="none">None</button>
+      </div>
+    </div>
+    <button class="btn ghost" id="finish" type="button" data-t="finish">Finish the story</button>
+    <button class="btn quiet" id="test1" type="button" data-t="test">Test my voice (10 seconds)</button>
+    <button class="btn quiet" id="delstory" type="button"></button>
   </div>
 
   <div id="problem" class="card bad" hidden>
     <b id="ptitle"></b>
     <p id="ptext" style="margin:.4em 0 0"></p>
     <button class="btn ghost" id="retry0" type="button" data-t="retry">Try again</button>
+    <button class="btn quiet" id="back0" type="button" data-t="back">Back</button>
   </div>
 
   <div id="live" hidden>
-    <div class="ringbox"><div class="ring" id="ring"></div></div>
+    <div class="ringbox"><div class="ring" id="ring"><span id="timer"></span></div></div>
     <p class="say" id="say" aria-live="polite"></p>
     <div class="card" id="readcard" hidden>
       <p class="tiny" style="margin:0 0 6px" data-t="readlabel">Read aloud:</p>
       <p class="read" data-t="sentence"></p>
       <div class="bar"><i id="prog"></i></div>
     </div>
+    <button class="btn" id="stop" type="button" data-t="page_done" hidden>Page finished</button>
+    <button class="btn quiet" id="cancel" type="button" data-t="cancel">Cancel</button>
   </div>
 
   <div id="result" hidden>
@@ -103,7 +140,6 @@
       <p class="verdict" id="vtitle"></p>
       <p id="vtext" class="center" style="margin:0"></p>
     </div>
-
     <div class="card" id="checkcard">
       <ul class="checks">
         <li><b data-t="k_vol">Volume</b><span class="tag" id="c_vol"></span></li>
@@ -111,28 +147,33 @@
         <li><b data-t="k_noise">The room</b><span class="tag" id="c_noise"></span></li>
       </ul>
     </div>
-
     <div class="card" id="listencard">
-      <b data-t="listen">Listen to the result</b>
+      <b data-t="listen">Listen</b>
       <button class="btn ghost" id="play_raw" type="button"></button>
       <button class="btn ghost" id="play_pol" type="button"></button>
-      <p class="tiny" data-t="pol_note"></p>
-      <p style="margin:14px 0 0;font-weight:600" data-t="chime_title">The page-turn sound</p>
-      <div class="seg" id="chimes">
-        <button type="button" data-c="bell" class="on" data-t="bell">Little bell</button>
-        <button type="button" data-c="carillon" data-t="carillon">Chimes</button>
-        <button type="button" data-c="box" data-t="box">Music box</button>
-      </div>
     </div>
-
-    <button class="btn" id="again" type="button" data-t="again">Do the check again</button>
-
+    <button class="btn" id="back1" type="button" data-t="back">Back</button>
+    <button class="btn quiet" id="again" type="button" data-t="again">Test again</button>
     <details>
-      <summary data-t="nums_sum">The numbers of this check</summary>
-      <p class="tiny" data-t="nums_note"></p>
+      <summary data-t="nums_sum">The numbers of this test</summary>
       <pre id="nums"></pre>
       <button class="btn ghost" id="copy" type="button" data-t="copy">Copy the numbers</button>
     </details>
+  </div>
+
+  <div id="done" hidden>
+    <div class="card ok">
+      <p class="verdict" data-t="done_t">Your story is ready</p>
+      <p class="center" id="dsum" style="margin:0"></p>
+    </div>
+    <button class="btn" id="share" type="button" data-t="share">Send or save the story</button>
+    <div id="links" hidden>
+      <p style="margin:14px 0 0;font-weight:600" data-t="files_t">Save the files:</p>
+      <div id="linklist"></div>
+    </div>
+    <p class="tiny center" data-t="done_hint" style="margin-top:12px"></p>
+    <button class="btn ghost" id="back2" type="button" data-t="back_story">Back to the story</button>
+    <button class="btn quiet" id="newstory" type="button"></button>
   </div>
 
   <audio id="player" preload="auto"></audio>
@@ -143,10 +184,14 @@
 (function () {
   'use strict';
 
-  var ROOM_S = 2.5;   // listening to the room (the first SKIP_S are dropped: the mic settles)
+  var ROOM_S = 2.5;      // the voice test listens to the room first (the first SKIP_S are dropped: the mic settles)
   var SKIP_S = 0.6;
-  var READ_S = 9;     // reading the sentence
+  var READ_S = 9;        // then to the sentence
   var FRAME_S = 0.02;
+  var OUT_SR = 44100;    // every page leaves at this rate, whatever the microphone gave
+  var PAGE_MAX_S = 300;  // a page stops by itself after five minutes (the phone's memory)
+  var GAP_S = 0.45;      // silence between the voice and the page-turn sound
+  var KBPS = 96;         // mono voice
 
   // ---- measuring ---------------------------------------------------------
 
@@ -168,13 +213,13 @@
     return a[Math.min(a.length - 1, Math.floor(p * a.length))];
   }
 
-  // x: the whole take (room then reading), sr: its sample rate.
-  function analyse(x, sr) {
-    var roomEnd = Math.min(x.length, Math.round(ROOM_S * sr));
-    var room = frameEnergies(x, sr, Math.round(SKIP_S * sr), roomEnd);
+  // x: a take at sr. roomS: seconds of "say nothing" at its start (0 for a page).
+  function analyse(x, sr, roomS) {
+    var roomEnd = Math.min(x.length, Math.round((roomS || 0) * sr));
+    var room = roomEnd ? frameEnergies(x, sr, Math.round(SKIP_S * sr), roomEnd) : [];
     var read = frameEnergies(x, sr, roomEnd, x.length);
-    var roomDb = db(percentile(room, 0.5));
     var gapsDb = db(percentile(read, 0.1));
+    var roomDb = room.length ? db(percentile(room, 0.5)) : gapsDb;
     // someone who starts reading too early must not count as a noisy room
     var noiseDb = Math.max(-90, Math.min(roomDb, gapsDb));
     var thr = Math.max(noiseDb + 8, -55);
@@ -233,16 +278,27 @@
     return out;
   }
 
-  // removes the rumble and evens the voice out; resolves with the arranged samples
+  function resample(x, from, to) {
+    if (from === to) return x;
+    var n = Math.floor(x.length * to / from), out = new Float32Array(n), step = from / to;
+    for (var i = 0; i < n; i++) {
+      var p = i * step, k = Math.floor(p), f = p - k;
+      out[i] = x[k] * (1 - f) + (k + 1 < x.length ? x[k + 1] : x[k]) * f;
+    }
+    return out;
+  }
+
+  // removes the rumble, evens the voice out, and brings it to OUT_SR
   function polish(read, sr) {
     var x = trim(read, sr);
     var OAC = typeof window !== 'undefined' && (window.OfflineAudioContext || window.webkitOfflineAudioContext);
-    if (!OAC) return Promise.resolve(level(x, sr));
+    function plain() { return level(resample(x, sr, OUT_SR), OUT_SR); }
+    if (!OAC) return Promise.resolve(plain());
     return new Promise(function (resolve) {
       var done = false;
-      function finish(arr) { if (!done) { done = true; resolve(level(arr, sr)); } }
+      function finish(arr) { if (!done) { done = true; resolve(arr ? level(arr, OUT_SR) : plain()); } }
       try {
-        var oc = new OAC(1, x.length, sr);
+        var oc = new OAC(1, Math.max(1, Math.ceil(x.length * OUT_SR / sr)), OUT_SR);
         var buf = oc.createBuffer(1, x.length, sr);
         buf.getChannelData(0).set(x);
         var src = oc.createBufferSource(); src.buffer = buf;
@@ -254,8 +310,8 @@
         src.start(0);
         oc.oncomplete = function (ev) { finish(new Float32Array(ev.renderedBuffer.getChannelData(0))); };
         var p = oc.startRendering();
-        if (p && p.then) p.then(function (b) { finish(new Float32Array(b.getChannelData(0))); }, function () { finish(x); });
-      } catch (err) { finish(x); }
+        if (p && p.then) p.then(function (b) { finish(new Float32Array(b.getChannelData(0))); }, function () { finish(null); });
+      } catch (err) { finish(null); }
     });
   }
 
@@ -296,10 +352,10 @@
     return out;
   }
 
-  function withChime(voice, kind, sr) {
-    var gap = Math.round(0.45 * sr), c = chime(kind, sr);
-    var out = new Float32Array(voice.length + gap + c.length);
-    out.set(voice, 0); out.set(c, voice.length + gap);
+  // the short silence, then the sound: what follows the voice at the end of a page
+  function tail(kind, sr) {
+    var gap = Math.round(GAP_S * sr), c = chime(kind, sr), out = new Float32Array(gap + c.length);
+    out.set(c, gap);
     return out;
   }
 
@@ -317,134 +373,182 @@
     return b;
   }
 
-  if (typeof module !== 'undefined') module.exports = { analyse: analyse, trim: trim, level: level, chime: chime, withChime: withChime, wav: wav, ROOM_S: ROOM_S, READ_S: READ_S };
-  if (typeof document === 'undefined') return;
+  // An ID3v2.3 tag (UTF-16 text frames), as the Jooki's page writes them: what the Jooki reads from an MP3.
+  function id3(tags) {
+    var frames = [];
+    Object.keys(tags).forEach(function (id) {
+      var v = String(tags[id] || '');
+      if (!v) return;
+      var b = new Uint8Array(5 + v.length * 2);
+      b[0] = 1; b[1] = 255; b[2] = 254;
+      for (var i = 0; i < v.length; i++) { b[3 + 2 * i] = v.charCodeAt(i) & 255; b[4 + 2 * i] = v.charCodeAt(i) >> 8; }
+      frames.push([id, b]);
+    });
+    var size = frames.reduce(function (s, f) { return s + 10 + f[1].length; }, 0), out = new Uint8Array(10 + size), at = 10;
+    out.set([73, 68, 51, 3, 0, 0, (size >> 21) & 127, (size >> 14) & 127, (size >> 7) & 127, size & 127], 0);
+    frames.forEach(function (f) {
+      var n = f[1].length;
+      out.set([f[0].charCodeAt(0), f[0].charCodeAt(1), f[0].charCodeAt(2), f[0].charCodeAt(3), (n >>> 24) & 255, (n >> 16) & 255, (n >> 8) & 255, n & 255, 0, 0], at);
+      out.set(f[1], at + 10); at += 10 + n;
+    });
+    return out;
+  }
+
+  function fileName(title, i) {
+    var clean = String(title).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').replace(/^[ .]+|[ .]+$/g, '');
+    return (i < 9 ? '0' : '') + (i + 1) + ' ' + (clean || 'story') + '.mp3';
+  }
 
   // ---- the three languages (same keys in each) ---------------------------
 
   var T = {
     en: {
-      title: "OpenJooki · voice check", h1: "The voice check", pill: "Trial page",
-      sub: "Before you read a story for the Jooki, check in ten seconds that your voice comes through well.",
-      s1: "Sit in a quiet room.", s2: "Hold the phone a hand's width from your mouth.",
-      s3: "Tap the button, then read the sentence that appears.",
-      go: "Start the check", allow: "The phone asks to use the microphone: answer <b>Allow</b>.", retry: "Try again",
+      title: "OpenJooki · story studio", h1: "The story studio", pill: "Trial page",
+      sub: "Read a story aloud. The Jooki plays it back, page by page.",
+      title_ph: "Title of the story", start: "Start", untitled: "My story", test: "Test my voice (10 seconds)",
+      no_pages: "No page yet.", rec: "Record page {n}", page: "Page",
+      listen_b: "Listen", stop: "Stop", redo: "Redo", remove: "Remove", sure: "Sure?",
+      w_loud: "Too loud", w_far: "Too far", w_noisy: "Noise around",
+      chime_title: "The sound at the end of each page", bell: "Little bell", carillon: "Chimes", box: "Music box", none: "None",
+      finish: "Finish the story", del_story: "Delete this story", page_done: "Page finished", cancel: "Cancel",
+      n_unheard: "I did not hear anything. Try again.",
+      n_long: "Long page: I stopped there. Go on with the next page.",
+      n_failed: "This page could not be kept. Record it again.",
+      done_t: "Your story is ready", pages_1: "1 page", pages_n: "{n} pages",
+      share: "Send or save the story", files_t: "Save the files:",
+      done_hint: "Then, on the Jooki's page: New playlist, Add files, and switch Audiobook on.",
+      back_story: "Back to the story", new_story: "New story", back: "Back", retry: "Try again",
       readlabel: "Read aloud:",
       sentence: "“Once upon a time, deep in a great forest, there was a little fox who could not fall asleep. So every evening, he listened to a story.”",
       k_vol: "Volume", k_dist: "Distance", k_noise: "The room",
       vol_ok: "Good", vol_no: "Too loud", dist_ok: "Good", dist_no: "Too far", noise_ok: "Quiet room", noise_no: "Noise",
-      listen: "Listen to the result", play_raw: "My voice, as it is", play_pol: "My voice tidied up, with the page-turn sound",
-      pol_note: "Tidied up: the studio sets the voice at the right volume, cuts the silences and removes the rumble. At the end, the sound that tells the child to turn the page.",
-      chime_title: "The page-turn sound", bell: "Little bell", carillon: "Chimes", box: "Music box",
-      again: "Do the check again", nums_sum: "The numbers of this check",
-      nums_note: "They help tune the studio. If the verdict seems wrong, copy them and send them.",
-      copy: "Copy the numbers", copied: "Copied", stop: "Stop",
+      listen: "Listen", play_raw: "My voice, as it is", play_pol: "My voice, tidied up",
+      again: "Test again", nums_sum: "The numbers of this test", copy: "Copy the numbers", copied: "Copied",
       footer: "Nothing is sent: your voice stays on this device.",
       allow_mic: "Allow the microphone…", hush: "Shh… I'm listening to the room", l_loud: "That's too loud",
-      l_good: "I hear you well", l_quiet: "I can barely hear you", l_go: "Go on, read the sentence", wait: "One moment…",
+      l_good: "I hear you well", l_quiet: "I can barely hear you", l_go: "Go on, read the sentence", l_go_page: "Go on, read", wait: "One moment…",
       p_nomic_t: "This browser cannot use the microphone.",
-      p_nomic_x: "Open this page in Safari on an iPhone, or in Chrome on Android or on a computer. If you came here from another app (a message, an email), choose “Open in Safari”.",
+      p_nomic_x: "Open this page in Safari (iPhone) or Chrome (Android, computer).",
       p_denied_t: "The microphone is refused.",
-      p_denied_x: "Without the microphone, the page cannot listen to you. Reload the page, tap the button and answer “Allow”. If nothing is asked, on an iPhone: Settings, Safari, Microphone, then “Allow”.",
+      p_denied_x: "Reload the page and answer “Allow”. On an iPhone, if nothing is asked: Settings, Safari, Microphone.",
       p_notfound_t: "No microphone found.",
-      p_notfound_x: "This device has no microphone, or another app is using it. Close the other app, or try with a phone.",
+      p_notfound_x: "Another app may be using it. Close it and try again.",
       p_stuck_t: "The microphone does not answer.",
-      p_stuck_x: "Close the other apps that use the microphone (a call, a voice recorder), then try again.",
-      v_ok_t: "That's perfect", v_ok_x: "Your voice is clear, not too loud and not too far. You can read your story just like this.",
-      v_loud_t: "That's too loud", v_loud_x: "Your voice is distorted. Move the phone a little further away, or speak a little more softly, then do the check again.",
-      v_far_t: "You are too far", v_far_x: "Your voice comes in faint. Hold the phone a hand's width from your mouth, then do the check again.",
-      v_noisy_t: "There is noise around", v_noisy_x: "The room can be heard behind your voice. Turn off the TV, close the window or change rooms, then do the check again.",
-      v_silent_t: "I did not hear you", v_silent_x: "Read the sentence aloud as soon as it appears. If you did, check that nothing covers the microphone.",
+      p_stuck_x: "Close the apps that use the microphone (a call, a voice recorder), then try again.",
+      v_ok_t: "That's perfect", v_ok_x: "Your voice is clear. Read just like this.",
+      v_loud_t: "That's too loud", v_loud_x: "Move the phone a little further away.",
+      v_far_t: "You are too far", v_far_x: "Hold the phone a hand's width from your mouth.",
+      v_noisy_t: "There is noise around", v_noisy_x: "Turn off the TV, close the window or change rooms.",
+      v_silent_t: "I did not hear you", v_silent_x: "Read the sentence aloud as soon as it appears.",
       n_verdict: "verdict", n_voice: "voice", n_noise: "noise", n_room: "room", n_gaps: "between words", n_snr: "voice / noise gap",
       n_peak: "peak", n_clip: "clipped", n_active: "spoken part", n_mic: "microphone", n_echo: "echo", n_ns: "noise filter",
       n_agc: "auto volume", yes: "yes", no: "no"
     },
     fr: {
-      title: "OpenJooki · essai de voix", h1: "L'essai de voix", pill: "Page d'essai",
-      sub: "Avant de lire une histoire pour le Jooki, vérifie en dix secondes que ta voix passe bien.",
-      s1: "Installe-toi dans une pièce calme.", s2: "Tiens le téléphone à une main de ta bouche.",
-      s3: "Touche le bouton, puis lis la phrase qui s'affiche.",
-      go: "Commencer l'essai", allow: "Le téléphone demande d'utiliser le micro : réponds <b>Autoriser</b>.", retry: "Réessayer",
+      title: "OpenJooki · studio d'histoires", h1: "Le studio d'histoires", pill: "Page d'essai",
+      sub: "Lis une histoire à voix haute. Le Jooki la rejoue, page par page.",
+      title_ph: "Titre de l'histoire", start: "Commencer", untitled: "Mon histoire", test: "Tester ma voix (10 secondes)",
+      no_pages: "Aucune page pour l'instant.", rec: "Enregistrer la page {n}", page: "Page",
+      listen_b: "Écouter", stop: "Arrêter", redo: "Refaire", remove: "Enlever", sure: "Sûr ?",
+      w_loud: "Trop fort", w_far: "Trop loin", w_noisy: "Du bruit autour",
+      chime_title: "Le son à la fin de chaque page", bell: "Clochette", carillon: "Carillon", box: "Boîte à musique", none: "Aucun",
+      finish: "Terminer l'histoire", del_story: "Supprimer cette histoire", page_done: "Page terminée", cancel: "Annuler",
+      n_unheard: "Je n'ai rien entendu. Réessaie.",
+      n_long: "Page longue : je me suis arrêté là. Continue sur la page suivante.",
+      n_failed: "Cette page n'a pas pu être gardée. Enregistre-la à nouveau.",
+      done_t: "Ton histoire est prête", pages_1: "1 page", pages_n: "{n} pages",
+      share: "Envoyer ou garder l'histoire", files_t: "Garde les fichiers :",
+      done_hint: "Ensuite, sur la page du Jooki : Nouvelle playlist, Ajouter des fichiers, et active Livre audio.",
+      back_story: "Revenir à l'histoire", new_story: "Nouvelle histoire", back: "Retour", retry: "Réessayer",
       readlabel: "Lis à voix haute :",
       sentence: "« Il était une fois, au fond d'une grande forêt, un petit renard qui n'arrivait pas à dormir. Alors, chaque soir, il écoutait une histoire. »",
       k_vol: "Le volume", k_dist: "La distance", k_noise: "Le calme autour",
       vol_ok: "Bon", vol_no: "Trop fort", dist_ok: "Bonne", dist_no: "Trop loin", noise_ok: "Pièce calme", noise_no: "Du bruit",
-      listen: "Écoute le résultat", play_raw: "Ma voix, telle quelle", play_pol: "Ma voix arrangée, avec le tourne-page",
-      pol_note: "Arrangée : le studio met la voix au bon volume, coupe les blancs et enlève le grondement. À la fin, le son qui dit à l'enfant de tourner la page.",
-      chime_title: "Le son du tourne-page", bell: "Clochette", carillon: "Carillon", box: "Boîte à musique",
-      again: "Refaire l'essai", nums_sum: "Les chiffres de cet essai",
-      nums_note: "Ils servent à régler le studio. Si le verdict te semble faux, copie-les et envoie-les.",
-      copy: "Copier les chiffres", copied: "Copié", stop: "Arrêter",
+      listen: "Écouter", play_raw: "Ma voix, telle quelle", play_pol: "Ma voix, arrangée",
+      again: "Refaire le test", nums_sum: "Les chiffres de ce test", copy: "Copier les chiffres", copied: "Copié",
       footer: "Rien n'est envoyé : ta voix reste sur cet appareil.",
       allow_mic: "Autorise le micro…", hush: "Chut… j'écoute la pièce", l_loud: "C'est trop fort",
-      l_good: "Je t'entends bien", l_quiet: "Je t'entends à peine", l_go: "Vas-y, lis la phrase", wait: "Un instant…",
+      l_good: "Je t'entends bien", l_quiet: "Je t'entends à peine", l_go: "Vas-y, lis la phrase", l_go_page: "Vas-y, lis", wait: "Un instant…",
       p_nomic_t: "Ce navigateur ne peut pas utiliser le micro.",
-      p_nomic_x: "Ouvre cette page dans Safari sur iPhone, ou dans Chrome sur Android ou sur un ordinateur. Si tu es arrivé ici depuis une autre appli (un message, un mail), choisis « Ouvrir dans Safari ».",
+      p_nomic_x: "Ouvre cette page dans Safari (iPhone) ou Chrome (Android, ordinateur).",
       p_denied_t: "Le micro est refusé.",
-      p_denied_x: "Sans le micro, la page ne peut pas t'écouter. Recharge la page, touche le bouton et réponds « Autoriser ». Si rien n'est demandé, sur iPhone : Réglages, Safari, Micro, puis « Autoriser ».",
+      p_denied_x: "Recharge la page et réponds « Autoriser ». Sur iPhone, si rien n'est demandé : Réglages, Safari, Micro.",
       p_notfound_t: "Aucun micro trouvé.",
-      p_notfound_x: "Cet appareil n'a pas de micro, ou il est utilisé par une autre appli. Ferme l'autre appli, ou essaie avec un téléphone.",
+      p_notfound_x: "Une autre appli l'utilise peut-être. Ferme-la et réessaie.",
       p_stuck_t: "Le micro ne répond pas.",
-      p_stuck_x: "Ferme les autres applis qui utilisent le micro (un appel, un dictaphone), puis réessaie.",
-      v_ok_t: "C'est parfait", v_ok_x: "Ta voix est claire, ni trop forte ni trop loin. Tu peux lire ton histoire comme ça.",
-      v_loud_t: "C'est trop fort", v_loud_x: "Ta voix sature. Éloigne un peu le téléphone, ou parle un peu moins fort, puis refais l'essai.",
-      v_far_t: "Tu es trop loin", v_far_x: "Ta voix arrive faible. Tiens le téléphone à une main de ta bouche, puis refais l'essai.",
-      v_noisy_t: "Il y a du bruit autour", v_noisy_x: "On entend la pièce derrière ta voix. Coupe la télé, ferme la fenêtre ou change de pièce, puis refais l'essai.",
-      v_silent_t: "Je ne t'ai pas entendu", v_silent_x: "Lis la phrase à voix haute dès qu'elle s'affiche. Si tu l'as fait, vérifie que rien ne bouche le micro.",
+      p_stuck_x: "Ferme les applis qui utilisent le micro (un appel, un dictaphone), puis réessaie.",
+      v_ok_t: "C'est parfait", v_ok_x: "Ta voix est claire. Lis comme ça.",
+      v_loud_t: "C'est trop fort", v_loud_x: "Éloigne un peu le téléphone.",
+      v_far_t: "Tu es trop loin", v_far_x: "Tiens le téléphone à une main de ta bouche.",
+      v_noisy_t: "Il y a du bruit autour", v_noisy_x: "Coupe la télé, ferme la fenêtre ou change de pièce.",
+      v_silent_t: "Je ne t'ai pas entendu", v_silent_x: "Lis la phrase à voix haute dès qu'elle s'affiche.",
       n_verdict: "verdict", n_voice: "voix", n_noise: "bruit", n_room: "pièce", n_gaps: "entre les mots", n_snr: "écart voix / bruit",
       n_peak: "crête", n_clip: "saturé", n_active: "part parlée", n_mic: "micro", n_echo: "écho", n_ns: "antibruit",
       n_agc: "volume auto", yes: "oui", no: "non"
     },
     nl: {
-      title: "OpenJooki · stemtest", h1: "De stemtest", pill: "Proefpagina",
-      sub: "Controleer in tien seconden of je stem goed doorkomt, voordat je een verhaal voorleest voor de Jooki.",
-      s1: "Ga in een rustige kamer zitten.", s2: "Houd de telefoon op een handbreedte van je mond.",
-      s3: "Tik op de knop en lees dan de zin die verschijnt.",
-      go: "Start de test", allow: "De telefoon vraagt of de microfoon gebruikt mag worden: kies <b>Sta toe</b>.", retry: "Opnieuw proberen",
+      title: "OpenJooki · verhalenstudio", h1: "De verhalenstudio", pill: "Proefpagina",
+      sub: "Lees een verhaal voor. De Jooki speelt het af, bladzijde per bladzijde.",
+      title_ph: "Titel van het verhaal", start: "Beginnen", untitled: "Mijn verhaal", test: "Mijn stem testen (10 seconden)",
+      no_pages: "Nog geen bladzijde.", rec: "Bladzijde {n} opnemen", page: "Bladzijde",
+      listen_b: "Luisteren", stop: "Stoppen", redo: "Opnieuw", remove: "Verwijderen", sure: "Zeker?",
+      w_loud: "Te luid", w_far: "Te ver", w_noisy: "Lawaai rondom",
+      chime_title: "Het geluid aan het einde van elke bladzijde", bell: "Belletje", carillon: "Klokkenspel", box: "Speeldoos", none: "Geen",
+      finish: "Het verhaal afmaken", del_story: "Dit verhaal wissen", page_done: "Bladzijde klaar", cancel: "Annuleren",
+      n_unheard: "Ik heb niets gehoord. Probeer het opnieuw.",
+      n_long: "Lange bladzijde: ik ben daar gestopt. Ga verder op de volgende bladzijde.",
+      n_failed: "Deze bladzijde kon niet bewaard worden. Neem ze opnieuw op.",
+      done_t: "Je verhaal is klaar", pages_1: "1 bladzijde", pages_n: "{n} bladzijden",
+      share: "Het verhaal versturen of bewaren", files_t: "Bewaar de bestanden:",
+      done_hint: "Daarna, op de pagina van de Jooki: Nieuwe afspeellijst, Bestanden toevoegen, en zet Luisterboek aan.",
+      back_story: "Terug naar het verhaal", new_story: "Nieuw verhaal", back: "Terug", retry: "Opnieuw proberen",
       readlabel: "Lees hardop:",
       sentence: "‘Er was eens, diep in een groot bos, een kleine vos die maar niet kon slapen. Daarom luisterde hij elke avond naar een verhaal.’",
       k_vol: "Het volume", k_dist: "De afstand", k_noise: "De rust rondom",
       vol_ok: "Goed", vol_no: "Te luid", dist_ok: "Goed", dist_no: "Te ver", noise_ok: "Rustige kamer", noise_no: "Lawaai",
-      listen: "Luister naar het resultaat", play_raw: "Mijn stem, zoals ze is", play_pol: "Mijn stem bijgewerkt, met het omslaggeluid",
-      pol_note: "Bijgewerkt: de studio zet de stem op het juiste volume, knipt de stiltes weg en haalt het gebrom eruit. Aan het einde klinkt het geluid dat het kind vertelt de bladzijde om te slaan.",
-      chime_title: "Het omslaggeluid", bell: "Belletje", carillon: "Klokkenspel", box: "Speeldoos",
-      again: "De test opnieuw doen", nums_sum: "De cijfers van deze test",
-      nums_note: "Ze helpen om de studio af te stellen. Lijkt het oordeel niet te kloppen, kopieer ze dan en stuur ze op.",
-      copy: "De cijfers kopiëren", copied: "Gekopieerd", stop: "Stoppen",
+      listen: "Luisteren", play_raw: "Mijn stem, zoals ze is", play_pol: "Mijn stem, bijgewerkt",
+      again: "Opnieuw testen", nums_sum: "De cijfers van deze test", copy: "De cijfers kopiëren", copied: "Gekopieerd",
       footer: "Er wordt niets verstuurd: je stem blijft op dit toestel.",
       allow_mic: "Sta de microfoon toe…", hush: "Sst… ik luister naar de kamer", l_loud: "Dat is te luid",
-      l_good: "Ik hoor je goed", l_quiet: "Ik hoor je nauwelijks", l_go: "Toe maar, lees de zin", wait: "Een ogenblik…",
+      l_good: "Ik hoor je goed", l_quiet: "Ik hoor je nauwelijks", l_go: "Toe maar, lees de zin", l_go_page: "Toe maar, lees", wait: "Een ogenblik…",
       p_nomic_t: "Deze browser kan de microfoon niet gebruiken.",
-      p_nomic_x: "Open deze pagina in Safari op een iPhone, of in Chrome op Android of op een computer. Kwam je hier vanuit een andere app (een bericht, een e-mail), kies dan ‘Open in Safari’.",
+      p_nomic_x: "Open deze pagina in Safari (iPhone) of Chrome (Android, computer).",
       p_denied_t: "De microfoon is geweigerd.",
-      p_denied_x: "Zonder microfoon kan de pagina niet naar je luisteren. Laad de pagina opnieuw, tik op de knop en kies ‘Sta toe’. Wordt er niets gevraagd, op een iPhone: Instellingen, Safari, Microfoon, dan ‘Sta toe’.",
+      p_denied_x: "Laad de pagina opnieuw en kies ‘Sta toe’. Op een iPhone, als er niets gevraagd wordt: Instellingen, Safari, Microfoon.",
       p_notfound_t: "Geen microfoon gevonden.",
-      p_notfound_x: "Dit toestel heeft geen microfoon, of een andere app gebruikt hem. Sluit de andere app, of probeer het met een telefoon.",
+      p_notfound_x: "Misschien gebruikt een andere app hem. Sluit die en probeer het opnieuw.",
       p_stuck_t: "De microfoon reageert niet.",
-      p_stuck_x: "Sluit de andere apps die de microfoon gebruiken (een gesprek, een dictafoon) en probeer het opnieuw.",
-      v_ok_t: "Dat is perfect", v_ok_x: "Je stem is helder, niet te luid en niet te ver. Zo kun je je verhaal voorlezen.",
-      v_loud_t: "Dat is te luid", v_loud_x: "Je stem vervormt. Houd de telefoon iets verder weg, of praat wat zachter, en doe de test opnieuw.",
-      v_far_t: "Je bent te ver weg", v_far_x: "Je stem komt zwak binnen. Houd de telefoon op een handbreedte van je mond en doe de test opnieuw.",
-      v_noisy_t: "Er is lawaai om je heen", v_noisy_x: "Je hoort de kamer achter je stem. Zet de tv uit, doe het raam dicht of ga naar een andere kamer, en doe de test opnieuw.",
-      v_silent_t: "Ik heb je niet gehoord", v_silent_x: "Lees de zin hardop zodra hij verschijnt. Deed je dat al, kijk dan of niets de microfoon afdekt.",
+      p_stuck_x: "Sluit de apps die de microfoon gebruiken (een gesprek, een dictafoon) en probeer het opnieuw.",
+      v_ok_t: "Dat is perfect", v_ok_x: "Je stem is helder. Lees zo voor.",
+      v_loud_t: "Dat is te luid", v_loud_x: "Houd de telefoon iets verder weg.",
+      v_far_t: "Je bent te ver weg", v_far_x: "Houd de telefoon op een handbreedte van je mond.",
+      v_noisy_t: "Er is lawaai om je heen", v_noisy_x: "Zet de tv uit, doe het raam dicht of ga naar een andere kamer.",
+      v_silent_t: "Ik heb je niet gehoord", v_silent_x: "Lees de zin hardop zodra hij verschijnt.",
       n_verdict: "oordeel", n_voice: "stem", n_noise: "ruis", n_room: "kamer", n_gaps: "tussen de woorden", n_snr: "verschil stem / ruis",
       n_peak: "piek", n_clip: "overstuurd", n_active: "gesproken deel", n_mic: "microfoon", n_echo: "echo", n_ns: "ruisfilter",
       n_agc: "auto-volume", yes: "ja", no: "nee"
     }
   };
 
+  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
+  if (typeof document === 'undefined') return;
+
   // ---- the page ----------------------------------------------------------
 
   var $ = function (id) { return document.getElementById(id); };
   var AC = window.AudioContext || window.webkitAudioContext;
-  var run = null;            // the take being recorded
-  var take = null;           // the last finished take: {sr, read, polished, m, settings}
-  var urls = {};             // blob URLs of what can be played
-  var chimeKind = 'bell';
-  var playing = null;
-  var player = $('player');
-  var view = 'intro', problem = null, liveKey = '';
+  var VIEWS = ['intro', 'story', 'problem', 'live', 'result', 'done'];
+  var CHIMES = ['bell', 'carillon', 'box'];
   var VERDICT_CARD = { ok: 'ok', loud: 'bad', far: 'warn', noisy: 'warn', silent: 'bad' };
+  var story = null;          // {title, chime, pages: [{mp3: Uint8Array, dur, verdict, pending}]}
+  var tails = {};            // the three page-turn sounds as MP3, made once
+  var run = null;            // the take being recorded
+  var take = null;           // the last voice test: {sr, read, polished, m, settings}
+  var last = { mode: 'check', index: -1 };
+  var view = 'intro', problem = null, liveKey = '', notice = '';
+  var playing = null, playUrl = null, sure = -1, sureDel = false, sureNew = false;
+  var doneFiles = [], doneUrls = [], lock = null;
+  var player = $('player');
 
   // the phone's language, unless a flag was tapped on this phone before
   var lang = (function () {
@@ -455,64 +559,133 @@
   })();
 
   function t(k) { return T[lang][k]; }
-
+  function clock(s) { s = Math.round(s); return Math.floor(s / 60) + ':' + (s % 60 < 10 ? '0' : '') + (s % 60); }
   function say(key) { liveKey = key; $('say').textContent = key ? t(key) : ''; }
-
-  function playLabels() {
-    $('play_raw').textContent = playing === 'raw' ? t('stop') : t('play_raw');
-    $('play_pol').textContent = playing === 'pol' ? t('stop') : t('play_pol');
-  }
-
-  function applyLang() {
-    document.documentElement.lang = lang;
-    document.title = t('title');
-    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) { el.textContent = t(el.getAttribute('data-t')); });
-    Array.prototype.forEach.call(document.querySelectorAll('[data-h]'), function (el) { el.innerHTML = t(el.getAttribute('data-h')); });
-    Array.prototype.forEach.call($('langs').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-l') === lang ? 'true' : 'false'); });
-    playLabels();
-    say(liveKey);
-    if (problem) { $('ptitle').textContent = t('p_' + problem + '_t'); $('ptext').textContent = t('p_' + problem + '_x'); }
-    if (take && take.polished) fillResult();
-  }
+  function home() { return story ? 'story' : 'intro'; }
 
   function show(id) {
     view = id;
-    ['intro', 'problem', 'live', 'result'].forEach(function (k) { $(k).hidden = k !== id; });
+    VIEWS.forEach(function (k) { $(k).hidden = k !== id; });
+    refresh();
     window.scrollTo(0, 0);
   }
 
-  function fail(kind) {
-    problem = kind;
-    $('ptitle').textContent = t('p_' + kind + '_t');
-    $('ptext').textContent = t('p_' + kind + '_x');
-    show('problem');
+  // ---- the draft: kept on this device, so a reload loses nothing ---------
+
+  function idb() {
+    return new Promise(function (ok, ko) {
+      try {
+        var q = indexedDB.open('oj-studio', 1);
+        q.onupgradeneeded = function () { q.result.createObjectStore('kv'); };
+        q.onsuccess = function () { ok(q.result); };
+        q.onerror = function () { ko(q.error); };
+      } catch (e) { ko(e); }
+    });
+  }
+
+  function saveDraft() {
+    var v = story ? {
+      title: story.title, chime: story.chime,
+      pages: story.pages.filter(function (p) { return p.mp3; }).map(function (p) { return { mp3: p.mp3, dur: p.dur, verdict: p.verdict }; })
+    } : null;
+    idb().then(function (d) {
+      var tx = d.transaction('kv', 'readwrite');
+      if (v) tx.objectStore('kv').put(v, 'draft'); else tx.objectStore('kv').delete('draft');
+      tx.oncomplete = tx.onerror = tx.onabort = function () { d.close(); };
+    }).catch(function () {});
+  }
+
+  function loadDraft() {
+    return idb().then(function (d) {
+      return new Promise(function (ok) {
+        var q = d.transaction('kv').objectStore('kv').get('draft');
+        q.onsuccess = function () { d.close(); ok(q.result || null); };
+        q.onerror = function () { d.close(); ok(null); };
+      });
+    }).catch(function () { return null; });
+  }
+
+  // ---- MP3, off the main thread (the encoder of the Jooki's own page) ----
+
+  function encode(x) {
+    return new Promise(function (ok, ko) {
+      var w;
+      try { w = new Worker('mp3-worker.js'); } catch (e) { ko(e); return; }
+      w.onmessage = function (e) {
+        if (e.data.mp3) { w.terminate(); ok(e.data.mp3); }
+        else if (e.data.error) { w.terminate(); ko(new Error(e.data.error)); }
+      };
+      w.onerror = function () { w.terminate(); ko(new Error('mp3 worker')); };
+      var c = new Float32Array(x);
+      w.postMessage({ channels: [c], rate: OUT_SR, kbps: KBPS }, [c.buffer]);
+    });
+  }
+
+  var tailsReady = null;
+  function makeTails() {
+    if (!tailsReady) tailsReady = Promise.all(CHIMES.map(function (k) {
+      return encode(tail(k, OUT_SR)).then(function (m) { tails[k] = m; });
+    })).catch(function () { tailsReady = null; });
+    return tailsReady;
+  }
+
+  // ---- listening ---------------------------------------------------------
+
+  function stopPlaying() {
+    try { player.pause(); } catch (e) {}
+    if (playUrl) { URL.revokeObjectURL(playUrl); playUrl = null; }
+    if (playing) { playing = null; refresh(); }
+  }
+
+  function playParts(id, parts, type) {
+    if (playing === id) { stopPlaying(); return; }
+    stopPlaying();
+    playUrl = URL.createObjectURL(new Blob(parts, { type: type }));
+    player.src = playUrl;
+    playing = id;
+    refresh();
+    var p = player.play();
+    if (p && p.catch) p.catch(function () { if (playing === id) stopPlaying(); });
+  }
+
+  function pageParts(p) {
+    var parts = [p.mp3];
+    if (story.chime !== 'none' && tails[story.chime]) parts.push(tails[story.chime]);
+    return parts;
+  }
+
+  // ---- recording ---------------------------------------------------------
+
+  function awake(on) {
+    try {
+      if (on && navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) {
+        if (run && !run.done) lock = l; else l.release();
+      }, function () {});
+      else if (!on && lock) { lock.release(); lock = null; }
+    } catch (e) {}
   }
 
   function stopRun(r) {
     r.done = true;
     clearTimeout(r.watchdog);
     if (r.proc) r.proc.onaudioprocess = null;
-    if (r.stream) r.stream.getTracks().forEach(function (t) { t.stop(); });
+    if (r.stream) r.stream.getTracks().forEach(function (tr) { tr.stop(); });
     // closing the context gives the loudspeaker back to playback on iPhone
-    try { if (r.ctx && r.ctx.close) r.ctx.close(); } catch (e) {}
+    try {
+      if (r.ctx && r.ctx.close && r.ctx.state !== 'closed') { var c = r.ctx.close(); if (c && c.catch) c.catch(function () {}); }
+    } catch (e) {}
+    r.ctx = null;
+    awake(false);
   }
 
-  function stopPlaying() {
-    try { player.pause(); } catch (e) {}
-    playing = null;
-    $('play_raw').classList.remove('on'); $('play_pol').classList.remove('on');
-    playLabels();
-  }
-
-  function forget() {
-    stopPlaying();
-    Object.keys(urls).forEach(function (k) { URL.revokeObjectURL(urls[k]); });
-    urls = {};
+  function fail(kind) {
+    problem = kind;
+    show('problem');
   }
 
   // the ring follows the voice, like the Jooki's own light
   var disp = 0, lastGood = 0, lastLoud = 0, heard = false;
-  function meter(d, inRoom) {
+  function meter(d, inRoom, idle) {
     var s = 0, p = 0;
     for (var i = 0; i < d.length; i++) { var v = d[i]; s += v * v; if (v > p) p = v; else if (-v > p) p = -v; }
     var lv = db(s / d.length), now = Date.now();
@@ -523,27 +696,35 @@
     if (p >= 0.985 || lv > -10) lastLoud = now;
     else if (lv > -40) { lastGood = now; heard = true; }
     var state = now - lastLoud < 900 ? 'loud' : now - lastGood < 700 ? 'good' : heard ? 'quiet' : '';
+    // between two sentences of a page, silence is normal: say nothing about it
+    if (idle && state === 'quiet') { ring.className = 'ring'; return; }
     ring.className = 'ring' + (state ? ' ' + state : '');
-    var key = state ? 'l_' + state : 'l_go';
+    var key = state ? 'l_' + state : idle ? 'l_go_page' : 'l_go';
     if (key !== liveKey) say(key);
   }
 
-  function begin() {
-    forget();
+  // mode 'check': the ten-second voice test. mode 'page': a page of the story (index = the page to redo, or -1).
+  function begin(mode, index) {
+    stopPlaying();
     if (run) stopRun(run);
-    take = null; problem = null;
+    last = { mode: mode, index: index };
+    problem = null; notice = ''; sure = -1; sureDel = false;
+    if (mode === 'check') take = null;
     if (!AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { fail('nomic'); return; }
-    var r = run = { chunks: [], n: 0, done: false };
+    var r = run = { mode: mode, index: index, chunks: [], n: 0, done: false };
     try { r.ctx = new AC(); } catch (e) { fail('nomic'); return; }
     disp = 0; lastGood = 0; lastLoud = 0; heard = false;
     $('ring').className = 'ring'; $('ring').style.setProperty('--lvl', 0);
-    say('allow_mic');
+    $('timer').textContent = '';
     $('readcard').hidden = true; $('prog').style.width = '0';
+    $('stop').hidden = true;
+    say('allow_mic');
     show('live');
+    awake(true);
     // the raw microphone: an automatic volume would hide "too loud" and "too far"
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } })
       .then(function (stream) {
-        if (r.done) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+        if (r.done) { stream.getTracks().forEach(function (tr) { tr.stop(); }); return; }
         r.stream = stream;
         var track = stream.getAudioTracks()[0];
         r.settings = track && track.getSettings ? track.getSettings() : {};
@@ -552,16 +733,22 @@
         var proc = r.proc = r.ctx.createScriptProcessor(4096, 1, 1);
         var mute = r.ctx.createGain(); mute.gain.value = 0;
         src.connect(proc); proc.connect(mute); mute.connect(r.ctx.destination);
-        say('hush');
+        if (mode === 'check') say('hush'); else { say('l_go_page'); $('stop').hidden = false; }
         r.watchdog = setTimeout(function () { if (!r.done && !r.n) { stopRun(r); fail('stuck'); } }, 6000);
         proc.onaudioprocess = function (ev) {
           if (r.done) return;
           var d = ev.inputBuffer.getChannelData(0);
           r.sr = ev.inputBuffer.sampleRate;
           r.chunks.push(new Float32Array(d)); r.n += d.length;
+          if (mode === 'page') {
+            meter(d, false, true);
+            $('timer').textContent = clock(r.n / r.sr);
+            if (r.n >= PAGE_MAX_S * r.sr) { notice = 'n_long'; finish(r); }
+            return;
+          }
           var roomN = ROOM_S * r.sr, totalN = (ROOM_S + READ_S) * r.sr, inRoom = r.n < roomN;
           if (!inRoom && $('readcard').hidden) $('readcard').hidden = false;
-          meter(d, inRoom);
+          meter(d, inRoom, false);
           if (!inRoom) $('prog').style.width = Math.min(100, 100 * (r.n - roomN) / (totalN - roomN)) + '%';
           if (r.n >= totalN) finish(r);
         };
@@ -574,29 +761,87 @@
       });
   }
 
+  function cancel() {
+    if (run) stopRun(run);
+    show(home());
+  }
+
   function finish(r) {
     stopRun(r);
     var x = new Float32Array(r.n), o = 0;
     r.chunks.forEach(function (c) { x.set(c, o); o += c.length; });
-    var sr = r.sr, m = analyse(x, sr);
-    var read = x.subarray(Math.round(ROOM_S * sr));
-    take = { sr: sr, read: read, m: m, settings: r.settings || {}, polished: null };
-    say('wait');
-    var tk = take;
-    polish(read, sr).then(function (p) { tk.polished = p; if (take === tk) { fillResult(); show('result'); } });
+    r.chunks = [];
+    var sr = r.sr;
+    if (r.mode === 'check') {
+      var tk = take = { sr: sr, read: x.subarray(Math.round(ROOM_S * sr)), m: analyse(x, sr, ROOM_S), settings: r.settings || {}, polished: null };
+      say('wait');
+      polish(tk.read, sr).then(function (p) { tk.polished = p; if (take === tk && view === 'live') show('result'); });
+      return;
+    }
+    if (!story || r.n < 0.7 * sr) { show(home()); return; }
+    var m = analyse(x, sr, 0);
+    if (m.silent) { notice = 'n_unheard'; show('story'); return; }
+    var page = { mp3: null, dur: 0, verdict: m.verdict, pending: true };
+    if (r.index >= 0 && r.index < story.pages.length) story.pages[r.index] = page; else story.pages.push(page);
+    show('story');
+    polish(x, sr).then(function (p) { page.dur = p.length / OUT_SR; return encode(p); }).then(function (mp3) {
+      page.mp3 = mp3; page.pending = false;
+      if (story && story.pages.indexOf(page) >= 0) saveDraft();
+      refresh();
+    }, function () {
+      var i = story ? story.pages.indexOf(page) : -1;
+      if (i >= 0) { story.pages.splice(i, 1); notice = 'n_failed'; refresh(); }
+    });
   }
 
-  function fillResult() {
+  // ---- drawing -----------------------------------------------------------
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function act(text, on, fn) { var b = el('button', on ? 'on' : '', text); b.type = 'button'; b.addEventListener('click', fn); return b; }
+
+  function drawStory() {
+    $('stitle').textContent = story.title;
+    $('nopages').hidden = story.pages.length > 0;
+    var list = $('pages');
+    list.textContent = '';
+    story.pages.forEach(function (p, i) {
+      var li = el('li'), row = el('div', 'prow');
+      row.appendChild(el('b', '', t('page') + ' ' + (i + 1)));
+      row.appendChild(el('span', 'muted', p.pending ? t('wait') : clock(p.dur)));
+      if (!p.pending && p.verdict !== 'ok') row.appendChild(el('span', 'warnpill', t('w_' + p.verdict)));
+      li.appendChild(row);
+      if (!p.pending) {
+        var acts = el('div', 'acts'), id = 'page-' + i;
+        acts.appendChild(act(playing === id ? t('stop') : t('listen_b'), playing === id, function () { playParts(id, pageParts(p), 'audio/mpeg'); }));
+        acts.appendChild(act(t('redo'), false, function () { begin('page', i); }));
+        acts.appendChild(act(sure === i ? t('sure') : t('remove'), false, function () {
+          if (sure !== i) { sure = i; refresh(); return; }
+          sure = -1; stopPlaying(); story.pages.splice(i, 1); saveDraft(); refresh();
+        }));
+        li.appendChild(acts);
+      }
+      list.appendChild(li);
+    });
+    $('notice').hidden = !notice; $('notice').textContent = notice ? t(notice) : '';
+    $('rec').textContent = t('rec').replace('{n}', story.pages.length + 1);
+    $('finish').disabled = !story.pages.length || story.pages.some(function (p) { return p.pending; });
+    Array.prototype.forEach.call($('chimes').children, function (c) { c.classList.toggle('on', c.getAttribute('data-c') === story.chime); });
+    $('delstory').textContent = sureDel ? t('sure') : t('del_story');
+  }
+
+  function drawResult() {
     var m = take.m;
     $('vcard').className = 'card ' + VERDICT_CARD[m.verdict];
     $('vtitle').textContent = t('v_' + m.verdict + '_t');
     $('vtext').textContent = t('v_' + m.verdict + '_x');
-    var heardIt = !m.silent;
-    $('checkcard').hidden = !heardIt; $('listencard').hidden = !heardIt;
+    $('checkcard').hidden = m.silent; $('listencard').hidden = m.silent;
     function tag(id, ok, key) { $(id).textContent = t(key + (ok ? '_ok' : '_no')); $(id).className = 'tag' + (ok ? '' : ' no'); }
     tag('c_vol', !m.loud, 'vol');
     tag('c_dist', !m.far, 'dist');
     tag('c_noise', !m.noisy, 'noise');
+    $('play_raw').textContent = playing === 'raw' ? t('stop') : t('play_raw');
+    $('play_pol').textContent = playing === 'pol' ? t('stop') : t('play_pol');
+    $('play_raw').classList.toggle('on', playing === 'raw'); $('play_pol').classList.toggle('on', playing === 'pol');
     var s = take.settings, f = function (n) { return (Math.round(n * 10) / 10).toFixed(1); };
     var onoff = function (v) { return v === true ? t('yes') : v === false ? t('no') : '?'; };
     $('nums').textContent = [
@@ -611,44 +856,114 @@
     ].join('\n');
   }
 
-  function play(which) {
-    if (!take) return;
-    if (playing === which) { stopPlaying(); return; }
-    stopPlaying();
-    var key = which === 'raw' ? 'raw' : which + '-' + chimeKind;
-    if (!urls[key]) {
-      var x = which === 'raw' ? take.read : which === 'chime' ? chime(chimeKind, take.sr) : withChime(take.polished, chimeKind, take.sr);
-      urls[key] = URL.createObjectURL(new Blob([wav(x, take.sr)], { type: 'audio/wav' }));
-    }
-    player.src = urls[key];
-    playing = which;
-    if (which !== 'chime') $(which === 'raw' ? 'play_raw' : 'play_pol').classList.add('on');
-    playLabels();
-    var p = player.play();
-    if (p && p.catch) p.catch(function () { if (playing === which) stopPlaying(); });
+  function drawDone() {
+    var n = story.pages.length, total = 0;
+    story.pages.forEach(function (p) { total += p.dur; });
+    $('dsum').textContent = story.title + ' · ' + (n === 1 ? t('pages_1') : t('pages_n').replace('{n}', n)) + ' · ' + clock(total);
+    $('newstory').textContent = sureNew ? t('sure') : t('new_story');
   }
 
+  function refresh() {
+    document.documentElement.lang = lang;
+    document.title = t('title');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (e) { e.textContent = t(e.getAttribute('data-t')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-p]'), function (e) { var v = t(e.getAttribute('data-p')); e.placeholder = v; e.setAttribute('aria-label', v); });
+    Array.prototype.forEach.call($('langs').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-l') === lang ? 'true' : 'false'); });
+    $('say').textContent = liveKey ? t(liveKey) : '';
+    if (problem) { $('ptitle').textContent = t('p_' + problem + '_t'); $('ptext').textContent = t('p_' + problem + '_x'); }
+    if (story) drawStory();
+    if (take && take.polished) drawResult();
+    if (story && view === 'done') drawDone();
+  }
+
+  // ---- the finished story ------------------------------------------------
+
+  function leaveDone() {
+    doneUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+    doneUrls = []; doneFiles = []; sureNew = false;
+  }
+
+  function finishStory() {
+    stopPlaying();
+    var wait = story.chime === 'none' || tails[story.chime] ? Promise.resolve() : makeTails();
+    $('finish').disabled = true;
+    wait.then(function () {
+      if (!story) return;
+      var n = story.pages.length, pageWord = t('page');
+      doneFiles = story.pages.map(function (p, i) {
+        var parts = [id3({ TIT2: pageWord + ' ' + (i + 1), TALB: story.title, TRCK: (i + 1) + '/' + n })].concat(pageParts(p));
+        var name = fileName(story.title, i);
+        try { return new File(parts, name, { type: 'audio/mpeg' }); }
+        catch (e) { var b = new Blob(parts, { type: 'audio/mpeg' }); b.name = name; return b; }
+      });
+      var canShare = false;
+      try { canShare = !!(navigator.canShare && navigator.share && navigator.canShare({ files: doneFiles })); } catch (e) {}
+      var desk = window.matchMedia && window.matchMedia('(pointer:fine)').matches;
+      $('share').hidden = !canShare;
+      $('links').hidden = canShare && !desk;
+      var box = $('linklist');
+      box.textContent = '';
+      doneFiles.forEach(function (f) {
+        var u = URL.createObjectURL(f), a = el('a', 'btn ghost', f.name);
+        doneUrls.push(u); a.href = u; a.download = f.name;
+        box.appendChild(a);
+      });
+      show('done');
+    });
+  }
+
+  // ---- buttons -----------------------------------------------------------
+
   player.addEventListener('ended', stopPlaying);
-  $('go').addEventListener('click', begin);
-  $('retry0').addEventListener('click', begin);
-  $('again').addEventListener('click', begin);
-  $('play_raw').addEventListener('click', function () { play('raw'); });
-  $('play_pol').addEventListener('click', function () { play('pol'); });
   $('langs').addEventListener('click', function (ev) {
     var b = ev.target.closest ? ev.target.closest('button') : null;
     if (!b) return;
     lang = b.getAttribute('data-l');
     try { localStorage.setItem('oj.studio.lang', lang); } catch (e) {}
-    applyLang();
+    refresh();
   });
+  function startStory() {
+    story = { title: $('title').value.replace(/\s+/g, ' ').trim() || t('untitled'), chime: 'bell', pages: [] };
+    saveDraft(); makeTails();
+    show('story');
+  }
+  $('start').addEventListener('click', startStory);
+  $('title').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') startStory(); });
+  $('test0').addEventListener('click', function () { begin('check', -1); });
+  $('test1').addEventListener('click', function () { begin('check', -1); });
+  $('rec').addEventListener('click', function () { begin('page', -1); });
+  $('stop').addEventListener('click', function () { if (run && !run.done && run.n) finish(run); });
+  $('cancel').addEventListener('click', cancel);
+  $('retry0').addEventListener('click', function () { begin(last.mode, last.index); });
+  $('back0').addEventListener('click', function () { problem = null; show(home()); });
+  $('back1').addEventListener('click', function () { stopPlaying(); show(home()); });
+  $('again').addEventListener('click', function () { begin('check', -1); });
+  $('play_raw').addEventListener('click', function () { if (take) playParts('raw', [wav(take.read, take.sr)], 'audio/wav'); });
+  $('play_pol').addEventListener('click', function () { if (take && take.polished) playParts('pol', [wav(take.polished, OUT_SR)], 'audio/wav'); });
   $('chimes').addEventListener('click', function (ev) {
     var b = ev.target.closest ? ev.target.closest('button') : null;
-    if (!b) return;
-    chimeKind = b.getAttribute('data-c');
-    Array.prototype.forEach.call($('chimes').children, function (c) { c.classList.toggle('on', c === b); });
-    // tapping a sound plays it alone, at once
+    if (!b || !story) return;
+    story.chime = b.getAttribute('data-c');
+    saveDraft();
     stopPlaying();
-    play('chime');
+    refresh();
+    // tapping a sound plays it alone, at once
+    if (story.chime !== 'none') playParts('chime', [wav(chime(story.chime, OUT_SR), OUT_SR)], 'audio/wav');
+  });
+  $('finish').addEventListener('click', finishStory);
+  $('delstory').addEventListener('click', function () {
+    if (!sureDel) { sureDel = true; refresh(); return; }
+    sureDel = false; stopPlaying(); story = null; saveDraft(); $('title').value = '';
+    show('intro');
+  });
+  $('share').addEventListener('click', function () {
+    try { navigator.share({ files: doneFiles, title: story.title }).catch(function () {}); } catch (e) {}
+  });
+  $('back2').addEventListener('click', function () { leaveDone(); show('story'); });
+  $('newstory').addEventListener('click', function () {
+    if (!sureNew) { sureNew = true; refresh(); return; }
+    leaveDone(); story = null; saveDraft(); $('title').value = '';
+    show('intro');
   });
   $('copy').addEventListener('click', function () {
     var text = $('nums').textContent, btn = $('copy');
@@ -656,7 +971,19 @@
     function select() { var r = document.createRange(); r.selectNodeContents($('nums')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, select); else select();
   });
-  applyLang();
+  // a phone that goes to sleep or changes app stops the microphone: keep what was read
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden || !run || run.done) return;
+    if (run.mode === 'page' && run.n) finish(run); else cancel();
+  });
+
+  refresh();
+  loadDraft().then(function (d) {
+    if (!d || story || view !== 'intro') return;
+    story = { title: d.title, chime: d.chime || 'bell', pages: (d.pages || []).map(function (p) { return { mp3: new Uint8Array(p.mp3), dur: p.dur, verdict: p.verdict || 'ok', pending: false }; }) };
+    makeTails();
+    show('story');
+  });
 })();
 </script>
 </body>

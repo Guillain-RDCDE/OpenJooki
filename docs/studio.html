@@ -684,14 +684,19 @@
   }
 
   function tailKey() { return story.chime + '-' + story.pause; }
-  function makeTails() {
-    var z = story.pause;
+  function makeTails(z) {
+    if (z === undefined) z = story.pause;
     return Promise.all(CHIMES.concat('none', 'lead').map(function (k) {
       var key = k + '-' + z;
       if (tails[key]) return null;
       if (!tailJobs[key]) tailJobs[key] = encode(k === 'lead' ? silence(OUT_SR, PAUSES[z]) : tail(k, OUT_SR, PAUSES[z])).then(function (m) { tails[key] = m; }, function () { delete tailJobs[key]; });
       return tailJobs[key];
     }));
+  }
+
+  // the chosen silence first, then the two others: changing the setting is then heard at once
+  function makeAllTails() {
+    return PAUSES.reduce(function (p, _, z) { return p.then(function () { return story ? makeTails(z) : null; }); }, makeTails());
   }
 
   function decode(mp3) {
@@ -1096,7 +1101,7 @@
   });
   function startStory() {
     story = { title: $('title').value.replace(/\s+/g, ' ').trim() || t('untitled'), chime: 'bell', pause: 1, pages: [] };
-    saveDraft(); makeTails();
+    saveDraft(); makeAllTails();
     show('story');
   }
   $('start').addEventListener('click', startStory);
@@ -1199,7 +1204,7 @@
     story = { title: d.title, chime: d.chime || 'bell', pause: d.pause >= 0 && d.pause < PAUSES.length ? d.pause : 1, pages: (d.pages || []).map(function (p) {
       return { mp3: new Uint8Array(p.mp3), dur: p.dur, verdict: p.verdict || 'ok', pending: false, orig: p.orig ? new Uint8Array(p.orig) : null, cut: p.cut || null };
     }) };
-    makeTails();
+    makeAllTails();
     show('story');
   });
 })();

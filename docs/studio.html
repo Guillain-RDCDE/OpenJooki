@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>OpenJooki · essai de voix</title>
-<meta name="description" content="Page d'essai : vérifie en dix secondes que ta voix passe bien avant de lire une histoire pour le Jooki.">
+<title>OpenJooki · voice check</title>
+<meta name="description" content="Trial page: check in ten seconds that your voice comes through well before you read a story for the Jooki.">
 <style>
   :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a;--okbg:#e8f6ec;--bad:#c0392b;--badbg:#fbeaea;--warn:#b26a00;--warnbg:#fdf1dc;--ring:#d9d4cc}
   @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333;--ok:#3fbf68;--okbg:#12301c;--bad:#e8695b;--badbg:#3a1a1a;--warn:#e0a040;--warnbg:#33260f;--ring:#4a4640}}
@@ -52,38 +52,48 @@
   details{margin:14px 0}summary{cursor:pointer;color:var(--accent)}
   pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.8em;overflow-x:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0}
   footer{color:var(--muted);font-size:.78em;text-align:center;margin-top:40px}
+  .langs{display:flex;justify-content:flex-end;gap:6px;padding-top:12px}
+  .langs button{width:44px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;background:transparent;border:2px solid transparent;border-radius:9px;cursor:pointer}
+  .langs button[aria-pressed=true]{border-color:var(--accent)}
+  .langs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .langs svg{width:27px;height:18px;border-radius:3px;display:block;box-shadow:0 0 0 1px var(--line)}
   [hidden]{display:none!important}
 </style>
 </head>
 <body>
 <main>
-  <h1>L'essai de voix</h1>
-  <p class="sub"><span class="pill">Page d'essai</span><br>Avant de lire une histoire pour le Jooki, vérifie en dix secondes que ta voix passe bien.</p>
+  <div class="langs" id="langs">
+    <button type="button" data-l="en" aria-label="English" title="English"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="16" fill="#012169"/><path d="M0 0L24 16M24 0L0 16" stroke="#fff" stroke-width="3.2"/><path d="M0 0L24 16M24 0L0 16" stroke="#c8102e" stroke-width="1.2"/><path d="M12 0v16M0 8h24" stroke="#fff" stroke-width="5.4"/><path d="M12 0v16M0 8h24" stroke="#c8102e" stroke-width="3"/></svg></button>
+    <button type="button" data-l="fr" aria-label="Français" title="Français"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="8" height="16" fill="#0055a4"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#ef4135"/></svg></button>
+    <button type="button" data-l="nl" aria-label="Nederlands" title="Nederlands"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#ae1c28"/><rect y="5.33" width="24" height="5.34" fill="#fff"/><rect y="10.66" width="24" height="5.34" fill="#21468b"/></svg></button>
+  </div>
+  <h1 data-t="h1">The voice check</h1>
+  <p class="sub"><span class="pill" data-t="pill">Trial page</span><br><span data-t="sub">Before you read a story for the Jooki, check in ten seconds that your voice comes through well.</span></p>
 
   <div id="intro">
     <div class="card">
       <ol>
-        <li>Installe-toi dans une pièce calme.</li>
-        <li>Tiens le téléphone à une main de ta bouche.</li>
-        <li>Touche le bouton, puis lis la phrase qui s'affiche.</li>
+        <li data-t="s1">Sit in a quiet room.</li>
+        <li data-t="s2">Hold the phone a hand's width from your mouth.</li>
+        <li data-t="s3">Tap the button, then read the sentence that appears.</li>
       </ol>
-      <button class="btn" id="go" type="button">Commencer l'essai</button>
-      <p class="tiny center">Le téléphone demande d'utiliser le micro : réponds <b>Autoriser</b>.</p>
+      <button class="btn" id="go" type="button" data-t="go">Start the check</button>
+      <p class="tiny center" data-h="allow">The phone asks to use the microphone: answer <b>Allow</b>.</p>
     </div>
   </div>
 
   <div id="problem" class="card bad" hidden>
     <b id="ptitle"></b>
     <p id="ptext" style="margin:.4em 0 0"></p>
-    <button class="btn ghost" id="retry0" type="button">Réessayer</button>
+    <button class="btn ghost" id="retry0" type="button" data-t="retry">Try again</button>
   </div>
 
   <div id="live" hidden>
     <div class="ringbox"><div class="ring" id="ring"></div></div>
     <p class="say" id="say" aria-live="polite"></p>
     <div class="card" id="readcard" hidden>
-      <p class="tiny" style="margin:0 0 6px">Lis à voix haute :</p>
-      <p class="read">« Il était une fois, au fond d'une grande forêt, un petit renard qui n'arrivait pas à dormir. Alors, chaque soir, il écoutait une histoire. »</p>
+      <p class="tiny" style="margin:0 0 6px" data-t="readlabel">Read aloud:</p>
+      <p class="read" data-t="sentence"></p>
       <div class="bar"><i id="prog"></i></div>
     </div>
   </div>
@@ -96,37 +106,37 @@
 
     <div class="card" id="checkcard">
       <ul class="checks">
-        <li><b>Le volume</b><span class="tag" id="c_vol"></span></li>
-        <li><b>La distance</b><span class="tag" id="c_dist"></span></li>
-        <li><b>Le calme autour</b><span class="tag" id="c_noise"></span></li>
+        <li><b data-t="k_vol">Volume</b><span class="tag" id="c_vol"></span></li>
+        <li><b data-t="k_dist">Distance</b><span class="tag" id="c_dist"></span></li>
+        <li><b data-t="k_noise">The room</b><span class="tag" id="c_noise"></span></li>
       </ul>
     </div>
 
     <div class="card" id="listencard">
-      <b>Écoute le résultat</b>
-      <button class="btn ghost" id="play_raw" type="button">Ma voix, telle quelle</button>
-      <button class="btn ghost" id="play_pol" type="button">Ma voix arrangée, avec le tourne-page</button>
-      <p class="tiny">Arrangée : le studio met la voix au bon volume, coupe les blancs et enlève le grondement. À la fin, le son qui dit à l'enfant de tourner la page.</p>
-      <p style="margin:14px 0 0;font-weight:600">Le son du tourne-page</p>
+      <b data-t="listen">Listen to the result</b>
+      <button class="btn ghost" id="play_raw" type="button"></button>
+      <button class="btn ghost" id="play_pol" type="button"></button>
+      <p class="tiny" data-t="pol_note"></p>
+      <p style="margin:14px 0 0;font-weight:600" data-t="chime_title">The page-turn sound</p>
       <div class="seg" id="chimes">
-        <button type="button" data-c="bell" class="on">Clochette</button>
-        <button type="button" data-c="carillon">Carillon</button>
-        <button type="button" data-c="box">Boîte à musique</button>
+        <button type="button" data-c="bell" class="on" data-t="bell">Little bell</button>
+        <button type="button" data-c="carillon" data-t="carillon">Chimes</button>
+        <button type="button" data-c="box" data-t="box">Music box</button>
       </div>
     </div>
 
-    <button class="btn" id="again" type="button">Refaire l'essai</button>
+    <button class="btn" id="again" type="button" data-t="again">Do the check again</button>
 
     <details>
-      <summary>Les chiffres de cet essai</summary>
-      <p class="tiny">Ils servent à régler le studio. Si le verdict te semble faux, copie-les et envoie-les.</p>
+      <summary data-t="nums_sum">The numbers of this check</summary>
+      <p class="tiny" data-t="nums_note"></p>
       <pre id="nums"></pre>
-      <button class="btn ghost" id="copy" type="button">Copier les chiffres</button>
+      <button class="btn ghost" id="copy" type="button" data-t="copy">Copy the numbers</button>
     </details>
   </div>
 
   <audio id="player" preload="auto"></audio>
-  <footer>Rien n'est envoyé : ta voix reste sur cet appareil. · <a href="./" style="color:inherit">OpenJooki</a></footer>
+  <footer><span data-t="footer">Nothing is sent: your voice stays on this device.</span> · <a href="./" style="color:inherit">OpenJooki</a></footer>
 </main>
 
 <script>
@@ -310,6 +320,119 @@
   if (typeof module !== 'undefined') module.exports = { analyse: analyse, trim: trim, level: level, chime: chime, withChime: withChime, wav: wav, ROOM_S: ROOM_S, READ_S: READ_S };
   if (typeof document === 'undefined') return;
 
+  // ---- the three languages (same keys in each) ---------------------------
+
+  var T = {
+    en: {
+      title: "OpenJooki · voice check", h1: "The voice check", pill: "Trial page",
+      sub: "Before you read a story for the Jooki, check in ten seconds that your voice comes through well.",
+      s1: "Sit in a quiet room.", s2: "Hold the phone a hand's width from your mouth.",
+      s3: "Tap the button, then read the sentence that appears.",
+      go: "Start the check", allow: "The phone asks to use the microphone: answer <b>Allow</b>.", retry: "Try again",
+      readlabel: "Read aloud:",
+      sentence: "“Once upon a time, deep in a great forest, there was a little fox who could not fall asleep. So every evening, he listened to a story.”",
+      k_vol: "Volume", k_dist: "Distance", k_noise: "The room",
+      vol_ok: "Good", vol_no: "Too loud", dist_ok: "Good", dist_no: "Too far", noise_ok: "Quiet room", noise_no: "Noise",
+      listen: "Listen to the result", play_raw: "My voice, as it is", play_pol: "My voice tidied up, with the page-turn sound",
+      pol_note: "Tidied up: the studio sets the voice at the right volume, cuts the silences and removes the rumble. At the end, the sound that tells the child to turn the page.",
+      chime_title: "The page-turn sound", bell: "Little bell", carillon: "Chimes", box: "Music box",
+      again: "Do the check again", nums_sum: "The numbers of this check",
+      nums_note: "They help tune the studio. If the verdict seems wrong, copy them and send them.",
+      copy: "Copy the numbers", copied: "Copied", stop: "Stop",
+      footer: "Nothing is sent: your voice stays on this device.",
+      allow_mic: "Allow the microphone…", hush: "Shh… I'm listening to the room", l_loud: "That's too loud",
+      l_good: "I hear you well", l_quiet: "I can barely hear you", l_go: "Go on, read the sentence", wait: "One moment…",
+      p_nomic_t: "This browser cannot use the microphone.",
+      p_nomic_x: "Open this page in Safari on an iPhone, or in Chrome on Android or on a computer. If you came here from another app (a message, an email), choose “Open in Safari”.",
+      p_denied_t: "The microphone is refused.",
+      p_denied_x: "Without the microphone, the page cannot listen to you. Reload the page, tap the button and answer “Allow”. If nothing is asked, on an iPhone: Settings, Safari, Microphone, then “Allow”.",
+      p_notfound_t: "No microphone found.",
+      p_notfound_x: "This device has no microphone, or another app is using it. Close the other app, or try with a phone.",
+      p_stuck_t: "The microphone does not answer.",
+      p_stuck_x: "Close the other apps that use the microphone (a call, a voice recorder), then try again.",
+      v_ok_t: "That's perfect", v_ok_x: "Your voice is clear, not too loud and not too far. You can read your story just like this.",
+      v_loud_t: "That's too loud", v_loud_x: "Your voice is distorted. Move the phone a little further away, or speak a little more softly, then do the check again.",
+      v_far_t: "You are too far", v_far_x: "Your voice comes in faint. Hold the phone a hand's width from your mouth, then do the check again.",
+      v_noisy_t: "There is noise around", v_noisy_x: "The room can be heard behind your voice. Turn off the TV, close the window or change rooms, then do the check again.",
+      v_silent_t: "I did not hear you", v_silent_x: "Read the sentence aloud as soon as it appears. If you did, check that nothing covers the microphone.",
+      n_verdict: "verdict", n_voice: "voice", n_noise: "noise", n_room: "room", n_gaps: "between words", n_snr: "voice / noise gap",
+      n_peak: "peak", n_clip: "clipped", n_active: "spoken part", n_mic: "microphone", n_echo: "echo", n_ns: "noise filter",
+      n_agc: "auto volume", yes: "yes", no: "no"
+    },
+    fr: {
+      title: "OpenJooki · essai de voix", h1: "L'essai de voix", pill: "Page d'essai",
+      sub: "Avant de lire une histoire pour le Jooki, vérifie en dix secondes que ta voix passe bien.",
+      s1: "Installe-toi dans une pièce calme.", s2: "Tiens le téléphone à une main de ta bouche.",
+      s3: "Touche le bouton, puis lis la phrase qui s'affiche.",
+      go: "Commencer l'essai", allow: "Le téléphone demande d'utiliser le micro : réponds <b>Autoriser</b>.", retry: "Réessayer",
+      readlabel: "Lis à voix haute :",
+      sentence: "« Il était une fois, au fond d'une grande forêt, un petit renard qui n'arrivait pas à dormir. Alors, chaque soir, il écoutait une histoire. »",
+      k_vol: "Le volume", k_dist: "La distance", k_noise: "Le calme autour",
+      vol_ok: "Bon", vol_no: "Trop fort", dist_ok: "Bonne", dist_no: "Trop loin", noise_ok: "Pièce calme", noise_no: "Du bruit",
+      listen: "Écoute le résultat", play_raw: "Ma voix, telle quelle", play_pol: "Ma voix arrangée, avec le tourne-page",
+      pol_note: "Arrangée : le studio met la voix au bon volume, coupe les blancs et enlève le grondement. À la fin, le son qui dit à l'enfant de tourner la page.",
+      chime_title: "Le son du tourne-page", bell: "Clochette", carillon: "Carillon", box: "Boîte à musique",
+      again: "Refaire l'essai", nums_sum: "Les chiffres de cet essai",
+      nums_note: "Ils servent à régler le studio. Si le verdict te semble faux, copie-les et envoie-les.",
+      copy: "Copier les chiffres", copied: "Copié", stop: "Arrêter",
+      footer: "Rien n'est envoyé : ta voix reste sur cet appareil.",
+      allow_mic: "Autorise le micro…", hush: "Chut… j'écoute la pièce", l_loud: "C'est trop fort",
+      l_good: "Je t'entends bien", l_quiet: "Je t'entends à peine", l_go: "Vas-y, lis la phrase", wait: "Un instant…",
+      p_nomic_t: "Ce navigateur ne peut pas utiliser le micro.",
+      p_nomic_x: "Ouvre cette page dans Safari sur iPhone, ou dans Chrome sur Android ou sur un ordinateur. Si tu es arrivé ici depuis une autre appli (un message, un mail), choisis « Ouvrir dans Safari ».",
+      p_denied_t: "Le micro est refusé.",
+      p_denied_x: "Sans le micro, la page ne peut pas t'écouter. Recharge la page, touche le bouton et réponds « Autoriser ». Si rien n'est demandé, sur iPhone : Réglages, Safari, Micro, puis « Autoriser ».",
+      p_notfound_t: "Aucun micro trouvé.",
+      p_notfound_x: "Cet appareil n'a pas de micro, ou il est utilisé par une autre appli. Ferme l'autre appli, ou essaie avec un téléphone.",
+      p_stuck_t: "Le micro ne répond pas.",
+      p_stuck_x: "Ferme les autres applis qui utilisent le micro (un appel, un dictaphone), puis réessaie.",
+      v_ok_t: "C'est parfait", v_ok_x: "Ta voix est claire, ni trop forte ni trop loin. Tu peux lire ton histoire comme ça.",
+      v_loud_t: "C'est trop fort", v_loud_x: "Ta voix sature. Éloigne un peu le téléphone, ou parle un peu moins fort, puis refais l'essai.",
+      v_far_t: "Tu es trop loin", v_far_x: "Ta voix arrive faible. Tiens le téléphone à une main de ta bouche, puis refais l'essai.",
+      v_noisy_t: "Il y a du bruit autour", v_noisy_x: "On entend la pièce derrière ta voix. Coupe la télé, ferme la fenêtre ou change de pièce, puis refais l'essai.",
+      v_silent_t: "Je ne t'ai pas entendu", v_silent_x: "Lis la phrase à voix haute dès qu'elle s'affiche. Si tu l'as fait, vérifie que rien ne bouche le micro.",
+      n_verdict: "verdict", n_voice: "voix", n_noise: "bruit", n_room: "pièce", n_gaps: "entre les mots", n_snr: "écart voix / bruit",
+      n_peak: "crête", n_clip: "saturé", n_active: "part parlée", n_mic: "micro", n_echo: "écho", n_ns: "antibruit",
+      n_agc: "volume auto", yes: "oui", no: "non"
+    },
+    nl: {
+      title: "OpenJooki · stemtest", h1: "De stemtest", pill: "Proefpagina",
+      sub: "Controleer in tien seconden of je stem goed doorkomt, voordat je een verhaal voorleest voor de Jooki.",
+      s1: "Ga in een rustige kamer zitten.", s2: "Houd de telefoon op een handbreedte van je mond.",
+      s3: "Tik op de knop en lees dan de zin die verschijnt.",
+      go: "Start de test", allow: "De telefoon vraagt of de microfoon gebruikt mag worden: kies <b>Sta toe</b>.", retry: "Opnieuw proberen",
+      readlabel: "Lees hardop:",
+      sentence: "‘Er was eens, diep in een groot bos, een kleine vos die maar niet kon slapen. Daarom luisterde hij elke avond naar een verhaal.’",
+      k_vol: "Het volume", k_dist: "De afstand", k_noise: "De rust rondom",
+      vol_ok: "Goed", vol_no: "Te luid", dist_ok: "Goed", dist_no: "Te ver", noise_ok: "Rustige kamer", noise_no: "Lawaai",
+      listen: "Luister naar het resultaat", play_raw: "Mijn stem, zoals ze is", play_pol: "Mijn stem bijgewerkt, met het omslaggeluid",
+      pol_note: "Bijgewerkt: de studio zet de stem op het juiste volume, knipt de stiltes weg en haalt het gebrom eruit. Aan het einde klinkt het geluid dat het kind vertelt de bladzijde om te slaan.",
+      chime_title: "Het omslaggeluid", bell: "Belletje", carillon: "Klokkenspel", box: "Speeldoos",
+      again: "De test opnieuw doen", nums_sum: "De cijfers van deze test",
+      nums_note: "Ze helpen om de studio af te stellen. Lijkt het oordeel niet te kloppen, kopieer ze dan en stuur ze op.",
+      copy: "De cijfers kopiëren", copied: "Gekopieerd", stop: "Stoppen",
+      footer: "Er wordt niets verstuurd: je stem blijft op dit toestel.",
+      allow_mic: "Sta de microfoon toe…", hush: "Sst… ik luister naar de kamer", l_loud: "Dat is te luid",
+      l_good: "Ik hoor je goed", l_quiet: "Ik hoor je nauwelijks", l_go: "Toe maar, lees de zin", wait: "Een ogenblik…",
+      p_nomic_t: "Deze browser kan de microfoon niet gebruiken.",
+      p_nomic_x: "Open deze pagina in Safari op een iPhone, of in Chrome op Android of op een computer. Kwam je hier vanuit een andere app (een bericht, een e-mail), kies dan ‘Open in Safari’.",
+      p_denied_t: "De microfoon is geweigerd.",
+      p_denied_x: "Zonder microfoon kan de pagina niet naar je luisteren. Laad de pagina opnieuw, tik op de knop en kies ‘Sta toe’. Wordt er niets gevraagd, op een iPhone: Instellingen, Safari, Microfoon, dan ‘Sta toe’.",
+      p_notfound_t: "Geen microfoon gevonden.",
+      p_notfound_x: "Dit toestel heeft geen microfoon, of een andere app gebruikt hem. Sluit de andere app, of probeer het met een telefoon.",
+      p_stuck_t: "De microfoon reageert niet.",
+      p_stuck_x: "Sluit de andere apps die de microfoon gebruiken (een gesprek, een dictafoon) en probeer het opnieuw.",
+      v_ok_t: "Dat is perfect", v_ok_x: "Je stem is helder, niet te luid en niet te ver. Zo kun je je verhaal voorlezen.",
+      v_loud_t: "Dat is te luid", v_loud_x: "Je stem vervormt. Houd de telefoon iets verder weg, of praat wat zachter, en doe de test opnieuw.",
+      v_far_t: "Je bent te ver weg", v_far_x: "Je stem komt zwak binnen. Houd de telefoon op een handbreedte van je mond en doe de test opnieuw.",
+      v_noisy_t: "Er is lawaai om je heen", v_noisy_x: "Je hoort de kamer achter je stem. Zet de tv uit, doe het raam dicht of ga naar een andere kamer, en doe de test opnieuw.",
+      v_silent_t: "Ik heb je niet gehoord", v_silent_x: "Lees de zin hardop zodra hij verschijnt. Deed je dat al, kijk dan of niets de microfoon afdekt.",
+      n_verdict: "oordeel", n_voice: "stem", n_noise: "ruis", n_room: "kamer", n_gaps: "tussen de woorden", n_snr: "verschil stem / ruis",
+      n_peak: "piek", n_clip: "overstuurd", n_active: "gesproken deel", n_mic: "microfoon", n_echo: "echo", n_ns: "ruisfilter",
+      n_agc: "auto-volume", yes: "ja", no: "nee"
+    }
+  };
+
   // ---- the page ----------------------------------------------------------
 
   var $ = function (id) { return document.getElementById(id); };
@@ -320,32 +443,48 @@
   var chimeKind = 'bell';
   var playing = null;
   var player = $('player');
+  var view = 'intro', problem = null, liveKey = '';
+  var VERDICT_CARD = { ok: 'ok', loud: 'bad', far: 'warn', noisy: 'warn', silent: 'bad' };
 
-  var PROBLEMS = {
-    nomic: ['Ce navigateur ne peut pas utiliser le micro.',
-      'Ouvre cette page dans Safari sur iPhone, ou dans Chrome sur Android ou sur un ordinateur. Si tu es arrivé ici depuis une autre appli (un message, un mail), choisis « Ouvrir dans Safari ».'],
-    denied: ['Le micro est refusé.',
-      'Sans le micro, la page ne peut pas t\'écouter. Recharge la page, touche le bouton et réponds « Autoriser ». Si rien n\'est demandé, sur iPhone : Réglages, Safari, Micro, puis « Autoriser ».'],
-    notfound: ['Aucun micro trouvé.', 'Cet appareil n\'a pas de micro, ou il est utilisé par une autre appli. Ferme l\'autre appli, ou essaie avec un téléphone.'],
-    stuck: ['Le micro ne répond pas.', 'Ferme les autres applis qui utilisent le micro (un appel, un dictaphone), puis réessaie.']
-  };
+  // the phone's language, unless a flag was tapped on this phone before
+  var lang = (function () {
+    try { var s = localStorage.getItem('oj.studio.lang'); if (T[s]) return s; } catch (e) {}
+    var l = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en'];
+    for (var i = 0; i < l.length; i++) { var c = String(l[i]).slice(0, 2).toLowerCase(); if (T[c]) return c; }
+    return 'en';
+  })();
 
-  var VERDICTS = {
-    ok: ['ok', 'C\'est parfait', 'Ta voix est claire, ni trop forte ni trop loin. Tu peux lire ton histoire comme ça.'],
-    loud: ['bad', 'C\'est trop fort', 'Ta voix sature. Éloigne un peu le téléphone, ou parle un peu moins fort, puis refais l\'essai.'],
-    far: ['warn', 'Tu es trop loin', 'Ta voix arrive faible. Tiens le téléphone à une main de ta bouche, puis refais l\'essai.'],
-    noisy: ['warn', 'Il y a du bruit autour', 'On entend la pièce derrière ta voix. Coupe la télé, ferme la fenêtre ou change de pièce, puis refais l\'essai.'],
-    silent: ['bad', 'Je ne t\'ai pas entendu', 'Lis la phrase à voix haute dès qu\'elle s\'affiche. Si tu l\'as fait, vérifie que rien ne bouche le micro.']
-  };
+  function t(k) { return T[lang][k]; }
+
+  function say(key) { liveKey = key; $('say').textContent = key ? t(key) : ''; }
+
+  function playLabels() {
+    $('play_raw').textContent = playing === 'raw' ? t('stop') : t('play_raw');
+    $('play_pol').textContent = playing === 'pol' ? t('stop') : t('play_pol');
+  }
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.title = t('title');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (el) { el.textContent = t(el.getAttribute('data-t')); });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-h]'), function (el) { el.innerHTML = t(el.getAttribute('data-h')); });
+    Array.prototype.forEach.call($('langs').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-l') === lang ? 'true' : 'false'); });
+    playLabels();
+    say(liveKey);
+    if (problem) { $('ptitle').textContent = t('p_' + problem + '_t'); $('ptext').textContent = t('p_' + problem + '_x'); }
+    if (take && take.polished) fillResult();
+  }
 
   function show(id) {
+    view = id;
     ['intro', 'problem', 'live', 'result'].forEach(function (k) { $(k).hidden = k !== id; });
     window.scrollTo(0, 0);
   }
 
   function fail(kind) {
-    $('ptitle').textContent = PROBLEMS[kind][0];
-    $('ptext').textContent = PROBLEMS[kind][1];
+    problem = kind;
+    $('ptitle').textContent = t('p_' + kind + '_t');
+    $('ptext').textContent = t('p_' + kind + '_x');
     show('problem');
   }
 
@@ -362,8 +501,7 @@
     try { player.pause(); } catch (e) {}
     playing = null;
     $('play_raw').classList.remove('on'); $('play_pol').classList.remove('on');
-    $('play_raw').textContent = 'Ma voix, telle quelle';
-    $('play_pol').textContent = 'Ma voix arrangée, avec le tourne-page';
+    playLabels();
   }
 
   function forget() {
@@ -386,19 +524,20 @@
     else if (lv > -40) { lastGood = now; heard = true; }
     var state = now - lastLoud < 900 ? 'loud' : now - lastGood < 700 ? 'good' : heard ? 'quiet' : '';
     ring.className = 'ring' + (state ? ' ' + state : '');
-    $('say').textContent = state === 'loud' ? 'C\'est trop fort' : state === 'good' ? 'Je t\'entends bien'
-      : state === 'quiet' ? 'Je t\'entends à peine' : 'Vas-y, lis la phrase';
+    var key = state ? 'l_' + state : 'l_go';
+    if (key !== liveKey) say(key);
   }
 
   function begin() {
     forget();
     if (run) stopRun(run);
+    take = null; problem = null;
     if (!AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { fail('nomic'); return; }
     var r = run = { chunks: [], n: 0, done: false };
     try { r.ctx = new AC(); } catch (e) { fail('nomic'); return; }
     disp = 0; lastGood = 0; lastLoud = 0; heard = false;
     $('ring').className = 'ring'; $('ring').style.setProperty('--lvl', 0);
-    $('say').textContent = 'Autorise le micro…';
+    say('allow_mic');
     $('readcard').hidden = true; $('prog').style.width = '0';
     show('live');
     // the raw microphone: an automatic volume would hide "too loud" and "too far"
@@ -413,7 +552,7 @@
         var proc = r.proc = r.ctx.createScriptProcessor(4096, 1, 1);
         var mute = r.ctx.createGain(); mute.gain.value = 0;
         src.connect(proc); proc.connect(mute); mute.connect(r.ctx.destination);
-        $('say').textContent = 'Chut… j\'écoute la pièce';
+        say('hush');
         r.watchdog = setTimeout(function () { if (!r.done && !r.n) { stopRun(r); fail('stuck'); } }, 6000);
         proc.onaudioprocess = function (ev) {
           if (r.done) return;
@@ -442,36 +581,34 @@
     var sr = r.sr, m = analyse(x, sr);
     var read = x.subarray(Math.round(ROOM_S * sr));
     take = { sr: sr, read: read, m: m, settings: r.settings || {}, polished: null };
-    $('say').textContent = 'Un instant…';
-    var t = take;
-    polish(read, sr).then(function (p) { t.polished = p; if (take === t) result(); });
+    say('wait');
+    var tk = take;
+    polish(read, sr).then(function (p) { tk.polished = p; if (take === tk) { fillResult(); show('result'); } });
   }
 
-  function onoff(v) { return v === true ? 'oui' : v === false ? 'non' : '?'; }
-
-  function result() {
-    var m = take.m, v = VERDICTS[m.verdict];
-    $('vcard').className = 'card ' + v[0];
-    $('vtitle').textContent = v[1];
-    $('vtext').textContent = v[2];
+  function fillResult() {
+    var m = take.m;
+    $('vcard').className = 'card ' + VERDICT_CARD[m.verdict];
+    $('vtitle').textContent = t('v_' + m.verdict + '_t');
+    $('vtext').textContent = t('v_' + m.verdict + '_x');
     var heardIt = !m.silent;
     $('checkcard').hidden = !heardIt; $('listencard').hidden = !heardIt;
-    function tag(id, ok, yes, no) { $(id).textContent = ok ? yes : no; $(id).className = 'tag' + (ok ? '' : ' no'); }
-    tag('c_vol', !m.loud, 'Bon', 'Trop fort');
-    tag('c_dist', !m.far, 'Bonne', 'Trop loin');
-    tag('c_noise', !m.noisy, 'Pièce calme', 'Du bruit');
+    function tag(id, ok, key) { $(id).textContent = t(key + (ok ? '_ok' : '_no')); $(id).className = 'tag' + (ok ? '' : ' no'); }
+    tag('c_vol', !m.loud, 'vol');
+    tag('c_dist', !m.far, 'dist');
+    tag('c_noise', !m.noisy, 'noise');
     var s = take.settings, f = function (n) { return (Math.round(n * 10) / 10).toFixed(1); };
+    var onoff = function (v) { return v === true ? t('yes') : v === false ? t('no') : '?'; };
     $('nums').textContent = [
-      'verdict : ' + m.verdict,
-      'voix : ' + f(m.voiceDb) + ' dB',
-      'bruit : ' + f(m.noiseDb) + ' dB (pièce ' + f(m.roomDb) + ', entre les mots ' + f(m.gapsDb) + ')',
-      'écart voix / bruit : ' + f(m.snrDb) + ' dB',
-      'crête : ' + f(m.peakDb) + ' dB, saturé : ' + (m.clipRatio * 100).toFixed(3) + ' %',
-      'part parlée : ' + Math.round(m.activeRatio * 100) + ' %',
-      'micro : ' + take.sr + ' Hz, écho ' + onoff(s.echoCancellation) + ', antibruit ' + onoff(s.noiseSuppression) + ', volume auto ' + onoff(s.autoGainControl),
+      t('n_verdict') + ': ' + m.verdict,
+      t('n_voice') + ': ' + f(m.voiceDb) + ' dB',
+      t('n_noise') + ': ' + f(m.noiseDb) + ' dB (' + t('n_room') + ' ' + f(m.roomDb) + ', ' + t('n_gaps') + ' ' + f(m.gapsDb) + ')',
+      t('n_snr') + ': ' + f(m.snrDb) + ' dB',
+      t('n_peak') + ': ' + f(m.peakDb) + ' dB, ' + t('n_clip') + ': ' + (m.clipRatio * 100).toFixed(3) + ' %',
+      t('n_active') + ': ' + Math.round(m.activeRatio * 100) + ' %',
+      t('n_mic') + ': ' + take.sr + ' Hz, ' + t('n_echo') + ' ' + onoff(s.echoCancellation) + ', ' + t('n_ns') + ' ' + onoff(s.noiseSuppression) + ', ' + t('n_agc') + ' ' + onoff(s.autoGainControl),
       navigator.userAgent
     ].join('\n');
-    show('result');
   }
 
   function play(which) {
@@ -485,10 +622,8 @@
     }
     player.src = urls[key];
     playing = which;
-    if (which !== 'chime') {
-      var btn = $(which === 'raw' ? 'play_raw' : 'play_pol');
-      btn.classList.add('on'); btn.textContent = 'Arrêter';
-    }
+    if (which !== 'chime') $(which === 'raw' ? 'play_raw' : 'play_pol').classList.add('on');
+    playLabels();
     var p = player.play();
     if (p && p.catch) p.catch(function () { if (playing === which) stopPlaying(); });
   }
@@ -499,6 +634,13 @@
   $('again').addEventListener('click', begin);
   $('play_raw').addEventListener('click', function () { play('raw'); });
   $('play_pol').addEventListener('click', function () { play('pol'); });
+  $('langs').addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (!b) return;
+    lang = b.getAttribute('data-l');
+    try { localStorage.setItem('oj.studio.lang', lang); } catch (e) {}
+    applyLang();
+  });
   $('chimes').addEventListener('click', function (ev) {
     var b = ev.target.closest ? ev.target.closest('button') : null;
     if (!b) return;
@@ -510,10 +652,11 @@
   });
   $('copy').addEventListener('click', function () {
     var text = $('nums').textContent, btn = $('copy');
-    function done() { btn.textContent = 'Copié'; setTimeout(function () { btn.textContent = 'Copier les chiffres'; }, 1500); }
+    function done() { btn.textContent = t('copied'); setTimeout(function () { btn.textContent = t('copy'); }, 1500); }
     function select() { var r = document.createRange(); r.selectNodeContents($('nums')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, select); else select();
   });
+  applyLang();
 })();
 </script>
 </body>

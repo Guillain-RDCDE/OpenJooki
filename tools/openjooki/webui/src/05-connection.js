@@ -108,6 +108,25 @@
   document.addEventListener('visibilitychange', function () { if (!document.hidden) checkAlive(); });
   window.addEventListener('pageshow', checkAlive);
   window.addEventListener('online', checkAlive);
+  // Before a command that must not be lost (a story handed over by the studio while this tab slept
+  // behind it): ask for the state and run fn once the Jooki has answered, on this connection or on a new
+  // one. Without an answer in 5 s the connection is made again, up to `tries` times, then ko() runs.
+  function whenAnswering(fn, ko, tries, again) {
+    if (tries === undefined) tries = 4;
+    if (again || !online) { retryDelay = 1000; connect(); }   // connecting asks for the state by itself
+    else client.publish('/j/web/input/GET_STATE', '{}');
+    var done = false, timer = setTimeout(function () {
+      if (done) return;
+      done = true;
+      if (tries <= 1) ko(); else whenAnswering(fn, ko, tries - 1, true);
+    }, 5000);
+    waiters.push(function () {
+      if (done) return true;
+      done = true; clearTimeout(timer);
+      setTimeout(fn, 0);   // after the waiters' round: a waiter fn adds (whenNewPlaylist) must not be lost
+      return true;
+    });
+  }
   function onMessage(topic, text) {
     var data;
     lastRx = Date.now();

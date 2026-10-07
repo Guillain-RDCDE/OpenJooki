@@ -23,7 +23,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.0:** put the token on the Jooki and it starts the story, with the book's cover as its picture; labels to print; a story is one file to send; rain, forest or night behind the voice.
+**New in 2.4.1:** a story sent from Jookistory after a long reading no longer vanishes, and Jookistory says what happened.
+2.4.0: put the token on the Jooki and it starts the story, with the book's cover as its picture; labels to print; a story is one file to send; rain, forest or night behind the voice.
 2.3.2: the story studio is called Jookistory; a story is never shuffled, even added by hand; shuffle in the Spotify app no longer shuffles the tokens.
 2.3.1: *Record a story* is now a card right next to *New playlist*.
 2.3.0: read a story yourself, page by page, and the Jooki plays it back: *Record a story* on the playlists page.

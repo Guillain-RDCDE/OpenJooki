@@ -697,6 +697,7 @@
       cut_start: "Start", cut_end: "End", cut_hint: "Move the two sliders to remove the start or the end.", keep: "Keep",
       send_jooki: "Send to the Jooki", j_sent: "Sent. Go back to the Jooki's page.",
       j_back: "Go back to the Jooki's tab: the story is waiting for it.",
+      j_asked: "Sending to the Jooki…", j_failed: "The Jooki could not take the story. Try again, or keep the file.",
       back_story: "Back to the story", new_story: "New story", back: "Back", retry: "Try again",
       readlabel: "Read aloud:",
       sentence: "“Once upon a time, deep in a great forest, there was a little fox who could not fall asleep. So every evening, he listened to a story.”",
@@ -753,6 +754,7 @@
       cut_start: "Début", cut_end: "Fin", cut_hint: "Déplace les deux curseurs pour enlever le début ou la fin.", keep: "Garder",
       send_jooki: "Envoyer sur le Jooki", j_sent: "Envoyé. Reviens sur la page du Jooki.",
       j_back: "Reviens sur l'onglet du Jooki : l'histoire l'attend.",
+      j_asked: "Envoi au Jooki…", j_failed: "Le Jooki n'a pas pu recevoir l'histoire. Réessaie, ou garde le fichier.",
       back_story: "Revenir à l'histoire", new_story: "Nouvelle histoire", back: "Retour", retry: "Réessayer",
       readlabel: "Lis à voix haute :",
       sentence: "« Il était une fois, au fond d'une grande forêt, un petit renard qui n'arrivait pas à dormir. Alors, chaque soir, il écoutait une histoire. »",
@@ -809,6 +811,7 @@
       cut_start: "Begin", cut_end: "Einde", cut_hint: "Verschuif de twee schuifjes om het begin of het einde weg te halen.", keep: "Bewaren",
       send_jooki: "Naar de Jooki sturen", j_sent: "Verstuurd. Ga terug naar de pagina van de Jooki.",
       j_back: "Ga terug naar het tabblad van de Jooki: het verhaal wacht daar.",
+      j_asked: "Naar de Jooki sturen…", j_failed: "De Jooki kon het verhaal niet ontvangen. Probeer opnieuw, of bewaar het bestand.",
       back_story: "Terug naar het verhaal", new_story: "Nieuw verhaal", back: "Terug", retry: "Opnieuw proberen",
       readlabel: "Lees hardop:",
       sentence: "‘Er was eens, diep in een groot bos, een kleine vos die maar niet kon slapen. Daarom luisterde hij elke avond naar een verhaal.’",
@@ -1353,7 +1356,9 @@
     $('newstory').textContent = sureNew ? t('sure') : t('new_story');
     $('send').hidden = !jooki;
     $('share').classList.toggle('ghost', !!jooki);
-    var msg = jooki && (jooki.state === 'sent' ? 'j_sent' : jooki.state === 'wait' ? 'j_back' : '');
+    var msg = jooki && jooki.state ? 'j_' + jooki.state : '';   // asked, sent, wait (back), failed
+    if (msg === 'j_wait') msg = 'j_back';
+    $('send').disabled = !!jooki && jooki.state === 'asked';
     $('jmsg').hidden = !msg; $('jmsg').textContent = msg ? t(msg) : '';
   }
 
@@ -1560,12 +1565,14 @@
       window.opener.postMessage({ type: 'oj-story', v: 2, title: story.title, files: doneFiles.map(function (f) { return { name: f.name, blob: f }; }),
         cover: story.cover ? { name: 'cover.jpg', blob: new Blob([story.cover.bytes], { type: story.cover.type }) } : null }, jooki.origin);
     } catch (e) { jooki.state = 'wait'; }
-    // a Jooki's page asleep behind this one answers only when it is shown again
-    setTimeout(function () { if (jooki.state === 'asked') { jooki.state = 'wait'; refresh(); } }, 4000);
+    // the Jooki's page answers once the story is a playlist there; asleep behind this one, only when it is shown again
+    setTimeout(function () { if (jooki.state === 'asked') { jooki.state = 'wait'; refresh(); } }, 8000);
     refresh();
   });
   window.addEventListener('message', function (ev) {
-    if (!jooki || ev.origin !== jooki.origin || !ev.data || ev.data.type !== 'oj-story-got') return;
+    if (!jooki || ev.origin !== jooki.origin || !ev.data) return;
+    if (ev.data.type === 'oj-story-failed') { if (jooki.state !== 'sent') { jooki.state = 'failed'; refresh(); } return; }
+    if (ev.data.type !== 'oj-story-got') return;
     jooki.state = 'sent';
     refresh();
     setTimeout(function () { try { window.close(); } catch (e) {} }, 1500);

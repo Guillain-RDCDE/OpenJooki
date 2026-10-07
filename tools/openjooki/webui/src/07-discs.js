@@ -216,9 +216,11 @@
     return p;
   }
   function notTrash(k) { return k !== 'TRASH'; }
-  function createPlaylist(title) {
+  // audiobook: true makes it one from birth (a story): no second command, whose answer could
+  // be mistaken for the end of the first page's upload
+  function createPlaylist(title, audiobook) {
     var p = whenNewPlaylist(notTrash, 20000);
-    send('PLAYLIST_NEW', { title: title, audiobook: false });
+    send('PLAYLIST_NEW', { title: title, audiobook: !!audiobook });
     return p;
   }
   // Discs dropped on the playlists page: each folder becomes a playlist named after its album, its

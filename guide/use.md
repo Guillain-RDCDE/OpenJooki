@@ -76,6 +76,11 @@ In Jookistory, **Invite someone far away to read** shows a QR code and **Send th
   Jookistory) and pick the file. The story becomes a playlist with its title, its pages in
   order, an audiobook, and the page asks which token starts it.
 
+Jookistory says **Sending to the Jooki…**, then closes itself once the story is on the Jooki's
+page. If the Jooki's page is asleep behind it, go back to its tab: the story is waiting for
+it. If the Jooki could not take the story, Jookistory says so and keeps it: try again, or
+**Send or save the story**, then **Open a story**.
+
 If **Send to the Jooki** does not show (it can happen when the Jooki's page was opened from
 the home screen), use **Send or save the story**, then **Open a story**.
 

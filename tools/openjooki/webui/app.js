@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.4.0';
+  var VERSION = '2.4.1';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -943,6 +943,25 @@
   document.addEventListener('visibilitychange', function () { if (!document.hidden) checkAlive(); });
   window.addEventListener('pageshow', checkAlive);
   window.addEventListener('online', checkAlive);
+  // Before a command that must not be lost (a story handed over by the studio while this tab slept
+  // behind it): ask for the state and run fn once the Jooki has answered, on this connection or on a new
+  // one. Without an answer in 5 s the connection is made again, up to `tries` times, then ko() runs.
+  function whenAnswering(fn, ko, tries, again) {
+    if (tries === undefined) tries = 4;
+    if (again || !online) { retryDelay = 1000; connect(); }   // connecting asks for the state by itself
+    else client.publish('/j/web/input/GET_STATE', '{}');
+    var done = false, timer = setTimeout(function () {
+      if (done) return;
+      done = true;
+      if (tries <= 1) ko(); else whenAnswering(fn, ko, tries - 1, true);
+    }, 5000);
+    waiters.push(function () {
+      if (done) return true;
+      done = true; clearTimeout(timer);
+      setTimeout(fn, 0);   // after the waiters' round: a waiter fn adds (whenNewPlaylist) must not be lost
+      return true;
+    });
+  }
   function onMessage(topic, text) {
     var data;
     lastRx = Date.now();
@@ -1288,9 +1307,11 @@
     return p;
   }
   function notTrash(k) { return k !== 'TRASH'; }
-  function createPlaylist(title) {
+  // audiobook: true makes it one from birth (a story): no second command, whose answer could
+  // be mistaken for the end of the first page's upload
+  function createPlaylist(title, audiobook) {
     var p = whenNewPlaylist(notTrash, 20000);
-    send('PLAYLIST_NEW', { title: title, audiobook: false });
+    send('PLAYLIST_NEW', { title: title, audiobook: !!audiobook });
     return p;
   }
   // Discs dropped on the playlists page: each folder becomes a playlist named after its album, its
@@ -1550,38 +1571,46 @@
   // cover and story.json), opened here with "Open a story" (08c-story-file.js). Both end in storyArrives.
   var STUDIO = 'https://guillain-rdcde.github.io', storySeen = {};
   function openStudio() { window.open(STUDIO + '/OpenJooki/studio.html#jooki=' + encodeURIComponent(location.origin)); }
-  // this tab slept behind the studio's: the connection to the Jooki comes back a moment after it is shown again
-  function whenOnline(fn, tries) {
-    if (online) fn();
-    else if (tries > 0) setTimeout(function () { whenOnline(fn, tries - 1); }, 500);
-    else toast(t('offline'), 'error');
-  }
-  // the story becomes a new playlist, an audiobook, its pages queued in order; then the question of the token
-  function storyArrives(title, files, cover) {
+  // The story becomes a new playlist, an audiobook, its pages queued in order; then the question of the
+  // token. told(ok) hears the outcome (the studio waits for it). This tab may have slept behind the
+  // studio's for a whole book: its connection can look open and be dead, so the Jooki is asked to answer
+  // first (whenAnswering), and a playlist that never shows up is asked for once more.
+  function storyArrives(title, files, cover, told) {
     title = String(title || '').slice(0, 100) || t('story_default');
-    // the same story sent twice (a second tap in the studio) is added once
+    // the same story sent twice (a second tap in the studio) is added once, and the studio hears of it each time
     var sig = title + '/' + files.map(function (f) { return f.size; }).join(',');
-    if (storySeen[sig] && Date.now() - storySeen[sig] < 120000) return;
-    storySeen[sig] = Date.now();
-    whenOnline(function () {
-      createPlaylist(title).then(function (id) {
-        send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: true } });
-        enqueue(files, id);
-        toast(t('story_got', title));
-        go('#/p/' + encodeURIComponent(id));
-        charPickerModal(Object.assign({ id: id }, pls()[id]), { story: true, cover: cover || null });
-      }, function () { delete storySeen[sig]; toast(t('up_fail') + t('colon') + title, 'error'); });
-    }, 60);
+    var seen = storySeen[sig];
+    if (seen && Date.now() - seen.at < 120000) { if (told) { if (seen.done) told(true); else seen.waiting.push(told); } return; }
+    seen = storySeen[sig] = { at: Date.now(), done: false, waiting: told ? [told] : [] };
+    var before = Object.keys(pls());
+    function tell(ok) { var w = seen.waiting; seen.waiting = []; w.forEach(function (f) { f(ok); }); }
+    function fail() { delete storySeen[sig]; toast(t('up_fail') + t('colon') + title, 'error'); tell(false); }
+    function ask(again) {
+      whenAnswering(function () {
+        // asked once already: the Jooki may have made it and the answer got lost on the way
+        var made = again ? Object.keys(pls()).filter(function (k) { return before.indexOf(k) < 0 && (pls()[k] || {}).title === title; })[0] : null;
+        (made ? Promise.resolve(made) : createPlaylist(title, true)).then(function (id) {
+          enqueue(files, id);
+          seen.done = true; tell(true);
+          toast(t('story_got', title));
+          go('#/p/' + encodeURIComponent(id));
+          charPickerModal(Object.assign({ id: id }, pls()[id]), { story: true, cover: cover || null });
+        }, function () { if (again) fail(); else ask(true); });
+      }, fail);
+    }
+    ask(false);
   }
   window.addEventListener('message', function (e) {
-    var d = e.data;
+    var d = e.data, from = e.source;
     if (e.origin !== STUDIO || !d || d.type !== 'oj-story' || !Array.isArray(d.files)) return;
     var files = d.files.filter(function (f) { return f && f.blob instanceof Blob && f.blob.size; })
       .map(function (f) { return new File([f.blob], String(f.name || 'page.mp3').slice(0, 120), { type: 'audio/mpeg' }); });
     if (!files.length) return;
-    try { e.source.postMessage({ type: 'oj-story-got' }, STUDIO); } catch (err) { /* the studio's tab is gone: the story is here anyway */ }
     var cover = d.cover && d.cover.blob instanceof Blob && d.cover.blob.size ? d.cover.blob : null;
-    storyArrives(d.title, files, cover);
+    storyArrives(d.title, files, cover, function (ok) {
+      // the studio closes itself on 'got', keeps the story on 'failed'; its tab may be gone: the story is here anyway
+      try { from.postMessage({ type: ok ? 'oj-story-got' : 'oj-story-failed' }, STUDIO); } catch (err) {}
+    });
   });
 
   // ---- a token put on the Jooki while a sheet waits for it ----------------

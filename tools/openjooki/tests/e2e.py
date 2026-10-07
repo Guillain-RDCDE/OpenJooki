@@ -1,5 +1,5 @@
 """End-to-end tests of the new web UI against the bench (real Lua app + mosquitto)."""
-import time, json, os, tempfile, urllib.request, base64
+import time, json, os, re, tempfile, urllib.request, urllib.parse, base64
 from playwright.sync_api import sync_playwright
 import bench as B
 from jk import PAGE
@@ -553,6 +553,63 @@ with sync_playwright() as p:
           sticker in tags and flat in tags and "Le conte de Mamie" in txt and "Petit monstre" in txt and pg.locator("[data-k=label30].on").count() == 1, (tags, txt))
     pg.click("[data-k=label40]"); pg.wait_for_selector("[data-k=label40].on")
     check("E30 the size is a choice (40 mm)", "--mm:40mm" in (pg.get_attribute("[data-k=labelsheet]", "style") or "") and pg.locator("[data-k=print]").count() == 1, pg.get_attribute("[data-k=labelsheet]", "style"))
+    # E31 the way back from the studio as on a phone: the Jookistory card opens the studio's address (a stub answers
+    # for it here), the studio hands the story to this tab, and hears 'got' only once the playlist exists. This tab
+    # slept behind the studio for a whole book: its WebSocket looks open and is dead (frozen by Playwright).
+    ctx.route("https://guillain-rdcde.github.io/**", lambda r: r.fulfill(status=200, content_type="text/html", body="""<!doctype html><title>stub studio</title><script>
+      window.acks = []; addEventListener('message', function (e) { if (e.data && e.data.type) window.acks.push(e.data.type); });
+      window.hand = function (title, pages) {
+        var to = decodeURIComponent(location.hash.split('jooki=')[1]);
+        var files = pages.map(function (b, i) { return { name: '0' + (i + 1) + ' ' + title + '.mp3', blob: new Blob([Uint8Array.from(atob(b), function (c) { return c.charCodeAt(0); }), title], { type: 'audio/mpeg' }) }; });   // not the bytes E26 sent
+        window.opener.postMessage({ type: 'oj-story', v: 2, title: title, files: files, cover: null }, to);
+      };</script>"""))
+    frozen = {"on": False}
+    # a WebSocket that passes nothing while frozen: open for the page, dead for the Jooki. The relay runs on this
+    # thread, inside Playwright calls: a wait on the Jooki's state alone would starve it, so every wait below asks
+    # the page first.
+    def zombie(ws):
+        up = ws.connect_to_server()
+        ws.on_message(lambda m: None if frozen["on"] else up.send(m))
+        up.on_message(lambda m: None if frozen["on"] else ws.send(m))
+    zp = ctx.new_page(); zp.route_web_socket(re.compile(r".*/mqtt$"), zombie)
+    zp.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
+    zp.goto(URL + "/"); zp.wait_for_selector("[data-k=story]", timeout=15000)
+    zp.wait_for_selector(".conn.on", timeout=15000)
+    with ctx.expect_page() as pop:
+        zp.click("[data-k=story]")
+    st = pop.value; st.wait_for_load_state()
+    check("E31 the Jookistory card opens the studio with this page's address", st.url == "https://guillain-rdcde.github.io/OpenJooki/studio.html#jooki=" + urllib.parse.quote(URL, safe=""), st.url)
+    frozen["on"] = True
+    t0 = time.time()
+    st.evaluate("([t, p]) => window.hand(t, p)", ["La poire géante", pages64])
+    st.evaluate("([t, p]) => window.hand(t, p)", ["La poire géante", pages64])   # a second tap, the first still on its way
+    B.quiet(7, "the page asks the Jooki, hears nothing, and connects again; the second connection is dead too")
+    check("E31 nothing reaches the Jooki through the dead connection, no answer for the studio yet", not pl_by_title("La poire géante") and st.evaluate("window.acks") == [], (pl_by_title("La poire géante"), st.evaluate("window.acks")))
+    frozen["on"] = False
+    st.wait_for_function("window.acks.length >= 2", timeout=30000)
+    poire = J.wait(lambda: pl_by_title("La poire géante"), 3)
+    J.wait(lambda: J.pls[poire].get("audiobook") is True, 3)
+    check("E31 once connected again the story is made, once, and the studio hears 'got' for each tap (%.0f s)" % (time.time() - t0),
+          st.evaluate("window.acks") == ["oj-story-got", "oj-story-got"] and len([p for p in J.pls.values() if p.get("title") == "La poire géante"]) == 1
+          and J.pls[poire].get("audiobook") is True, (st.evaluate("window.acks"), [p.get("title") for p in J.pls.values()]))
+    B.poll(lambda: not zp.locator(".up.uploading, .up.processing").count() and len(J.pls[poire].get("tracks") or []) >= 2, 60, every=0.25)
+    check("E31 ... with its two pages", [J.tracks.get(x, {}).get("userFilename") for x in J.pls[poire]["tracks"]] == ["01 La poire géante.mp3", "02 La poire géante.mp3"], J.pls[poire])
+    # the Jooki never answers: the page gives up, says so, and the studio hears 'failed' and keeps the story; a new tap starts afresh
+    zp.goto(URL + "/"); zp.wait_for_selector(".conn.on", timeout=15000)
+    frozen["on"] = True
+    st.evaluate("window.acks = []"); st.evaluate("([t, p]) => window.hand(t, p)", ["Le navet", pages64])
+    st.wait_for_function("window.acks.length >= 1", timeout=45000)
+    check("E31 a Jooki that never answers: the studio hears 'failed', nothing is made, the page says it",
+          st.evaluate("window.acks") == ["oj-story-failed"] and not pl_by_title("Le navet") and "Le navet" in " ".join(zp.locator(".toast.error").all_inner_texts()), (st.evaluate("window.acks"), zp.locator(".toast").all_inner_texts()))
+    frozen["on"] = False
+    zp.wait_for_selector(".conn.on", timeout=20000)
+    st.evaluate("([t, p]) => window.hand(t, p)", ["Le navet", pages64])
+    st.wait_for_function("window.acks.length >= 2", timeout=20000)
+    navet = J.wait(lambda: pl_by_title("Le navet"), 3)
+    J.wait(lambda: J.pls[navet].get("audiobook") is True, 3)
+    check("E31 the Jooki back, the same story sent again is made this time", st.evaluate("window.acks") == ["oj-story-failed", "oj-story-got"], st.evaluate("window.acks"))
+    B.poll(lambda: not zp.locator(".up.uploading, .up.processing").count() and len(J.pls[navet].get("tracks") or []) >= 2, 60, every=0.25)
+    st.close(); zp.close(); ctx.unroute("https://guillain-rdcde.github.io/**")
     # E14 offline / reconnect
     B.kill_brokers()
     pg.wait_for_function("document.querySelector('.conn') && !document.querySelector('.conn').classList.contains('on')", timeout=20000)

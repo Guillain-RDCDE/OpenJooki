@@ -1,5 +1,22 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.1 (7 October 2026) — Send to the Jooki, after a long reading
+- **Send to the Jooki, after a long reading.** A story sent from Jookistory could vanish: the
+  phone came back to the Jooki's page by itself, and no playlist appeared. The Jooki's tab had
+  slept behind Jookistory for the whole book; its link to the Jooki looked open and was dead, and
+  the story fell into that hole. Now the page first makes sure the Jooki answers (and connects
+  again if not), only then makes the playlist, asks once more if the Jooki stays silent, and
+  tells Jookistory only when the story really is there. Jookistory says *Sending to the Jooki…*,
+  closes itself once the story has arrived, and if the Jooki could not take it, says so and keeps
+  the story so you can try again or keep the file. A second tap while the first is on its way
+  no longer vanishes either.
+- For the tinkerers: `whenAnswering` in `05-connection.js` (ask for the state, 5 s, connect
+  again, four times); `storyArrives` in `08b-story.js` answers the studio `oj-story-got` or
+  `oj-story-failed` after the fact, and looks for a playlist already made before asking again.
+  A story's playlist is born an audiobook (`PLAYLIST_NEW` with `audiobook: true`): the answer to
+  a separate `PLAYLIST_UPDATE` could pass for the end of the first page's upload. Test E31 plays
+  the dead connection with Playwright's `route_web_socket` (e2e = 107).
+
 ## OpenJooki 2.4.0 (7 October 2026) — From the book to the token, a story as one file, sounds behind the voice
 - **From the book to the token in one go.** When a story arrives from Jookistory, the page asks
   *Which token starts this story?* and waits: put a flat token or an NFC sticker on the Jooki, it

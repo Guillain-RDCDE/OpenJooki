@@ -34,7 +34,8 @@
       title = p ? (p.title || '—') : t('playlists');
       back = '#/';
       body = viewPlaylist(r.arg);
-    } else if (r.name === 'tokens') { title = t('tokens'); body = viewTokens(); }
+    } else if (r.name === 'tokens' && r.arg === 'labels') { title = t('labels_t'); back = '#/tokens'; body = viewLabels(); }
+    else if (r.name === 'tokens') { title = t('tokens'); body = viewTokens(); }
     else if (r.name === 'library') { title = t('library'); body = viewLibrary(r.arg); }
     else if (r.name === 'settings') {
       var sub = r.arg && SUBS[r.arg] ? r.arg : null;

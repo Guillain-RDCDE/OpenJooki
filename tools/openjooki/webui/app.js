@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.3.2';
+  var VERSION = '2.4.0';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -179,7 +179,14 @@
     disc_errors: function (n) { return n + (n > 1 ? ' pistes n\'ont pas pu être envoyées' : ' piste n\'a pas pu être envoyée'); },
     disc_created: function (n) { return 'Playlist créée : ' + n; },
     story_rec: 'Enregistrer une histoire', story_default: 'Mon histoire', story_got: function (n) { return 'Histoire reçue : ' + n; },
-    story_book: 'Une histoire : cette playlist passe en livre audio',
+    story_open: 'Ouvrir une histoire', story_open_sub: 'Une histoire reçue en fichier', story_file_bad: 'Ce fichier n\'est pas une histoire de Jookistory',
+    story_token_t: 'Quel jeton lance cette histoire ?', story_token_help: 'Pose-le sur le Jooki maintenant, ou choisis-le ci-dessous.',
+    token_live: 'J\'attends un jeton sur le Jooki…', token_seen: function (n) { return 'Jeton vu : ' + n; }, later: 'Plus tard',
+    cover_set: function (n) { return 'La couverture est maintenant l\'image de ' + n; },
+    labels_btn: 'Imprimer les étiquettes', labels_t: 'Étiquettes pour les livres', labels_size: 'Taille', print: 'Imprimer',
+    labels_help: 'Une étiquette par jeton. Imprime, découpe, colle chacune sur son livre, par-dessus l\'autocollant NFC. Puis essaie : pose le livre fermé sur le Jooki.',
+    labels_none: 'Pas encore de jeton à toi. Pose d\'abord un jeton plat ou un autocollant NFC sur le Jooki.',
+    story_book:'Une histoire : cette playlist passe en livre audio',
     s_mp3: 'Qualité des MP3', s_mp3_sub: 'Pour les FLAC et WAV envoyés', s_mp3_192: '192 kbps — le plus léger', s_mp3_256: '256 kbps — recommandé', s_mp3_320: '320 kbps — le plus fin',
     s_mp3_foot: 'Les FLAC et WAV envoyés au Jooki sont convertis en MP3 sur ton ordinateur ou ton téléphone : un disque prend trois fois moins de place. 256 kbps suffit largement pour l\'enceinte du Jooki et un casque Bluetooth. Ce choix ne vaut que pour cet appareil.',
     s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
@@ -361,6 +368,13 @@
     disc_created: function (n) { return 'Playlist created: ' + n; },
     story_rec: 'Record a story', story_default: 'My story', story_got: function (n) { return 'Story received: ' + n; },
     story_book: 'A story: this playlist is now an audiobook',
+    story_open: 'Open a story', story_open_sub: 'A story received as a file', story_file_bad: 'This file is not a story from Jookistory',
+    story_token_t: 'Which token starts this story?', story_token_help: 'Put it on the Jooki now, or pick it below.',
+    token_live: 'Waiting for a token on the Jooki…', token_seen: function (n) { return 'Token seen: ' + n; }, later: 'Later',
+    cover_set: function (n) { return 'The cover is now the picture of ' + n; },
+    labels_btn: 'Print the labels', labels_t: 'Labels for the books', labels_size: 'Size', print: 'Print',
+    labels_help: 'One label per token. Print, cut out, stick each one on its book, over the NFC sticker. Then try: put the closed book on the Jooki.',
+    labels_none: 'No token of your own yet. Put a flat token or an NFC sticker on the Jooki first.',
     s_mp3: 'MP3 quality', s_mp3_sub: 'For the FLAC and WAV you send', s_mp3_192: '192 kbps — lightest', s_mp3_256: '256 kbps — recommended', s_mp3_320: '320 kbps — finest',
     s_mp3_foot: 'FLAC and WAV files sent to the Jooki are turned into MP3 on your computer or phone: an album takes three times less space. 256 kbps is plenty for the Jooki\'s speaker and Bluetooth headphones. This choice is for this device only.',
     s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
@@ -541,7 +555,14 @@
     disc_errors: function (n) { return n + (n > 1 ? ' nummers konden niet verstuurd worden' : ' nummer kon niet verstuurd worden'); },
     disc_created: function (n) { return 'Afspeellijst gemaakt: ' + n; },
     story_rec: 'Een verhaal opnemen', story_default: 'Mijn verhaal', story_got: function (n) { return 'Verhaal ontvangen: ' + n; },
-    story_book: 'Een verhaal: deze afspeellijst wordt een luisterboek',
+    story_open: 'Een verhaal openen', story_open_sub: 'Een verhaal dat je als bestand kreeg', story_file_bad: 'Dit bestand is geen verhaal van Jookistory',
+    story_token_t: 'Welk figuurtje start dit verhaal?', story_token_help: 'Zet het nu op de Jooki, of kies het hieronder.',
+    token_live: 'Ik wacht op een figuurtje op de Jooki…', token_seen: function (n) { return 'Figuurtje gezien: ' + n; }, later: 'Later',
+    cover_set: function (n) { return 'De kaft is nu het plaatje van ' + n; },
+    labels_btn: 'De etiketten afdrukken', labels_t: 'Etiketten voor de boeken', labels_size: 'Grootte', print: 'Afdrukken',
+    labels_help: 'Eén etiket per figuurtje. Druk af, knip uit, plak elk op zijn boek, over de NFC-sticker. Probeer dan: leg het dichte boek op de Jooki.',
+    labels_none: 'Nog geen eigen figuurtje. Zet eerst een plat figuurtje of een NFC-sticker op de Jooki.',
+    story_book:'Een verhaal: deze afspeellijst wordt een luisterboek',
     s_mp3: 'MP3-kwaliteit', s_mp3_sub: 'Voor de FLAC en WAV die je verstuurt', s_mp3_192: '192 kbps — het lichtst', s_mp3_256: '256 kbps — aanbevolen', s_mp3_320: '320 kbps — het fijnst',
     s_mp3_foot: 'FLAC- en WAV-bestanden die naar de Jooki gaan, worden op je computer of telefoon omgezet naar MP3: een album neemt drie keer minder ruimte in. 256 kbps is ruim genoeg voor de luidspreker van de Jooki en een Bluetooth-koptelefoon. Deze keuze geldt alleen voor dit apparaat.',
     s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
@@ -1276,6 +1297,7 @@
   // tracks in disc order. Dropped in a playlist: everything goes into that playlist, folder by folder.
   function addDiscs(groups, playlistId) {
     return groups.reduce(function (chain, g) {
+      g.files = takeStoryFiles(g.files, playlistId);   // a story's zip dropped among the files opens as a story
       return chain.then(function () { return discOf(g); }).then(function (d) {
         if (!d) return null;
         if (playlistId || !g.dir) { enqueue(d.files, playlistId || null, { cover: d.cover }); return null; }
@@ -1455,7 +1477,8 @@
   // Files chosen together go in name order (a phone hands them over in no order). The pages of a story made
   // in Jookistory ("01 Title.mp3", "02 Title.mp3"…) make their playlist an audiobook: resumed, never shuffled.
   function pickedFiles(files, playlistId) {
-    var list = Array.prototype.slice.call(files).sort(function (a, b) { return collator().compare(a.name, b.name); });
+    var list = takeStoryFiles(files, playlistId).sort(function (a, b) { return collator().compare(a.name, b.name); });
+    if (!list.length) return;
     var m = list.map(function (f) { return /^(\d\d) (.+)\.mp3$/i.exec(f.name); });
     var story = list.length > 1 && m.every(function (x, i) { return x && x[2] === m[0][2] && Number(x[1]) === i + 1; });
     var p = playlistId && pls()[playlistId];
@@ -1463,7 +1486,7 @@
     enqueue(list, playlistId);
   }
   function fileButton(label, playlistId, primary) {
-    return pickerButton({ label: label, primary: primary, input: { accept: 'audio/*,.mp3,.m4a,.m4b,.aac,.ogg,.oga,.flac,.wav,.wma' },
+    return pickerButton({ label: label, primary: primary, input: { accept: 'audio/*,.mp3,.m4a,.m4b,.aac,.ogg,.oga,.flac,.wav,.wma,.zip,application/zip' },
       onFiles: function (files) { pickedFiles(files, playlistId); } });
   }
   function dropZone(playlistId) {
@@ -1523,6 +1546,8 @@
   // A story is read aloud on the project's site, in a tab this page opens: a page served by the Jooki
   // (http) has no right to the microphone, and a page of the site (https) has no right to write to the
   // Jooki. So the studio hands the finished story back from tab to tab (docs/studio.html, "oj-story").
+  // A story can also come as one file (the studio's "Send or save the story": a zip with the pages, the
+  // cover and story.json), opened here with "Open a story" (08c-story-file.js). Both end in storyArrives.
   var STUDIO = 'https://guillain-rdcde.github.io', storySeen = {};
   function openStudio() { window.open(STUDIO + '/OpenJooki/studio.html#jooki=' + encodeURIComponent(location.origin)); }
   // this tab slept behind the studio's: the connection to the Jooki comes back a moment after it is shown again
@@ -1531,14 +1556,9 @@
     else if (tries > 0) setTimeout(function () { whenOnline(fn, tries - 1); }, 500);
     else toast(t('offline'), 'error');
   }
-  window.addEventListener('message', function (e) {
-    var d = e.data;
-    if (e.origin !== STUDIO || !d || d.type !== 'oj-story' || !Array.isArray(d.files)) return;
-    var title = String(d.title || '').slice(0, 100) || t('story_default');
-    var files = d.files.filter(function (f) { return f && f.blob instanceof Blob && f.blob.size; })
-      .map(function (f) { return new File([f.blob], String(f.name || 'page.mp3').slice(0, 120), { type: 'audio/mpeg' }); });
-    if (!files.length) return;
-    try { e.source.postMessage({ type: 'oj-story-got' }, STUDIO); } catch (err) { /* the studio's tab is gone: the story is here anyway */ }
+  // the story becomes a new playlist, an audiobook, its pages queued in order; then the question of the token
+  function storyArrives(title, files, cover) {
+    title = String(title || '').slice(0, 100) || t('story_default');
     // the same story sent twice (a second tap in the studio) is added once
     var sig = title + '/' + files.map(function (f) { return f.size; }).join(',');
     if (storySeen[sig] && Date.now() - storySeen[sig] < 120000) return;
@@ -1549,9 +1569,149 @@
         enqueue(files, id);
         toast(t('story_got', title));
         go('#/p/' + encodeURIComponent(id));
+        charPickerModal(Object.assign({ id: id }, pls()[id]), { story: true, cover: cover || null });
       }, function () { delete storySeen[sig]; toast(t('up_fail') + t('colon') + title, 'error'); });
     }, 60);
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (e.origin !== STUDIO || !d || d.type !== 'oj-story' || !Array.isArray(d.files)) return;
+    var files = d.files.filter(function (f) { return f && f.blob instanceof Blob && f.blob.size; })
+      .map(function (f) { return new File([f.blob], String(f.name || 'page.mp3').slice(0, 120), { type: 'audio/mpeg' }); });
+    if (!files.length) return;
+    try { e.source.postMessage({ type: 'oj-story-got' }, STUDIO); } catch (err) { /* the studio's tab is gone: the story is here anyway */ }
+    var cover = d.cover && d.cover.blob instanceof Blob && d.cover.blob.size ? d.cover.blob : null;
+    storyArrives(d.title, files, cover);
   });
+
+  // ---- a token put on the Jooki while a sheet waits for it ----------------
+  // What the Jooki tells about its tokens: state.nfc carries the token on it right now (a character, a
+  // flat token), and a foreign tag (an NFC sticker) only bumps its `seen` count in db.tokens. A watch
+  // remembers both as they were, and calls back with the first character that changes. stop() ends it.
+  function watchToken(cb) {
+    var seen = {}, nfc = isUserChar(S.nfc.starId) ? S.nfc.starId : null, on = true;
+    Object.keys(S.db.tokens).forEach(function (k) { seen[k] = Number((S.db.tokens[k] || {}).seen) || 0; });
+    function fresh() {
+      var now = S.nfc.starId;
+      if (isUserChar(now) && now !== nfc) return now;
+      var hit = null;
+      Object.keys(S.db.tokens).forEach(function (k) {
+        var tk = S.db.tokens[k] || {};
+        if (!hit && isUserChar(tk.starId) && (Number(tk.seen) || 0) > (seen.hasOwnProperty(k) ? seen[k] : 0)) hit = tk.starId;
+      });
+      return hit;
+    }
+    waiters.push(function () {
+      if (!on) return true;
+      var s = fresh();
+      if (!s) return false;
+      on = false; cb(s); return true;
+    });
+    return { stop: function () { on = false; } };
+  }
+
+  // ---- the cover of the book becomes the token's picture ------------------
+  // The middle of the cover, in a circle, 128 px, like a photo from the editor (16-token-photo.js);
+  // only a token of its own (a flat token, an NFC tag) carries a picture: a character has its figure.
+  function coverToToken(starId, blob, done) {
+    var own = ownParts(starId);
+    if (!own || !blob || !window.createImageBitmap) { done(false); return; }
+    var tag = own.uid, OUT = 128;
+    createImageBitmap(blob).then(function (img) {
+      var s = Math.min(img.width, img.height), o = document.createElement('canvas');
+      o.width = OUT; o.height = OUT;
+      var c = o.getContext('2d');
+      c.beginPath(); c.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2); c.clip();
+      c.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, OUT, OUT);
+      o.toBlob(function (png) {
+        if (!png) { done(false); return; }
+        uploadBlob(png, 'tok_' + tag + '.png', function (uploadId) {
+          if (!uploadId) { done(false); return; }
+          var before = (S.db.tokens[tag] || {}).image || '';
+          send('TOKEN_SET_IMAGE', { tagId: tag, uploadId: uploadId });
+          var tries = 0, tm = setInterval(function () {
+            var now = (S.db.tokens[tag] || {}).image || '';
+            if (now && now !== before) { clearInterval(tm); done(true); }
+            else if (++tries > 60) { clearInterval(tm); done(false); }
+          }, 250);
+        });
+      }, 'image/png');
+    }, function () { done(false); });
+  }
+
+  /* ------------------------------------------------------------------ a story as one file */
+  // Jookistory's "Send or save the story" gives one zip: "01 Title.mp3", "02 Title.mp3"…, cover.jpg and
+  // story.json ({jookistory: 1, title, pages…}). Sent by message from far away, it is opened here:
+  // "Open a story" on the playlists page, or picked with "Add files" in a playlist. The zip is read
+  // in the browser: its files are stored as they are (any phone opens it), a zip made again on a
+  // computer may hold them deflated, which the browser inflates itself.
+  var ZIP_NAME = /\.zip$/i;
+  function isZip(f) { return ZIP_NAME.test(f.name) || f.type === 'application/zip' || f.type === 'application/x-zip-compressed'; }
+  function zipU16(b, i) { return b[i] | (b[i + 1] << 8); }
+  // file -> Promise of [{name, blob}] (folders, Mac leftovers and hidden files left out)
+  function readZip(file) {
+    return readBytes(file, 0, file.size).then(function (b) {
+      var n = b.length, eocd = -1;
+      for (var i = n - 22; i >= 0 && i >= n - 66000; i--) if (b[i] === 0x50 && b[i + 1] === 0x4b && b[i + 2] === 0x05 && b[i + 3] === 0x06) { eocd = i; break; }
+      if (eocd < 0) throw new Error('not a zip');
+      var count = zipU16(b, eocd + 10), at = u32le(b, eocd + 16), out = [];
+      for (var k = 0; k < count; k++) {
+        if (u32le(b, at) !== 0x02014b50) break;
+        var method = zipU16(b, at + 10), csize = u32le(b, at + 20), usize = u32le(b, at + 24), nl = zipU16(b, at + 28), el = zipU16(b, at + 30), cl = zipU16(b, at + 32), local = u32le(b, at + 42);
+        var name = utf8At(b, at + 46, nl);
+        at += 46 + nl + el + cl;
+        var base = name.split('/').pop();
+        if (!base || name.indexOf('__MACOSX/') === 0 || base.charAt(0) === '.' || name.slice(-1) === '/') continue;
+        var start = local + 30 + zipU16(b, local + 26) + zipU16(b, local + 28);
+        var data = b.subarray(start, start + csize);
+        if (method === 0) out.push({ name: base, blob: new Blob([data]) });
+        else if (method === 8 && window.DecompressionStream) out.push({ name: base, blob: new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob(), size: usize });
+        else throw new Error('unsupported');
+      }
+      return Promise.all(out.map(function (e) { return Promise.resolve(e.blob).then(function (blob) { return { name: e.name, blob: blob }; }); }));
+    });
+  }
+  // the story in the zip: its title, its pages as Files in order, its cover; null when there is no page
+  function storyOfZip(entries) {
+    var meta = null, pages = [], cover = null;
+    return Promise.all(entries.map(function (e) {
+      if (e.name.toLowerCase() === 'story.json') return readBytes(e.blob, 0, Math.min(e.blob.size, 10000)).then(function (b) { try { meta = JSON.parse(utf8At(b, 0, b.length)); } catch (err) { meta = null; } });
+      if (/^cover\.(jpe?g|png)$/i.test(e.name)) cover = e.blob;
+      else if (AUDIO_EXT.test(e.name) && e.blob.size > 5000) pages.push(new File([e.blob], e.name, { type: 'audio/mpeg' }));
+      return null;
+    })).then(function () {
+      if (!pages.length) return null;
+      pages.sort(function (a, b) { return collator().compare(a.name, b.name); });
+      var m = /^\d\d (.+)\.\w+$/.exec(pages[0].name);
+      var title = meta && typeof meta.title === 'string' && meta.title.trim() ? meta.title.trim() : m ? m[1] : cleanTitle(pages[0].name);
+      return { title: title, pages: pages, cover: cover };
+    });
+  }
+  // a zip picked or dropped: into that playlist (an audiobook from then on), or as a new playlist named after the story
+  function openStoryFile(file, playlistId) {
+    readZip(file).then(storyOfZip).then(function (st) {
+      if (!st) { toast(t('story_file_bad') + t('colon') + file.name, 'error'); return; }
+      if (playlistId) {
+        var p = pls()[playlistId];
+        if (p && !p.audiobook) { send('PLAYLIST_UPDATE', { playlist: { id: playlistId, audiobook: true } }); toast(t('story_book')); }
+        enqueue(st.pages, playlistId);
+      } else storyArrives(st.title, st.pages, st.cover);
+    }, function () { toast(t('story_file_bad') + t('colon') + file.name, 'error'); });
+  }
+  // the files of a pick or a drop, their zips taken out and opened as stories; the rest comes back
+  function takeStoryFiles(files, playlistId) {
+    var rest = [];
+    Array.prototype.forEach.call(files, function (f) { if (isZip(f)) openStoryFile(f, playlistId); else rest.push(f); });
+    return rest;
+  }
+  // the card on the playlists page: a file picker that looks like "New playlist"
+  function storyFileCard() {
+    var inp = h('input', { type: 'file', accept: '.zip,application/zip', class: 'sr', 'aria-hidden': 'true', tabindex: '-1', 'data-k': 'storyfile',
+      onchange: function () { if (inp.files && inp.files.length) takeStoryFiles(inp.files, null); inp.value = ''; } });
+    return h('label', { class: 'card pl newpl', role: 'button', tabindex: '0', 'data-k': 'storyopen',
+      onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inp.click(); } } },
+      icon('upload'), t('story_open'), h('div', { class: 'small', style: 'font-weight:400' }, t('story_open_sub')), inp);
+  }
 
   /* ------------------------------------------------------------------ token visuals */
   function tokVisual(starId, cls, live) {
@@ -1607,6 +1767,7 @@
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
     cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), 'Jookistory',
       h('div', { class: 'small', style: 'font-weight:400' }, t('story_rec'))));
+    cards.push(storyFileCard());
     var addDisc = discButton();
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),
@@ -1663,19 +1824,35 @@
     ids.sort(function (a, b) { return (seen[b] ? 1 : 0) - (seen[a] ? 1 : 0) || charInfo(a).order - charInfo(b).order; });
     return h('div', { class: 'chargrid' }, none ? opt(null) : null, ids.map(opt));
   }
-  function charPickerModal(p) {
-    var chosen = p.star || null;
+  // The character that starts a playlist: picked in the grid, or the token put on the Jooki while the
+  // sheet is open (watchToken). opts.story: the sheet opens for a story that just arrived; opts.cover:
+  // the book's cover, which becomes the picture of a token of its own (coverToToken).
+  function charPickerModal(p, opts) {
+    opts = opts || {};
+    var chosen = p.star || null, live = null, watch = null;
+    function arm() {
+      if (watch) watch.stop();
+      watch = watchToken(function (sid) { chosen = sid; live = sid; renderModal(); arm(); });
+    }
+    arm();
+    function save() {
+      watch.stop();
+      var star = chosen || null, changed = star !== (p.star || null);
+      if (changed) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: star || false } });
+      closeModal();
+      if (star && opts.cover) coverToToken(star, opts.cover, function (ok) { if (ok) toast(t('cover_set', charName(star))); });
+    }
     openModal({
+      onclose: function () { watch.stop(); },
       render: function () {
         var other = chosen ? playlistOfChar(chosen) : null;
         if (other && other.id === p.id) other = null;
-        return [h('h3', null, t('token_for')), h('p', { class: 'small muted' }, t('token_help')),
-          charGrid(chosen, p.id, function (id) { chosen = id; }, true),
+        return [h('h3', null, opts.story ? t('story_token_t') : t('token_for')), h('p', { class: 'small muted' }, opts.story ? t('story_token_help') : t('token_help')),
+          h('p', { class: 'small tokwait' + (live ? ' accent-text' : ' muted'), 'data-k': 'tokwait' }, live ? t('token_seen', charName(live)) : t('token_live')),
+          charGrid(chosen, p.id, function (id) { chosen = id; live = null; }, true),
           other ? h('div', { class: 'banner', style: 'margin-top:12px' }, t('token_moved', other.title || '—')) : null,
-          modalFoot(t('save'), function () {
-            if ((chosen || null) !== (p.star || null)) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: chosen || false } });
-            closeModal();
-          }, { k: 'charsave' })];
+          h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, opts.story ? t('later') : t('cancel')),
+            h('button', { class: 'btn primary', 'data-k': 'charsave', onclick: save }, t('save')))];
       }
     });
   }
@@ -2089,7 +2266,31 @@
         : !shown.length ? h('div', { class: 'card empty' }, t('tok_no_match'))
         : h('div', { class: 'chargrid' }, shown.map(tile)),
       h('p', { class: 'small muted', style: 'text-align:center' }, t('tokens_hint')),
-      g.ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null
+      g.ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null,
+      ownTokens().length ? h('div', { class: 'actions', style: 'justify-content:center' }, h('a', { class: 'btn', href: '#/tokens/labels', 'data-k': 'labels' }, icon('tag'), t('labels_btn'))) : null
+    ];
+  }
+  // the tokens of their own (flat tokens, NFC stickers), each with its name, picture and playlist: what a label shows
+  function ownTokens() {
+    return Object.keys(S.db.tokens).filter(function (uid) { return ownParts((S.db.tokens[uid] || {}).starId); })
+      .map(function (uid) { var sid = S.db.tokens[uid].starId; return { uid: uid, sid: sid, name: charName(sid), pl: playlistOfChar(sid) }; })
+      .sort(function (a, b) { return collator().compare(a.name, b.name); });
+  }
+  // Labels for the books: one round label per token of its own, to print, cut out and stick on the
+  // book over its NFC sticker. The size is kept on this phone (oj.label); the page prints itself.
+  var LABEL_MM = [25, 30, 40];
+  function viewLabels() {
+    var mm = Number(lsGet('oj.label')); if (LABEL_MM.indexOf(mm) < 0) mm = 30;
+    var list = ownTokens();
+    return [
+      h('div', { class: 'card noprint' },
+        h('p', { class: 'small muted', style: 'margin:0 0 10px' }, t('labels_help')),
+        h('div', { class: 'row' }, h('span', { class: 'grow' }, t('labels_size')), h('div', { class: 'tabs', style: 'margin:0' }, LABEL_MM.map(function (v) {
+          return h('button', { class: v === mm ? 'on' : '', 'data-k': 'label' + v, onclick: function () { lsSet('oj.label', String(v)); render(); } }, v + ' mm'); }))),
+        h('div', { class: 'actions' }, h('button', { class: 'btn primary', 'data-k': 'print', onclick: function () { window.print(); } }, t('print')))),
+      list.length ? h('div', { class: 'labels', 'data-k': 'labelsheet', style: '--mm:' + mm + 'mm' }, list.map(function (x) {
+        return h('div', { class: 'label', 'data-tag': x.uid }, tokVisual(x.sid, ''), h('div', { class: 'ln' }, x.name), x.pl ? h('div', { class: 'lp' }, x.pl.title || '') : null);
+      })) : h('div', { class: 'card empty' }, t('labels_none'))
     ];
   }
 
@@ -3120,7 +3321,8 @@
       title = p ? (p.title || '—') : t('playlists');
       back = '#/';
       body = viewPlaylist(r.arg);
-    } else if (r.name === 'tokens') { title = t('tokens'); body = viewTokens(); }
+    } else if (r.name === 'tokens' && r.arg === 'labels') { title = t('labels_t'); back = '#/tokens'; body = viewLabels(); }
+    else if (r.name === 'tokens') { title = t('tokens'); body = viewTokens(); }
     else if (r.name === 'library') { title = t('library'); body = viewLibrary(r.arg); }
     else if (r.name === 'settings') {
       var sub = r.arg && SUBS[r.arg] ? r.arg : null;

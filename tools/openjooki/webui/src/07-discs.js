@@ -225,6 +225,7 @@
   // tracks in disc order. Dropped in a playlist: everything goes into that playlist, folder by folder.
   function addDiscs(groups, playlistId) {
     return groups.reduce(function (chain, g) {
+      g.files = takeStoryFiles(g.files, playlistId);   // a story's zip dropped among the files opens as a story
       return chain.then(function () { return discOf(g); }).then(function (d) {
         if (!d) return null;
         if (playlistId || !g.dir) { enqueue(d.files, playlistId || null, { cover: d.cover }); return null; }

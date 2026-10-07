@@ -485,6 +485,74 @@ with sync_playwright() as p:
     names = [J.tracks.get(x, {}).get("userFilename") for x in (J.pls[hand].get("tracks") or [])]
     check("E27 a story's files chosen in no order arrive in name order", names == ["01 Mon conte.mp3", "02 Mon conte.mp3"], names)
     check("E27 ... and their playlist becomes an audiobook", J.pls[hand].get("audiobook") is True, J.pls[hand])
+    pg.keyboard.press("Escape")
+    # E28 a story received as one file (the studio's zip: pages, cover, story.json) opened with "Open a story";
+    # the token put on the Jooki while the sheet waits starts it, and the cover becomes the token's picture
+    import zipfile, zlib, struct
+    def png(w, h, rgb):   # a plain PNG the browser can draw (no PIL on the bench)
+        raw = b"".join(b"\0" + bytes(rgb) * w for _ in range(h))
+        def chunk(k, d): return struct.pack(">I", len(d)) + k + d + struct.pack(">I", zlib.crc32(k + d) & 0xffffffff)
+        return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
+    zpath = os.path.join(tempfile.mkdtemp(), "Mamie.zip")
+    with zipfile.ZipFile(zpath, "w", zipfile.ZIP_STORED) as z:
+        z.writestr("02 Mamie.mp3", open("media/song2.mp3", "rb").read() + b"zip2"); z.writestr("01 Mamie.mp3", open("media/song1.mp3", "rb").read() + b"zip1")
+        z.writestr("cover.png", png(60, 80, (200, 40, 40))); z.writestr("story.json", json.dumps({"jookistory": 1, "title": "Le conte de Mamie", "pages": 2}))
+        z.writestr("__MACOSX/._01 Mamie.mp3", b"junk")
+    pg.goto(URL + "/"); pg.wait_for_selector("[data-k=storyopen]", timeout=15000)
+    check("E28 the playlists page offers 'Ouvrir une histoire' next to Jookistory",
+          pg.locator(".plgrid [data-k=story] + [data-k=storyopen]").count() == 1 and "Ouvrir une histoire" in pg.locator("[data-k=storyopen]").inner_text(), pg.locator("[data-k=storyopen]").inner_text())
+    pg.set_input_files("[data-k=storyfile]", zpath)
+    pg.wait_for_selector("[data-k=tokwait]", timeout=15000)
+    mamie = J.wait(lambda: pl_by_title("Le conte de Mamie"), 10)
+    B.poll(lambda: len(J.pls[mamie].get("tracks") or []) >= 2 and not pg.locator(".up.uploading, .up.processing").count(), 60, every=0.25)
+    names = [J.tracks.get(x, {}).get("userFilename") for x in J.pls[mamie]["tracks"]]
+    check("E28 the zip becomes a playlist named by story.json, its pages in order, an audiobook, opened on the page",
+          names == ["01 Mamie.mp3", "02 Mamie.mp3"] and J.pls[mamie].get("audiobook") is True and pg.url.endswith("/#/p/" + mamie), (names, J.pls[mamie], pg.url))
+    check("E28 ... and the sheet asks which token starts it, waiting for one on the Jooki",
+          "Quel jeton lance cette histoire" in pg.locator(".sheet h3").inner_text() and "J'attends un jeton" in pg.locator("[data-k=tokwait]").inner_text(), pg.locator(".sheet").inner_text()[:200])
+    sticker = "04AABBCCDDEE01"
+    J.nfc_foreign(sticker); J.wait(lambda: sticker in J.tokens)
+    pg.wait_for_function("document.querySelector('[data-char=\"tag.%s\"].sel') !== null" % sticker, timeout=10000)
+    check("E28 an NFC sticker put on the Jooki is picked by itself", "Jeton vu" in pg.locator("[data-k=tokwait]").inner_text(), pg.locator("[data-k=tokwait]").inner_text())
+    pg.click("[data-k=charsave]")
+    J.wait(lambda: J.pls[mamie].get("star") == "tag." + sticker, 5)
+    R.expect("E28 Save: the sticker starts the story, and the cover is its picture", lambda: str(J.tokens.get(sticker, {}).get("image", "")).startswith("/artwork/tok_" + sticker), 15, lambda: J.tokens.get(sticker))
+    img = urllib.request.urlopen(URL + J.tokens[sticker]["image"], timeout=10).read()
+    check("E28 ... a 128 px PNG the page can show", img[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", img[16:24]) == (128, 128), (len(img), img[:24]))
+    # E29 the same from the studio (another tab) with the cover, a flat token put on; the sheet picks it, Later leaves everything as it is
+    cover64 = base64.b64encode(png(40, 50, (30, 90, 200))).decode()
+    hand_cover = """([origin, title, pages, cover]) => {
+      const files = pages.map((b, i) => ({ name: '0' + (i + 1) + ' ' + title + '.mp3', blob: new Blob([Uint8Array.from(atob(b), c => c.charCodeAt(0))], { type: 'audio/mpeg' }) }));
+      const cv = { name: 'cover.jpg', blob: new Blob([Uint8Array.from(atob(cover), c => c.charCodeAt(0))], { type: 'image/png' }) };
+      window.dispatchEvent(new MessageEvent('message', { origin: origin, data: { type: 'oj-story', v: 2, title: title, files: files, cover: cv } }));
+    }"""
+    pg.goto(URL + "/"); pg.wait_for_selector("[data-k=story]", timeout=15000)
+    pg.evaluate(hand_cover, ["https://guillain-rdcde.github.io", "Petit monstre", pages64, cover64])
+    pg.wait_for_selector("[data-k=tokwait]", timeout=15000)
+    monstre = J.wait(lambda: pl_by_title("Petit monstre"), 10)
+    flat = "04A1B2C3D49C77"
+    J.nfc(flat, "200"); J.wait(lambda: flat in J.tokens)
+    pg.wait_for_function("document.querySelector('[data-char=\"flat.%s\"].sel') !== null" % flat, timeout=10000)
+    J.nfc_off(); J.wait(lambda: not J.nfc_state)
+    check("E29 a flat token put on the Jooki is picked for a story from the studio", pg.locator("[data-char='flat.%s'].sel" % flat).count() == 1)
+    later = pg.locator(".sheet .foot button").first
+    check("E29 the sheet's first button says 'Plus tard'", later.inner_text().strip() == "Plus tard", later.inner_text())
+    later.click(); J.barrier()
+    check("E29 Later: no token, no picture", not J.pls[monstre].get("star") and not J.tokens[flat].get("image"), (J.pls[monstre], J.tokens[flat]))
+    B.poll(lambda: len(J.pls[monstre].get("tracks") or []) >= 2 and not pg.locator(".up.uploading, .up.processing").count(), 60, every=0.25)
+    pg.click("[data-k=tokbtn]"); pg.wait_for_selector("[data-k=tokwait]")
+    J.nfc(flat, "200"); pg.wait_for_function("document.querySelector('[data-char=\"flat.%s\"].sel') !== null" % flat, timeout=10000); J.nfc_off()
+    pg.click("[data-k=charsave]")
+    R.expect("E29 the playlist's own token sheet also takes a token put on the Jooki", lambda: J.pls[monstre].get("star") == "flat." + flat, 5, lambda: J.pls[monstre])
+    # E30 labels for the books: one round label per token of its own, with its name and its story
+    pg.goto(URL + "/#/tokens"); pg.wait_for_selector("[data-k=labels]", timeout=15000)
+    pg.click("[data-k=labels]"); pg.wait_for_selector("[data-k=labelsheet]", timeout=10000)
+    tags = [e.get_attribute("data-tag") for e in pg.locator(".label").all()]
+    txt = pg.locator("[data-k=labelsheet]").inner_text()
+    check("E30 the labels page shows one label per token of its own, with the story it starts",
+          sticker in tags and flat in tags and "Le conte de Mamie" in txt and "Petit monstre" in txt and pg.locator("[data-k=label30].on").count() == 1, (tags, txt))
+    pg.click("[data-k=label40]"); pg.wait_for_selector("[data-k=label40].on")
+    check("E30 the size is a choice (40 mm)", "--mm:40mm" in (pg.get_attribute("[data-k=labelsheet]", "style") or "") and pg.locator("[data-k=print]").count() == 1, pg.get_attribute("[data-k=labelsheet]", "style"))
     # E14 offline / reconnect
     B.kill_brokers()
     pg.wait_for_function("document.querySelector('.conn') && !document.querySelector('.conn').classList.contains('on')", timeout=20000)

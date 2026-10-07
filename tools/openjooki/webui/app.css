@@ -478,3 +478,18 @@ button.srow:disabled { opacity: .5; cursor: default; }
 .libcell span { font-size: 11px; color: var(--muted); line-height: 1.15; text-align: center; width: 100%; overflow: hidden;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .libempty { text-align: center; padding: 40px 16px; }
+
+/* ---------- labels for the books (#/tokens/labels): round labels of --mm, printed as they are */
+.labels { display: grid; grid-template-columns: repeat(auto-fill, calc(var(--mm) + 6mm)); gap: 6mm; justify-content: center; padding: 8px 0; }
+.label { width: calc(var(--mm) + 6mm); height: calc(var(--mm) + 6mm); border-radius: 50%; border: 1px dashed var(--line); background: #fff; color: #1f1d1a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 2mm; text-align: center; overflow: hidden; box-sizing: border-box; }
+.label .tok { width: 44%; height: 44%; background: transparent; }
+.label .ln { font-weight: 700; font-size: 11px; line-height: 1.1; max-width: 90%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.label .lp { font-size: 9px; color: #6d675f; line-height: 1.1; max-width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+@media print {
+  .topbar, .nav, .player, .toasts, .noprint, .banner, .conn { display: none !important; }
+  body, html { background: #fff !important; color: #000 !important; }
+  .shell, main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+  .labels { gap: 4mm; justify-content: start; }
+  .label { border-color: #bbb; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

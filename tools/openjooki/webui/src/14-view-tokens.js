@@ -108,7 +108,31 @@
         : !shown.length ? h('div', { class: 'card empty' }, t('tok_no_match'))
         : h('div', { class: 'chargrid' }, shown.map(tile)),
       h('p', { class: 'small muted', style: 'text-align:center' }, t('tokens_hint')),
-      g.ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null
+      g.ids.some(foreignUid) ? h('p', { class: 'small muted', style: 'text-align:center' }, t('foreign_hint')) : null,
+      ownTokens().length ? h('div', { class: 'actions', style: 'justify-content:center' }, h('a', { class: 'btn', href: '#/tokens/labels', 'data-k': 'labels' }, icon('tag'), t('labels_btn'))) : null
+    ];
+  }
+  // the tokens of their own (flat tokens, NFC stickers), each with its name, picture and playlist: what a label shows
+  function ownTokens() {
+    return Object.keys(S.db.tokens).filter(function (uid) { return ownParts((S.db.tokens[uid] || {}).starId); })
+      .map(function (uid) { var sid = S.db.tokens[uid].starId; return { uid: uid, sid: sid, name: charName(sid), pl: playlistOfChar(sid) }; })
+      .sort(function (a, b) { return collator().compare(a.name, b.name); });
+  }
+  // Labels for the books: one round label per token of its own, to print, cut out and stick on the
+  // book over its NFC sticker. The size is kept on this phone (oj.label); the page prints itself.
+  var LABEL_MM = [25, 30, 40];
+  function viewLabels() {
+    var mm = Number(lsGet('oj.label')); if (LABEL_MM.indexOf(mm) < 0) mm = 30;
+    var list = ownTokens();
+    return [
+      h('div', { class: 'card noprint' },
+        h('p', { class: 'small muted', style: 'margin:0 0 10px' }, t('labels_help')),
+        h('div', { class: 'row' }, h('span', { class: 'grow' }, t('labels_size')), h('div', { class: 'tabs', style: 'margin:0' }, LABEL_MM.map(function (v) {
+          return h('button', { class: v === mm ? 'on' : '', 'data-k': 'label' + v, onclick: function () { lsSet('oj.label', String(v)); render(); } }, v + ' mm'); }))),
+        h('div', { class: 'actions' }, h('button', { class: 'btn primary', 'data-k': 'print', onclick: function () { window.print(); } }, t('print')))),
+      list.length ? h('div', { class: 'labels', 'data-k': 'labelsheet', style: '--mm:' + mm + 'mm' }, list.map(function (x) {
+        return h('div', { class: 'label', 'data-tag': x.uid }, tokVisual(x.sid, ''), h('div', { class: 'ln' }, x.name), x.pl ? h('div', { class: 'lp' }, x.pl.title || '') : null);
+      })) : h('div', { class: 'card empty' }, t('labels_none'))
     ];
   }
 

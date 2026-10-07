@@ -166,7 +166,8 @@
   // Files chosen together go in name order (a phone hands them over in no order). The pages of a story made
   // in Jookistory ("01 Title.mp3", "02 Title.mp3"…) make their playlist an audiobook: resumed, never shuffled.
   function pickedFiles(files, playlistId) {
-    var list = Array.prototype.slice.call(files).sort(function (a, b) { return collator().compare(a.name, b.name); });
+    var list = takeStoryFiles(files, playlistId).sort(function (a, b) { return collator().compare(a.name, b.name); });
+    if (!list.length) return;
     var m = list.map(function (f) { return /^(\d\d) (.+)\.mp3$/i.exec(f.name); });
     var story = list.length > 1 && m.every(function (x, i) { return x && x[2] === m[0][2] && Number(x[1]) === i + 1; });
     var p = playlistId && pls()[playlistId];
@@ -174,7 +175,7 @@
     enqueue(list, playlistId);
   }
   function fileButton(label, playlistId, primary) {
-    return pickerButton({ label: label, primary: primary, input: { accept: 'audio/*,.mp3,.m4a,.m4b,.aac,.ogg,.oga,.flac,.wav,.wma' },
+    return pickerButton({ label: label, primary: primary, input: { accept: 'audio/*,.mp3,.m4a,.m4b,.aac,.ogg,.oga,.flac,.wav,.wma,.zip,application/zip' },
       onFiles: function (files) { pickedFiles(files, playlistId); } });
   }
   function dropZone(playlistId) {

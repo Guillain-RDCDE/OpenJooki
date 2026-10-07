@@ -92,6 +92,27 @@
   .seg{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
   .seg button.on{background:var(--soft);color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);font-weight:700}
 
+  .tiles.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .tiles .blank{width:38px;height:38px;border-radius:50%;background:var(--panel);box-shadow:inset 0 0 0 2px var(--line)}
+  /* the sound effects, tapped while a page is read */
+  .fx{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:8px 0 12px}
+  .fx button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 6px;border-radius:12px;border:none;background:var(--panel2);font-size:.72em;font-weight:600;line-height:1.1;cursor:pointer;transition:transform .08s,background .2s}
+  .fx button:active{transform:scale(.94)} .fx button.hit{background:var(--soft);color:var(--accent)}
+  .fx img{width:30px;height:30px}
+  /* the cover of the book */
+  .coverrow{display:flex;align-items:center;gap:12px}
+  .coverrow img{width:64px;height:84px;object-fit:cover;border-radius:8px;box-shadow:var(--shadow);flex:none}
+  .coverrow .none{width:64px;height:84px;border-radius:8px;background:var(--panel2);display:flex;align-items:center;justify-content:center;flex:none}
+  .coverrow .none img{width:34px;height:34px;box-shadow:none;object-fit:contain}
+  .coverrow .btn{margin:0;padding:11px}
+  .coverrow .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;font-family:var(--round);font-weight:700}
+  .switch input{width:50px;height:30px;appearance:none;-webkit-appearance:none;background:var(--ring);border-radius:15px;position:relative;cursor:pointer;flex:none;margin:0;transition:background .2s}
+  .switch input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+  .switch input:checked{background:var(--accent)} .switch input:checked::after{left:23px}
+  .switch small{display:block;font:400 .82em/1.3 system-ui,sans-serif;color:var(--muted)}
+  .qr{display:block;width:200px;height:200px;margin:8px auto;background:#fff;border-radius:12px;padding:6px}
+  .addr{text-align:center;font-weight:600;overflow-wrap:anywhere;margin:4px 0 0}
   canvas{display:block;width:100%;height:90px;margin-bottom:10px}
   input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0 12px}
   label{font-weight:600;display:flex;justify-content:space-between;gap:10px}
@@ -130,6 +151,19 @@
       <button class="btn" id="start" type="button" data-t="start">Start</button>
     </div>
     <button class="btn quiet" id="test0" type="button" data-t="test">Test my voice (10 seconds)</button>
+    <button class="btn quiet" id="invite0" type="button" data-t="invite">Invite someone far away to read</button>
+  </div>
+
+  <div id="invite" hidden>
+    <div class="card hero">
+      <img src="img/studio/love_letter.webp" alt="" width="92" height="92">
+      <p class="lead" data-t="invite_lead">Grandma, Grandpa, a godmother: they open this page on their phone and read. Then they send you the story.</p>
+      <img class="qr" src="img/studio/qr.svg" alt="" width="200" height="200">
+      <p class="addr">guillain-rdcde.github.io/OpenJooki/studio.html</p>
+      <button class="btn" id="invite_share" type="button" data-t="invite_share">Send the link</button>
+      <p class="tiny" data-t="invite_hint">They tap Send or save the story: you get one file. On the Jooki's page: Jookistory, Open a story.</p>
+    </div>
+    <button class="btn quiet" id="invite_back" type="button" data-t="back">Back</button>
   </div>
 
   <div id="story" hidden>
@@ -156,6 +190,27 @@
         <button type="button" data-z="0" data-t="pause_0">Short (1 s)</button>
         <button type="button" data-z="1" data-t="pause_1">Normal (2 s)</button>
         <button type="button" data-z="2" data-t="pause_2">Long (4 s)</button>
+      </div>
+    </div>
+    <div class="card">
+      <b data-t="amb_title">A sound behind the voice</b>
+      <div class="tiles" id="ambs">
+        <button type="button" data-a="none"><span class="blank" aria-hidden="true"></span><span data-t="amb_none">None</span></button>
+        <button type="button" data-a="rain"><img src="img/studio/cloud_with_rain.webp" alt="" width="38" height="38"><span data-t="amb_rain">Rain</span></button>
+        <button type="button" data-a="forest"><img src="img/studio/evergreen_tree.webp" alt="" width="38" height="38"><span data-t="amb_forest">Forest</span></button>
+        <button type="button" data-a="night"><img src="img/studio/night_with_stars.webp" alt="" width="38" height="38"><span data-t="amb_night">Night</span></button>
+      </div>
+      <label class="switch"><span><span data-t="sleep_t">Falls asleep at the end</span><small data-t="sleep_x">No sound after the last page: the voice fades away slowly.</small></span><input type="checkbox" id="sleepend"></label>
+    </div>
+    <div class="card">
+      <b data-t="cover_title">The book's cover</b>
+      <div class="coverrow" style="margin-top:8px">
+        <span id="coverbox" class="none"><img src="img/studio/camera.webp" alt="" width="34" height="34"></span>
+        <div class="grow">
+          <label class="btn ghost" id="coverbtn" style="cursor:pointer"><span data-t="cover_take">Take a photo</span><input type="file" id="coverfile" accept="image/*" capture="environment" hidden></label>
+          <button class="btn quiet" id="coverdel" type="button" data-t="cover_del" hidden>Remove</button>
+          <p class="tiny" data-t="cover_hint" style="margin:0">It becomes the picture of the token that starts the story.</p>
+        </div>
       </div>
     </div>
     <button class="btn ghost" id="listen_all" type="button" hidden></button>
@@ -194,6 +249,13 @@
       <p class="tiny" style="margin:0 0 6px" data-t="readlabel">Read aloud:</p>
       <p class="read" data-t="sentence"></p>
       <div class="bar"><i id="prog"></i></div>
+    </div>
+    <div class="fx" id="fx" hidden>
+      <button type="button" data-f="knock"><img src="img/studio/house.webp" alt="" width="30" height="30"><span data-t="fx_knock">Knock</span></button>
+      <button type="button" data-f="thunder"><img src="img/studio/cloud_with_lightning.webp" alt="" width="30" height="30"><span data-t="fx_thunder">Thunder</span></button>
+      <button type="button" data-f="owl"><img src="img/studio/owl.webp" alt="" width="30" height="30"><span data-t="fx_owl">Owl</span></button>
+      <button type="button" data-f="magic"><img src="img/studio/magic_wand.webp" alt="" width="30" height="30"><span data-t="fx_magic">Magic</span></button>
+      <button type="button" data-f="wind"><img src="img/studio/wind_face.webp" alt="" width="30" height="30"><span data-t="fx_wind">Wind</span></button>
     </div>
     <button class="btn" id="stop" type="button" data-t="page_done" hidden>Page finished</button>
     <button class="btn quiet" id="cancel" type="button" data-t="cancel">Cancel</button>
@@ -235,8 +297,9 @@
     <p class="notice" id="jmsg" aria-live="polite" hidden></p>
     <button class="btn" id="share" type="button" data-t="share">Send or save the story</button>
     <div id="links" hidden>
-      <p style="margin:14px 0 0;font-weight:600" data-t="files_t">Save the files:</p>
+      <p style="margin:14px 0 0;font-weight:600" data-t="files_t">Save the story:</p>
       <div id="linklist"></div>
+      <details><summary data-t="pages_sum">The pages one by one</summary><div id="pagelist"></div></details>
     </div>
     <p class="tiny center" data-t="done_hint" style="margin-top:12px"></p>
     <button class="btn ghost" id="back2" type="button" data-t="back_story">Back to the story</button>
@@ -316,18 +379,18 @@
 
   // ---- arranging the voice -----------------------------------------------
 
-  // keeps the spoken part, with a short margin on each side
-  function trim(x, sr) {
+  // the spoken part, with a short margin on each side: [from, to] in samples
+  function trimBounds(x, sr) {
     var n = Math.max(1, Math.round(FRAME_S * sr));
     var e = frameEnergies(x, sr, 0, x.length), top = -200;
     for (var i = 0; i < e.length; i++) top = Math.max(top, db(e[i]));
     var thr = Math.max(top - 30, -60), first = -1, last = -1;
     for (i = 0; i < e.length; i++) if (db(e[i]) > thr) { if (first < 0) first = i; last = i; }
-    if (first < 0) return x;
+    if (first < 0) return [0, x.length];
     var margin = Math.round(0.2 * sr);
-    var a = Math.max(0, first * n - margin), b = Math.min(x.length, (last + 1) * n + margin);
-    return x.subarray(a, b);
+    return [Math.max(0, first * n - margin), Math.min(x.length, (last + 1) * n + margin)];
   }
+  function trim(x, sr) { var ab = trimBounds(x, sr); return x.subarray(ab[0], ab[1]); }
 
   // same loudness for every reader, and no peak that would make a child jump
   function level(x, sr) {
@@ -356,15 +419,25 @@
     return out;
   }
 
+  // the sound effects tapped while the page was read, put where they were tapped (fx: [{t, kind}], t in
+  // seconds of the take; `from` = where the kept part starts in the take, in samples at sr)
+  function withFx(out, fx, from, sr) {
+    (fx || []).forEach(function (m) {
+      var at = Math.round((m.t - from / sr) * OUT_SR);
+      if (at > -OUT_SR && at < out.length) mixInto(out, effect(m.kind, OUT_SR), at, 1);
+    });
+    return fx && fx.length ? clamp1(out) : out;
+  }
+
   // removes the rumble, evens the voice out, and brings it to OUT_SR
-  function polish(read, sr) {
-    var x = trim(read, sr);
+  function polish(read, sr, fx) {
+    var ab = trimBounds(read, sr), x = read.subarray(ab[0], ab[1]);
     var OAC = typeof window !== 'undefined' && (window.OfflineAudioContext || window.webkitOfflineAudioContext);
-    function plain() { return level(resample(x, sr, OUT_SR), OUT_SR); }
+    function plain() { return withFx(level(resample(x, sr, OUT_SR), OUT_SR), fx, ab[0], sr); }
     if (!OAC) return Promise.resolve(plain());
     return new Promise(function (resolve) {
       var done = false;
-      function finish(arr) { if (!done) { done = true; resolve(arr ? level(arr, OUT_SR) : plain()); } }
+      function finish(arr) { if (!done) { done = true; resolve(arr ? withFx(level(arr, OUT_SR), fx, ab[0], sr) : plain()); } }
       try {
         var oc = new OAC(1, Math.max(1, Math.ceil(x.length * OUT_SR / sr)), OUT_SR);
         var buf = oc.createBuffer(1, x.length, sr);
@@ -430,6 +503,121 @@
   }
   function silence(sr, pause) { return new Float32Array(Math.round(pause * sr)); }
 
+  // ---- ambiences and sound effects, made here too ------------------------
+
+  function rng(seed) { var s = (seed || 1) % 2147483647; if (s <= 0) s += 2147483646; return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; }
+  // noise through a one-pole low-pass: k near 1 = deep and soft, near 0 = hissy
+  function noise(n, rnd, k, amp) { var out = new Float32Array(n), y = 0; for (var i = 0; i < n; i++) { y += (1 - k) * (rnd() * 2 - 1 - y); out[i] = y * amp; } return out; }
+  // adds fn(k) for k = 0..len-1 into out from `at` (fn is called in order: it may keep a phase)
+  function envAdd(out, at, len, fn) { var s = Math.max(0, Math.round(at)), e = Math.min(out.length, s + Math.round(len)); for (var i = s; i < e; i++) out[i] += fn(i - s); }
+  function rms(x) { var s = 0; for (var i = 0; i < x.length; i++) s += x[i] * x[i]; return Math.sqrt(s / (x.length || 1)); }
+  function scaleTo(x, target) { var g = target / (rms(x) || 1); for (var i = 0; i < x.length; i++) x[i] *= g; return x; }
+  function clamp1(x) { for (var i = 0; i < x.length; i++) { var v = x[i]; x[i] = v > 1 ? 1 : v < -1 ? -1 : v; } return x; }
+  function mixInto(out, snd, at, gain) { var s = Math.max(0, at), e = Math.min(out.length, at + snd.length); for (var i = s; i < e; i++) out[i] += snd[i - at] * gain; return out; }
+  var AMBS = ['rain', 'forest', 'night'];
+  var AMB_RMS = 0.016;      // about -36 dB: well under the voice (-19 dB), heard in the silences
+  var SLEEP_S = 15;         // a story that falls asleep: the ambience goes on this long after the last page, fading
+  // kind, sr, seconds, seed -> rain on the window, a forest with birds, a summer night with crickets
+  function ambience(kind, sr, seconds, seed) {
+    var n = Math.round(seconds * sr), rnd = rng(seed || 7), out, i, t;
+    if (kind === 'rain') {
+      out = noise(n, rnd, 0.55, 0.4);
+      var deep = noise(n, rnd, 0.97, 3);
+      for (i = 0; i < n; i++) out[i] += deep[i];
+      for (t = 0; t < n; t += Math.round((0.004 + rnd() * 0.02) * sr)) {   // the drops: short bright ticks
+        (function (w, a, len) { envAdd(out, t, len, function (k) { return a * Math.sin(w * k) * (1 - k / len); }); })(2 * Math.PI * (2000 + rnd() * 5000) / sr, 0.05 + rnd() * 0.25, Math.round(0.004 * sr));
+      }
+    } else if (kind === 'forest') {
+      out = noise(n, rnd, 0.992, 1);
+      var slow = 0.12 + rnd() * 0.1;          // the wind swells and falls
+      for (i = 0; i < n; i++) out[i] *= 0.6 + 0.4 * Math.sin(2 * Math.PI * slow * i / sr + 1);
+      scaleTo(out, 0.08);
+      for (t = (1 + rnd()) * sr; t < n - sr; t += (1.2 + rnd() * 2.5) * sr) {   // birds: phrases of 3 to 6 sweeping notes
+        var notes = 3 + Math.floor(rnd() * 4), f1 = 2400 + rnd() * 1800, at = t, amp = 0.25 + rnd() * 0.3;
+        for (var q = 0; q < notes; q++) {
+          (function (fa, fb, l, a0) { var ph = 0; envAdd(out, at, l, function (k) { var p = k / l; ph += 2 * Math.PI * (fa + (fb - fa) * p) / sr; return a0 * Math.sin(ph) * Math.sin(Math.PI * p); }); })(f1, f1 * (0.8 + rnd() * 0.5), Math.round((0.05 + rnd() * 0.08) * sr), amp);
+          at += Math.round((0.1 + rnd() * 0.16) * sr);
+        }
+      }
+    } else {   // night: two crickets, and a very soft wind
+      out = noise(n, rnd, 0.995, 1); scaleTo(out, 0.03);
+      [[4300, 27, 0.55, 0.9], [4700, 31, 0.7, 1.3]].forEach(function (c) {
+        for (t = rnd() * sr; t < n; t += (c[3] + rnd() * 0.6) * sr) {
+          (function (l, w, m) { envAdd(out, t, l, function (k) { return 0.3 * Math.sin(w * k) * Math.max(0, Math.sin(m * k)) * Math.sin(Math.PI * k / l); }); })(Math.round((c[2] + rnd() * 0.2) * sr), 2 * Math.PI * c[0] / sr, 2 * Math.PI * c[1] / sr);
+        }
+      });
+    }
+    return clamp1(scaleTo(out, AMB_RMS));
+  }
+  var FXS = ['knock', 'thunder', 'owl', 'magic', 'wind'];
+  function effect(kind, sr) {
+    var rnd = rng(3), out, n, i;
+    function tone(at, len, f, amp, decay, vib) {
+      var ph = 0;
+      envAdd(out, at, len, function (k) { var p = k / len; ph += 2 * Math.PI * (f + (vib ? 8 * Math.sin(2 * Math.PI * 5 * k / sr) : 0)) / sr;
+        return amp * Math.sin(ph) * (decay ? Math.exp(-p * decay) : Math.sin(Math.PI * p)) * Math.min(1, k / (0.01 * sr)); });
+    }
+    if (kind === 'knock') {
+      out = new Float32Array(Math.round(0.9 * sr));
+      [0, 0.22, 0.44].forEach(function (s) {
+        tone(s * sr, 0.18 * sr, 95, 1, 9);
+        var burst = noise(Math.round(0.03 * sr), rnd, 0.3, 1);
+        envAdd(out, s * sr, burst.length, function (k) { return burst[k] * (1 - k / burst.length) * 0.8; });
+      });
+    } else if (kind === 'thunder') {
+      n = Math.round(3 * sr); out = noise(n, rnd, 0.985, 1);
+      for (i = 0; i < n; i++) { var p = i / n; out[i] *= Math.min(1, i / (0.08 * sr)) * (Math.exp(-p * 3) + 0.5 * Math.exp(-Math.pow((p - 0.35) / 0.08, 2))); }
+    } else if (kind === 'owl') {
+      out = new Float32Array(Math.round(1.6 * sr));
+      tone(0, 0.35 * sr, 380, 1, 0, true); tone(0, 0.35 * sr, 760, 0.25, 0, true);
+      tone(0.55 * sr, 0.6 * sr, 360, 1, 0, true); tone(0.55 * sr, 0.6 * sr, 720, 0.25, 0, true);
+    } else if (kind === 'magic') {
+      out = new Float32Array(Math.round(1.8 * sr));
+      [1046.5, 1318.5, 1568, 2093, 2637, 3136].forEach(function (f, q) { strike(out, sr, q * 0.07, f, 4, 1, [[1, 1, 1], [2, 0.3, 1.6], [3.01, 0.12, 2.4]]); });
+      var sh = noise(Math.round(0.6 * sr), rnd, 0.1, 1);
+      envAdd(out, 0, sh.length, function (k) { return sh[k] * 0.15 * Math.sin(Math.PI * k / sh.length); });
+    } else {   // wind: one gust
+      n = Math.round(2.6 * sr); out = new Float32Array(n);
+      var y = 0;
+      for (i = 0; i < n; i++) { var p2 = i / n, k2 = 0.997 - 0.03 * Math.sin(Math.PI * p2); y += (1 - k2) * (rnd() * 2 - 1 - y); out[i] = y * Math.sin(Math.PI * p2); }
+    }
+    var peak = 0;
+    for (i = 0; i < out.length; i++) peak = Math.max(peak, Math.abs(out[i]));
+    var g = 0.45 / (peak || 1);
+    for (i = 0; i < out.length; i++) out[i] *= g;
+    return out;
+  }
+
+  // ---- one file for the whole story ----------------------------------------
+
+  var CRC_T = (function () { var t = new Int32Array(256); for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c; } return t; })();
+  function crc32(b) { var c = -1; for (var i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; }
+  // A ZIP with the files stored as they are (an MP3 does not shrink): one file to send by message, that
+  // any phone or computer opens, and that the Jooki's page reads as a story. [{name, bytes}] -> bytes
+  function zipStore(entries) {
+    var enc = new TextEncoder(), parts = [], central = [], offset = 0, now = new Date();
+    var dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1), dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    function u16(v) { return [v & 255, (v >> 8) & 255]; }
+    function u32(v) { return [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255]; }
+    entries.forEach(function (e) {
+      var name = enc.encode(e.name), crc = crc32(e.bytes), size = e.bytes.length;
+      var head = new Uint8Array([].concat(u32(0x04034b50), u16(20), u16(0x800), u16(0), u16(dosTime), u16(dosDate), u32(crc), u32(size), u32(size), u16(name.length), u16(0)));
+      parts.push(head, name, e.bytes);
+      central.push(new Uint8Array([].concat(u32(0x02014b50), u16(20), u16(20), u16(0x800), u16(0), u16(dosTime), u16(dosDate), u32(crc), u32(size), u32(size), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset))), name);
+      offset += head.length + name.length + size;
+    });
+    var cdSize = central.reduce(function (s, c) { return s + c.length; }, 0);
+    var end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(entries.length), u16(entries.length), u32(cdSize), u32(offset), u16(0)));
+    var out = new Uint8Array(offset + cdSize + end.length), at = 0;
+    parts.concat(central, [end]).forEach(function (c) { out.set(c, at); at += c.length; });
+    return out;
+  }
+  function concatBytes(parts) {
+    var n = parts.reduce(function (s, p) { return s + p.length; }, 0), out = new Uint8Array(n), at = 0;
+    parts.forEach(function (p) { out.set(p, at); at += p.length; });
+    return out;
+  }
+
   function join(a, b) { var out = new Uint8Array(a.length + b.length); out.set(a, 0); out.set(b, a.length); return out; }
 
   function wav(x, sr) {
@@ -446,8 +634,9 @@
     return b;
   }
 
-  // An ID3v2.3 tag (UTF-16 text frames), as the Jooki's page writes them: what the Jooki reads from an MP3.
-  function id3(tags) {
+  // An ID3v2.3 tag (UTF-16 text frames, the cover as an APIC frame), as the Jooki's page writes them:
+  // what the Jooki reads from an MP3.
+  function id3(tags, cover) {
     var frames = [];
     Object.keys(tags).forEach(function (id) {
       var v = String(tags[id] || '');
@@ -457,6 +646,12 @@
       for (var i = 0; i < v.length; i++) { b[3 + 2 * i] = v.charCodeAt(i) & 255; b[4 + 2 * i] = v.charCodeAt(i) >> 8; }
       frames.push([id, b]);
     });
+    if (cover && cover.length) {
+      var head = [0].concat('image/jpeg'.split('').map(function (c) { return c.charCodeAt(0); }), [0, 3, 0]);
+      var pic = new Uint8Array(head.length + cover.length);
+      pic.set(head, 0); pic.set(cover, head.length);
+      frames.push(['APIC', pic]);
+    }
     var size = frames.reduce(function (s, f) { return s + 10 + f[1].length; }, 0), out = new Uint8Array(10 + size), at = 10;
     out.set([73, 68, 51, 3, 0, 0, (size >> 21) & 127, (size >> 14) & 127, (size >> 7) & 127, size & 127], 0);
     frames.forEach(function (f) {
@@ -467,10 +662,8 @@
     return out;
   }
 
-  function fileName(title, i) {
-    var clean = String(title).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').replace(/^[ .]+|[ .]+$/g, '');
-    return (i < 9 ? '0' : '') + (i + 1) + ' ' + (clean || 'story') + '.mp3';
-  }
+  function cleanName(title) { return String(title).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').replace(/^[ .]+|[ .]+$/g, '') || 'story'; }
+  function fileName(title, i) { return (i < 9 ? '0' : '') + (i + 1) + ' ' + cleanName(title) + '.mp3'; }
 
   // ---- the three languages (same keys in each) ---------------------------
 
@@ -488,8 +681,17 @@
       n_long: "Long page: I stopped there. Go on with the next page.",
       n_failed: "This page could not be kept. Record it again.",
       done_t: "Your story is ready", pages_1: "1 page", pages_n: "{n} pages",
-      share: "Send or save the story", files_t: "Save the files:",
-      done_hint: "Then, on the Jooki's page: New playlist, Add files, and switch Audiobook on.",
+      share: "Send or save the story", files_t: "Save the story:", pages_sum: "The pages one by one",
+      done_hint: "Then, on the Jooki's page: Open a story, and pick that file.",
+      making: "Preparing page {n} of {m}…",
+      invite: "Invite someone far away to read", invite_share: "Send the link", invite_text: "Read a story aloud for the Jooki, page by page: ",
+      invite_lead: "Grandma, Grandpa, a godmother: they open this page on their phone and read. Then they send you the story.",
+      invite_hint: "They tap Send or save the story: you get one file. On the Jooki's page: Open a story.",
+      amb_title: "A sound behind the voice", amb_none: "None", amb_rain: "Rain", amb_forest: "Forest", amb_night: "Night",
+      sleep_t: "Falls asleep at the end", sleep_x: "No sound after the last page: the voice fades away slowly.",
+      cover_title: "The book's cover", cover_take: "Take a photo", cover_del: "Remove", cover_bad: "This photo could not be read.",
+      cover_hint: "It becomes the picture of the token that starts the story.",
+      fx_knock: "Knock", fx_thunder: "Thunder", fx_owl: "Owl", fx_magic: "Magic", fx_wind: "Wind",
       listen_all: "Listen to the whole story", adv: "Advanced mode", cut: "Cut", more: "Continue",
       pause_title: "The silence before and after the reading", pause_0: "Short (1 s)", pause_1: "Normal (2 s)", pause_2: "Long (4 s)",
       cut_start: "Start", cut_end: "End", cut_hint: "Move the two sliders to remove the start or the end.", keep: "Keep",
@@ -535,8 +737,17 @@
       n_long: "Page longue : je me suis arrêté là. Continue sur la page suivante.",
       n_failed: "Cette page n'a pas pu être gardée. Enregistre-la à nouveau.",
       done_t: "Ton histoire est prête", pages_1: "1 page", pages_n: "{n} pages",
-      share: "Envoyer ou garder l'histoire", files_t: "Garde les fichiers :",
-      done_hint: "Ensuite, sur la page du Jooki : Nouvelle playlist, Ajouter des fichiers, et active Livre audio.",
+      share: "Envoyer ou garder l'histoire", files_t: "Garde l'histoire :", pages_sum: "Les pages une par une",
+      done_hint: "Ensuite, sur la page du Jooki : Ouvrir une histoire, et choisis ce fichier.",
+      making: "Je prépare la page {n} sur {m}…",
+      invite: "Inviter quelqu'un de loin à lire", invite_share: "Envoyer le lien", invite_text: "Lis une histoire à voix haute pour le Jooki, page par page : ",
+      invite_lead: "Mamie, Papi, une marraine : ils ouvrent cette page sur leur téléphone et lisent. Puis ils t'envoient l'histoire.",
+      invite_hint: "Ils appuient sur Envoyer ou garder l'histoire : tu reçois un seul fichier. Sur la page du Jooki : Ouvrir une histoire.",
+      amb_title: "Un son derrière la voix", amb_none: "Aucun", amb_rain: "Pluie", amb_forest: "Forêt", amb_night: "Nuit",
+      sleep_t: "S'endort à la fin", sleep_x: "Pas de son après la dernière page : la voix s'éloigne doucement.",
+      cover_title: "La couverture du livre", cover_take: "Prendre une photo", cover_del: "Enlever", cover_bad: "Cette photo n'a pas pu être lue.",
+      cover_hint: "Elle devient l'image du jeton qui lance l'histoire.",
+      fx_knock: "Toc toc", fx_thunder: "Tonnerre", fx_owl: "Hibou", fx_magic: "Magie", fx_wind: "Vent",
       listen_all: "Écouter toute l'histoire", adv: "Mode avancé", cut: "Couper", more: "Continuer",
       pause_title: "Le blanc avant et après la lecture", pause_0: "Court (1 s)", pause_1: "Normal (2 s)", pause_2: "Long (4 s)",
       cut_start: "Début", cut_end: "Fin", cut_hint: "Déplace les deux curseurs pour enlever le début ou la fin.", keep: "Garder",
@@ -582,8 +793,17 @@
       n_long: "Lange bladzijde: ik ben daar gestopt. Ga verder op de volgende bladzijde.",
       n_failed: "Deze bladzijde kon niet bewaard worden. Neem ze opnieuw op.",
       done_t: "Je verhaal is klaar", pages_1: "1 bladzijde", pages_n: "{n} bladzijden",
-      share: "Het verhaal versturen of bewaren", files_t: "Bewaar de bestanden:",
-      done_hint: "Daarna, op de pagina van de Jooki: Nieuwe afspeellijst, Bestanden toevoegen, en zet Luisterboek aan.",
+      share: "Het verhaal versturen of bewaren", files_t: "Bewaar het verhaal:", pages_sum: "De bladzijden een voor een",
+      done_hint: "Daarna, op de pagina van de Jooki: Een verhaal openen, en kies dat bestand.",
+      making: "Bladzijde {n} van {m} wordt klaargemaakt…",
+      invite: "Iemand ver weg uitnodigen om voor te lezen", invite_share: "De link versturen", invite_text: "Lees een verhaal voor aan de Jooki, bladzijde per bladzijde: ",
+      invite_lead: "Oma, opa, een meter: ze openen deze pagina op hun telefoon en lezen voor. Daarna sturen ze je het verhaal.",
+      invite_hint: "Ze tikken op Het verhaal versturen of bewaren: je krijgt één bestand. Op de pagina van de Jooki: Een verhaal openen.",
+      amb_title: "Een geluid achter de stem", amb_none: "Geen", amb_rain: "Regen", amb_forest: "Bos", amb_night: "Nacht",
+      sleep_t: "Valt in slaap op het einde", sleep_x: "Geen geluid na de laatste bladzijde: de stem sterft langzaam weg.",
+      cover_title: "De kaft van het boek", cover_take: "Een foto nemen", cover_del: "Weghalen", cover_bad: "Deze foto kon niet gelezen worden.",
+      cover_hint: "Ze wordt het plaatje van het figuurtje dat het verhaal start.",
+      fx_knock: "Klop klop", fx_thunder: "Donder", fx_owl: "Uil", fx_magic: "Magie", fx_wind: "Wind",
       listen_all: "Het hele verhaal beluisteren", adv: "Geavanceerde modus", cut: "Knippen", more: "Verder lezen",
       pause_title: "De stilte voor en na het lezen", pause_0: "Kort (1 s)", pause_1: "Normaal (2 s)", pause_2: "Lang (4 s)",
       cut_start: "Begin", cut_end: "Einde", cut_hint: "Verschuif de twee schuifjes om het begin of het einde weg te halen.", keep: "Bewaren",
@@ -618,18 +838,23 @@
     }
   };
 
-  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, join: join, silence: silence, PAUSES: PAUSES, AFTER_S: AFTER_S, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
+  if (typeof module !== 'undefined') module.exports = { T: T, analyse: analyse, trim: trim, trimBounds: trimBounds, level: level, resample: resample, chime: chime, tail: tail, wav: wav, id3: id3, fileName: fileName, cleanName: cleanName, join: join, silence: silence,
+    ambience: ambience, effect: effect, withFx: withFx, mixInto: mixInto, rms: rms, zipStore: zipStore, crc32: crc32, concatBytes: concatBytes, AMBS: AMBS, FXS: FXS, AMB_RMS: AMB_RMS, SLEEP_S: SLEEP_S,
+    PAUSES: PAUSES, AFTER_S: AFTER_S, ROOM_S: ROOM_S, READ_S: READ_S, OUT_SR: OUT_SR, KBPS: KBPS };
   if (typeof document === 'undefined') return;
 
   // ---- the page ----------------------------------------------------------
 
   var $ = function (id) { return document.getElementById(id); };
   var AC = window.AudioContext || window.webkitAudioContext;
-  var VIEWS = ['intro', 'story', 'cut', 'problem', 'live', 'result', 'done'];
+  var VIEWS = ['intro', 'invite', 'story', 'cut', 'problem', 'live', 'result', 'done'];
   var CHIMES = ['bell', 'carillon', 'box'];
   var VERDICT_CARD = { ok: 'ok', loud: 'bad', far: 'warn', noisy: 'warn', silent: 'bad' };
-  var story = null;          // {title, chime, pause, pages: [{mp3: Uint8Array, dur, verdict, pending, orig, cut}]}
+  var STUDIO_URL = 'https://guillain-rdcde.github.io/OpenJooki/studio.html';
+  var story = null;          // {title, chime, pause, amb, sleep, cover: {type, bytes} | null, pages: [{mp3: Uint8Array, dur, verdict, pending, orig, cut}]}
                              // a cut page keeps what was recorded in orig and its two cut points in cut
+  var coverUrl = null;       // the cover shown on the story screen
+  var doneZip = null;        // the finished story as one file
   var tails = {}, tailJobs = {};   // the ends of page as MP3, by sound and pause, made once
   var cutting = null;        // the page being cut: {index, page, pcm, dur, peaks}
   var adv = false;
@@ -685,7 +910,7 @@
 
   function saveDraft() {
     var v = story ? {
-      title: story.title, chime: story.chime, pause: story.pause,
+      title: story.title, chime: story.chime, pause: story.pause, amb: story.amb, sleep: !!story.sleep, cover: story.cover || null,
       pages: story.pages.filter(function (p) { return p.mp3; }).map(function (p) { return { mp3: p.mp3, dur: p.dur, verdict: p.verdict, orig: p.orig || null, cut: p.cut || null }; })
     } : null;
     idb().then(function (d) {
@@ -749,7 +974,9 @@
 
   // ---- listening ---------------------------------------------------------
 
+  var queue = null;          // what plays next ("Listen to the whole story" with an ambience: one page at a time)
   function stopPlaying() {
+    queue = null;
     try { player.pause(); } catch (e) {}
     if (playUrl) { URL.revokeObjectURL(playUrl); playUrl = null; }
     if (playing) { playing = null; refresh(); }
@@ -758,17 +985,60 @@
   function playParts(id, parts, type) {
     if (playing === id) { stopPlaying(); return; }
     stopPlaying();
-    playUrl = URL.createObjectURL(new Blob(parts, { type: type }));
-    player.src = playUrl;
     playing = id;
     refresh();
+    playNow(id, parts, type);
+  }
+  function playNow(id, parts, type) {
+    if (playUrl) URL.revokeObjectURL(playUrl);
+    playUrl = URL.createObjectURL(new Blob(parts, { type: type }));
+    player.src = playUrl;
     var p = player.play();
     if (p && p.catch) p.catch(function () { if (playing === id) stopPlaying(); });
   }
+  // id, then makers: functions giving a Promise of [parts, type], played one after the other
+  function playSeq(id, makers) {
+    if (playing === id) { stopPlaying(); return; }
+    stopPlaying();
+    playing = id; queue = makers.slice(); refresh();
+    playNext(id);
+  }
+  function playNext(id) {
+    if (playing !== id || !queue) return;
+    var make = queue.shift();
+    if (!make) { stopPlaying(); return; }
+    make().then(function (r) { if (playing === id) playNow(id, r[0], r[1]); }, function () { if (playing === id) stopPlaying(); });
+  }
+  player.addEventListener('ended', function () { if (queue) playNext(playing); else stopPlaying(); });
 
   function pageParts(p) {
     var lead = tails['lead-' + story.pause], end = tails[tailKey()];
     return (lead ? [lead] : []).concat([p.mp3], end ? [end] : []);
+  }
+  // An ambience under the voice, or a story that falls asleep: the page is put together as sound
+  // (the MP3 parts cannot just be laid end to end any more)
+  function needsRender() { return !!story && (story.amb !== 'none' || !!story.sleep); }
+  // page i as it will be heard: silence, the voice, silence, the sound, a last silence; the ambience
+  // under it all; the last page of a story that falls asleep has no sound, its voice fades, and the
+  // ambience goes on a while and dies away
+  function pagePcm(p, i) {
+    return decode(p.mp3).then(function (voice) {
+      var last = i === story.pages.length - 1, sleepy = !!story.sleep && last, z = PAUSES[story.pause];
+      var lead = silence(OUT_SR, z), end = sleepy ? silence(OUT_SR, story.amb === 'none' ? 2 : SLEEP_S) : tail(story.chime, OUT_SR, z);
+      var n = lead.length + voice.length + end.length, out = new Float32Array(n), k;
+      out.set(voice, lead.length);
+      if (sleepy) { var fv = Math.min(voice.length, Math.round(3 * OUT_SR)), ve = lead.length + voice.length; for (k = ve - fv; k < ve; k++) out[k] *= (ve - k) / fv; }
+      else out.set(end, lead.length + voice.length);
+      if (story.amb !== 'none') {
+        var amb = ambience(story.amb, OUT_SR, n / OUT_SR, 11 + i), fi = Math.round(OUT_SR), fo = Math.round((sleepy ? SLEEP_S - 1 : 1.5) * OUT_SR);
+        for (k = 0; k < n; k++) { var g = k < fi ? k / fi : n - k < fo ? (n - k) / fo : 1; out[k] += amb[k] * g; }
+      }
+      return clamp1(out);
+    });
+  }
+  function listenPage(id, p, i) {
+    if (!needsRender()) { playParts(id, pageParts(p), 'audio/mpeg'); return; }
+    playSeq(id, [function () { return pagePcm(p, i).then(function (x) { return [[wav(x, OUT_SR)], 'audio/wav']; }); }]);
   }
 
   // ---- recording ---------------------------------------------------------
@@ -829,13 +1099,14 @@
     problem = null; notice = ''; sure = -1; sureDel = false;
     if (mode === 'check') take = null;
     if (!AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { fail('nomic'); return; }
-    var r = run = { mode: mode, index: index, append: !!append, chunks: [], n: 0, done: false };
+    var r = run = { mode: mode, index: index, append: !!append, chunks: [], n: 0, done: false, fx: [] };
     try { r.ctx = new AC(); } catch (e) { fail('nomic'); return; }
     disp = 0; lastGood = 0; lastLoud = 0; heard = false;
     $('ring').className = 'ring'; $('ring').style.setProperty('--lvl', 0);
     $('timer').textContent = '';
     $('readcard').hidden = true; $('prog').style.width = '0';
     $('stop').hidden = true;
+    $('fx').hidden = !(adv && mode === 'page');
     say('allow_mic');
     show('live');
     awake(true);
@@ -903,7 +1174,7 @@
     if (more && more.mp3) {
       more.pending = true;
       show('story');
-      polish(x, sr).then(function (p) {
+      polish(x, sr, r.fx).then(function (p) {
         return encode(p).then(function (mp3) {
           more.mp3 = join(more.mp3, mp3); more.dur += p.length / OUT_SR; more.orig = null; more.cut = null;
           if (m.verdict !== 'ok') more.verdict = m.verdict;
@@ -914,7 +1185,7 @@
     var page = { mp3: null, dur: 0, verdict: m.verdict, pending: true, orig: null, cut: null };
     if (r.index >= 0 && r.index < story.pages.length) story.pages[r.index] = page; else story.pages.push(page);
     show('story');
-    polish(x, sr).then(function (p) { page.dur = p.length / OUT_SR; return encode(p); }).then(function (mp3) {
+    polish(x, sr, r.fx).then(function (p) { page.dur = p.length / OUT_SR; return encode(p); }).then(function (mp3) {
       page.mp3 = mp3; page.pending = false;
       if (story && story.pages.indexOf(page) >= 0) saveDraft();
       refresh();
@@ -1012,7 +1283,7 @@
       li.appendChild(row);
       if (!p.pending) {
         var acts = el('div', 'acts'), id = 'page-' + i;
-        acts.appendChild(act(playing === id ? t('stop') : t('listen_b'), playing === id, function () { playParts(id, pageParts(p), 'audio/mpeg'); }));
+        acts.appendChild(act(playing === id ? t('stop') : t('listen_b'), playing === id, function () { listenPage(id, p, i); }));
         acts.appendChild(act(t('redo'), false, function () { begin('page', i); }));
         acts.appendChild(act(sure === i ? t('sure') : t('remove'), false, function () {
           if (sure !== i) { sure = i; refresh(); return; }
@@ -1032,6 +1303,15 @@
     Array.prototype.forEach.call($('chimes').children, function (c) { c.classList.toggle('on', c.getAttribute('data-c') === story.chime); });
     $('delstory').textContent = sureDel ? t('sure') : t('del_story');
     Array.prototype.forEach.call($('pauses').children, function (c) { c.classList.toggle('on', +c.getAttribute('data-z') === story.pause); });
+    Array.prototype.forEach.call($('ambs').children, function (c) { c.classList.toggle('on', c.getAttribute('data-a') === story.amb); });
+    $('sleepend').checked = !!story.sleep;
+    var box = $('coverbox');
+    if (story.cover && !coverUrl) coverUrl = URL.createObjectURL(new Blob([story.cover.bytes], { type: story.cover.type }));
+    if (!story.cover && coverUrl) { URL.revokeObjectURL(coverUrl); coverUrl = null; }
+    if (coverUrl && box.tagName !== 'IMG') { var im = el('img'); im.id = 'coverbox'; im.alt = ''; im.src = coverUrl; box.replaceWith(im); }
+    else if (coverUrl) { if (box.src !== coverUrl) box.src = coverUrl; }
+    else if (box.tagName === 'IMG') { var sp = el('span', 'none'); sp.id = 'coverbox'; sp.innerHTML = '<img src="img/studio/camera.webp" alt="" width="34" height="34">'; box.replaceWith(sp); }
+    $('coverdel').hidden = !story.cover;
     $('advbtn').classList.toggle('on', adv); $('advbtn').setAttribute('aria-pressed', adv ? 'true' : 'false');
     var ready = story.pages.filter(function (p) { return !p.pending; }).length;
     $('listen_all').hidden = ready < 2;
@@ -1095,41 +1375,80 @@
 
   function leaveDone() {
     doneUrls.forEach(function (u) { URL.revokeObjectURL(u); });
-    doneUrls = []; doneFiles = []; sureNew = false; if (jooki) jooki.state = '';
+    doneUrls = []; doneFiles = []; doneZip = null; sureNew = false; if (jooki) jooki.state = '';
+  }
+  function asFile(parts, name, type) {
+    try { return new File(parts, name, { type: type }); }
+    catch (e) { var b = new Blob(parts, { type: type }); b.name = name; return b; }
+  }
+  // a photo, read and shrunk in a canvas: JPEG bytes, at most `max` px on its long side
+  function shrinkPhoto(blob, max) {
+    return new Promise(function (ok, ko) {
+      var u = URL.createObjectURL(blob), img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(u);
+        var s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(img.naturalWidth * s)); c.height = Math.max(1, Math.round(img.naturalHeight * s));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(function (jpg) {
+          if (!jpg) { ko(new Error('canvas')); return; }
+          var fr = new FileReader();
+          fr.onload = function () { ok(new Uint8Array(fr.result)); };
+          fr.onerror = function () { ko(fr.error); };
+          fr.readAsArrayBuffer(jpg);
+        }, 'image/jpeg', 0.82);
+      };
+      img.onerror = function () { URL.revokeObjectURL(u); ko(new Error('image')); };
+      img.src = u;
+    });
   }
 
   function finishStory() {
     stopPlaying();
     var wait = tails[tailKey()] && tails['lead-' + story.pause] ? Promise.resolve() : makeTails();
-    $('finish').disabled = true;
-    wait.then(function () {
-      if (!story) return;
-      var n = story.pages.length, pageWord = t('page');
-      doneFiles = story.pages.map(function (p, i) {
-        var parts = [id3({ TIT2: pageWord + ' ' + (i + 1), TALB: story.title, TRCK: (i + 1) + '/' + n })].concat(pageParts(p));
-        var name = fileName(story.title, i);
-        try { return new File(parts, name, { type: 'audio/mpeg' }); }
-        catch (e) { var b = new Blob(parts, { type: 'audio/mpeg' }); b.name = name; return b; }
+    var btn = $('finish');
+    btn.disabled = true;
+    var n = story.pages.length, pageWord = t('page'), st = story;
+    // the pages as bytes: the MP3 parts laid end to end, or each page put together as sound and encoded again
+    function pageBytes() {
+      if (!needsRender()) return Promise.resolve(st.pages.map(function (p) { return concatBytes(pageParts(p)); }));
+      return st.pages.reduce(function (chain, p, i) {
+        return chain.then(function (list) {
+          btn.textContent = t('making').replace('{n}', i + 1).replace('{m}', n);
+          return pagePcm(p, i).then(encode).then(function (mp3) { list.push(mp3); return list; });
+        });
+      }, Promise.resolve([]));
+    }
+    var small = st.cover ? shrinkPhoto(new Blob([st.cover.bytes], { type: st.cover.type }), 300).catch(function () { return null; }) : Promise.resolve(null);
+    wait.then(function () { return Promise.all([pageBytes(), small]); }).then(function (r) {
+      if (story !== st) return;
+      var pages = r[0], cover = r[1];
+      doneFiles = pages.map(function (bytes, i) {
+        return asFile([id3({ TIT2: pageWord + ' ' + (i + 1), TALB: st.title, TRCK: (i + 1) + '/' + n }, cover), bytes], fileName(st.title, i), 'audio/mpeg');
       });
+      var entries = doneFiles.map(function (f, i) { return { name: f.name, bytes: concatBytes([id3({ TIT2: pageWord + ' ' + (i + 1), TALB: st.title, TRCK: (i + 1) + '/' + n }, cover), pages[i]]) }; });
+      if (st.cover) entries.push({ name: 'cover.jpg', bytes: st.cover.bytes });
+      entries.push({ name: 'story.json', bytes: new TextEncoder().encode(JSON.stringify({ jookistory: 1, title: st.title, pages: n, chime: st.chime, pause: PAUSES[st.pause], ambience: st.amb, sleep: !!st.sleep, lang: lang })) });
+      doneZip = asFile([zipStore(entries)], cleanName(st.title) + '.zip', 'application/zip');
       var canShare = false;
-      try { canShare = !!(navigator.canShare && navigator.share && navigator.canShare({ files: doneFiles })); } catch (e) {}
+      try { canShare = !!(navigator.canShare && navigator.share && navigator.canShare({ files: [doneZip] })); } catch (e) {}
       var desk = window.matchMedia && window.matchMedia('(pointer:fine)').matches;
       $('share').hidden = !canShare;
       $('links').hidden = canShare && !desk;
-      var box = $('linklist');
-      box.textContent = '';
-      doneFiles.forEach(function (f) {
+      function link(box, f) {
         var u = URL.createObjectURL(f), a = el('a', 'btn ghost', f.name);
         doneUrls.push(u); a.href = u; a.download = f.name;
         box.appendChild(a);
-      });
+      }
+      $('linklist').textContent = ''; $('pagelist').textContent = '';
+      link($('linklist'), doneZip);
+      doneFiles.forEach(function (f) { link($('pagelist'), f); });
       show('done');
-    });
+    }).catch(function () { notice = 'n_failed'; }).then(function () { btn.textContent = t('finish'); refresh(); });
   }
 
   // ---- buttons -----------------------------------------------------------
 
-  player.addEventListener('ended', stopPlaying);
   $('langs').addEventListener('click', function (ev) {
     var b = ev.target.closest ? ev.target.closest('button') : null;
     if (!b) return;
@@ -1138,12 +1457,48 @@
     refresh();
   });
   function startStory() {
-    story = { title: $('title').value.replace(/\s+/g, ' ').trim() || t('untitled'), chime: 'bell', pause: 1, pages: [] };
+    story = { title: $('title').value.replace(/\s+/g, ' ').trim() || t('untitled'), chime: 'bell', pause: 1, amb: 'none', sleep: false, cover: null, pages: [] };
     saveDraft(); makeAllTails();
     show('story');
   }
   $('start').addEventListener('click', startStory);
   $('title').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') startStory(); });
+  $('invite0').addEventListener('click', function () { show('invite'); });
+  $('invite_back').addEventListener('click', function () { show('intro'); });
+  $('invite_share').addEventListener('click', function () {
+    var btn = $('invite_share'), text = t('invite_text') + STUDIO_URL;
+    function copied() { btn.textContent = t('copied'); setTimeout(function () { btn.textContent = t('invite_share'); }, 1500); }
+    if (navigator.share) { try { navigator.share({ title: 'Jookistory', text: t('invite_text'), url: STUDIO_URL }).catch(function () {}); return; } catch (e) {} }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(copied, function () {});
+  });
+  $('ambs').addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (!b || !story) return;
+    story.amb = b.getAttribute('data-a');
+    saveDraft(); stopPlaying(); refresh();
+    // tapping an ambience plays a few seconds of it, at once
+    if (story.amb !== 'none') playParts('amb', [wav(ambience(story.amb, OUT_SR, 5, 5), OUT_SR)], 'audio/wav');
+  });
+  $('sleepend').addEventListener('change', function (ev) { if (story) { story.sleep = !!ev.target.checked; saveDraft(); stopPlaying(); refresh(); } });
+  $('coverfile').addEventListener('change', function (ev) {
+    var f = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!f || !story) return;
+    var st = story;
+    shrinkPhoto(f, 640).then(function (bytes) {
+      if (story !== st) return;
+      if (coverUrl) { URL.revokeObjectURL(coverUrl); coverUrl = null; }
+      st.cover = { type: 'image/jpeg', bytes: bytes }; notice = ''; saveDraft(); refresh();
+    }, function () { notice = 'cover_bad'; refresh(); });
+  });
+  $('coverdel').addEventListener('click', function () { if (story) { story.cover = null; saveDraft(); refresh(); } });
+  // a sound effect tapped while a page is read: kept with the moment it was tapped, mixed in afterwards
+  $('fx').addEventListener('click', function (ev) {
+    var b = ev.target.closest ? ev.target.closest('button') : null;
+    if (!b || !run || run.done || run.mode !== 'page' || !run.sr) return;
+    run.fx.push({ t: run.n / run.sr, kind: b.getAttribute('data-f') });
+    b.classList.add('hit'); setTimeout(function () { b.classList.remove('hit'); }, 350);
+  });
   $('test0').addEventListener('click', function () { begin('check', -1); });
   $('test1').addEventListener('click', function () { begin('check', -1); });
   $('rec').addEventListener('click', function () { begin('page', -1); });
@@ -1178,9 +1533,14 @@
     refresh();
   });
   $('listen_all').addEventListener('click', function () {
-    var parts = [];
-    story.pages.forEach(function (p) { if (!p.pending) parts = parts.concat(pageParts(p)); });
-    playParts('all', parts, 'audio/mpeg');
+    var ready = story.pages.filter(function (p) { return !p.pending; });
+    if (!needsRender()) {
+      var parts = [];
+      ready.forEach(function (p) { parts = parts.concat(pageParts(p)); });
+      playParts('all', parts, 'audio/mpeg');
+      return;
+    }
+    playSeq('all', ready.map(function (p) { return function () { return pagePcm(p, story.pages.indexOf(p)).then(function (x) { return [[wav(x, OUT_SR)], 'audio/wav']; }); }; }));
   });
   function cutMoved(ev) {
     var a = $('cut_a'), b = $('cut_b');
@@ -1197,7 +1557,8 @@
     if (!jooki) return;
     jooki.state = 'asked';
     try {
-      window.opener.postMessage({ type: 'oj-story', v: 1, title: story.title, files: doneFiles.map(function (f) { return { name: f.name, blob: f }; }) }, jooki.origin);
+      window.opener.postMessage({ type: 'oj-story', v: 2, title: story.title, files: doneFiles.map(function (f) { return { name: f.name, blob: f }; }),
+        cover: story.cover ? { name: 'cover.jpg', blob: new Blob([story.cover.bytes], { type: story.cover.type }) } : null }, jooki.origin);
     } catch (e) { jooki.state = 'wait'; }
     // a Jooki's page asleep behind this one answers only when it is shown again
     setTimeout(function () { if (jooki.state === 'asked') { jooki.state = 'wait'; refresh(); } }, 4000);
@@ -1216,7 +1577,7 @@
     show('intro');
   });
   $('share').addEventListener('click', function () {
-    try { navigator.share({ files: doneFiles, title: story.title }).catch(function () {}); } catch (e) {}
+    try { navigator.share({ files: [doneZip], title: story.title }).catch(function () {}); } catch (e) {}
   });
   $('back2').addEventListener('click', function () { leaveDone(); show('story'); });
   $('newstory').addEventListener('click', function () {
@@ -1239,7 +1600,8 @@
   refresh();
   loadDraft().then(function (d) {
     if (!d || story || view !== 'intro') return;
-    story = { title: d.title, chime: d.chime || 'bell', pause: d.pause >= 0 && d.pause < PAUSES.length ? d.pause : 1, pages: (d.pages || []).map(function (p) {
+    story = { title: d.title, chime: d.chime || 'bell', pause: d.pause >= 0 && d.pause < PAUSES.length ? d.pause : 1, amb: AMBS.indexOf(d.amb) >= 0 ? d.amb : 'none', sleep: !!d.sleep,
+      cover: d.cover && d.cover.bytes ? { type: d.cover.type || 'image/jpeg', bytes: new Uint8Array(d.cover.bytes) } : null, pages: (d.pages || []).map(function (p) {
       return { mp3: new Uint8Array(p.mp3), dur: p.dur, verdict: p.verdict || 'ok', pending: false, orig: p.orig ? new Uint8Array(p.orig) : null, cut: p.cut || null };
     }) };
     makeAllTails();

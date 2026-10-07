@@ -110,6 +110,22 @@ picture, stored in `tokens.json` as `image`. Two forms only, checked by the core
 page also gives the picture's name to a token that has none); a photo replaced
 that way, or removed with `image: false`, has its file deleted.
 
+Since 2.4 the cover of a book read in Jookistory can be that photo: the studio hands it over
+with the story (`cover` in its `oj-story` message, `cover.jpg` in its zip), and the page sends
+a 128 px circle of its middle through the same `/upload` + `TOKEN_SET_IMAGE` path
+(`coverToToken`, `webui/src/08b-story.js`), only for a token of its own.
+
+### A token put on the Jooki while a sheet waits (2.4)
+
+The *Which token starts this story?* sheet (and *Choose the character*) watches what the Jooki
+reports: `state.nfc.starId` for a genuine token (a character, a flat token), and the `seen`
+counts in `db.tokens` for a foreign tag, which never claims `state.nfc` (§3). The first
+character that changes is picked (`watchToken`, `08b-story.js`). The labels page
+(`#/tokens/labels`) lists the tokens of their own with their picture and playlist, printed as
+25, 30 or 40 mm circles (`@media print` in `app.css`). Whether the reader sees a sticker
+through a book's cover is a question of thickness: the tag must sit close (§3); the guide says
+to try, and to put the sticker inside the cover when it fails.
+
 ## 6. Do not
 
 - `esp32_cmd set_nfc_mode`: setting 0 turned the reader off, and setting 1 again

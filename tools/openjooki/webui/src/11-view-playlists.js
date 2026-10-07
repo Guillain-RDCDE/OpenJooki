@@ -19,6 +19,7 @@
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
     cards.push(h('button', { class: 'card pl newpl', onclick: openStudio, 'data-k': 'story' }, icon('mic'), 'Jookistory',
       h('div', { class: 'small', style: 'font-weight:400' }, t('story_rec'))));
+    cards.push(storyFileCard());
     var addDisc = discButton();
     return [
       updateAvailable() && upd.state === 'checked' ? h('div', { class: 'banner row', 'data-k': 'updbanner' }, h('span', { class: 'grow' }, t('upd_banner', upd.latest)),
@@ -75,19 +76,35 @@
     ids.sort(function (a, b) { return (seen[b] ? 1 : 0) - (seen[a] ? 1 : 0) || charInfo(a).order - charInfo(b).order; });
     return h('div', { class: 'chargrid' }, none ? opt(null) : null, ids.map(opt));
   }
-  function charPickerModal(p) {
-    var chosen = p.star || null;
+  // The character that starts a playlist: picked in the grid, or the token put on the Jooki while the
+  // sheet is open (watchToken). opts.story: the sheet opens for a story that just arrived; opts.cover:
+  // the book's cover, which becomes the picture of a token of its own (coverToToken).
+  function charPickerModal(p, opts) {
+    opts = opts || {};
+    var chosen = p.star || null, live = null, watch = null;
+    function arm() {
+      if (watch) watch.stop();
+      watch = watchToken(function (sid) { chosen = sid; live = sid; renderModal(); arm(); });
+    }
+    arm();
+    function save() {
+      watch.stop();
+      var star = chosen || null, changed = star !== (p.star || null);
+      if (changed) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: star || false } });
+      closeModal();
+      if (star && opts.cover) coverToToken(star, opts.cover, function (ok) { if (ok) toast(t('cover_set', charName(star))); });
+    }
     openModal({
+      onclose: function () { watch.stop(); },
       render: function () {
         var other = chosen ? playlistOfChar(chosen) : null;
         if (other && other.id === p.id) other = null;
-        return [h('h3', null, t('token_for')), h('p', { class: 'small muted' }, t('token_help')),
-          charGrid(chosen, p.id, function (id) { chosen = id; }, true),
+        return [h('h3', null, opts.story ? t('story_token_t') : t('token_for')), h('p', { class: 'small muted' }, opts.story ? t('story_token_help') : t('token_help')),
+          h('p', { class: 'small tokwait' + (live ? ' accent-text' : ' muted'), 'data-k': 'tokwait' }, live ? t('token_seen', charName(live)) : t('token_live')),
+          charGrid(chosen, p.id, function (id) { chosen = id; live = null; }, true),
           other ? h('div', { class: 'banner', style: 'margin-top:12px' }, t('token_moved', other.title || '—')) : null,
-          modalFoot(t('save'), function () {
-            if ((chosen || null) !== (p.star || null)) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: chosen || false } });
-            closeModal();
-          }, { k: 'charsave' })];
+          h('div', { class: 'foot' }, h('button', { class: 'btn', onclick: closeModal }, opts.story ? t('later') : t('cancel')),
+            h('button', { class: 'btn primary', 'data-k': 'charsave', onclick: save }, t('save')))];
       }
     });
   }

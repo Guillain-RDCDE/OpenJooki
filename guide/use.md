@@ -53,17 +53,39 @@ playlist**. The story studio opens in a new tab (the phone needs the Internet fo
   be listened to, redone or removed.
 - Choose **the sound at the end of each page**: it tells the child to turn the page. And
   **the silence before and after the reading**: 1, 2 or 4 seconds.
+- **A sound behind the voice**, if you like: rain, forest or night, under the whole story.
+  **Falls asleep at the end**: no sound after the last page, the voice fades away slowly.
+- **The book's cover**: **Take a photo** of it. It becomes the picture of the token that
+  starts the story.
 - **Finish the story**, then **Send to the Jooki**: back on the Jooki's page, the story is a
-  new playlist, already an audiobook. Choose its character.
+  new playlist, already an audiobook. The page asks **Which token starts this story?**: put
+  a flat token or an NFC sticker on the Jooki, it is picked by itself. **Save**.
 
-A grandparent far away can read too, at
-[guillain-rdcde.github.io/OpenJooki/studio.html](https://guillain-rdcde.github.io/OpenJooki/studio.html):
-**Send or save the story** gives one file per page, to send by message. At home, **New
-playlist**, then **Add files**: the pages go in order and the playlist becomes an audiobook
-by itself.
+**Advanced mode** (at the bottom): cut a page, continue it, and sound effects while you read:
+tap **Knock**, **Thunder**, **Owl**, **Magic** or **Wind** at the right moment.
+
+### A story read from far away
+
+A grandparent can read too, at
+[guillain-rdcde.github.io/OpenJooki/studio.html](https://guillain-rdcde.github.io/OpenJooki/studio.html).
+In Jookistory, **Invite someone far away to read** shows a QR code and **Send the link**.
+
+- They read, then **Send or save the story**: they get one file, `Title.zip`, and send it to
+  you by message.
+- At home, keep the file on the phone, then on the Jooki's page: **Open a story** (next to
+  Jookistory) and pick the file. The story becomes a playlist with its title, its pages in
+  order, an audiobook, and the page asks which token starts it.
 
 If **Send to the Jooki** does not show (it can happen when the Jooki's page was opened from
-the home screen), use **Send or save the story**, then **Add files** in a new playlist.
+the home screen), use **Send or save the story**, then **Open a story**.
+
+### Labels for the books
+
+Stick an NFC sticker in each book, and give it its story (above). Then, on the **Tokens**
+tab, **Print the labels**: one round label per sticker, with its picture, its name and its
+story. Choose the size (25, 30 or 40 mm), **Print**, cut out, and stick each label on its
+book over the sticker. Then try: put the closed book on the Jooki. A thick cover may keep
+the Jooki from reading the sticker: put it inside the cover instead.
 
 ## Tokens
 
@@ -78,6 +100,9 @@ the home screen), use **Send or save the story**, then **Add files** in a new pl
 - **A picture** for a flat token or an NFC tag: **Choose a picture** (659 ready-made ones,
   with a search, no Internet needed) or **My photo** (take or pick a photo, then **Remove
   the background**).
+- **Choose the character** in a playlist: pick it in the list, or just put the token on the
+  Jooki while the sheet is open.
+- **Print the labels**: see *Labels for the books* above.
 
 ## The Library
 

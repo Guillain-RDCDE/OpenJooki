@@ -1,5 +1,33 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.0 (7 October 2026) — From the book to the token, a story as one file, sounds behind the voice
+- **From the book to the token in one go.** When a story arrives from Jookistory, the page asks
+  *Which token starts this story?* and waits: put a flat token or an NFC sticker on the Jooki, it
+  is picked by itself (or choose it in the list, or *Later*). The same works in a playlist's
+  *Choose the character* sheet. In Jookistory, *The book's cover*: take a photo of it, and it
+  becomes the picture of that token (flat tokens and NFC stickers; the characters keep their
+  figure). The cover also travels inside each page's file.
+- **Labels for the books.** On the *Tokens* tab, *Print the labels*: one round label per token of
+  its own (25, 30 or 40 mm), with its picture, its name and the story it starts, to print, cut out
+  and stick on the book over its NFC sticker.
+- **A story is one file.** *Send or save the story* now gives a single file, `Title.zip`, with
+  the pages, the cover and a small description. Grandma sends it by message; at home, on the
+  playlists page, *Open a story* (next to Jookistory) makes it a playlist with the right title,
+  the pages in order, an audiobook, and asks which token starts it. The file also goes through
+  *Add files* in a playlist, or dropped on the page from a computer.
+- **Invite someone far away to read.** In Jookistory, on the first screen: a QR code and *Send
+  the link*, so Grandma opens the studio without typing anything.
+- **A sound behind the voice.** Rain, forest or night under the whole story, made by the page
+  (no file, no rights), well under the voice. *Falls asleep at the end*: no sound after the last
+  page, the voice fades away and the ambience dies down slowly.
+- **Sound effects while reading** (advanced mode): knock, thunder, owl, magic, wind; tap one while
+  reading a page, it is put in the story at that very moment.
+- For the tinkerers: `webui/src/08c-story-file.js` reads the zip in the browser (stored entries,
+  or deflated ones through `DecompressionStream`); `watchToken` in `08b-story.js` watches
+  `state.nfc` and the tokens' `seen` counts; `coverToToken` sends a 128 px circle of the cover as
+  the token's photo (`TOKEN_SET_IMAGE`); `#/tokens/labels` prints with `@media print`. The
+  studio's message is `v: 2` with an optional `cover`. Tests E28 to E30 (e2e = 101).
+
 ## OpenJooki 2.3.2 (5 October 2026) — Jookistory, and a story is never shuffled
 - **The story studio has a name: Jookistory.** Its card on the playlists page says so.
 - **A story is never shuffled any more.** Its pages, added by hand with *Add files* (the files

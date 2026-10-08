@@ -1,5 +1,14 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Seven more sounds behind the voice** in Jookistory (already online, the studio lives on the
+  site): *The sea* (waves that swell and withdraw, a gull now and then), *Fireside* (crackles, a
+  pop), *Stream* (running water, a frog), *Castle* (drops that echo in the halls, a draught),
+  *Train* (the wheels on the rails, a whistle far away), *Farm morning* (hens, the rooster, a cow)
+  and *Snow* (a muffled wind, sleigh bells far away). All made by the page, like the first three.
+- For the tinkerers: `ambience()` in `docs/studio.html`, `AMBS` has ten kinds; seven pictures
+  copied from `webui/tokimg/` into `docs/img/studio/`.
+
 ## OpenJooki 2.4.1 (7 October 2026) — Send to the Jooki, after a long reading
 - **Send to the Jooki, after a long reading.** A story sent from Jookistory could vanish: the
   phone came back to the Jooki's page by itself, and no playlist appeared. The Jooki's tab had

@@ -53,7 +53,9 @@ playlist**. The story studio opens in a new tab (the phone needs the Internet fo
   be listened to, redone or removed.
 - Choose **the sound at the end of each page**: it tells the child to turn the page. And
   **the silence before and after the reading**: 1, 2 or 4 seconds.
-- **A sound behind the voice**, if you like: rain, forest or night, under the whole story.
+- **A sound behind the voice**, if you like, under the whole story: rain, forest, night, the sea
+  (with a gull), a fireside, a stream (with a frog), a castle, a train, a farm morning (hens,
+  the rooster, a cow) or snow (with sleigh bells far away). Tap one to hear it.
   **Falls asleep at the end**: no sound after the last page, the voice fades away slowly.
 - **The book's cover**: **Take a photo** of it. It becomes the picture of the token that
   starts the story.

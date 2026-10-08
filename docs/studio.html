@@ -199,6 +199,13 @@
         <button type="button" data-a="rain"><img src="img/studio/cloud_with_rain.webp" alt="" width="38" height="38"><span data-t="amb_rain">Rain</span></button>
         <button type="button" data-a="forest"><img src="img/studio/evergreen_tree.webp" alt="" width="38" height="38"><span data-t="amb_forest">Forest</span></button>
         <button type="button" data-a="night"><img src="img/studio/night_with_stars.webp" alt="" width="38" height="38"><span data-t="amb_night">Night</span></button>
+        <button type="button" data-a="sea"><img src="img/studio/water_wave.webp" alt="" width="38" height="38"><span data-t="amb_sea">The sea</span></button>
+        <button type="button" data-a="fire"><img src="img/studio/fire.webp" alt="" width="38" height="38"><span data-t="amb_fire">Fireside</span></button>
+        <button type="button" data-a="stream"><img src="img/studio/droplet.webp" alt="" width="38" height="38"><span data-t="amb_stream">Stream</span></button>
+        <button type="button" data-a="castle"><img src="img/studio/castle.webp" alt="" width="38" height="38"><span data-t="amb_castle">Castle</span></button>
+        <button type="button" data-a="train"><img src="img/studio/locomotive.webp" alt="" width="38" height="38"><span data-t="amb_train">Train</span></button>
+        <button type="button" data-a="farm"><img src="img/studio/rooster.webp" alt="" width="38" height="38"><span data-t="amb_farm">Farm morning</span></button>
+        <button type="button" data-a="snow"><img src="img/studio/snowflake.webp" alt="" width="38" height="38"><span data-t="amb_snow">Snow</span></button>
       </div>
       <label class="switch"><span><span data-t="sleep_t">Falls asleep at the end</span><small data-t="sleep_x">No sound after the last page: the voice fades away slowly.</small></span><input type="checkbox" id="sleepend"></label>
     </div>
@@ -514,12 +521,13 @@
   function scaleTo(x, target) { var g = target / (rms(x) || 1); for (var i = 0; i < x.length; i++) x[i] *= g; return x; }
   function clamp1(x) { for (var i = 0; i < x.length; i++) { var v = x[i]; x[i] = v > 1 ? 1 : v < -1 ? -1 : v; } return x; }
   function mixInto(out, snd, at, gain) { var s = Math.max(0, at), e = Math.min(out.length, at + snd.length); for (var i = s; i < e; i++) out[i] += snd[i - at] * gain; return out; }
-  var AMBS = ['rain', 'forest', 'night'];
+  var AMBS = ['rain', 'forest', 'night', 'sea', 'fire', 'stream', 'castle', 'train', 'farm', 'snow'];
   var AMB_RMS = 0.016;      // about -36 dB: well under the voice (-19 dB), heard in the silences
   var SLEEP_S = 15;         // a story that falls asleep: the ambience goes on this long after the last page, fading
-  // kind, sr, seconds, seed -> rain on the window, a forest with birds, a summer night with crickets
+  // kind, sr, seconds, seed -> rain on the window, a forest with birds, a summer night with crickets, the sea with
+  // a gull, a fireside, a stream with a frog, a castle's dripping halls, a train, a farmyard morning, snow with sleigh bells
   function ambience(kind, sr, seconds, seed) {
-    var n = Math.round(seconds * sr), rnd = rng(seed || 7), out, i, t;
+    var n = Math.round(seconds * sr), rnd = rng(seed || 7), out, i, t, q;
     if (kind === 'rain') {
       out = noise(n, rnd, 0.55, 0.4);
       var deep = noise(n, rnd, 0.97, 3);
@@ -539,13 +547,112 @@
           at += Math.round((0.1 + rnd() * 0.16) * sr);
         }
       }
-    } else {   // night: two crickets, and a very soft wind
+    } else if (kind === 'night') {   // two crickets, and a very soft wind
       out = noise(n, rnd, 0.995, 1); scaleTo(out, 0.03);
       [[4300, 27, 0.55, 0.9], [4700, 31, 0.7, 1.3]].forEach(function (c) {
         for (t = rnd() * sr; t < n; t += (c[3] + rnd() * 0.6) * sr) {
           (function (l, w, m) { envAdd(out, t, l, function (k) { return 0.3 * Math.sin(w * k) * Math.max(0, Math.sin(m * k)) * Math.sin(Math.PI * k / l); }); })(Math.round((c[2] + rnd() * 0.2) * sr), 2 * Math.PI * c[0] / sr, 2 * Math.PI * c[1] / sr);
         }
       });
+    } else if (kind === 'sea') {   // waves that swell and withdraw, foam, a gull now and then
+      out = noise(n, rnd, 0.985, 0.25);                                     // the deep roll of the water
+      for (t = -2 * sr; t < n; t += Math.round((6 + rnd() * 4) * sr)) {     // one wave: a quick rise, a long withdrawal
+        (function (L, wash, foam, a1, at2) { envAdd(out, at2, L, function (k) { var p = k / L;
+          return a1 * (wash[k] * Math.pow(p, 0.6) * Math.pow(1 - p, 1.4) * 1.8 + foam[k] * 0.15 * Math.exp(-Math.pow((p - 0.3) / 0.14, 2))); }); })(
+          Math.round((5 + rnd() * 2) * sr), noise(Math.round(7 * sr), rnd, 0.9, 1), noise(Math.round(7 * sr), rnd, 0.45, 1), 0.7 + rnd() * 0.3, t);
+      }
+      for (t = (3 + rnd() * 6) * sr; t < n - sr; t += (9 + rnd() * 12) * sr) {   // a gull: two or three falling cries
+        var cries = 2 + Math.floor(rnd() * 2), gat = t;
+        for (q = 0; q < cries; q++) {
+          (function (l, f0, a0, at2) { var ph = 0; envAdd(out, at2, l, function (k) { var p = k / l; ph += 2 * Math.PI * f0 * (1.15 - 0.3 * p + 0.08 * p * Math.sin(2 * Math.PI * 9 * k / sr)) / sr;
+            return a0 * (Math.sin(ph) + 0.45 * Math.sin(2 * ph) + 0.2 * Math.sin(3 * ph)) * Math.sin(Math.PI * p) * Math.min(1, k / (0.02 * sr)); }); })(Math.round((0.3 + rnd() * 0.25) * sr), 1000 + rnd() * 300, 0.15 + rnd() * 0.1, gat);
+          gat += Math.round((0.35 + rnd() * 0.3) * sr);
+        }
+      }
+    } else if (kind === 'fire') {   // a warm breath, crackles, a pop now and then
+      out = noise(n, rnd, 0.993, 1);
+      for (i = 0; i < n; i++) out[i] *= 0.7 + 0.3 * Math.sin(2 * Math.PI * 0.23 * i / sr);
+      scaleTo(out, 0.05);
+      for (t = 0; t < n; t += Math.round((0.03 + rnd() * 0.5) * sr)) {      // crackles: short bright ticks
+        (function (cl, cr, ca, at2) { envAdd(out, at2, cl, function (k) { return ca * cr[k] * (1 - k / cl); }); })(Math.round((0.004 + rnd() * 0.02) * sr), noise(Math.round(0.024 * sr), rnd, 0.15, 1), 0.15 + rnd() * 0.6, t);
+        if (rnd() < 0.08) (function (l, at2) { envAdd(out, at2, l, function (k) { var p = k / l; return 0.5 * Math.sin(2 * Math.PI * 140 * k / sr) * Math.exp(-p * 8); }); })(Math.round(0.08 * sr), t);   // a pop
+      }
+    } else if (kind === 'stream') {   // water that runs and gurgles, a frog far away
+      out = noise(n, rnd, 0.7, 1);
+      var bab = noise(n, rnd, 0.9993, 1); scaleTo(bab, 0.3);                // the babble: the flow wavers quickly
+      for (i = 0; i < n; i++) out[i] *= 0.6 + Math.min(0.4, Math.abs(bab[i]));
+      scaleTo(out, 0.06);
+      for (t = rnd() * sr; t < n; t += Math.round((0.15 + rnd() * 0.8) * sr)) {   // gurgles: tiny rising blips
+        (function (l, fa, a0, at2) { var ph = 0; envAdd(out, at2, l, function (k) { var p = k / l; ph += 2 * Math.PI * fa * (1 + 1.5 * p) / sr; return a0 * Math.sin(ph) * Math.sin(Math.PI * p); }); })(Math.round((0.03 + rnd() * 0.05) * sr), 250 + rnd() * 400, 0.04 + rnd() * 0.05, t);
+      }
+      for (t = (2 + rnd() * 4) * sr; t < n - sr; t += (5 + rnd() * 6) * sr) {   // the frog: three to five croaks
+        var cro = 3 + Math.floor(rnd() * 3), fat = t;
+        for (q = 0; q < cro; q++) {
+          (function (l, w, m, at2) { envAdd(out, at2, l, function (k) { return 0.2 * (Math.sin(w * k) + 0.5 * Math.sin(2 * w * k)) * Math.max(0, Math.sin(m * k)) * Math.sin(Math.PI * k / l); }); })(Math.round(0.22 * sr), 2 * Math.PI * 115 / sr, 2 * Math.PI * 24 / sr, fat);
+          fat += Math.round(0.32 * sr);
+        }
+      }
+    } else if (kind === 'castle') {   // a deep draught in the corridors, drops that fall and echo
+      out = noise(n, rnd, 0.998, 1);
+      for (i = 0; i < n; i++) out[i] *= 0.6 + 0.4 * Math.sin(2 * Math.PI * 0.09 * i / sr) * Math.sin(2 * Math.PI * 0.031 * i / sr + 1);
+      scaleTo(out, 0.05);
+      for (t = rnd() * sr; t < n; t += Math.round((0.7 + rnd() * 2.5) * sr)) {   // a drop, its echoes, then the hall's tail
+        (function (f0, da, dt) {
+          [[0, 1], [0.13, 0.5], [0.29, 0.26], [0.48, 0.13]].forEach(function (e) {
+            var ph = 0, l = Math.round(0.05 * sr);
+            envAdd(out, dt + e[0] * sr, l, function (k) { var p = k / l; ph += 2 * Math.PI * f0 * (1 - 0.4 * p) / sr; return da * e[1] * Math.sin(ph) * Math.exp(-p * 5) * Math.min(1, k / (0.003 * sr)); });
+          });
+          var tail = noise(Math.round(0.5 * sr), rnd, 0.8, 1);
+          envAdd(out, dt, tail.length, function (k) { return 0.08 * da * tail[k] * Math.exp(-4 * k / tail.length); });
+        })(900 + rnd() * 900, 0.25 + rnd() * 0.25, t);
+      }
+    } else if (kind === 'train') {   // the wheels on the rails, the land going by, a whistle far away
+      out = noise(n, rnd, 0.99, 1);
+      var hiss = noise(n, rnd, 0.9, 1);
+      for (i = 0; i < n; i++) out[i] = out[i] * 0.7 + hiss[i] * 0.05 * (1 + 0.5 * Math.sin(2 * Math.PI * 0.17 * i / sr));
+      scaleTo(out, 0.05);
+      var per = Math.round((1 + rnd() * 0.2) * sr);
+      for (t = 0; t < n; t += per) {
+        [0, 0.13, 0.42, 0.55].forEach(function (d) {   // two bogies, two wheels each, over a rail joint
+          (function (ct, cl, cn) {
+            envAdd(out, ct, cl, function (k) { return 0.35 * cn[k] * (1 - k / cl); });
+            envAdd(out, ct, Math.round(0.08 * sr), function (k) { var p = k / (0.08 * sr); return 0.3 * Math.sin(2 * Math.PI * 70 * k / sr) * Math.exp(-p * 7); });
+          })(t + d * sr, Math.round(0.02 * sr), noise(Math.round(0.02 * sr), rnd, 0.5, 1));
+        });
+      }
+      for (t = (1 + rnd() * 10) * sr; t < n - 2 * sr; t += (20 + rnd() * 20) * sr) {   // the whistle: two notes together, swelling
+        (function (l, at2) { var p1 = 0, p2 = 0; envAdd(out, at2, l, function (k) { var p = k / l, v = 1 + 0.004 * Math.sin(2 * Math.PI * 5.5 * k / sr); p1 += 2 * Math.PI * 660 * v / sr; p2 += 2 * Math.PI * 830 * v / sr;
+          return 0.12 * (Math.sin(p1) + 0.8 * Math.sin(p2) + 0.3 * Math.sin(2 * p1)) * Math.sin(Math.PI * p) * Math.min(1, k / (0.05 * sr)); }); })(Math.round((1 + rnd() * 0.6) * sr), t);
+      }
+    } else if (kind === 'farm') {   // a morning in the yard: a breeze, hens, the rooster, a cow far away
+      out = noise(n, rnd, 0.995, 1); scaleTo(out, 0.035);
+      var call = function (at2, l, fa, fb, a0, harm) { var ph = 0; l = Math.round(l); envAdd(out, at2, l, function (k) { var p = k / l; ph += 2 * Math.PI * (fa + (fb - fa) * p) * (1 + 0.01 * Math.sin(2 * Math.PI * 6 * k / sr)) / sr;
+        var s = 0; for (var h = 0; h < harm.length; h++) s += harm[h] * Math.sin((h + 1) * ph); return a0 * s * Math.sin(Math.PI * p) * Math.min(1, k / (0.015 * sr)); }); };
+      for (t = (1 + rnd() * 3) * sr; t < n; t += (3 + rnd() * 6) * sr) {   // hens: clucks in little groups
+        var cc = 3 + Math.floor(rnd() * 4), hat = t, hf = 500 + rnd() * 250;
+        for (q = 0; q < cc; q++) { call(hat, (0.05 + rnd() * 0.05) * sr, hf * 1.4, hf, 0.1, [1, 0.5, 0.3]); hat += Math.round((0.12 + rnd() * 0.15) * sr); }
+      }
+      for (t = (2 + rnd() * 8) * sr; t < n - 2 * sr; t += (14 + rnd() * 14) * sr) {   // the rooster: four notes, the last one long and falling
+        var rf = 560 + rnd() * 120, rat = t, H = [1, 0.6, 0.4, 0.25];
+        call(rat, 0.22 * sr, rf, rf * 1.3, 0.22, H); rat += 0.26 * sr;
+        call(rat, 0.18 * sr, rf * 1.5, rf * 1.55, 0.22, H); rat += 0.22 * sr;
+        call(rat, 0.28 * sr, rf * 1.7, rf * 1.9, 0.22, H); rat += 0.34 * sr;
+        call(rat, 0.7 * sr, rf * 1.6, rf * 0.9, 0.2, H);
+      }
+      for (t = (6 + rnd() * 10) * sr; t < n - 2 * sr; t += (25 + rnd() * 20) * sr) call(t, 1.2 * sr, 150, 125, 0.14, [1, 0.6, 0.45, 0.3, 0.2]);   // the cow
+    } else {   // snow: a muffled wind, the flakes' faint hiss, sleigh bells far away
+      out = noise(n, rnd, 0.997, 1);
+      for (i = 0; i < n; i++) out[i] *= 0.55 + 0.45 * Math.sin(2 * Math.PI * 0.07 * i / sr) * Math.sin(2 * Math.PI * 0.19 * i / sr + 2);
+      scaleTo(out, 0.06);
+      var fl = noise(n, rnd, 0.2, 1);
+      for (i = 0; i < n; i++) out[i] += fl[i] * 0.004;
+      for (t = (4 + rnd() * 8) * sr; t < n - sr; t += (10 + rnd() * 12) * sr) {   // the bells: a short jingle
+        var nb = 6 + Math.floor(rnd() * 5), bat = t;
+        for (q = 0; q < nb; q++) {
+          (function (f, at2) { envAdd(out, at2, Math.round(0.6 * sr), function (k) { var tt = k / sr; return 0.05 * Math.min(1, k / (0.003 * sr)) * (Math.exp(-tt * 10) * Math.sin(2 * Math.PI * f * k / sr) + 0.4 * Math.exp(-tt * 15) * Math.sin(2 * Math.PI * f * 2.7 * k / sr)); }); })(2600 + rnd() * 1400, bat);
+          bat += Math.round((0.07 + rnd() * 0.05) * sr);
+        }
+      }
     }
     return clamp1(scaleTo(out, AMB_RMS));
   }
@@ -687,7 +794,7 @@
       invite: "Invite someone far away to read", invite_share: "Send the link", invite_text: "Read a story aloud for the Jooki, page by page: ",
       invite_lead: "Grandma, Grandpa, a godmother: they open this page on their phone and read. Then they send you the story.",
       invite_hint: "They tap Send or save the story: you get one file. On the Jooki's page: Open a story.",
-      amb_title: "A sound behind the voice", amb_none: "None", amb_rain: "Rain", amb_forest: "Forest", amb_night: "Night",
+      amb_title: "A sound behind the voice", amb_none: "None", amb_rain: "Rain", amb_forest: "Forest", amb_night: "Night", amb_sea: "The sea", amb_fire: "Fireside", amb_stream: "Stream", amb_castle: "Castle", amb_train: "Train", amb_farm: "Farm morning", amb_snow: "Snow",
       sleep_t: "Falls asleep at the end", sleep_x: "No sound after the last page: the voice fades away slowly.",
       cover_title: "The book's cover", cover_take: "Take a photo", cover_del: "Remove", cover_bad: "This photo could not be read.",
       cover_hint: "It becomes the picture of the token that starts the story.",
@@ -744,7 +851,7 @@
       invite: "Inviter quelqu'un de loin à lire", invite_share: "Envoyer le lien", invite_text: "Lis une histoire à voix haute pour le Jooki, page par page : ",
       invite_lead: "Mamie, Papi, une marraine : ils ouvrent cette page sur leur téléphone et lisent. Puis ils t'envoient l'histoire.",
       invite_hint: "Ils appuient sur Envoyer ou garder l'histoire : tu reçois un seul fichier. Sur la page du Jooki : Ouvrir une histoire.",
-      amb_title: "Un son derrière la voix", amb_none: "Aucun", amb_rain: "Pluie", amb_forest: "Forêt", amb_night: "Nuit",
+      amb_title: "Un son derrière la voix", amb_none: "Aucun", amb_rain: "Pluie", amb_forest: "Forêt", amb_night: "Nuit", amb_sea: "La mer", amb_fire: "Feu de cheminée", amb_stream: "Ruisseau", amb_castle: "Château", amb_train: "Train", amb_farm: "La ferme au matin", amb_snow: "Neige",
       sleep_t: "S'endort à la fin", sleep_x: "Pas de son après la dernière page : la voix s'éloigne doucement.",
       cover_title: "La couverture du livre", cover_take: "Prendre une photo", cover_del: "Enlever", cover_bad: "Cette photo n'a pas pu être lue.",
       cover_hint: "Elle devient l'image du jeton qui lance l'histoire.",
@@ -801,7 +908,7 @@
       invite: "Iemand ver weg uitnodigen om voor te lezen", invite_share: "De link versturen", invite_text: "Lees een verhaal voor aan de Jooki, bladzijde per bladzijde: ",
       invite_lead: "Oma, opa, een meter: ze openen deze pagina op hun telefoon en lezen voor. Daarna sturen ze je het verhaal.",
       invite_hint: "Ze tikken op Het verhaal versturen of bewaren: je krijgt één bestand. Op de pagina van de Jooki: Een verhaal openen.",
-      amb_title: "Een geluid achter de stem", amb_none: "Geen", amb_rain: "Regen", amb_forest: "Bos", amb_night: "Nacht",
+      amb_title: "Een geluid achter de stem", amb_none: "Geen", amb_rain: "Regen", amb_forest: "Bos", amb_night: "Nacht", amb_sea: "De zee", amb_fire: "Haardvuur", amb_stream: "Beekje", amb_castle: "Kasteel", amb_train: "Trein", amb_farm: "Boerderij 's ochtends", amb_snow: "Sneeuw",
       sleep_t: "Valt in slaap op het einde", sleep_x: "Geen geluid na de laatste bladzijde: de stem sterft langzaam weg.",
       cover_title: "De kaft van het boek", cover_take: "Een foto nemen", cover_del: "Weghalen", cover_bad: "Deze foto kon niet gelezen worden.",
       cover_hint: "Ze wordt het plaatje van het figuurtje dat het verhaal start.",

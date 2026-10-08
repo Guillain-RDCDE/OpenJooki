@@ -16,6 +16,8 @@ say so: just reload it yourself.)
 
 No message? *Settings → Update → **Check for updates***.
 
+<img src="../docs/img/shots/phone-settings.webp" width="260" alt="At the top of Settings: the version, and whether it is up to date">
+
 **Good to know**
 - Your music and tokens are never touched by an update.
 - If the new version does not start, switch the Jooki off and on again: it goes back to

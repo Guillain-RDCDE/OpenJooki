@@ -6,6 +6,8 @@ the web instead. The phone must be on the same Wi-Fi as the Jooki.
 
 The page has four tabs at the bottom: **Playlists**, **Tokens**, **Library**, **Settings**.
 
+<img src="../docs/img/shots/phone-playlists.png" width="260" alt="The playlists page on a phone: one card per playlist with its character, and the bar of what is playing at the bottom">
+
 ## The first two things to do
 
 - **Give it a short name**: in **Settings**, tap **Rename** next to its name, at the top.
@@ -31,6 +33,8 @@ The page has four tabs at the bottom: **Playlists**, **Tokens**, **Library**, **
 
 ### Whole albums, from a computer
 
+<img src="../docs/img/shots/computer-playlists.webp" width="640" alt="The playlists page on a computer: the cards, an album being converted to MP3, the Add albums button and the drop zone">
+
 On a computer, **Add albums** (or drop album folders on the page): each folder becomes a
 playlist, in the album's order. FLAC and WAV files are turned into MP3 by the page before
 they are sent, so an album takes three times less room. Keep the tab in front while it
@@ -44,6 +48,12 @@ shuffled. The playlist says *Will resume at chapter…*; **Start again from the 
 puts it back to chapter 1.
 
 ### A story read by you
+
+<p>
+  <img src="../docs/img/shots/jookistory-start.webp" width="300" alt="Jookistory's first screen: the title of the story, Start, Test my voice">
+  &nbsp;
+  <img src="../docs/img/shots/jookistory-editor.webp" width="300" alt="Jookistory: the big record button, the sound at the end of each page, the silence, the sound behind the voice, the book's cover">
+</p>
 
 On the **Playlists** tab, tap **Jookistory** (*Record a story*), the card next to **New
 playlist**. The story studio opens in a new tab (the phone needs the Internet for this).
@@ -62,6 +72,8 @@ playlist**. The story studio opens in a new tab (the phone needs the Internet fo
 - **Finish the story**, then **Send to the Jooki**: back on the Jooki's page, the story is a
   new playlist, already an audiobook. The page asks **Which token starts this story?**: put
   a flat token or an NFC sticker on the Jooki, it is picked by itself. **Save**.
+
+<img src="../docs/img/shots/jookistory-sounds.webp" width="420" alt="The ten sounds behind the voice: rain, forest, night, the sea, fireside, stream, castle, train, farm morning, snow; and the Falls asleep at the end switch">
 
 **Advanced mode** (at the bottom): cut a page (tap the wave to listen from there, or **The end,
 10 s** to hear just the end), continue it, and sound effects while you read:
@@ -112,6 +124,10 @@ the Jooki from reading the sticker: put it inside the cover instead.
   Jooki while the sheet is open.
 - **Print the labels**: see *Labels for the books* above.
 
+<img src="../docs/img/shots/token-pictures.webp" width="640" alt="The Tokens page on a computer: the characters, the flat tokens, an amiibo, and the picture chooser with its search and its animals">
+
+<img src="../docs/img/shots/token-photo.png" width="420" alt="My photo: an amiibo photographed, the background removed, in the round frame of the token">
+
 ## The Library
 
 Every song on the Jooki, with a search. **Unused** lists the songs that are in no
@@ -146,6 +162,8 @@ listen stops by itself after the **Automatic timer**, the volume stays under the
 
 At the top: the Jooki's name (**Rename**), its battery, the room left for music, and its
 version.
+
+<img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version up to date, then Limited volume, Shuffle, Repeat, MP3 quality, Speaker or headphones">
 
 **Listening**
 - **Limited volume (kids mode)**, **Shuffle**, **Repeat**.

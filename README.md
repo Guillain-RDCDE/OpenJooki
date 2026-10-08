@@ -5,6 +5,15 @@
 **Your child's Jooki 2 keeps working, and gets better, even though the Jooki company is gone.**
 Free, made by a parent, not affiliated with Muuselabs / Jooki.
 
+<p align="center">
+  <img src="docs/img/shots/phone-playlists.png" width="220" alt="The playlists page on a phone: the characters, the playlists, what is playing">
+  &nbsp;
+  <img src="docs/img/shots/jookistory-editor.webp" width="220" alt="Jookistory: record a story page by page, with a sound at the end of each page">
+  &nbsp;
+  <img src="docs/img/shots/phone-settings.webp" width="220" alt="Settings on a phone: battery, storage, version, kids volume, shuffle, Bluetooth speaker">
+</p>
+<p align="center"><sub>The Jooki's page on a phone · Jookistory, a story read by you · Settings</sub></p>
+
 ## What do you need?
 
 | Your situation | Go here |

@@ -12,6 +12,8 @@
   main{max-width:460px;margin:0 auto}
   h1{color:var(--accent);font-size:1.8em;margin:.8em 0 .05em;text-align:center}
   .sub{color:var(--muted);margin:0 0 1.4em;text-align:center;font-size:.95em}
+  .shots{display:flex;gap:8px;justify-content:center;margin:0 0 1.4em}
+  .shots img{width:31%;height:auto;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.12)}
   label{font-weight:600;display:block;margin:0 0 6px}
   input{width:100%;padding:14px;font-size:1.15em;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg)}
   .hint{color:var(--muted);font-size:.85em;margin:7px 2px 0}
@@ -42,6 +44,11 @@
   <div id="controls">
     <h1>OpenJooki</h1>
     <p class="sub">For your Jooki&nbsp;2 &mdash; from your phone.</p>
+    <div class="shots">
+      <img src="img/shots/phone-playlists.png" width="296" height="640" alt="The playlists page on a phone">
+      <img src="img/shots/jookistory-editor.webp" width="658" height="1232" alt="Jookistory, a story read by you">
+      <img src="img/shots/phone-settings.webp" width="1284" height="2391" alt="Settings on a phone">
+    </div>
 
     <label for="ip">Your Jooki's address</label>
     <input id="ip" inputmode="decimal" placeholder="192.168.1.61" autocomplete="off">

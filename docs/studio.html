@@ -113,7 +113,8 @@
   .switch small{display:block;font:400 .82em/1.3 system-ui,sans-serif;color:var(--muted)}
   .qr{display:block;width:200px;height:200px;margin:8px auto;background:#fff;border-radius:12px;padding:6px}
   .addr{text-align:center;font-weight:600;overflow-wrap:anywhere;margin:4px 0 0}
-  canvas{display:block;width:100%;height:90px;margin-bottom:10px}
+  canvas{display:block;width:100%;height:90px;margin-bottom:10px;cursor:pointer;touch-action:manipulation}
+  .cutacts button:first-child{background:var(--panel2);color:inherit;font-weight:600}
   input[type=range]{width:100%;accent-color:var(--accent);margin:2px 0 12px}
   label{font-weight:600;display:flex;justify-content:space-between;gap:10px}
   label .muted{font-weight:400;font-variant-numeric:tabular-nums}
@@ -237,6 +238,10 @@
       <input type="range" id="cut_b" min="0" step="0.05">
       <p class="tiny" data-t="cut_hint"></p>
       <button class="btn ghost" id="cut_play" type="button"></button>
+      <div class="acts cutacts">
+        <button id="cut_head" type="button" data-t="cut_head">The start, 10 s</button>
+        <button id="cut_tail" type="button" data-t="cut_tail">The end, 10 s</button>
+      </div>
     </div>
     <button class="btn" id="cut_keep" type="button" data-t="keep">Keep</button>
     <button class="btn quiet" id="cut_cancel" type="button" data-t="cancel">Cancel</button>
@@ -801,7 +806,7 @@
       fx_knock: "Knock", fx_thunder: "Thunder", fx_owl: "Owl", fx_magic: "Magic", fx_wind: "Wind",
       listen_all: "Listen to the whole story", adv: "Advanced mode", cut: "Cut", more: "Continue",
       pause_title: "The silence before and after the reading", pause_0: "Short (1 s)", pause_1: "Normal (2 s)", pause_2: "Long (4 s)",
-      cut_start: "Start", cut_end: "End", cut_hint: "Move the two sliders to remove the start or the end.", keep: "Keep",
+      cut_start: "Start", cut_end: "End", cut_hint: "Move the two sliders to remove the start or the end. Tap the wave to listen from there.", keep: "Keep", cut_head: "The start, 10 s", cut_tail: "The end, 10 s",
       send_jooki: "Send to the Jooki", j_sent: "Sent. Go back to the Jooki's page.",
       j_back: "Go back to the Jooki's tab: the story is waiting for it.",
       j_asked: "Sending to the Jooki…", j_failed: "The Jooki could not take the story. Try again, or keep the file.",
@@ -858,7 +863,7 @@
       fx_knock: "Toc toc", fx_thunder: "Tonnerre", fx_owl: "Hibou", fx_magic: "Magie", fx_wind: "Vent",
       listen_all: "Écouter toute l'histoire", adv: "Mode avancé", cut: "Couper", more: "Continuer",
       pause_title: "Le blanc avant et après la lecture", pause_0: "Court (1 s)", pause_1: "Normal (2 s)", pause_2: "Long (4 s)",
-      cut_start: "Début", cut_end: "Fin", cut_hint: "Déplace les deux curseurs pour enlever le début ou la fin.", keep: "Garder",
+      cut_start: "Début", cut_end: "Fin", cut_hint: "Déplace les deux curseurs pour enlever le début ou la fin. Tape sur l'onde pour écouter à partir de là.", keep: "Garder", cut_head: "Le début, 10 s", cut_tail: "La fin, 10 s",
       send_jooki: "Envoyer sur le Jooki", j_sent: "Envoyé. Reviens sur la page du Jooki.",
       j_back: "Reviens sur l'onglet du Jooki : l'histoire l'attend.",
       j_asked: "Envoi au Jooki…", j_failed: "Le Jooki n'a pas pu recevoir l'histoire. Réessaie, ou garde le fichier.",
@@ -915,7 +920,7 @@
       fx_knock: "Klop klop", fx_thunder: "Donder", fx_owl: "Uil", fx_magic: "Magie", fx_wind: "Wind",
       listen_all: "Het hele verhaal beluisteren", adv: "Geavanceerde modus", cut: "Knippen", more: "Verder lezen",
       pause_title: "De stilte voor en na het lezen", pause_0: "Kort (1 s)", pause_1: "Normaal (2 s)", pause_2: "Lang (4 s)",
-      cut_start: "Begin", cut_end: "Einde", cut_hint: "Verschuif de twee schuifjes om het begin of het einde weg te halen.", keep: "Bewaren",
+      cut_start: "Begin", cut_end: "Einde", cut_hint: "Verschuif de twee schuifjes om het begin of het einde weg te halen. Tik op de golf om vanaf daar te luisteren.", keep: "Bewaren", cut_head: "Het begin, 10 s", cut_tail: "Het einde, 10 s",
       send_jooki: "Naar de Jooki sturen", j_sent: "Verstuurd. Ga terug naar de pagina van de Jooki.",
       j_back: "Ga terug naar het tabblad van de Jooki: het verhaal wacht daar.",
       j_asked: "Naar de Jooki sturen…", j_failed: "De Jooki kon het verhaal niet ontvangen. Probeer opnieuw, of bewaar het bestand.",
@@ -1120,6 +1125,12 @@
     make().then(function (r) { if (playing === id) playNow(id, r[0], r[1]); }, function () { if (playing === id) stopPlaying(); });
   }
   player.addEventListener('ended', function () { if (queue) playNext(playing); else stopPlaying(); });
+  // a long page: the Listen button says where it is ("Stop · 3:12 / 15:00")
+  player.addEventListener('timeupdate', function () {
+    if (!playing || playing === 'cut' || !isFinite(player.duration)) return;
+    var lb = document.querySelector('[data-listen="' + playing + '"]');
+    if (lb) lb.textContent = t('stop') + ' · ' + clock(player.currentTime) + ' / ' + clock(player.duration);
+  });
 
   function pageParts(p) {
     var lead = tails['lead-' + story.pause], end = tails[tailKey()];
@@ -1322,18 +1333,32 @@
     }, function () { p.pending = false; notice = 'n_failed'; refresh(); });
   }
 
-  function cutPart() {
-    var c = cutting, a = Math.round(+$('cut_a').value * OUT_SR), b = Math.min(c.pcm.length, Math.round(+$('cut_b').value * OUT_SR));
+  // the kept part, or any stretch of it, with soft edges
+  function cutSeg(from, to) {
+    var c = cutting, a = Math.round(from * OUT_SR), b = Math.min(c.pcm.length, Math.round(to * OUT_SR));
     var seg = new Float32Array(c.pcm.subarray(a, b)), fade = Math.min(Math.round(0.02 * OUT_SR), seg.length >> 1);
     for (var i = 0; i < fade; i++) { seg[i] *= i / fade; seg[seg.length - 1 - i] *= i / fade; }
     return seg;
   }
+  function cutPart() { return cutSeg(+$('cut_a').value, +$('cut_b').value); }
+  // listening in the cutter: from any second of the kept part (a tap on the wave, the start, the end),
+  // the cursor on the wave follows; cutFrom is where this playback starts in the recording
+  var cutFrom = 0;
+  function playCut(from, to) {
+    var a = +$('cut_a').value, b = +$('cut_b').value;
+    from = Math.max(a, Math.min(from, b - 0.3)); to = Math.min(b, Math.max(to, from + 0.3));
+    stopPlaying();
+    cutFrom = from;
+    playParts('cut', [wav(cutSeg(from, to), OUT_SR)], 'audio/wav');
+    (function tick() { if (playing === 'cut' && view === 'cut') { drawCut(); requestAnimationFrame(tick); } })();
+  }
+  function cutPos() { return playing === 'cut' ? cutFrom + (player.currentTime || 0) : -1; }
 
   function drawCut() {
     var c = cutting, a = +$('cut_a').value, b = +$('cut_b').value;
     $('ctitle').textContent = t('page') + ' ' + (c.index + 1);
     $('cut_at').textContent = clock1(a); $('cut_bt').textContent = clock1(b);
-    $('cut_play').textContent = playing === 'cut' ? t('stop') : t('listen_b') + ' · ' + clock1(b - a);
+    $('cut_play').textContent = playing === 'cut' ? t('stop') + ' · ' + clock1(cutPos()) : t('listen_b') + ' · ' + clock1(b - a);
     $('cut_play').classList.toggle('on', playing === 'cut');
     var cv = $('wave'), w = Math.max(50, Math.round(cv.clientWidth || 300)), h = 90, dpr = window.devicePixelRatio || 1, x;
     if (!c.peaks || c.peaks.length !== w) {
@@ -1355,6 +1380,8 @@
       g.fillStyle = at >= a && at <= b ? kept : gone;
       g.fillRect(x, (h - bar) / 2, 1, bar);
     }
+    var pos = cutPos();
+    if (pos >= 0) { g.fillStyle = css.getPropertyValue('--fg').trim() || '#222'; g.fillRect(Math.round(pos / c.dur * w) - 1, 0, 2, h); }
   }
 
   function keepCut() {
@@ -1393,7 +1420,8 @@
       li.appendChild(row);
       if (!p.pending) {
         var acts = el('div', 'acts'), id = 'page-' + i;
-        acts.appendChild(act(playing === id ? t('stop') : t('listen_b'), playing === id, function () { listenPage(id, p, i); }));
+        var lb = act(playing === id ? t('stop') : t('listen_b'), playing === id, function () { listenPage(id, p, i); });
+        lb.setAttribute('data-listen', id); acts.appendChild(lb);
         acts.appendChild(act(t('redo'), false, function () { begin('page', i); }));
         acts.appendChild(act(sure === i ? t('sure') : t('remove'), false, function () {
           if (sure !== i) { sure = i; refresh(); return; }
@@ -1661,7 +1689,14 @@
   }
   $('cut_a').addEventListener('input', cutMoved);
   $('cut_b').addEventListener('input', cutMoved);
-  $('cut_play').addEventListener('click', function () { if (cutting) playParts('cut', [wav(cutPart(), OUT_SR)], 'audio/wav'); });
+  $('cut_play').addEventListener('click', function () { if (!cutting) return; if (playing === 'cut') stopPlaying(); else playCut(+$('cut_a').value, +$('cut_b').value); });
+  $('cut_head').addEventListener('click', function () { if (cutting) playCut(+$('cut_a').value, +$('cut_a').value + 10); });
+  $('cut_tail').addEventListener('click', function () { if (cutting) playCut(+$('cut_b').value - 10, +$('cut_b').value); });
+  $('wave').addEventListener('click', function (ev) {   // a tap on the wave: listen from there
+    if (!cutting) return;
+    var r = $('wave').getBoundingClientRect(), x = (ev.clientX - r.left) / (r.width || 1);
+    playCut(x * cutting.dur, +$('cut_b').value);
+  });
   $('cut_keep').addEventListener('click', function () { if (cutting) keepCut(); });
   $('cut_cancel').addEventListener('click', function () { stopPlaying(); cutting = null; show('story'); });
   window.addEventListener('resize', function () { if (cutting && view === 'cut') drawCut(); });

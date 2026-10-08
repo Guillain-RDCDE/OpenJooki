@@ -63,7 +63,8 @@ playlist**. The story studio opens in a new tab (the phone needs the Internet fo
   new playlist, already an audiobook. The page asks **Which token starts this story?**: put
   a flat token or an NFC sticker on the Jooki, it is picked by itself. **Save**.
 
-**Advanced mode** (at the bottom): cut a page, continue it, and sound effects while you read:
+**Advanced mode** (at the bottom): cut a page (tap the wave to listen from there, or **The end,
+10 s** to hear just the end), continue it, and sound effects while you read:
 tap **Knock**, **Thunder**, **Owl**, **Magic** or **Wind** at the right moment.
 
 ### A story read from far away

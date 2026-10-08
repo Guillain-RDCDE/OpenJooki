@@ -6,8 +6,13 @@
   pop), *Stream* (running water, a frog), *Castle* (drops that echo in the halls, a draught),
   *Train* (the wheels on the rails, a whistle far away), *Farm morning* (hens, the rooster, a cow)
   and *Snow* (a muffled wind, sleigh bells far away). All made by the page, like the first three.
+- **Finding the second to cut, without listening to the whole page.** In Jookistory's *Cut* (advanced
+  mode): a cursor runs along the wave while it plays and the button says where it is; tap the wave to
+  listen from there; *The start, 10 s* and *The end, 10 s* play just those. On the pages list, *Listen*
+  now says where it is too (*Stop · 3:12 / 15:00*).
 - For the tinkerers: `ambience()` in `docs/studio.html`, `AMBS` has ten kinds; seven pictures
-  copied from `webui/tokimg/` into `docs/img/studio/`.
+  copied from `webui/tokimg/` into `docs/img/studio/`. The cutter: `playCut(from, to)`, `cutPos()`,
+  the cursor drawn by `drawCut` on each animation frame.
 
 ## OpenJooki 2.4.1 (7 October 2026) — Send to the Jooki, after a long reading
 - **Send to the Jooki, after a long reading.** A story sent from Jookistory could vanish: the

@@ -2,6 +2,14 @@
 
 # OpenJooki
 
+<!-- opening -->
+> A children’s music speaker whose maker went out of business. This keeps it working, from a phone, for parents who are not technicians.
+>
+> A replacement core on the device’s embedded Linux, over-the-air updates, Bluetooth, Spotify, a story studio, and a fresh SD-card image for a unit that no longer starts.
+>
+> Abandoned hardware rescued end to end, and documented for people who will never read code. Part of the work of [Guillain d’Erceville](https://github.com/Guillain-RDCDE), forward deployed engineer.
+<!-- opening -->
+
 **Your child's Jooki 2 keeps working, and gets better, even though the Jooki company is gone.**
 Free, made by a parent, not affiliated with Muuselabs / Jooki.
 

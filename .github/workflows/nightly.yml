@@ -22,7 +22,7 @@ jobs:
       run:
         working-directory: tools/openjooki/tests
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/bench
       - name: Unit specs and smoke, as a reminder of the day
         working-directory: .

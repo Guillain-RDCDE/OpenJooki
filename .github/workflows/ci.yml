@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Versions agree (app.js, index.html, README, CHANGELOG)
         run: python3 scripts/check_versions.py
       - name: Python (ruff, undefined names and unused imports only)
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Tools
         run: |
           sudo apt-get update -qq
@@ -75,7 +75,7 @@ jobs:
         run: lua5.1 core/spec/run.lua core/spec/integration/bus_spec.lua
       - name: Smoke (boot, contract, budgets)
         run: python3 core/spec/integration/smoke.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: core-build
@@ -94,7 +94,7 @@ jobs:
       run:
         working-directory: tools/openjooki/tests
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/bench
       - name: backend
         run: sudo -E python3 test_backend.py

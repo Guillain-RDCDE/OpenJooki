@@ -42,16 +42,6 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 
 **New in 2.4.1:** a story sent from Jookistory after a long reading no longer vanishes, and Jookistory says what happened.
 2.4.0: put the token on the Jooki and it starts the story, with the book's cover as its picture; labels to print; a story is one file to send; rain, forest or night behind the voice.
-2.3.2: the story studio is called Jookistory; a story is never shuffled, even added by hand; shuffle in the Spotify app no longer shuffles the tokens.
-2.3.1: *Record a story* is now a card right next to *New playlist*.
-2.3.0: read a story yourself, page by page, and the Jooki plays it back: *Record a story* on the playlists page.
-2.2.7: the update screen no longer looks stuck: it finds the Jooki again by itself.
-2.2.6: shuffle really shuffles; the characters have Dutch names; an audiobook says at once where it will resume.
-2.2.5: the pages inside Settings no longer blink.
-2.2.3: FLAC albums go onto the Jooki as MP3, three times lighter; on a computer, drop an album folder and it becomes a playlist.
-2.2.2: the page opens by the Jooki's name every time (`http://` + its name + `.local`).
-2.2.1: the page in dark or light, your choice; and a *Christmas tree* button, just for fun.
-2.2.0: each flat token can start its own story; 659 ready-made pictures for flat tokens and NFC tags; a shorter Settings page.
 [All the changes](CHANGELOG.md)
 
 ---

@@ -2,7 +2,8 @@
 # OpenJooki — write the next version number everywhere it is written by hand, in one go.
 #   scripts/bump-version.sh 2.2.6 "Settings pages stay still" "the pages inside Settings no longer blink"
 # Changes: the page's VERSION (webui/src/00-config.js, then app.js rebuilt), webui/index.html (three ?v=), CHANGELOG.md ("## Next release" becomes
-# the release heading, dated today), README.md ("New in X" line: the new one on top, the old one demoted).
+# the release heading, dated today), README.md ("New in X" line: the new one on top, the old one demoted, older ones
+# dropped: the README shows the last two versions, CHANGELOG.md has them all).
 # Then scripts/check_versions.py --release confirms. Commit the result as "Release X: title".
 set -e
 cd "$(dirname "$0")/.."
@@ -25,6 +26,12 @@ v, old, summary = sys.argv[1:4]
 s = open("README.md", encoding="utf-8").read()
 new, n = re.subn(r"^\*\*New in %s:\*\* " % re.escape(old), "**New in %s:** %s.\n%s: " % (v, summary.rstrip("."), old), s, count=1, flags=re.M)
 assert n == 1, "README.md: no '**New in %s:**' line" % old
+# the last two versions only: drop what follows the demoted line, down to the link to the changelog
+lines = new.split("\n")
+i = next(k for k, l in enumerate(lines) if l.startswith("**New in %s:**" % v))
+j = next((k for k, l in enumerate(lines) if l.startswith("[All the changes](CHANGELOG.md)")), None)
+assert j is not None and j > i + 1, "README.md: no '[All the changes](CHANGELOG.md)' line under the 'New in' lines"
+new = "\n".join(lines[:i + 2] + lines[j:])
 open("README.md", "w", encoding="utf-8", newline="").write(new)
 EOF
 python3 scripts/check_versions.py --release "$V"

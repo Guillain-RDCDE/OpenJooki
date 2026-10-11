@@ -1,0 +1,18 @@
+# Weekly, one pull request per ecosystem: the GitHub actions (workflows and the bench action),
+# and the bench's pinned Python packages (tools/openjooki/tests/requirements.txt).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/.github/actions/bench"]
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: pip
+    directory: /tools/openjooki/tests
+    schedule:
+      interval: weekly
+    groups:
+      bench-python:
+        patterns: ["*"]

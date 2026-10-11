@@ -9,6 +9,14 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+# a release tag's run is never cut short by the next one (each ref has its own queue)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   PLAYWRIGHT_BROWSERS_PATH: /opt/pw
   CORE_BUILD: ${{ github.workspace }}/build

@@ -3,9 +3,9 @@ name: core
 on:
   push:
     branches: [main]      # a tag push does not run this again: the nightly workflow covers tags
-    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", ".github/**", "README.md", "CHANGELOG.md"]
+    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", "docs/mp3-worker.js", "docs/lame.*", ".github/**", "README.md", "CHANGELOG.md"]
   pull_request:
-    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", ".github/**", "README.md", "CHANGELOG.md"]
+    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", "docs/mp3-worker.js", "docs/lame.*", ".github/**", "README.md", "CHANGELOG.md"]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -26,11 +26,11 @@ jobs:
         run: python3 scripts/check_versions.py
       - name: Python (ruff, undefined names and unused imports only)
         run: pip install -q ruff==0.15.14 && ruff check --select F tools scripts core/spec/integration
-      - name: app.js is what webui/src gives
+      - name: app.js is what webui/src gives, and the MP3 encoder in docs/ is the copy of webui/
         run: python3 tools/openjooki/webui/build.py --check
       - name: The page parses and stays small (app.js <= 256 KiB, app.css <= 64 KiB)
         run: |
-          node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js
+          node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js && node --check docs/mp3-worker.js
           for f in tools/openjooki/webui/src/*.js; do node --check "$f" || exit 1; done
           python3 - <<'EOF'
           import os, sys

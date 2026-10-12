@@ -13,6 +13,17 @@
 - For the tinkerers: `ambience()` in `docs/studio.html`, `AMBS` has ten kinds; seven pictures
   copied from `webui/tokimg/` into `docs/img/studio/`. The cutter: `playCut(from, to)`, `cutPos()`,
   the cursor drawn by `drawCut` on each animation frame.
+- **Updates check their own tools.** From the next version on, before it runs the two small
+  programs that install an update, the Jooki checks that they are exactly the ones of that
+  version. If one is not, it installs nothing and says so. Until then, updates work as before.
+- For the tinkerers: `version.json` gains `ota_sha256`, `selfupdate_sha256` and `o_sha256`
+  (`scripts/make-release.sh`), and the release carries `openjooki-ota.sh` and
+  `openjooki-selfupdate.sh` (`scripts/publish-release.sh` downloads them again and compares).
+  `o.sh` and `b.sh` read `version.json` first, take each script from the release (Pages when the
+  release has no copy with that sha256), and refuse a mismatch: *updater rejected, nothing changed*,
+  exit 3, the old scripts kept. A release without these fields (2.4.1 and before) still gets the
+  Pages copies, unchecked, with *updater not verified* in the log. `check_versions.py --manifest`
+  and the bench suite `test_updater.py` (busybox, in CI) guard it.
 
 ## OpenJooki 2.4.1 (7 October 2026) — Send to the Jooki, after a long reading
 - **Send to the Jooki, after a long reading.** A story sent from Jookistory could vanish: the

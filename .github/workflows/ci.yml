@@ -134,6 +134,9 @@ jobs:
       - name: the Wi-Fi page (docs/wifi.html) against a scripted Jooki
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_wifi_page.py
+      - name: the updater scripts (docs/o.sh, docs/b.sh) under busybox, checking what they fetch
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_updater.py
       - name: Bench logs (on failure)
         if: failure()
         run: |

@@ -7,7 +7,7 @@ and the web page end to end. It needs root (it creates `/jooki`, `/data/mode`,
 The CI runs exactly this (`.github/workflows/ci.yml`, job *oracle*).
 
 Requirements: `lua5.1`, `lua-socket`, `lua-filesystem`, `mosquitto`, `ffmpeg`/`ffprobe`,
-Python 3 with `paho-mqtt` and `playwright` (Chromium), at the versions pinned in
+`busybox` (`test_updater.py` runs the device's updater scripts under it), Python 3 with `paho-mqtt` and `playwright` (Chromium), at the versions pinned in
 `requirements.txt` (what CI installs, `.github/actions/bench`).
 
 | On the device | On the bench |
@@ -29,6 +29,7 @@ python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py
 python3 test_security_backend.py && python3 e2e.py && python3 test_security.py
 python3 test_spotify.py && python3 test_robustness.py && python3 test_loader.py
 python3 test_httpd.py && python3 test_clock.py && python3 test_wifi_page.py
+python3 test_updater.py                       # docs/o.sh, docs/b.sh: no core needed
 python3 ../../../core/spec/integration/endurance.py 3     # minutes (default 10, what nightly.yml runs)
 ```
 

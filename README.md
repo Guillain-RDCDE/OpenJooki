@@ -40,8 +40,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.1:** a story sent from Jookistory after a long reading no longer vanishes, and Jookistory says what happened.
-2.4.0: put the token on the Jooki and it starts the story, with the book's cover as its picture; labels to print; a story is one file to send; rain, forest or night behind the voice.
+**New in 2.4.2:** before it installs an update, the Jooki checks that the programs doing it are the right ones; seven more sounds and an easier cutter in Jookistory.
+2.4.1: a story sent from Jookistory after a long reading no longer vanishes, and Jookistory says what happened.
 [All the changes](CHANGELOG.md)
 
 ---

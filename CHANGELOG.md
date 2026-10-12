@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.2 (12 October 2026) — Updates check their own tools
 - **Seven more sounds behind the voice** in Jookistory (already online, the studio lives on the
   site): *The sea* (waves that swell and withdraw, a gull now and then), *Fireside* (crackles, a
   pop), *Stream* (running water, a frog), *Castle* (drops that echo in the halls, a draught),
@@ -13,9 +13,9 @@
 - For the tinkerers: `ambience()` in `docs/studio.html`, `AMBS` has ten kinds; seven pictures
   copied from `webui/tokimg/` into `docs/img/studio/`. The cutter: `playCut(from, to)`, `cutPos()`,
   the cursor drawn by `drawCut` on each animation frame.
-- **Updates check their own tools.** From the next version on, before it runs the two small
+- **Updates check their own tools.** From this version on, before it runs the two small
   programs that install an update, the Jooki checks that they are exactly the ones of that
-  version. If one is not, it installs nothing and says so. Until then, updates work as before.
+  version. If one is not, it installs nothing and says so.
 - For the tinkerers: `version.json` gains `ota_sha256`, `selfupdate_sha256` and `o_sha256`
   (`scripts/make-release.sh`), and the release carries `openjooki-ota.sh` and
   `openjooki-selfupdate.sh` (`scripts/publish-release.sh` downloads them again and compares).

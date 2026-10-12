@@ -61,7 +61,8 @@ check("S4 core.version event", r and r["ok"] and got["events"] and got["events"]
 n = len(got["states"])
 c.publish("/j/spotify/input/login", json.dumps({"username": "fake-spotify"}))
 B.poll(lambda: len(got["states"]) > n, 2, every=0.02)
-sp = [s for s in got["states"][n:] if s.get("patch", {}).get("spotify")]
+# a patch with nothing published in it arrives as [] (an empty Lua table encodes as a JSON array)
+sp = [s for s in got["states"][n:] if isinstance(s, dict) and isinstance(s.get("patch"), dict) and s["patch"].get("spotify")]
 check("S8 spotify login from the daemon reaches the state", sp and sp[-1]["patch"]["spotify"]["username"] == "fake-spotify", got["states"][n:][-2:])
 r = cmd({"v": 2, "id": "a4", "type": "spotify.new_playlist", "payload": {"title": "x"}})
 check("S8 preset while idle -> unavailable, core alive", r and r["ok"] is False and r["error"]["code"] == "unavailable" and proc.poll() is None, r)

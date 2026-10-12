@@ -1,5 +1,6 @@
 lame.min.js is lamejs 1.2.1 (https://github.com/zhuker/lamejs), a JavaScript port of LAME,
-unmodified (identical to the npm package lamejs-1.2.1.tgz, sha256 15d285e2587b3bdbfd18a68de6ce07cc074f7480a82c3815da2dc1c348ec6df4).
+unmodified (identical to lame.min.js in the npm package lamejs-1.2.1.tgz; sha256 of lame.min.js:
+15d285e2587b3bdbfd18a68de6ce07cc074f7480a82c3815da2dc1c348ec6df4).
 It is used by the page to turn FLAC and WAV files into MP3 in the browser before they are sent to the Jooki.
 Licence: GNU Lesser General Public License v3 (LGPL-3.0), below.
 

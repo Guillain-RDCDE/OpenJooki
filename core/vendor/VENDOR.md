@@ -8,7 +8,7 @@ Each version below was checked against the file itself and its upstream, not tak
 |---|---|---|---|---|
 | json.lua (rxi), the core's JSON | `core/vendor/json.lua`, licence `core/vendor/json.LICENSE` | https://github.com/rxi/json.lua | commit `11077824d7cfcd28a4b2f152518036b295e7e4ce` (5 April 2020), see below | MIT, Copyright (c) 2020 rxi |
 | lamejs, the MP3 encoder of the page and of Jookistory | `tools/openjooki/webui/lame.min.js` (copied to `docs/lame.min.js` by `tools/openjooki/webui/build.py`), licence `lame.LICENSE.txt` next to it | https://github.com/zhuker/lamejs, npm package `lamejs` | 1.2.1, unmodified | LGPL-3.0 |
-| Fluent Emoji 3D (Microsoft), the ready-made token pictures | `tools/openjooki/webui/tokimg/*.webp` (659 pictures, 128 px WebP), licence `tokimg/LICENSE.txt`; 24 of them copied unchanged to `docs/img/studio/*.webp` for Jookistory | https://github.com/microsoft/fluentui-emoji | branch `main`, most likely commit `1ffb34c752ecf5d402f04cfb4b392c77f57c54bc`, see below | MIT, Copyright (c) Microsoft Corporation |
+| Fluent Emoji 3D (Microsoft), the ready-made token pictures | `tools/openjooki/webui/tokimg/*.webp` (659 pictures, 128 px WebP), licence `tokimg/LICENSE.txt`; 24 of them copied unchanged to `docs/img/studio/*.webp` for Jookistory, licence `docs/img/studio/LICENSE.txt` | https://github.com/microsoft/fluentui-emoji | branch `main`, most likely commit `1ffb34c752ecf5d402f04cfb4b392c77f57c54bc`, see below | MIT, Copyright (c) Microsoft Corporation |
 | Unicode CLDR annotations, the names and search words of the token pictures | `tools/openjooki/webui/tokimg/index.json` (names shortened by hand) | https://github.com/unicode-org/cldr-json, npm packages `cldr-annotations-full` and `cldr-annotations-derived-full` | 46 (the major version `make_tokimg.py` asks for; the exact 46.x release was not recorded: unknown) | Unicode License v3 |
 
 ## How each version was checked
@@ -23,7 +23,7 @@ Each version below was checked against the file itself and its upstream, not tak
   inside https://registry.npmjs.org/lamejs/-/lamejs-1.2.1.tgz (whose `package.json` says version
   1.2.1, licence LGPL-3.0). The tarball itself has sha256
   `d8d099ef788808c15bc9b4a407dd23ae935feb1152e6bb0efdcd24e3e91c2a2d`: the hash written in
-  `lame.LICENSE.txt` is the one of `lame.min.js`, not of the tarball.
+  `lame.LICENSE.txt` is the one of `lame.min.js`, not of the tarball, and it says so.
 - **Fluent Emoji**: `tools/openjooki/webui/make_tokimg.py` downloads from the `main` branch and
   does not write down the commit. The pictures were added on 1 October 2026 (commit `618fa66`);
   upstream `main` had not moved between 24 August 2026 (`1ffb34c`) and then, so that is the

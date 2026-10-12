@@ -8,8 +8,8 @@ checked everywhere by CI (`scripts/check_versions.py`).
 |---|---|---|
 | 1. Write the entry | anywhere | `CHANGELOG.md`: fill the `## Next release` section (one bullet per change a family can see) |
 | 2. Set the version | anywhere | `scripts/bump-version.sh 2.2.6 "Title" "one-line summary"` then `git commit -am "Release 2.2.6: Title"` and `git push` |
-| 3. Build | the Linux bench, as root | `scripts/release.sh 2.2.6` → `release-2.2.6/` (image + `version.json`) and `release-sdcard-2.2.6/` (new-card image + `sdcard.json`), both verified |
-| 4. Publish | a machine with `gh` | `scripts/publish-release.sh 2.2.6` → tag, GitHub Release marked *Latest* (notes from the CHANGELOG entry), the rolling `sdcard` release updated, the published image downloaded again and checked |
+| 3. Build | the Linux bench, as root | `scripts/release.sh 2.2.6` → `release-2.2.6/` (image + `version.json` + `openjooki-ota.sh` and `openjooki-selfupdate.sh`) and `release-sdcard-2.2.6/` (new-card image + `sdcard.json`), both verified |
+| 4. Publish | a machine with `gh` | `scripts/publish-release.sh 2.2.6` → tag, GitHub Release marked *Latest* (notes from the CHANGELOG entry), the rolling `sdcard` release updated, the published image and updater scripts downloaded again and checked |
 | 5. Check the card | the bench | `scripts/check-card.sh 2.2.6` → the SD tool fetches the new-card image from the real release and writes an 8 GB "card" that is then checked |
 
 What `release.sh` needs on the bench, by environment variable (defaults in the script): the
@@ -26,7 +26,12 @@ Inside, `release.sh` checks the version (`check_versions.py --release`), builds 
 system files into the base image, then `scrub_rootfs`: leftovers removed and the free blocks
 emptied with `e2fsck -E discard`, at least two passes), checks the version, the page, the
 loader and the core inside the image, runs `scripts/make-release.sh` (the `.img.gz` and
-`version.json`), then `tools/sdcard/make_card_image.py` for the new-card image.
+`version.json`, which also gives the sha256 of the commit's `docs/o.sh`, `openjooki-ota.sh` and
+`openjooki-selfupdate.sh`, the last two copied next to it), checks those hashes
+(`check_versions.py --manifest`), then `tools/sdcard/make_card_image.py` for the new-card image.
+The Jookis check the two updater scripts against these hashes before running them
+([15-ota-github.md](15-ota-github.md)): once the latest release has these hashes, a change to
+them in `docs/` only runs on a Jooki when a release carries it.
 
 CI (`.github/workflows/ci.yml`) must be green on the pushed commit before step 4; the tag then
 runs the long `nightly.yml` (the whole bench plus 10 minutes of endurance). Where the files go

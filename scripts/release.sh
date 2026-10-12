@@ -7,7 +7,8 @@
 # In: the committed tree (scripts/check_versions.py --release must pass), the 1.3.0 base image
 # (OJ_BASE_IMAGE), the pieces of a new card (OJ_NEWCARD: boot.bin, p1.img; OJ_DATA_TAR) and, optionally,
 # OJ_FORGET_FILE: one string per line that must not appear in any image (the source Jooki's identity).
-# Out, in the repository (ignored by git): release-<V>/ (firmware image + version.json) and
+# Out, in the repository (ignored by git): release-<V>/ (firmware image + version.json + the two
+# updater scripts it gives the sha256 of) and
 # release-sdcard-<V>/ (new-card image + sdcard.json), both verified.
 set -e
 cd "$(dirname "$0")/.."
@@ -32,6 +33,7 @@ if [ -f "$FORGET_FILE" ]; then while read -r s; do [ -n "$s" ] && FORGET+=(--for
 say "copy of the tree to $WORK (Dropbox is slow: a few minutes for the token pictures)"
 rm -rf "$WORK"; mkdir -p "$WORK"
 cp -r "$SRC/core" "$SRC/tools" "$SRC/scripts" "$WORK/"
+mkdir -p "$WORK/docs"; cp "$SRC"/docs/*.sh "$WORK/docs/"   # the updater scripts: make-release.sh hashes them
 find "$WORK" -name '*.sh' -exec sed -i 's/\r$//' {} +
 cd "$WORK"
 
@@ -53,6 +55,7 @@ echo "version, page, loader and core verified"
 say "release files"
 bash scripts/make-release.sh "$WORK/out-$V.img" "$V"
 rm -rf "$SRC/release-$V"; mkdir -p "$SRC/release-$V"; cp "release-$V"/* "$SRC/release-$V/"
+(cd "$SRC" && python3 scripts/check_versions.py --release "$V" --manifest "release-$V/version.json")
 
 say "new-card image (tools/sdcard/make_card_image.py)"
 mkdir -p "$WORK/card"

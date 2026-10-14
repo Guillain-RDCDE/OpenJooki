@@ -51,7 +51,7 @@ Internet is fine (a holiday home's box, a campsite).
   hotspot on; on an iPhone also switch on *Maximize Compatibility* (the Jooki only sees
   2.4 GHz Wi-Fi). Give that Wi-Fi to the Jooki with the Wi-Fi page. Away from home, switch
   the hotspot on, then the Jooki.
-- **Back home**, on the Wi-Fi page, **Forget** the Wi-Fi you added. The Jooki works best
-  when it knows only the Wi-Fi next to it.
+- **Back home**, on the Wi-Fi page, **Forget** the Wi-Fi you added, then give it your home
+  Wi-Fi again: at start the Jooki only looks at the networks before the first empty slot.
 
 [← Back](../README.md)

@@ -30,8 +30,16 @@ is on the charger and plays nothing, it restarts quietly (twice in a row at most
 **It is on the Wi-Fi at the other end of the house.**
 The Jooki does not pick the strongest Wi-Fi: after a short cut it can move to another one
 it knows and stay there. Keep only the Wi-Fi next to it: on the
-[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), find the Jooki, then
-**Forget** the others in *Networks the Jooki remembers*. This does not cut its Wi-Fi.
+[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), find the Jooki,
+**Forget** every network in *Networks the Jooki remembers*, then give it the Wi-Fi next to it
+again. Forgetting does not cut its Wi-Fi.
+
+**It only gets on the Wi-Fi after I use the Wi-Fi page.**
+After every start the side dots stay orange until you give it a network on the
+[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html). At start the Jooki only
+looks at the networks before the first empty slot, and OpenJooki 2.0.9 to 2.4.2 forgot
+Muuselabs' own network, which sat in the first slot. On the Wi-Fi page, **Forget** every network,
+then give it your Wi-Fi once more: it then finds it by itself at every start.
 
 **On holiday, night mode does nothing.**
 Without the Internet the Jooki does not know the time. Open its page once from your phone:

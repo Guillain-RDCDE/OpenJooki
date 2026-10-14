@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The Jooki finds its Wi-Fi by itself at every start again.** Since 2.0.9 a Jooki could stay
+  offline after each start, side dots chasing orange, until someone gave it its Wi-Fi on the
+  Wi-Fi page. At start the Wi-Fi chip only looks at the networks before the first empty slot,
+  and OpenJooki forgot Muuselabs' own network, which sat in the first slot. OpenJooki keeps it now.
+  A Jooki already in that state needs one repair on the Wi-Fi page: **Forget** every network,
+  then give it your Wi-Fi again ([questions](guide/questions.md)).
+- The Wi-Fi page and `jooki_wifi.py` say to give the near network again after forgetting one,
+  and the guide's advice to forget the far networks now says the same.
+- For the tinkerers: `services.network` no longer runs `wifi_forget_factory` (removed from
+  `adapters.shell`). The chip's start-up log, how to capture it, and what it says are in
+  `docs/20-network-health.md`.
+
 ## OpenJooki 2.4.2 (12 October 2026) — Updates check their own tools
 - **Seven more sounds behind the voice** in Jookistory (already online, the studio lives on the
   site): *The sea* (waves that swell and withdraw, a gull now and then), *Fireside* (crackles, a

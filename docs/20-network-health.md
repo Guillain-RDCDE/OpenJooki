@@ -121,9 +121,9 @@ browser searches the web or tries https.
   to idx 1` at ~72 s, the network at ~81 s), tokens and sound were re-initialised,
   and on the way back it could settle on another network it knows. Since 2.0.8 S55
   no longer adds it; since 2.0.9 it writes nothing to the chip's list at start at all
-  (2.0.8 removed mnet2 there, while the chip connected), and the core forgets mnet2 a
-  minute after the Wi-Fi is up (`wifi_forget_factory`: only if another network is known
-  and the chip is not on it). S55 also waits 30 s for the chip instead of 10, and no
+  (2.0.8 removed mnet2 there, while the chip connected), and from 2.0.9 to 2.4.2 the core
+  forgot mnet2 a minute after the Wi-Fi was up, which left slot 0 empty (see *The first
+  empty slot* below). S55 also waits 30 s for the chip instead of 10, and no
   longer writes `/data/mode/FACTORY` (for good) when the chip is slow: it logs instead.
 - **About 80 s to the Wi-Fi after a start is normal, and needed.** The chip's first
   connection (~4 s) is cut by the Linux start, and it tries again 60 s later
@@ -148,6 +148,34 @@ browser searches the web or tries https.
   (`/etc/rcS.d/S55_ml-start-wifi.sh.openjooki-orig`), and the boot loop runs every
   `S??*` file of that folder. OpenJooki's `rcS` skips `*.openjooki-orig`, or both the
   new and the original script would run (checked by `tests/test_robustness.py` R5).
+
+## The first empty slot (14/10/2026)
+
+- **At start the chip reads its list only up to the first empty slot.** Its start-up check
+  (`WCM`, firmware 0x020C, ESP-IDF v4.4) found no network on a Jooki that knew one, and
+  started Bluetooth provisioning instead: `WCM: no networks configured`, then `WCM: WiFi
+  configuration database is empty, starting Bluetooth provisioning.` With `mnet2` back in
+  slot 0, slots 1 and 2 empty and the home network in slot 3: `WCM: only fallback network
+  defined`, `WCM: fallback network not found`, and Bluetooth provisioning again. With the home
+  network alone in slot 0: `WCM_STA: reconnecting to idx -1...`, connected 12 s after the
+  chip started.
+- **2.0.9's forgetting of `mnet2` emptied slot 0.** From then on the Jooki stayed offline
+  after every start (side dots chasing orange) until someone gave it a network over
+  Bluetooth, and the watchdog's restart led to the same place. While running, the chip's
+  reconnection loop reads every slot, so it recovered after a drop and nothing looked
+  wrong there. The core no longer forgets `mnet2`.
+- **Forgetting any network leaves the same gap.** `list_configured_ap` (and the Bluetooth
+  list) gives the networks without their slots, so neither the Wi-Fi page nor
+  `jooki_wifi.py` can see a gap. Both now say to give the near network again after a
+  forget: a network that is added takes the first empty slot (`Found an empty slot in
+  WiFi database at index %d`). Forgetting every network, then adding the home one, puts
+  it in slot 0.
+- **The chip's start-up never reached the log.** It decides about a second after
+  power-on, and `S55` starts `esp32_tty_log.sh` 10 to 15 s later. To read it, reset the
+  chip while the logger runs: unload `esp32sdio`, pulse `/sys/kernel/htdrv/esp_reset`
+  (with `esp_bootmode` at 0), load it again, then `esp32_cmd set_versions`.
+- **Adding a network prints its password.** `WCM_NVS: [idx N] settings:` dumps the slot in
+  hex, SSID and password included, so the system log on the card holds the Wi-Fi password.
 
 ## Tests
 

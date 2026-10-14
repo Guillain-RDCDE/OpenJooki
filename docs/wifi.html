@@ -115,7 +115,7 @@
 
   <div id="knownbox" class="card" hidden>
     <b>Networks the Jooki remembers</b>
-    <p class="tiny" style="margin-bottom:8px">It does not pick the strongest one: after a short cut it can move to another one it knows, even a far one, and stay there. So keep only the network next to the Jooki, and forget the others (reading and forgetting here do not take it off its Wi-Fi).</p>
+    <p class="tiny" style="margin-bottom:8px">It does not pick the strongest one: after a short cut it can move to another one it knows, even a far one, and stay there. At start it only looks at the networks before the first empty slot, and forgetting one can leave a gap: after forgetting any, give it the network next to it again (below), which fills the first empty slot. To keep only that one, forget them all, then give it that one. Reading and forgetting here do not take it off its Wi-Fi.</p>
     <div id="known"></div>
   </div>
 
@@ -331,7 +331,7 @@
         var name = document.createElement('span'); name.className = 'name'; name.textContent = ssid;
         var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost small'; b.textContent = 'Forget'; b.setAttribute('data-forget', ssid);
         b.onclick = async function () {
-          if (!confirm('Forget "' + ssid + '"?\nIf the Jooki is on it right now, it will drop off it.')) return;
+          if (!confirm('Forget "' + ssid + '"?\nIf the Jooki is on it right now, it will drop off it.\nAfterwards, give it the network next to it again (below), or at its next start it may only find its Wi-Fi through this page.')) return;
           try { await link(); await forget(ssid); await renderKnown(); } catch (e) { err('Could not forget it', explain(e)); }
         };
         row.appendChild(name); row.appendChild(b); box.appendChild(row);

@@ -137,6 +137,9 @@ jobs:
       - name: the updater scripts (docs/o.sh, docs/b.sh) under busybox, checking what they fetch
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_updater.py
+      - name: jooki.py's A/B switch waits for a slow Jooki and leaves an armed trial alone
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_ab_switch.py
       - name: Bench logs (on failure)
         if: failure()
         run: |

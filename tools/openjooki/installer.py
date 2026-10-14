@@ -221,11 +221,15 @@ def install_firmware(host, image_path, on_step=None, on_progress=None, do_switch
         return {"ok": True, "switched": False, "hash": src_hash, "active": a, "spare": s}
 
     # Activation with U-Boot rollback armed (see jooki.ab_switch).
-    step("Activation + test (reboot ~2 min, do not unplug)…"); prog(80)
+    step("Activation + test (reboot ~2 min, up to 10 min on a slow Wi-Fi; do not unplug)…"); prog(80)
     rc = jooki.ab_switch(host, s)
     if rc == 0:
         step("Firmware active and working ✓"); prog(100)
         return {"ok": True, "switched": True, "hash": src_hash, "active": s, "previous": a}
+    if rc == jooki.AB_LOST:
+        step("The Jooki is not back on the network yet. If it restarts before the new version is "
+             "confirmed, it goes back to the previous version on its own."); prog(100)
+        return {"ok": False, "switched": False, "hash": src_hash, "active": None, "spare": s, "reason": "lost"}
     step("The new version did not boot: automatic return to the previous version."); prog(100)
     return {"ok": False, "switched": False, "hash": src_hash, "active": a, "spare": s, "reason": "boot"}
 

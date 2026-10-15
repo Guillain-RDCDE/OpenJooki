@@ -36,6 +36,11 @@ CH_LIST = "5bf49f8c-3491-218c-ae4f-db0580debd03"
 NAME_PREFIX = "JOOKI2_"
 STATES = ["connected", "connecting", "disconnected", "failed"]
 AUTH = ["open", "WEP", "WPA", "WPA2", "WPA/WPA2", "WPA2 enterprise", "WPA3", "WPA2/WPA3"]
+# At start the chip reads its list of networks only up to the first empty slot, and a forgotten
+# network leaves one: giving the home network again puts it in the first empty slot.
+GAP_WARNING = ("At start the Jooki only looks at the networks before the first empty slot, and the one forgotten\n"
+               "may have left one. Give it the network next to it again (connect), or forget them all and then\n"
+               "give it that one.")
 LEAVES_WIFI = ("Note: while the Jooki talks to this computer it leaves its Wi-Fi, until it is given a network.")
 COMES_BACK = ("The Jooki has left its Wi-Fi. It goes back to it once you give it a network (connect), or by\n"
               "itself within about 10 minutes if it is on the charger (OpenJooki 2.0.8 or later); or switch\n"
@@ -295,6 +300,8 @@ async def run(a):
             await j.forget(a.ssid)
             k = await j.known()
             print(('Forgotten "%s". ' % a.ssid if a.ssid not in k else 'Still there: "%s". ' % a.ssid) + "It now remembers: %s" % (", ".join(k) or "nothing"))
+            if a.ssid not in k and k:
+                print(GAP_WARNING)
             return 0 if a.ssid not in k else 1
         if a.cmd in ("scan", None):
             print("Asking the Jooki which networks it can see…", flush=True)

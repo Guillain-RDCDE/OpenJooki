@@ -120,6 +120,8 @@ with sync_playwright() as p:
           "leaves its Wi-Fi" in pg.locator("#scanwarn").inner_text() and "ten minutes" in pg.locator("#scanwarn").inner_text())
     check("W14 the remembered list says the Jooki does not pick the strongest network (keep only the near one)",
           "does not pick the strongest" in pg.locator("#knownbox").inner_text())
+    check("W14 ... and that at start it only looks before a forgotten network: forget them all, then give the near one again",
+          "before the first empty slot" in pg.locator("#knownbox").inner_text() and "forget them all" in pg.locator("#knownbox").inner_text())
     pg.click("#scanbtn")
     try: pg.wait_for_selector(".net[data-ssid]")
     except Exception:
@@ -183,6 +185,7 @@ with sync_playwright() as p:
     B.quiet(0.3, "cancelled: nothing must change, so there is nothing to wait for")
     known = pg.locator("[data-forget]").evaluate_all("els => els.map(e => e.getAttribute('data-forget'))")
     check("W10 forget asks first; cancelled = nothing changes", len(dialogs) == 1 and "Old box" in dialogs[0] and known == before and "Old box" in before, (dialogs, known, before))
+    check("W10 ... and the question says to give the near network again afterwards", "give it the network next to it again" in dialogs[0], dialogs)
     accept["v"] = True
     pg.click("[data-forget='Old box']")
     pg.wait_for_function("document.querySelectorAll('[data-forget]').length === %d" % (len(before) - 1))

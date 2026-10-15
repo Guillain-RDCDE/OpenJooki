@@ -81,17 +81,11 @@ function network.watchdog(doc, now)
   local limit, max = cfg(doc, "wifi_watchdog_s", WATCHDOG_S), cfg(doc, "wifi_watchdog_max", WATCHDOG_MAX)
   local w = copy(doc.net_watch or { count = 0 })
   if online(doc.net) then
+    -- The factory network (mnet2) stays in the chip's list: it sits in slot 0, and at start the chip
+    -- only reads its list up to the first empty slot. Without slot 0 it finds no network at all and
+    -- waits for a Bluetooth set-up at every start (docs/20-network-health.md).
+    if not w.since and (w.count or 0) == 0 then return nil end
     local cmds = {}
-    -- once per start, a minute after the Wi-Fi is up: forget the factory network (never at start:
-    -- writing the chip's list while it connects disturbs it)
-    if not w.factory_done then
-      w.online_at = w.online_at or now
-      if now - w.online_at >= 60 then
-        w.factory_done = true
-        cmds[#cmds + 1] = { kind = "shell", action = "wifi_forget_factory" }
-      end
-    end
-    if not w.since and (w.count or 0) == 0 then return { state = { net_watch = w }, commands = cmds } end
     if (w.count or 0) > 0 then
       cmds[#cmds + 1] = { kind = "files.write_text", path = cfg(doc, "wifi_watchdog_file", WATCHDOG_FILE), text = "0\n" }
       cmds[#cmds + 1] = { kind = "log", level = "info", key = "network.watchdog_ok", fields = { after_restarts = w.count } }
@@ -99,20 +93,16 @@ function network.watchdog(doc, now)
     w.since, w.count = nil, 0
     return { state = { net_watch = w }, commands = cmds }
   end
-  -- the minute before forgetting the factory network counts from a stable Wi-Fi
-  local dropped = w.online_at ~= nil
-  w.online_at = nil
-  local keep = dropped and { state = { net_watch = w } } or nil
   if radios_off(doc) or limit <= 0 then
     if w.since then w.since = nil return { state = { net_watch = w } } end
-    return keep
+    return nil
   end
   if not w.since then w.since = now return { state = { net_watch = w } } end
-  if now - w.since < limit then return keep end
+  if now - w.since < limit then return nil end
   local sys = (doc.playback_int or {}).sys       -- a system sound in progress (services.playback)
   local busy = util.is_playing(doc) or (sys and sys.name)
   local plugged = doc.power and doc.power.connected
-  if busy or not plugged or (w.count or 0) >= max then return keep end
+  if busy or not plugged or (w.count or 0) >= max then return nil end
   w.count = (w.count or 0) + 1
   w.since = nil
   return { state = { net_watch = w }, commands = {

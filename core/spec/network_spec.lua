@@ -83,20 +83,11 @@ describe("services.network — Wi-Fi watchdog", function()
     assert_eq(doc.net_watch.since, 90)
   end)
 
-  it("the factory network is forgotten once per start, a minute after the Wi-Fi is up, never before", function()
+  it("the factory network is never forgotten: at start the chip reads its list only up to the first empty slot", function()
     local doc = offline_doc(); doc.net = { connected = true, ip = "192.168.1.19" }
-    apply(doc, network.on_timer(doc, { name = "network.status", now = 5 }))
-    assert_false(has(network.on_timer(doc, { name = "network.status", now = 64 }), "shell wifi_forget_factory"))
-    local r = apply(doc, network.on_timer(doc, { name = "network.status", now = 65 }))
-    assert_true(has(r, "shell wifi_forget_factory"))
-    assert_false(has(apply(doc, network.on_timer(doc, { name = "network.status", now = 200 })), "shell wifi_forget_factory"))
-    -- a Wi-Fi that drops before the minute starts the minute again
-    doc = offline_doc(); doc.net = { connected = true, ip = "x" }
-    apply(doc, network.on_timer(doc, { name = "network.status", now = 0 }))
-    doc.net = { connected = false }; apply(doc, network.on_timer(doc, { name = "network.status", now = 30 }))
-    doc.net = { connected = true, ip = "x" }; apply(doc, network.on_timer(doc, { name = "network.status", now = 61 }))
-    assert_false(has(network.on_timer(doc, { name = "network.status", now = 90 }), "shell wifi_forget_factory"))
-    assert_true(has(network.on_timer(doc, { name = "network.status", now = 121 }), "shell wifi_forget_factory"))
+    for now = 5, 605, 30 do
+      assert_false(has(apply(doc, network.on_timer(doc, { name = "network.status", now = now })), "shell wifi_forget_factory"))
+    end
   end)
 
   it("the chip saying 'connected' is not enough: Linux must have a default route (29/09: 40 min unreachable)", function()

@@ -214,7 +214,7 @@ own). One file per module; only `device/` and `playback/` are folders.
 | `device.buttons` | `activity.buttons`, `activity.last` | `gpio.button`, timer `device.tick` (0.5 s, only while a button is held) | events `playback.next`, `playback.prev`, `playback.pause_request`, `power.off_request`, `radio.set`, `security.parent_clear`; `shell` (`speak_info`) |
 | `uploads` | nothing of its own (the track goes into `library`) | `upload.add` (v2 command and v1 `PLAYLIST_ADD_UPLOAD`), then its own chain `upload.hashed`, `upload.renamed`, `upload.probed`, `upload.meta` | `shell` (`md5`, `probe_audio`), `files.rename/read_text/remove`, events `user.message`, `upload.done` |
 | `bedtime` | `bedtime` { cfg, night, sleep }, `bedtime_int`; drives `limits` { maxvol, fade, dim } | `boot`, timers `bedtime.clock` (15 s) and `bedtime.tick` (0.5 s, only while a sleep timer runs), `clock.set`, `playback.changed`; v2 `bedtime.sleep`, `bedtime.set` | `files.write` (bedtime.json), events `limits.changed`, `playback.pause_request` |
-| `network` | `net`, `net_watch` (the Wi-Fi watchdog's count) | `boot`, `net.status` (from the ESP32), timers `network.status` (30 s) and `network.wifi_log` (20 s), their replies `network.route`, `network.wifi_log`. No command from the page | `bus.publish` (asks the chip its status), `files.read_text` (`/proc/net/route`, `/tmp/oj-wifi.log`), `files.write_text`, `shell` (`log_cleanup`, `wifi_forget_factory`, `watchdog_reboot`) |
+| `network` | `net`, `net_watch` (the Wi-Fi watchdog's count) | `boot`, `net.status` (from the ESP32), timers `network.status` (30 s) and `network.wifi_log` (20 s), their replies `network.route`, `network.wifi_log`. No command from the page | `bus.publish` (asks the chip its status), `files.read_text` (`/proc/net/route`, `/tmp/oj-wifi.log`), `files.write_text`, `shell` (`log_cleanup`, `watchdog_reboot`) |
 | `bluetooth` | `bluetooth` | `boot`, `bt.state`, `bt.connected`, `bt.discovered`, `bt.saved`, timers `bluetooth.poll` (30 s), `bluetooth.scan_end`; v1 only: `OJ_BT_SCAN/CONNECT/FORGET` | `bus.publish` to `esp32_ctrl` |
 | `security` | `maintenance` { ssh, ssh_until, ssh_keys, mqtt_lan, parent }; the parent code itself stays in memory | `boot`, timer `security.ssh_off` (one hour), `security.parent_clear` (the buttons); v1 only: `OJ_SSH_ON/OFF/KEY`, `OJ_MQTT_LAN`, `OJ_PARENT_SET/CLEAR`. `security.gate` is asked by `api.v1` and `api.v2` | `shell` (`ssh_on`, `ssh_off`, `ssh_key_add`, `ssh_key_clear`, `mqtt_lan`), `files.write_text` / `files.remove` (the parent code), event `system.event` |
 | `update` | nothing | `update.check`, `update.start` (from v1 `OJ_UPDATE_*`); v2 `update.check`, `update.start` | `shell` (`update_check`, `update_start`) with the two addresses of the configuration (§12) |
@@ -331,8 +331,8 @@ no log line measures it.
 - **Wi-Fi watchdog**: offline 10 minutes with the radios on, nothing playing
   and on the charger → the Jooki restarts itself, silently, at most twice in a
   row (`wifi_watchdog_s`, `wifi_watchdog_max`).
-- **The factory network** (`mnet2`) is forgotten once, a minute after the Wi-Fi
-  is up, when another network is known.
+- **The factory network** (`mnet2`) is kept: it sits in slot 0, and at start the
+  chip reads its list only up to the first empty slot (docs/20).
 - **The name**: `adapters/mdns.lua` answers `<name>.local` from the loop and,
   since 2.2.2, also **announces** it unasked (at start, on every address change
   and every 30 s), because the chip misses most multicast questions. The name
@@ -459,7 +459,7 @@ a record.
 2.2.7; none is scheduled):
 
 - **Preferred networks and the safe Wi-Fi switch** (§11, diagram 08): the core
-  never changes the chip's networks, except to forget the factory one.
+  never changes the chip's networks.
 - **A v2 position channel** (`/j/web/v2/position`) with a page "hello", a
   **periodic full state**, and the v2 events `token.placed`, `upload.done`,
   `upload.failed`, `health.warning`: the page stayed on v1.

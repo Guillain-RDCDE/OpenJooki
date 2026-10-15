@@ -63,7 +63,8 @@ def do_install():
                                          on_step=set_step, on_progress=set_prog)
         with LOCK:
             STATE["result"] = ("ok" if (res.get("ok") and res.get("switched"))
-                               else "okns" if res.get("ok") else "rollback")
+                               else "okns" if res.get("ok")
+                               else "lost" if res.get("reason") == "lost" else "rollback")
     except installer.InstallError as e:
         set_step("FAILED: " + str(e))
         with LOCK:
@@ -172,6 +173,7 @@ function render(s){
   const b=document.getElementById("banner");b.className="banner";
   if(s.result==="ok"){b.className="banner ok";b.textContent="✓  Done — your Jooki is running the new firmware.";}
   else if(s.result==="okns"){b.className="banner ok";b.textContent="✓  Firmware written and verified (not activated).";}
+  else if(s.result==="lost"){b.className="banner warn";b.textContent="⚠  Your Jooki is not back on the network yet, and the new version is not confirmed: its next restart goes back to the previous version. Once it is back, install again to keep the new one.";}
   else if(s.result==="rollback"){b.className="banner warn";b.textContent="↩  The new version didn't start — automatic rollback. Nothing broken.";}
   else if(s.result && s.result.indexOf("fail:")===0){b.className="banner err";b.textContent="⚠  "+s.result.slice(5)+"  (your Jooki was not modified)";}
 }

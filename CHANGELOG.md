@@ -12,6 +12,12 @@
 - For the tinkerers: `services.network` no longer runs `wifi_forget_factory` (removed from
   `adapters.shell`). The chip's start-up log, how to capture it, and what it says are in
   `docs/20-network-health.md`.
+- `jooki.py patch webui` and `patch switch` wait up to 10 minutes for the Jooki to come back after
+  switching partitions, instead of three, and say every 30 s that they are still waiting. A Jooki
+  whose Wi-Fi starts slowly came back after they had given up; they then tried to switch back over a
+  connection they no longer had and left an uncommitted trial, which the next restart rolled back.
+  When the Jooki stays out of reach, they now say that the trial is still armed and what a restart
+  does, and send nothing more. The installer says the same.
 
 ## OpenJooki 2.4.2 (12 October 2026) — Updates check their own tools
 - **Seven more sounds behind the voice** in Jookistory (already online, the studio lives on the

@@ -247,11 +247,18 @@ def _reboot(host):
         try: ssh(host,"echo b > /proc/sysrq-trigger 2>/dev/null &",timeout=6)
         except Exception: pass
 
+# A Jooki whose Wi-Fi starts slowly is back on the network only minutes after a restart; the Wi-Fi
+# watchdog gives it 10 min before restarting it (wifi_watchdog_s, core/services/network.lua).
+BOOT_WAIT_S = 600
+AB_LOST = 4   # ab_switch: the Jooki did not come back, the trial is still armed
+
 def ab_switch(host, part):
     """Switch to p<part> with U-Boot rollback ARMED (like a real Mender update).
        Counter reset to zero + monitored trial (upgrade_available=1) BEFORE the reboot:
        if the partition does not start, U-Boot (bootlimit=1) reverts to the other ON ITS OWN.
-       If it starts fine, we settle the trial (commit: upgrade_available=0)."""
+       If it starts fine, we settle the trial (commit: upgrade_available=0).
+       Returns 0 when settled, AB_LOST when the Jooki is not back within BOOT_WAIT_S (nothing more
+       can be sent to it), 2 when it is back but not on p<part>."""
     if part not in ("2","3"): log("invalid partition"); return 1
     log("Switching to p%s (rollback armed) ..."%part)
     # Arming identical to a Mender update: counter at 0 + monitored trial.
@@ -263,13 +270,20 @@ def ab_switch(host, part):
     for _ in range(40):
         if not is_jooki(host): break
         time.sleep(1)
-    log("  rebooting (~1-2 min)...")
-    up=False
-    for _ in range(180):
+    log("  rebooting (~1-2 min, up to %d min while its Wi-Fi starts)..." % (BOOT_WAIT_S // 60))
+    up=False; t0=time.monotonic(); said=0
+    while time.monotonic() - t0 < BOOT_WAIT_S:
         if is_jooki(host): up=True; break
+        if time.monotonic() - t0 >= said + 30:
+            said += 30; log("  still waiting (%d s)..." % said)
         time.sleep(1)
     if not up:
-        log("  !! did not come back — U-Boot will switch back ON ITS OWN to the other partition at next power-on (rollback armed)."); return 2
+        log("  !! not back on the network after %d min. The trial on p%s is still armed and not committed:"
+            % (BOOT_WAIT_S // 60, part))
+        log("     a restart before it is committed puts the Jooki back on p%s (U-Boot rollback)." % _spare(part))
+        log("     Once it is reachable: jooki.py --host %s patch status, then patch switch %s to keep p%s."
+            % (host, part, part))
+        return AB_LOST
     for _ in range(6):
         if ensure_ssh(host): break
         time.sleep(5)
@@ -281,6 +295,13 @@ def ab_switch(host, part):
         ua=ssh(host,"fw_printenv upgrade_available 2>/dev/null").stdout.strip()
         log("  -> OK, boots on p%s, trial settled (%s)"%(part, ua or "upgrade_available=0")); return 0
     log("  -> TO VERIFY (mender_boot_part=%s) — trial NOT settled, U-Boot rollback stays armed"%bp); return 2
+
+def switch_or_back(host, part, back):
+    """ab_switch to p<part>, and to p<back> when p<part> does not boot right. Not when the Jooki is
+       out of reach: nothing can be sent to it, and one that comes back on p<part> may be fine."""
+    rc = ab_switch(host, part)
+    if rc not in (0, AB_LOST): log("switch KO -> back to p%s" % back); ab_switch(host, back)
+    return rc
 
 
 # ---------------- "webui": the OpenJooki core + its web page, via A/B ----------------
@@ -551,7 +572,8 @@ def ab_webui(host, dry_run=False, core=None):
         if "EXEC_OK" not in r.stdout: log("executable check on the spare partition failed -> aborting (boot unchanged)"); return 1
     log("    spare partition verified (md5 of %d files)" % len(exp))
     log("[4] switch to p%s (patched)" % s)
-    if ab_switch(host, s) != 0: log("switch KO -> back to p%s" % a); ab_switch(host, a); return 2
+    rc = switch_or_back(host, s, a)
+    if rc != 0: return AB_LOST if rc == AB_LOST else 2
     log("[5] verification on the running Jooki")
     # the reboot dropped the maintenance SSH; reopen it (over the WebSocket since 2.1 has no /ll)
     for _ in range(20):

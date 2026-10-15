@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.3 (15 October 2026) — The Wi-Fi at every start
 - **The Jooki finds its Wi-Fi by itself at every start again.** Since 2.0.9 a Jooki could stay
   offline after each start, side dots chasing orange, until someone gave it its Wi-Fi on the
   Wi-Fi page. At start the Wi-Fi chip only looks at the networks before the first empty slot,

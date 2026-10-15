@@ -40,8 +40,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.2:** before it installs an update, the Jooki checks that the programs doing it are the right ones; seven more sounds and an easier cutter in Jookistory.
-2.4.1: a story sent from Jookistory after a long reading no longer vanishes, and Jookistory says what happened.
+**New in 2.4.3:** the Jooki finds its Wi-Fi by itself at every start again, and your Wi-Fi password no longer stays in its logs.
+2.4.2: before it installs an update, the Jooki checks that the programs doing it are the right ones; seven more sounds and an easier cutter in Jookistory.
 [All the changes](CHANGELOG.md)
 
 ---

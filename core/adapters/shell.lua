@@ -98,11 +98,18 @@ S="$1"; L="$2"; U="$3"; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updatin
 if curl -fsSL --max-time 60 "$U" -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> "$S"; fi
 rm -f /tmp/oj-updating]], "update_start", a.status, a.link, a.url } end, background = true },
   df             = { argv = function(a) if not is_path(a.dir) then return nil, "bad path" end return { "df", "-k", a.dir } end },
-  -- the logs the original system piled up (docs/20): the Papertrail queue and the never-rotated file, once at boot
+  -- the logs the original system piled up (docs/20): the Papertrail queue and the never-rotated file, once at boot;
+  -- and the Wi-Fi chip's dumps of its network slots (name and password in hex), which syslog-ng.conf now drops:
+  -- rewritten in place (cat >), as syslog-ng keeps today's file open
   log_cleanup    = { argv = function() return { "sh", "-c", [[
 cd /jooki/external/logs/syslog-ng 2>/dev/null || exit 0
 rm -f syslog-ng-0*.qf
 if [ -f syslog-ng.log ]; then tail -n 3000 syslog-ng.log > syslog-ng.old.log; rm -f syslog-ng.log; fi
+P='WCM_NVS: (\[idx [0-9]+\] settings|(0x[0-9a-fA-F]+ +)?[0-9a-fA-F]{2}( [0-9a-fA-F]{2})*( |$))'
+for f in jooki-*.log syslog-ng.old.log; do
+  [ -f "$f" ] && grep -qE "$P" "$f" || continue
+  sed -r "/$P/d" "$f" > /tmp/oj-log.$$ && cat /tmp/oj-log.$$ > "$f"; rm -f /tmp/oj-log.$$
+done
 exit 0]] } end, background = true },
   -- what web_ctrl serves: /tmp/web_ctrl_dirs/{public,uploads,wifi_setup,deezer} rebuilt once at boot (1.x setupWebServer).
   -- In the background (0.8 s on the device, web_ctrl starts 5 s after the core): a failure goes to syslog itself.

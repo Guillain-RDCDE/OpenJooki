@@ -7,11 +7,19 @@
   and OpenJooki forgot Muuselabs' own network, which sat in the first slot. OpenJooki keeps it now.
   A Jooki already in that state needs one repair on the Wi-Fi page: **Forget** every network,
   then give it your Wi-Fi again ([questions](guide/questions.md)).
+- **Your Wi-Fi password no longer stays in the Jooki's logs.** When it was given a network, the
+  Wi-Fi chip wrote the password into the log on the memory card. The Jooki no longer keeps those
+  lines, and wipes the ones already there at its next start.
 - The Wi-Fi page and `jooki_wifi.py` say to give the near network again after forgetting one,
   and the guide's advice to forget the far networks now says the same.
+- Thanks to Sebastian Funk ([@sbfnk](https://github.com/sbfnk)), who found the first-slot
+  problem on their own Jooki, traced it in the chip's start-up log, and sent the fixes for it and
+  for `jooki.py` below.
 - For the tinkerers: `services.network` no longer runs `wifi_forget_factory` (removed from
   `adapters.shell`). The chip's start-up log, how to capture it, and what it says are in
-  `docs/20-network-health.md`.
+  `docs/20-network-health.md`. `syslog-ng.conf` drops the chip's slot dumps (`WCM_NVS: [idx N]
+  settings:` and the hex lines after it) and `log_cleanup` wipes them from `jooki-*.log` and
+  `syslog-ng.old.log` at boot.
 - `jooki.py patch webui` and `patch switch` wait up to 10 minutes for the Jooki to come back after
   switching partitions, instead of three, and say every 30 s that they are still waiting. A Jooki
   whose Wi-Fi starts slowly came back after they had given up; they then tried to switch back over a

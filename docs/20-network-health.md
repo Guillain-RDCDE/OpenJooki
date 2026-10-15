@@ -175,7 +175,13 @@ browser searches the web or tries https.
   chip while the logger runs: unload `esp32sdio`, pulse `/sys/kernel/htdrv/esp_reset`
   (with `esp_bootmode` at 0), load it again, then `esp32_cmd set_versions`.
 - **Adding a network prints its password.** `WCM_NVS: [idx N] settings:` dumps the slot in
-  hex, SSID and password included, so the system log on the card holds the Wi-Fi password.
+  hex, SSID and password included, so the system log on the card held the Wi-Fi password
+  (ours did, in `syslog-ng.old.log`, from 26/09). Since 2.4.3 `syslog-ng.conf` drops the dump
+  (the `settings:` line and the lines of hex bytes after it; `options:`, `Successfully added`
+  and `saving N ... as last connection` stay), and `log_cleanup` wipes it at boot from the
+  logs already on the card (`jooki-*.log`, `syslog-ng.old.log`; rewritten in place, as
+  syslog-ng keeps today's file open). Checked on our Jooki's own logs: 26 lines gone, none
+  left; `test_net.py` N1 with the chip's real lines.
 
 ## Tests
 

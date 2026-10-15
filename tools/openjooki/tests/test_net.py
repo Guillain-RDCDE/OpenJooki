@@ -16,10 +16,25 @@ def query(name, qtype=1, port=5353):
     finally: s.close()
     return data
 
+# as the chip writes them (colour codes, task prefix): a slot dump holds the network's name and password
+E = "Oct 14 17:02:11 j esp_tty[514]: \x1b[0;32mI (%d) [1:0x3ffd14dc] WCM_NVS: %s \x1b[0m\n"
+SLOT = [E % (1, "[idx 3] settings:"),
+        E % (2, "53 61 6c 6f 6e 00 00 00 00 00 00 00 00 00 00 00"),     # "Salon"
+        E % (3, "73 65 63 72 65 74 21 00 00 00 00 00 00 00 00 00"),     # "secret!"
+        E % (4, "00 00 00 00 00 00 00 00"),
+        E % (5, "79")]
+KEEP = ["Oct 14 17:02:10 j esp_tty[514]: \x1b[0;32mI (0) [1:0x3ffd14dc] WCM_NVS: Found an empty slot in WiFi database at index 3\x1b[0m\n",
+        "Oct 14 17:02:10 j openjooki-core: info boot\n",
+        E % (6, "options:"),
+        E % (7, 'Successfully added access point "Salon" to database.'),
+        E % (8, "saving 3 on channel 8 as last connection [0]"),
+        "Oct 14 17:02:12 j esp_tty[514]: I (9) wifi:connected with Salon, aid = 1, channel 8, BW20\n"]
+
 def pre():   # what the core finds at boot: a big syslog, a Papertrail queue, the Wi-Fi chip's log
     os.makedirs(LD, exist_ok=True)
     open(LD + "/syslog-ng.log", "w").write("".join("old line %d\n" % i for i in range(5000)))
     open(LD + "/syslog-ng-00000.qf", "wb").write(b"x" * 100000)      # logs queued for Papertrail
+    open(LD + "/jooki-Mon.log", "w").write("".join(KEEP[:2] + SLOT + KEEP[2:]))   # a network added: the chip dumps its slot
     open("/tmp/oj-wifi.log", "w").write(
         "Sep 26 11:22:44 j esp_tty[1]: I (1) wifi:connected with Salon, aid = 1, channel 8, BW20, bssid = 02:00:00:00:00:01\n"
         "Sep 26 11:30:00 j esp_tty[1]: I (2) wifi:bcn_timout,ap_probe_send_start\n"
@@ -29,6 +44,8 @@ j = B.boot(pre=pre)
 check("N1 Papertrail queue removed at boot", not os.path.exists(LD + "/syslog-ng-00000.qf"))
 old = open(LD + "/syslog-ng.old.log").read().splitlines() if os.path.exists(LD + "/syslog-ng.old.log") else []
 check("N1 old log kept short (last 3000 lines), big file removed", len(old) == 3000 and old[-1] == "old line 4999" and not os.path.exists(LD + "/syslog-ng.log"), len(old))
+R.expect("N1 the chip's dump of a network slot (password in hex) is wiped from the card's logs, the rest kept",
+         lambda: open(LD + "/jooki-Mon.log").read() == "".join(KEEP), 10, lambda: open(LD + "/jooki-Mon.log").read())
 R.expect("N2 Wi-Fi state for the page: access point, drops, beacon losses",
          lambda: j.get("net.ap") == "Box" and j.get("net.drops") == 1 and j.get("net.beacons") == 1, 10, lambda: j.get("net"))
 with open("/tmp/oj-wifi.log", "a") as f:

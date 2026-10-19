@@ -11,7 +11,10 @@ from jk import PAGE
 URL = PAGE
 FOX = "04000000F00001"
 R = B.Results(lead=""); check = R.check
-J = B.boot(seed=True, ui=True)
+# the daemon's saved account (spotify_ctrl's credentials.bin: the name, NUL, then its blob)
+CRED = "/tmp/oj-spotify-credentials.bin"
+open(CRED, "wb").write(b"alice\0" + b"\0" * 27 + b"\x01\x02not-a-real-blob")
+J = B.boot(seed=True, ui=True, config=B.core_config({"spotify_credentials_file": CRED}, "spotify"))
 
 # what the core says to the Spotify daemon and to the local audio engine (and the engine's answers)
 spy = B.Spy("/j/spotify/output/#", "/j/audio/out/#", "/j/audio/input/#", name="spy-spotify")
@@ -194,6 +197,37 @@ with sync_playwright() as p:
     daemon("set_cfg", {"shuffle_mode": 1, "repeat_mode": 2}); J.barrier()
     check("SP11 the app's shuffle and repeat leave the Jooki's own setting alone", J.get("audio.config.shuffle_mode") is False
           and J.get("audio.config.repeat_mode") == 0, J.get("audio.config"))
+
+    # SP12 the Jooki's own Spotify account (19/10/2026, Felix's report): Spotify keeps only the first account that
+    # sets the Jooki up; another one is a guest until the next restart. The page says which, and can change it.
+    check("SP12 the core reads the saved account at boot", J.get("spotify.saved") == "alice", J.get("spotify"))
+    pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=sprow]")
+    check("SP12 the settings row says Spotify is set up", "Configuré" in pg.locator("[data-k=sprow]").inner_text(), pg.locator("[data-k=sprow]").inner_text())
+    pg.click("[data-k=sprow]"); pg.wait_for_selector("[data-k=spcard]")
+    check("SP12 its page: set up, and the account", "Spotify est configuré" in pg.locator("[data-k=spcard]").inner_text()
+          and "alice" in pg.locator("[data-k=spsaved]").inner_text(), pg.locator(".settings").inner_text())
+    daemon("login", {"username": "bob", "firstLogin": True}); J.wait(lambda: J.get("spotify.username") == "bob")
+    try: pg.wait_for_selector("[data-k=spnow]", timeout=5000)
+    except Exception: pass
+    txt = pg.locator(".settings").inner_text()
+    check("SP12 a guest account playing: the page says so, the saved one stays (the daemon did not save bob)",
+          "Un autre compte joue" in txt and "bob" in pg.locator("[data-k=spnow]").inner_text() and J.get("spotify.saved") == "alice", txt)
+    pg.click("[data-k=spchange]"); pg.wait_for_selector("[data-k=ok]"); pg.click("[data-k=ok]")
+    J.wait(lambda: J.get("spotify.saved") is False)
+    B.poll(lambda: not B.os.path.exists(CRED))
+    check("SP12 'Forget the account': the daemon's file is gone, the Jooki has no account any more",
+          not B.os.path.exists(CRED) and J.get("spotify.saved") is False and not J.get("spotify.username"), (J.get("spotify"), B.os.path.exists(CRED)))
+    try: pg.wait_for_function("document.querySelector('[data-k=spstate]').textContent.indexOf('Pas encore') >= 0", timeout=5000)
+    except Exception: pass
+    check("SP12 the page asks to pick the Jooki in the Spotify app", "Pas encore de compte Spotify" in pg.locator("[data-k=spcard]").inner_text()
+          and pg.locator("[data-k=spchange]").count() == 0, pg.locator(".settings").inner_text())
+    # the next account that picks the Jooki: the daemon saves it (it reached a Jooki with none), the core reads it back
+    open(CRED, "wb").write(b"carol\0" + b"\0" * 27 + b"blob")
+    daemon("login", {"username": "carol", "firstLogin": True}); J.wait(lambda: J.get("spotify.saved") == "carol")
+    try: pg.wait_for_function("document.querySelector('[data-k=spstate]').textContent.indexOf('configuré') >= 0", timeout=5000)
+    except Exception: pass
+    check("SP12 the new account is the Jooki's own, and the page says so", J.get("spotify.saved") == "carol"
+          and "Spotify est configuré" in pg.locator("[data-k=spcard]").inner_text(), (J.get("spotify"), pg.locator(".settings").inner_text()))
 
     check("SP7 no page error", not errs, errs)
     b.close()

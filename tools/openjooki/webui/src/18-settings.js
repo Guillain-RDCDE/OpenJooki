@@ -31,7 +31,7 @@
   var SUBS = { bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
                parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, maintenance: { title: 's_maint', page: maintPage },
-               theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page } };
+               theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
     var body = SUBS[sub] ? SUBS[sub].page() : null;
@@ -64,7 +64,8 @@
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
-        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null
+        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
+        spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
       c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
         c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
@@ -109,6 +110,28 @@
     return sGroup(null, THEMES.map(function (v) {
       return sRow({ label: t('s_theme_' + v), check: theme === v, nochev: true, k: 'theme-' + v, onclick: function () { setTheme(v); } });
     }), t('s_theme_foot'));
+  }
+  // Spotify (guide/use.md#spotify): the Jooki's own account, the one it logs back into at every start. Spotify only keeps
+  // the first account that sets the Jooki up; another one plays until the next restart, then tokens play on
+  // the Jooki's own again. Only on a core that reads the account (state.spotify.saved).
+  function spOn() { return obj(S.spotify).saved !== undefined; }
+  function spSaved() { var s = obj(S.spotify).saved; return typeof s === 'string' && s ? s : null; }
+  function spGuest() { var u = obj(S.spotify).username; return !!(spSaved() && typeof u === 'string' && u && u !== spSaved()); }
+  function spPage() {
+    if (!spOn()) return null;
+    var saved = spSaved(), guest = spGuest(), key = guest ? 'sp_guest' : saved ? 'sp_own' : 'sp_none';
+    var rows = [];
+    if (saved) rows.push(sRow({ label: t('sp_acc_own'), value: saved, vcls: 'mono', k: 'spsaved' }));
+    if (guest) rows.push(sRow({ label: t('sp_acc_now'), value: S.spotify.username, vcls: 'mono', k: 'spnow' }));
+    return [h('div', { class: 'statuscard', 'data-k': 'spcard' }, h('div', { class: 'bigico' + (guest ? ' orange' : saved ? ' green' : ' muted') }, icon('note')),
+        h('b', { 'data-k': 'spstate' }, t(key + '_t')), h('p', null, t(key))),
+      rows.length ? sGroup(null, rows, t('sp_acc_help')) : null,
+      saved ? h('button', { class: 'btn block' + (guest ? ' primary' : ''), 'data-k': 'spchange', onclick: function () {
+        confirmBox(t('sp_change_q'), t('sp_change_text'), t('sp_change_btn'), true).then(function (ok) {
+          if (ok && send('OJ_SPOTIFY_FORGET', {}) !== false) toast(t('sp_change_done'));
+        });
+      } }, t('sp_change')) : null,
+      h('p', { class: 'gfoot' }, t('sp_why'))];
   }
   // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
   // speaker by itself once connected, and reconnects to it when it comes back.

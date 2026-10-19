@@ -207,3 +207,71 @@ describe("services.streaming — presets, config, login", function()
     assert_eq(streaming.hex2str("4142"), "AB"); assert_eq(streaming.str2hex("AB"), "4142")
   end)
 end)
+
+describe("services.streaming — the Jooki's own Spotify account", function()
+  local v1 = require("api.v1")
+  local security = require("services.security")
+  local shell = require("adapters.shell")
+  local function kinds(r, kind)
+    local out = {}
+    for _, c in ipairs((r and r.commands) or {}) do if c.kind == kind then out[#out + 1] = c end end
+    return out
+  end
+
+  it("the account name is what starts the daemon's file, up to its NUL", function()
+    assert_eq(streaming.saved_user("10987654321\0\0\0\1\2blob"), "10987654321")
+    assert_eq(streaming.saved_user("x7q2example0account0id00\0" .. string.rep("\0", 40)), "x7q2example0account0id00")
+    assert_nil(streaming.saved_user(nil)); assert_nil(streaming.saved_user("")); assert_nil(streaming.saved_user("\0abc"))
+    assert_nil(streaming.saved_user("no-nul-anywhere"))            -- not the daemon's file
+    assert_nil(streaming.saved_user("bad name\0"))                 -- not an account name
+  end)
+
+  it("boot and every login read the file again; the state says which account comes back after a restart", function()
+    local doc = doc_with(); doc.config.spotify_credentials_file = "/tmp/cred.bin"
+    local r = streaming.on_boot(doc)
+    assert_eq(r.state.spotify.saved, false)
+    local reads = kinds(r, "files.read_text")
+    assert_eq(#reads, 1); assert_eq(reads[1].path, "/tmp/cred.bin"); assert_eq(reads[1].reply, "spotify.saved_read")
+    apply(doc, r)
+    r = streaming.on_saved_read(doc, { text = "alice\0rest" })
+    assert_eq(r.state.spotify.saved, "alice")
+    apply(doc, r)
+    assert_nil(streaming.on_saved_read(doc, { text = "alice\0rest" }))       -- unchanged: nothing published
+    -- a guest logs in: the daemon does not save it, the file still says alice
+    r = streaming.on_spotify(doc, { type = "spotify.login", username = "bob" })
+    assert_eq(#kinds(r, "files.read_text"), 1)
+    apply(doc, r)
+    assert_nil(streaming.on_saved_read(doc, { text = "alice\0rest" }))
+    assert_eq(doc.spotify.username, "bob"); assert_eq(doc.spotify.saved, "alice")
+    -- no file: no account of its own
+    assert_eq(streaming.on_saved_read(doc, { text = nil }).state.spotify.saved, false)
+  end)
+
+  it("forgetting: the daemon starts again with no account, what Spotify played stops being what plays", function()
+    local doc = doc_with({ spotify = { active = true, username = "bob", saved = "alice", playing = true },
+                           playback = { state = "playing", now = { service = "SPOTIFY", title = "Song" }, last = {}, shuffle = {} } })
+    doc.config.spotify_credentials_file = "/tmp/cred.bin"
+    local r = streaming.on_forget_account(doc)
+    local sh = kinds(r, "shell")
+    assert_eq(#sh, 1); assert_eq(sh[1].action, "spotify_forget"); assert_eq(sh[1].args.file, "/tmp/cred.bin")
+    assert_eq(r.state.spotify.saved, false); assert_nil(r.state.spotify.username); assert_eq(r.state.spotify.active, false)
+    assert_nil(r.state.playback.now); assert_eq(r.state.playback.state, "idle")
+    -- the next account that picks the Jooki is saved by the daemon: the read after its login says so
+    apply(doc, r)
+    apply(doc, streaming.on_spotify(doc, { type = "spotify.login", username = "carol" }))
+    assert_eq(streaming.on_saved_read(doc, { text = "carol\0x" }).state.spotify.saved, "carol")
+  end)
+
+  it("v1: a change of state.spotify reaches the page (its Spotify settings follow the account)", function()
+    local msg = v1.partial({ spotify = { active = false, saved = "alice", username = "bob" } }, { "spotify" })
+    assert_eq(msg.payload.spotify.saved, "alice"); assert_eq(msg.payload.spotify.username, "bob")
+  end)
+
+  it("forgetting needs the parent code (v1 and v2); the shell action only takes a plain path", function()
+    assert_true(v1.PROTECTED.OJ_SPOTIFY_FORGET); assert_true(security.PROTECTED_V2["spotify.forget_account"])
+    local argv = shell.ACTIONS.spotify_forget.argv({ file = "/data/spotify/credentials.bin" })
+    assert_eq(argv[1], "sh"); assert_eq(argv[#argv], "/data/spotify/credentials.bin")
+    assert_nil(shell.ACTIONS.spotify_forget.argv({ file = "../etc/passwd" }))
+    assert_nil(shell.ACTIONS.spotify_forget.argv({ file = "/x;rm -rf /" .. "'" }))
+  end)
+end)

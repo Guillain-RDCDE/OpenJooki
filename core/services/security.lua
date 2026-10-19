@@ -43,7 +43,7 @@ security.PROTECTED_V2 = {
   ["device.set_config"] = true, ["device.toy_safe"] = true, ["device.set_wifi"] = true,
   ["device.power_off"] = true, ["device.set_name"] = true, ["device.airplane"] = true,
   ["bedtime.set"] = true, ["update.check"] = true, ["update.start"] = true,
-  ["spotify.new_playlist"] = true, ["deezer.get_playlists"] = true, ["deezer.set_config"] = true,
+  ["spotify.new_playlist"] = true, ["spotify.forget_account"] = true, ["deezer.get_playlists"] = true, ["deezer.set_config"] = true,
 }
 
 --- The parent-code gate: nil when `name` may run, else the typed error to answer with.

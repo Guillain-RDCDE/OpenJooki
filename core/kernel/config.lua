@@ -48,6 +48,9 @@ config.defaults = {
   overheat_mc = 80000,
   -- streaming module (ADR-0009)
   streaming_enabled = true,
+  -- the Spotify account the daemon logs back into at every start: spotify_ctrl writes it only for the
+  -- first account that reaches it with no account at all; its name starts the file, NUL-terminated
+  spotify_credentials_file = "/data/spotify/credentials.bin",
   -- OpenJooki updates (services.update): where the Jooki reads the newest version and the installer.
   -- The bench points both at its own web server (adapters.shell only accepts GitHub or 127.0.0.1).
   update_manifest_url = "https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json",

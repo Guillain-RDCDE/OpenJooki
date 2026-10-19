@@ -124,6 +124,19 @@ for f in /jooki/app/www/public/*; do [ -e "$f" ] && ln -s "$f" "$W/public/"; don
 for f in /jooki/app/www/wifi_setup/public/*; do [ -e "$f" ] && ln -s "$f" "$W/wifi_setup/setup/"; done
 for f in /jooki/app/www/deezer/*; do [ -e "$f" ] && ln -s "$f" "$W/deezer/"; done
 exit 0]], "setup_web_dirs", a.data } end, background = true },
+  -- the Jooki's own Spotify account forgotten (services.streaming): spotify_ctrl only saves the first account
+  -- that reaches it with none, so it is stopped, its file removed, and it starts again with no account, as
+  -- S51_ml-start-app-audio.sh starts it. The next account that picks the Jooki in the Spotify app is the one
+  -- it keeps, restarts included. SIGTERM: the launcher stops too (exit 143) instead of restarting it.
+  spotify_forget = { argv = function(a) if not is_path(a.file) then return nil, "bad path" end
+                             return { "sh", "-c", [[
+for p in $(pidof spotify_ctrl 2>/dev/null); do kill "$p" 2>/dev/null; done
+n=0; while pidof spotify_ctrl >/dev/null 2>&1 && [ $n -lt 10 ]; do sleep 1; n=$((n+1)); done
+rm -f "$1"; sync
+if [ -x /jooki/bin/spotify_ctrl ] && [ ! -e /data/mode/SPOTIFY_OFF ] && [ ! -e /data/mode/WIFI_OFF ]; then
+  /jooki/bin/ml-launch-realtime.sh /jooki/bin/spotify_ctrl </dev/null >/dev/null 2>&1 &
+fi
+echo ok]], "spotify_forget", a.file } end, background = true },
   md5            = { argv = function(a) if not is_path(a.file) then return nil, "bad path" end return { "md5sum", a.file } end },
   -- the name chosen on the page: kept on /data (survives A/B updates), applied now; the boot script
   -- (ml-jooki-hostname.sh) applies it again at every start. /etc/hostname keeps the factory name (device id).

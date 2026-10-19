@@ -1,5 +1,26 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.4 (19 October 2026) — The Jooki's own Spotify account
+- **Settings → Spotify: the Jooki's own Spotify account.** Spotify only remembers the first
+  account that sets the Jooki up. Another account can play on it too, but only until the Jooki
+  restarts: then it goes back to its own account, and tokens play on that one. In a home with
+  several Spotify accounts, a token could then stop the music of another Spotify speaker playing
+  on that account. The new *Settings → Spotify* page shows which account is the Jooki's, says
+  when another one is playing, and **Change the Jooki's account** makes the next account that
+  picks the Jooki in the Spotify app its own, even after a restart
+  ([Use it](guide/use.md#spotify)).
+- Thanks to Felix, who saw a token stop his hi-fi in Linz, and narrowed it down to "after the
+  Jooki restarts" with careful tests on his own Jooki.
+- For the tinkerers: this is the original `spotify_ctrl`'s own rule, not a change in OpenJooki: it
+  writes `/data/spotify/credentials.bin` only when an account reaches it with no account at all
+  (`CallbackNewCredentials: User switching from '' to '<id>' (Primary user)`); a ZeroConf login
+  over an existing account is never saved, and the daemon logs back into the saved one at every
+  start. The core reads the account name from the head of that file at boot and after every login
+  (`state.spotify.saved`); `spotify.forget_account` (v2) / `OJ_SPOTIFY_FORGET` (v1, parent code)
+  runs the shell action `spotify_forget`: stop the daemon, remove the file, start it again as
+  `S51_ml-start-app-audio.sh` does. Changes of `state.spotify` now reach the page in v1 partial
+  states (before, only in the full state). Spotify's device id is `sha1` of the Jooki's MAC address.
+
 ## OpenJooki 2.4.3 (15 October 2026) — The Wi-Fi at every start
 - **The Jooki finds its Wi-Fi by itself at every start again.** Since 2.0.9 a Jooki could stay
   offline after each start, side dots chasing orange, until someone gave it its Wi-Fi on the

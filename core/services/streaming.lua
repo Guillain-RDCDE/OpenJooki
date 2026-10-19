@@ -2,7 +2,10 @@
 -- A faithful port of the message paths of the original program (docs/22),
 -- isolated from local playback: the closed daemons (spotify_ctrl, deezer_ctrl)
 -- do the streaming; this module only carries messages and keeps two small
--- sub-trees: state.spotify = { username, active }, state.deezer = { username, id, active }.
+-- sub-trees: state.spotify = { username, saved, active }, state.deezer = { username, id, active }.
+-- `saved` is the Jooki's own account, the one spotify_ctrl logs back into at every start (false: none).
+-- The daemon keeps only the first account that reaches it with no account at all; any other one is a
+-- guest, gone at the next restart, and the tokens then play on the saved account again.
 -- What a daemon says about the track it plays reaches state.playback through one door,
 -- playback.on_external: this module never writes the music machine's sub-tree itself.
 -- Best effort: verified on the bench with a fake daemon, not against the services.
@@ -99,12 +102,52 @@ local function take_over(doc, sp)
   return r
 end
 
+-- ------------------------------------------------------------------ the Jooki's own account
+local CREDENTIALS = "/data/spotify/credentials.bin"
+local function credentials_file(doc) return (doc.config or {}).spotify_credentials_file or CREDENTIALS end
+local function read_saved(doc) return { kind = "files.read_text", path = credentials_file(doc), reply = "spotify.saved_read" } end
+
+--- The account name that starts the daemon's file (NUL-terminated), or nil.
+function streaming.saved_user(text)
+  if type(text) ~= "string" then return nil end
+  local stop = text:find("\0", 1, true)
+  local name = stop and text:sub(1, stop - 1) or ""
+  if #name == 0 or #name > 64 or not name:match("^[%w%._%-]+$") then return nil end
+  return name
+end
+
+--- The file read back (at boot, after each login): what the Jooki will log into at its next start.
+function streaming.on_saved_read(doc, ev)
+  local sp = copy(doc.spotify or { active = false })
+  sp.saved = streaming.saved_user(ev.text) or false
+  if sp.saved == (doc.spotify or {}).saved then return nil end
+  return { state = { spotify = sp } }
+end
+
+--- The page asks the Jooki to forget its account: the daemon starts again with none, and the next
+--- account that picks the Jooki in the Spotify app becomes its own.
+function streaming.on_forget_account(doc)
+  local sp = copy(doc.spotify or {})
+  sp.username, sp.saved, sp.active, sp.playing, sp.track = nil, false, false, nil, nil
+  local r = gone(doc, "SPOTIFY", { spotify = sp })
+  r.commands = r.commands or {}
+  table.insert(r.commands, 1, { kind = "shell", action = "spotify_forget", args = { file = credentials_file(doc) } })
+  r.commands[#r.commands + 1] = { kind = "log", level = "info", key = "streaming.spotify_forgotten" }
+  return r
+end
+
+--- Boot: ask the daemon how it is, and read which account it will log into.
+function streaming.on_boot(doc)
+  return { state = { spotify = { active = false, saved = false }, deezer = {}, streaming_int = {} }, commands = { pub(SP .. "get_status"), read_saved(doc) } }
+end
+
 function streaming.on_spotify(doc, ev)
   local kind = ev.type:sub(9)     -- after "spotify."
   local sp = copy(doc.spotify or { active = false })
   if kind == "login" then
     sp.username = ev.username
-    return { state = { spotify = sp }, commands = { emit("volume.apply", {}) } }
+    -- the daemon has just saved the account if it reached a Jooki with none: read the file again
+    return { state = { spotify = sp }, commands = { emit("volume.apply", {}), read_saved(doc) } }
   elseif kind == "logout" then
     sp.username, sp.playing, sp.track = nil, nil, nil
     return gone(doc, "SPOTIFY", { spotify = sp })
@@ -252,8 +295,10 @@ function streaming.install(api, dispatch)
   end
   dispatch.on("audiocfg.changed", "streaming", streaming.on_config)
   dispatch.on("net.status", "streaming", streaming.on_net)
-  dispatch.on("boot", "streaming", function() return { state = { spotify = { active = false }, deezer = {}, streaming_int = {} }, commands = { pub(SP .. "get_status") } } end)
+  dispatch.on("spotify.saved_read", "streaming", streaming.on_saved_read)
+  dispatch.on("boot", "streaming", streaming.on_boot)
   api.command("spotify.new_playlist", S.new_spotify, streaming.on_new_spotify_playlist)
+  api.command("spotify.forget_account", nil, streaming.on_forget_account)
   api.command("deezer.get_playlists", nil, streaming.on_deezer_get_playlists)
   api.command("deezer.set_config", S.deezer_cfg, streaming.on_deezer_set_cfg)
 end

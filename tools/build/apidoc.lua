@@ -61,6 +61,7 @@ local DESC = {
   ["update.check"] = "Asks the Jooki to fetch the latest version.json from GitHub (result in /oj-latest.json).",
   ["update.start"] = "Starts the A/B update (progress in /oj-status.txt).",
   ["spotify.new_playlist"] = "Saves what Spotify is playing as a playlist (preset), optionally linked to a character.",
+  ["spotify.forget_account"] = "Forgets the Jooki's own Spotify account (`state.spotify.saved`, the one it logs back into at every start): the daemon starts again with none, and the next account that picks the Jooki in the Spotify app becomes its own.",
   ["deezer.get_playlists"] = "Asks the Deezer daemon for the user's playlists.", ["deezer.set_config"] = "Stores Deezer credentials for the daemon.",
 }
 

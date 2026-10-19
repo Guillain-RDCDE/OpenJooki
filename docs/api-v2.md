@@ -19,7 +19,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/
 
 `device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
 
-## Commands (37)
+## Commands (38)
 
 ### `bedtime.set`
 
@@ -556,6 +556,12 @@ Payload schema:
   "type": "object"
 }
 ```
+
+### `spotify.forget_account`
+
+Forgets the Jooki's own Spotify account (`state.spotify.saved`, the one it logs back into at every start): the daemon starts again with none, and the next account that picks the Jooki in the Spotify app becomes its own.
+
+No payload.
 
 ### `spotify.new_playlist`
 

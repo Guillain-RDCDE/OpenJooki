@@ -63,6 +63,12 @@ add the songs with **Add files**. [Use it](use.md).
 Spotify does: choose the Jooki in the Spotify app ([Use it](use.md#spotify)). Deezer does
 not.
 
+**A token stops the Spotify music on another speaker at home. Why?**
+The Jooki plays tokens on its own Spotify account, the first one that set it up. If someone
+listens to that same account on another speaker, Spotify stops it: one account plays in one place
+at a time. In *Settings → Spotify*, tap **Change the Jooki's account**, then pick the Jooki in the
+Spotify app from the account the tokens should use ([Use it](use.md#spotify)).
+
 **What are *Home automation* and *Maintenance access* in Settings?**
 Two switches for tinkerers. Leave them off.
 

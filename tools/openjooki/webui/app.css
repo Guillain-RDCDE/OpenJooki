@@ -445,6 +445,7 @@ button.srow:disabled { opacity: .5; cursor: default; }
 .bigico svg { width: 32px; height: 32px; }
 .bigico.accent { background: var(--accent); } .bigico.ok { background: var(--ok); } .bigico.danger { background: var(--danger); }
 .bigico.blue { background: #2f7cf6; } .bigico.muted { color: var(--muted); }
+.bigico.green { background: #2fa55a; } .bigico.orange { background: #f08a24; }
 .settings .btn.block { margin-bottom: 12px; }
 .choice { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; }
 .choice button { border: 1px solid var(--line); background: var(--bg); border-radius: 99px; padding: 8px 14px; font-size: 15px; min-height: 40px; }

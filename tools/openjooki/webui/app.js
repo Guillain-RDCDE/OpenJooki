@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.4.3';
+  var VERSION = '2.4.4';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -100,6 +100,15 @@
     sp_timeout: 'Spotify n\'a pas répondu. Relance la musique dans l\'appli Spotify et réessaie.',
     err_sp_not_playing: 'Lance d\'abord la musique sur le Jooki depuis l\'appli Spotify.',
     sp_playlist: 'Playlist Spotify', sp_playlist_help: 'Cette playlist se joue depuis Spotify : on ne peut pas y ajouter de fichiers. Pour changer la musique, fais-la jouer dans Spotify et remets-la sur le personnage.',
+    s_sp: 'Spotify', sp_set: 'Configuré', sp_unset: 'Pas configuré', sp_guest_v: 'Autre compte',
+    sp_own_t: 'Spotify est configuré', sp_own: 'Les jetons jouent sur le compte du Jooki, même après un redémarrage.',
+    sp_guest_t: 'Un autre compte joue', sp_guest: 'En ce moment, le Jooki joue pour un autre compte Spotify. À son prochain redémarrage, il revient à son propre compte, et les jetons jouent sur celui-là.',
+    sp_none_t: 'Pas encore de compte Spotify', sp_none: 'Dans l’appli Spotify, choisis le Jooki dans la liste des appareils : ce compte devient celui du Jooki, même après un redémarrage.',
+    sp_acc_own: 'Compte du Jooki', sp_acc_now: 'Joue en ce moment', sp_acc_help: 'C’est le nom d’utilisateur que l’appli Spotify affiche dans Paramètres → Compte.',
+    sp_change: 'Changer le compte du Jooki', sp_change_q: 'Changer de compte Spotify ?',
+    sp_change_text: 'Le Jooki oublie son compte Spotify. Ensuite, dans l’appli Spotify, choisis le Jooki depuis le compte voulu : il devient celui du Jooki, même après un redémarrage.',
+    sp_change_btn: 'Oublier le compte', sp_change_done: 'C’est fait. Choisis maintenant le Jooki dans l’appli Spotify.',
+    sp_why: 'Spotify ne retient que le premier compte qui configure le Jooki. Un autre compte peut jouer dessus, mais seulement jusqu’au prochain redémarrage.',
     live: 'En direct', volume: 'Volume',
     uploading: 'Envoi', processing: 'Analyse sur le Jooki…', done: 'Ajouté', queued: 'En attente',
     up_too_small: 'Fichier vide ou trop petit', up_no_space: 'Plus assez de place sur le Jooki',
@@ -288,6 +297,15 @@
     sp_timeout: 'Spotify did not answer. Play the music again in the Spotify app and try again.',
     err_sp_not_playing: 'First play the music on the Jooki from the Spotify app.',
     sp_playlist: 'Spotify playlist', sp_playlist_help: 'This playlist plays from Spotify: files cannot be added to it. To change the music, play it in Spotify and put it on the character again.',
+    s_sp: 'Spotify', sp_set: 'Set up', sp_unset: 'Not set up', sp_guest_v: 'Another account',
+    sp_own_t: 'Spotify is set up', sp_own: 'Tokens play on the Jooki’s own account, even after a restart.',
+    sp_guest_t: 'Another account is playing', sp_guest: 'Right now the Jooki plays for another Spotify account. At its next restart it goes back to its own account, and tokens play on that one.',
+    sp_none_t: 'No Spotify account yet', sp_none: 'In the Spotify app, pick the Jooki in the list of devices: that account becomes the Jooki’s own, even after a restart.',
+    sp_acc_own: 'The Jooki’s account', sp_acc_now: 'Playing now', sp_acc_help: 'This is the username the Spotify app shows under Settings → Account.',
+    sp_change: 'Change the Jooki’s account', sp_change_q: 'Change the Spotify account?',
+    sp_change_text: 'The Jooki forgets its Spotify account. Then, in the Spotify app, pick the Jooki from the account you want: it becomes the Jooki’s own, even after a restart.',
+    sp_change_btn: 'Forget the account', sp_change_done: 'Done. Now pick the Jooki in the Spotify app.',
+    sp_why: 'Spotify only remembers the first account that sets up the Jooki. Another account can play on it, but only until the next restart.',
     live: 'Live', volume: 'Volume',
     uploading: 'Uploading', processing: 'Processing on the Jooki…', done: 'Added', queued: 'Waiting',
     up_too_small: 'Empty or too small file', up_no_space: 'Not enough space left on the Jooki',
@@ -476,6 +494,15 @@
     sp_timeout: 'Spotify antwoordde niet. Speel de muziek opnieuw af in de Spotify-app en probeer het nog eens.',
     err_sp_not_playing: 'Speel eerst de muziek op de Jooki af vanuit de Spotify-app.',
     sp_playlist: 'Spotify-afspeellijst', sp_playlist_help: 'Deze afspeellijst speelt vanuit Spotify: er kunnen geen bestanden aan worden toegevoegd. Om de muziek te veranderen, speel ze af in Spotify en zet ze opnieuw op het figuurtje.',
+    s_sp: 'Spotify', sp_set: 'Ingesteld', sp_unset: 'Niet ingesteld', sp_guest_v: 'Ander account',
+    sp_own_t: 'Spotify is ingesteld', sp_own: 'Figuurtjes spelen op het eigen account van de Jooki, ook na een herstart.',
+    sp_guest_t: 'Er speelt een ander account', sp_guest: 'Op dit moment speelt de Jooki voor een ander Spotify-account. Bij de volgende herstart gaat hij terug naar zijn eigen account, en dan spelen de figuurtjes daarop.',
+    sp_none_t: 'Nog geen Spotify-account', sp_none: 'Kies in de Spotify-app de Jooki in de lijst met apparaten: dat account wordt het eigen account van de Jooki, ook na een herstart.',
+    sp_acc_own: 'Account van de Jooki', sp_acc_now: 'Speelt nu', sp_acc_help: 'Dit is de gebruikersnaam die de Spotify-app toont onder Instellingen → Account.',
+    sp_change: 'Account van de Jooki wijzigen', sp_change_q: 'Spotify-account wijzigen?',
+    sp_change_text: 'De Jooki vergeet zijn Spotify-account. Kies daarna in de Spotify-app de Jooki vanaf het account dat je wilt: dat wordt het eigen account van de Jooki, ook na een herstart.',
+    sp_change_btn: 'Account vergeten', sp_change_done: 'Klaar. Kies nu de Jooki in de Spotify-app.',
+    sp_why: 'Spotify onthoudt alleen het eerste account dat de Jooki instelt. Een ander account kan erop spelen, maar alleen tot de volgende herstart.',
     live: 'Live', volume: 'Volume',
     uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
     up_too_small: 'Leeg of te klein bestand', up_no_space: 'Niet genoeg ruimte over op de Jooki',
@@ -2784,7 +2811,7 @@
   var SUBS = { bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
                parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, maintenance: { title: 's_maint', page: maintPage },
-               theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page } };
+               theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
     var body = SUBS[sub] ? SUBS[sub].page() : null;
@@ -2817,7 +2844,8 @@
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
-        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null
+        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
+        spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
       c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
         c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
@@ -2862,6 +2890,28 @@
     return sGroup(null, THEMES.map(function (v) {
       return sRow({ label: t('s_theme_' + v), check: theme === v, nochev: true, k: 'theme-' + v, onclick: function () { setTheme(v); } });
     }), t('s_theme_foot'));
+  }
+  // Spotify (guide/use.md#spotify): the Jooki's own account, the one it logs back into at every start. Spotify only keeps
+  // the first account that sets the Jooki up; another one plays until the next restart, then tokens play on
+  // the Jooki's own again. Only on a core that reads the account (state.spotify.saved).
+  function spOn() { return obj(S.spotify).saved !== undefined; }
+  function spSaved() { var s = obj(S.spotify).saved; return typeof s === 'string' && s ? s : null; }
+  function spGuest() { var u = obj(S.spotify).username; return !!(spSaved() && typeof u === 'string' && u && u !== spSaved()); }
+  function spPage() {
+    if (!spOn()) return null;
+    var saved = spSaved(), guest = spGuest(), key = guest ? 'sp_guest' : saved ? 'sp_own' : 'sp_none';
+    var rows = [];
+    if (saved) rows.push(sRow({ label: t('sp_acc_own'), value: saved, vcls: 'mono', k: 'spsaved' }));
+    if (guest) rows.push(sRow({ label: t('sp_acc_now'), value: S.spotify.username, vcls: 'mono', k: 'spnow' }));
+    return [h('div', { class: 'statuscard', 'data-k': 'spcard' }, h('div', { class: 'bigico' + (guest ? ' orange' : saved ? ' green' : ' muted') }, icon('note')),
+        h('b', { 'data-k': 'spstate' }, t(key + '_t')), h('p', null, t(key))),
+      rows.length ? sGroup(null, rows, t('sp_acc_help')) : null,
+      saved ? h('button', { class: 'btn block' + (guest ? ' primary' : ''), 'data-k': 'spchange', onclick: function () {
+        confirmBox(t('sp_change_q'), t('sp_change_text'), t('sp_change_btn'), true).then(function (ok) {
+          if (ok && send('OJ_SPOTIFY_FORGET', {}) !== false) toast(t('sp_change_done'));
+        });
+      } }, t('sp_change')) : null,
+      h('p', { class: 'gfoot' }, t('sp_why'))];
   }
   // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
   // speaker by itself once connected, and reconnects to it when it comes back.

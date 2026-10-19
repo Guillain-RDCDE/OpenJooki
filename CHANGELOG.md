@@ -9,8 +9,8 @@
   when another one is playing, and **Change the Jooki's account** makes the next account that
   picks the Jooki in the Spotify app its own, even after a restart
   ([Use it](guide/use.md#spotify)).
-- Thanks to Felix, who saw a token stop his hi-fi in Linz, and narrowed it down to "after the
-  Jooki restarts" with careful tests on his own Jooki.
+- Thanks to the parent who saw a token stop their hi-fi, and narrowed it down to "after the
+  Jooki restarts" with careful tests on their own Jooki.
 - For the tinkerers: this is the original `spotify_ctrl`'s own rule, not a change in OpenJooki: it
   writes `/data/spotify/credentials.bin` only when an account reaches it with no account at all
   (`CallbackNewCredentials: User switching from '' to '<id>' (Primary user)`); a ZeroConf login

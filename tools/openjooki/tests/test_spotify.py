@@ -198,7 +198,7 @@ with sync_playwright() as p:
     check("SP11 the app's shuffle and repeat leave the Jooki's own setting alone", J.get("audio.config.shuffle_mode") is False
           and J.get("audio.config.repeat_mode") == 0, J.get("audio.config"))
 
-    # SP12 the Jooki's own Spotify account (19/10/2026, Felix's report): Spotify keeps only the first account that
+    # SP12 the Jooki's own Spotify account (19/10/2026, a parent's report): Spotify keeps only the first account that
     # sets the Jooki up; another one is a guest until the next restart. The page says which, and can change it.
     check("SP12 the core reads the saved account at boot", J.get("spotify.saved") == "alice", J.get("spotify"))
     pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=sprow]")

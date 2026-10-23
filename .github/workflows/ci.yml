@@ -35,6 +35,9 @@ jobs:
         run: |
           node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js && node --check docs/mp3-worker.js
           for f in tools/openjooki/webui/src/*.js; do node --check "$f" || exit 1; done
+          # the SD card tool's page (the Mac app's window) is a script inside jooki_sd.py
+          python3 -c "import re,sys; sys.path.insert(0,'tools/sdcard'); import jooki_sd; print(re.search(r'<script>(.*)</script>', jooki_sd.PAGE.replace('%TOKEN%','\"t\"'), re.S).group(1))" > /tmp/sdcard-page.js
+          node --check /tmp/sdcard-page.js
           python3 - <<'EOF'
           import os, sys
           caps = {"tools/openjooki/webui/app.js": 256, "tools/openjooki/webui/app.css": 64}

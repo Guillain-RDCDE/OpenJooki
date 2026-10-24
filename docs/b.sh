@@ -14,11 +14,17 @@ WORK="/data/openjooki"
 WEB="/jooki/app/www/public"
 STATUS="$WEB/openjooki-status.txt"
 mkdir -p "$WORK"
+# one install at a time: a link opened twice (or fetched ahead by the browser) starts this twice
+if ! mkdir /tmp/openjooki-install 2>/dev/null; then
+  echo "[openjooki] already running: this second start does nothing" >> "$STATUS" 2>/dev/null; exit 0
+fi
+trap 'rmdir /tmp/openjooki-install 2>/dev/null' EXIT
 : > "$STATUS" 2>/dev/null
 # the factory web server only serves the links put in /tmp/web_ctrl_dirs/public at start: link this one too
 [ -d /tmp/web_ctrl_dirs/public ] && ln -sf "$STATUS" /tmp/web_ctrl_dirs/public/ 2>/dev/null
 st(){ echo "[openjooki] $*"; echo "[openjooki] $*" >> "$STATUS" 2>/dev/null; }
-dl(){ _u="$1"; _o="$2"; _i=0; while :; do curl -fsSL --max-time 300 "$_u" -o "$_o" && return 0; _i=$((_i+1)); [ $_i -ge 5 ] && return 1; st "network hiccup, retry $_i/5…"; sleep 5; done; }
+# curl's own words go to the log: "network hiccup" alone cannot tell a cut from a refused certificate
+dl(){ _u="$1"; _o="$2"; _i=0; while :; do _e=$(curl -fsSL -S --max-time 300 "$_u" -o "$_o" 2>&1) && return 0; _i=$((_i+1)); [ $_i -ge 5 ] && { st "$_e"; return 1; }; st "network hiccup (${_e:-no reason given}), retry $_i/5…"; sleep 5; done; }
 
 st "starting first-install…"
 

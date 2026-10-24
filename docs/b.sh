@@ -15,6 +15,8 @@ WEB="/jooki/app/www/public"
 STATUS="$WEB/openjooki-status.txt"
 mkdir -p "$WORK"
 : > "$STATUS" 2>/dev/null
+# the factory web server only serves the links put in /tmp/web_ctrl_dirs/public at start: link this one too
+[ -d /tmp/web_ctrl_dirs/public ] && ln -sf "$STATUS" /tmp/web_ctrl_dirs/public/ 2>/dev/null
 st(){ echo "[openjooki] $*"; echo "[openjooki] $*" >> "$STATUS" 2>/dev/null; }
 dl(){ _u="$1"; _o="$2"; _i=0; while :; do curl -fsSL --max-time 300 "$_u" -o "$_o" && return 0; _i=$((_i+1)); [ $_i -ge 5 ] && return 1; st "network hiccup, retry $_i/5…"; sleep 5; done; }
 

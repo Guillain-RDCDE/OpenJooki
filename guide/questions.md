@@ -50,6 +50,16 @@ A Jooki without Wi-Fi only listens over Bluetooth, and Apple does not let any we
 Bluetooth on an iPhone or iPad, in any browser. That one step takes an Android phone or a
 computer with Chrome or Edge, once; everything else works from the iPhone.
 
+**I installed OpenJooki, but I still see the old Jooki page.**
+The old page has a menu on the left (*Playlists*, *Tokens*, *Parental controls*, *Device info*).
+OpenJooki's page has four tabs at the bottom, and **Settings** is the last one.
+First close the old page for good: close the browser tab, or if it is an icon on your home
+screen, swipe it away from the list of open apps. Then open the address again, in a new tab.
+Still the old page? Open the address followed by `/openjooki-status.txt` (like
+`http://192.168.1.19/openjooki-status.txt`): it is what the installer wrote, and its last line
+says how it ended. No such page means the install never started: do it again.
+If you're stuck, send me that text: guillain@poulpe.us.
+
 **What is the address of my Jooki's page?**
 `http://` followed by the address your internet box shows for it (like `http://192.168.1.19`),
 or by its name and `.local`. Its name is `jooki2-…` until you give it another one: in

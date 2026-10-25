@@ -12,7 +12,8 @@ truncate -s 8G "$W/card.img"
 python3 tools/sdcard/jooki_sd.py new "$W/card.img" --folder "$W/folder" --yes 2>&1 | tail -n 4
 echo "--- sgdisk"; sgdisk -v "$W/card.img" 2>&1 | tail -n 2
 LOOP=$(losetup -Pf --show "$W/card.img")
-trap 'umount /mnt/oj-sd3 2>/dev/null; losetup -d "$LOOP"; rm -rf "$W"' EXIT
+# set -e must not stop the cleanup: the card is already unmounted when all went well (umount: 32)
+trap 'umount /mnt/oj-sd3 2>/dev/null || true; losetup -d "$LOOP" || true; rm -rf "$W"' EXIT
 for p in 2 3 5 7; do echo "--- e2fsck p$p"; e2fsck -fn "${LOOP}p$p" 2>&1 | tail -n 1; done
 mkdir -p /mnt/oj-sd3; mount -o ro "${LOOP}p3" /mnt/oj-sd3
 GOT=$(cat /mnt/oj-sd3/etc/openjooki-version 2>/dev/null)

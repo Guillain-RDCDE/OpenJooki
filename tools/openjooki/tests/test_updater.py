@@ -14,11 +14,14 @@ address asked, in order). The device's own paths are used (/data/openjooki, /dat
     nothing run;
   - a release made before the hashes (2.4.1's version.json, as published): today's behaviour,
     the Pages copies, unchecked, and the log says "updater not verified";
-  - no network: nothing changed.
+  - no network: nothing changed;
+  - the firmware image over a weak Wi-Fi (openjooki-ota.sh's dlr, the real curl against a server
+    that cuts every answer): each try goes on from where the last stopped, a server that cannot
+    resume starts again from zero, 30 tries at most, a file already whole is kept.
 
   sudo python3 test_updater.py        (root, like every bench suite; busybox installed)
 """
-import hashlib, os, shutil, subprocess, sys, tempfile
+import hashlib, http.server, os, shutil, subprocess, sys, tempfile, threading
 import bench as B
 
 DOCS = os.path.join(B.REPO, "docs")
@@ -144,6 +147,85 @@ def work(name, mode="rb"):
     return read(os.path.join(WORK, name), mode)
 
 
+class Flaky(http.server.BaseHTTPRequestHandler):
+    """The firmware image over a weak Wi-Fi: each answer stops after CUT bytes. mode "resume" honours
+    Range (206); "norange" ignores it (200, the whole file, cut only the first time); "down" is 404."""
+    body, mode, cut, asked = b"", "resume", 64 * 1024, []
+
+    def log_message(s, *a):
+        pass
+
+    def do_GET(s):
+        cls = type(s)
+        rng = s.headers.get("Range")
+        cls.asked.append(rng)
+        if cls.mode == "down":
+            s.send_response(404); s.send_header("Content-Length", "0"); s.end_headers(); return
+        start = int(rng.split("=")[1].split("-")[0]) if rng and cls.mode == "resume" else 0
+        part = cls.body[start:]
+        s.send_response(206 if start else 200)
+        if start:
+            s.send_header("Content-Range", "bytes %d-%d/%d" % (start, len(cls.body) - 1, len(cls.body)))
+        s.send_header("Content-Length", str(len(part)))
+        s.end_headers()
+        cut = cls.mode == "resume" or len(cls.asked) == 1
+        s.wfile.write(part[:cls.cut] if cut else part)
+        s.wfile.flush()
+        s.close_connection = True
+
+
+def resume_cases(R):
+    """openjooki-ota.sh's dlr(), the real function under busybox with the real curl, against Flaky."""
+    src = docs("openjooki-ota.sh").decode()
+    dlr = src[src.index("dlr(){"):src.index("done; }", src.index("dlr(){")) + len("done; }")]
+    body = os.urandom(300 * 1024)
+    tmp = tempfile.mkdtemp(prefix="ojresume-")
+    bindir = os.path.join(tmp, "bin"); os.makedirs(bindir)
+    for name in subprocess.run([BUSYBOX, "--list"], capture_output=True, text=True, check=True).stdout.split():
+        if name not in ("curl", "sleep"):
+            os.symlink(BUSYBOX, os.path.join(bindir, name))
+    os.symlink(shutil.which("curl"), os.path.join(bindir, "curl"))
+    with open(os.path.join(bindir, "sleep"), "w") as f: f.write("#!%s ash\nexit 0\n" % BUSYBOX)
+    os.chmod(os.path.join(bindir, "sleep"), 0o755)
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Flaky)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    out = os.path.join(tmp, "img")
+
+    def run(mode, start=None):
+        Flaky.body, Flaky.mode, Flaky.asked = body, mode, []
+        if os.path.exists(out): os.remove(out)
+        if start is not None:
+            with open(out, "wb") as f: f.write(start)
+        sh = os.path.join(tmp, "t.sh")
+        with open(sh, "w") as f:
+            # sleep as a function: busybox ash may run its own sleep before any on the PATH (29 x 5 s)
+            f.write("SHA=%s\nsleep(){ :; }\nlog(){ echo \"[ota] $*\"; }\n%s\ndlr http://127.0.0.1:%d/img %s; echo \"rc=$?\"\n"
+                    % (sha(body), dlr, srv.server_address[1], out))
+        r = subprocess.run([BUSYBOX, "ash", sh], capture_output=True, text=True, timeout=120, env={"PATH": bindir})
+        got = read(out, "rb")
+        return r.stdout, got, [l for l in r.stdout.splitlines() if "going on from" in l]
+
+    try:
+        so, got, hic = run("resume")
+        R.check("resume: a download cut every 64 KB still arrives whole (each try goes on from where the last stopped)",
+                "rc=0" in so and got == body and len(hic) >= 4 and all(a and a.startswith("bytes=") for a in Flaky.asked[1:]),
+                (so[-600:], len(got), Flaky.asked))
+        kb = [int(l.split("going on from ")[1].split(" KB")[0]) for l in hic]
+        R.check("resume: the log says how much is there, growing (%s KB)" % kb, kb == sorted(kb) and kb[0] > 0 and kb[-1] < 300, kb)
+        so, got, hic = run("norange")
+        R.check("a server that cannot resume (curl 33): the piece is thrown away, the next try starts from zero and arrives",
+                "rc=0" in so and got == body and any("going on from 0 KB" in l for l in hic), (so[-600:], len(got), Flaky.asked))
+        so, got, hic = run("down")
+        R.check("unreachable: 30 tries, then dlr fails (rc 1) and the log counts them up to 29/30",
+                "rc=1" in so and len(Flaky.asked) == 30 and "retry 29/30" in hic[-1], (so[-300:], len(Flaky.asked)))
+        so, got, hic = run("down", start=body)
+        R.check("a file already whole (its sha256 is the manifest's) is taken as is, even when the server answers no more",
+                "rc=0" in so and got == body and not hic, (so[-300:], len(got)))
+    finally:
+        srv.shutdown()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def main():
     R = B.Results()
     if not BUSYBOX:
@@ -248,6 +330,8 @@ def main():
                     rc == 1 and "cannot reach GitHub" in st and work("ota.sh") == OLD and work("selfupdate.sh") == OLD, (rc, st, out))
     finally:
         w.restore()
+    # --- 8. the image over a weak Wi-Fi: openjooki-ota.sh goes on from where a cut left it
+    resume_cases(R)
     R.finish(list_failed=True, ok_line="OK: the updater scripts are checked before they run (and run as before without hashes)")
 
 

@@ -15,6 +15,17 @@ SELF="/data/openjooki/selfupdate.sh"
 mkdir -p "$WORK"
 log(){ echo "[ota] $*"; }
 dl(){ _u="$1"; _o="$2"; _i=0; while :; do curl -fSL --max-time 1200 "$_u" -o "$_o" && return 0; _i=$((_i+1)); [ $_i -ge 5 ] && return 1; log "network hiccup, retry $_i/5…"; sleep 5; done; }
+# The image (40 MB and more) picks up where a cut left it, for up to 30 tries: on a weak Wi-Fi it may
+# never come in one go (a Jooki at 2 KB/s needs hours, and each try stops after 20 minutes). A server
+# that cannot resume (curl's exit 33) starts it again from zero; a file already whole is known by $SHA.
+dlr(){ _u="$1"; _o="$2"; _i=0; while :; do
+  curl -fSL -C - --max-time 1200 "$_u" -o "$_o"; _rc=$?
+  [ $_rc -eq 0 ] && return 0
+  [ -f "$_o" ] && [ "$(sha256sum "$_o" | cut -d' ' -f1)" = "$SHA" ] && return 0
+  [ $_rc -eq 33 ] && rm -f "$_o"
+  _i=$((_i+1)); [ $_i -ge 30 ] && return 1
+  _k=0; [ -f "$_o" ] && _k=$(( $(wc -c < "$_o") / 1024 ))
+  log "network hiccup, going on from $_k KB, retry $_i/30…"; sleep 5; done; }
 
 # Currently installed version = the one recorded in the running firmware.
 CUR=$(cat /etc/openjooki-version 2>/dev/null || echo "0")
@@ -57,7 +68,7 @@ fi
 IMG="$IMGDIR/$FILE"
 
 log "downloading $FILE…"
-dl "$BASE/$FILE" "$IMG" || { rm -f "$IMG"; log "download failed"; exit 1; }
+dlr "$BASE/$FILE" "$IMG" || { rm -f "$IMG"; log "download failed"; exit 1; }
 
 log "verifying sha256…"
 GOT=$(sha256sum "$IMG" | cut -d' ' -f1)

@@ -1,5 +1,25 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.5 (25 October 2026) — Installs on a weak Wi-Fi
+- **Installing and updating on a weak Wi-Fi.** The new system (about 40 MB) used to start again
+  from zero every time the connection dropped, so a Jooki far from its internet box could never
+  finish. Now each try goes on from where the last one stopped.
+- **The Install button reaches every Jooki.** The small tab it opens was closed at once, sometimes
+  before a slow Jooki had even heard the command, and the install then never started while the
+  page said it was done. The tab now shows the Jooki's `ok`, and the waiting screen has
+  **See what my Jooki is doing**: the install, line by line.
+- The install log (`http://` + the Jooki's address + `/openjooki-status.txt`) can be read on a
+  Jooki with its original program, it explains why a download failed, and an install started
+  twice at once runs only once ([questions](guide/questions.md)).
+- Thanks to the parent who went through every step with us until their Jooki got there.
+- For the tinkerers: `openjooki-ota.sh` downloads the image with `curl -C -`, up to 30 tries; a
+  server that cannot resume (curl's exit 33) starts again from zero, and a file whose sha256 is
+  already the manifest's is kept (`test_updater.py` section 8: the real curl under busybox against
+  a server that cuts every answer). `b.sh` takes a lock in `/tmp/openjooki-install`, writes curl's
+  own error to the log, and links the log into `/tmp/web_ctrl_dirs/public`: the factory `web_ctrl`
+  only serves the links made at start. The factory `/ll` refuses commands over about 100
+  characters ("Invalid request").
+
 ## OpenJooki 2.4.4 (19 October 2026) — The Jooki's own Spotify account
 - **Settings → Spotify: the Jooki's own Spotify account.** Spotify only remembers the first
   account that sets the Jooki up. Another account can play on it too, but only until the Jooki

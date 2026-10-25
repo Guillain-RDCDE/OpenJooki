@@ -86,7 +86,8 @@
     <p id="wclock">15:00</p>
     <p id="wsub">Please wait &mdash; your Jooki is working now and will <b>restart on its own</b>.<br>Nothing else appears here, and that's completely normal.</p>
     <a class="btn" id="wopen" href="#" hidden>Open my Jooki's page</a>
-    <p class="wnote">If a small <code>ok</code> tab popped up, ignore it &mdash; it's harmless and closes by itself.</p>
+    <a class="btn ghost" id="wlog" href="#" target="_blank" rel="noopener">See what my Jooki is doing</a>
+    <p class="wnote">A small <code>ok</code> tab opened: that's your Jooki saying yes, you can close it. The button above shows the install as it goes; its last line says where it is. On a weak Wi-Fi the download takes longer: put the Jooki next to your internet box.</p>
     <span class="wwarn" id="wwarn">⚡ Keep it plugged in &mdash; don't unplug</span>
   </div>
 
@@ -97,7 +98,7 @@
     bi:"curl -fsSLo /tmp/b https://guillain-rdcde.github.io/OpenJooki/b.sh;sh /tmp/b&"
   };
   var CONF={
-    bi:"<b>Install OpenJooki now?</b><br><br>For about <b>10&ndash;15 minutes, nothing happens on screen &mdash; that is completely normal</b>. Your Jooki does everything by itself and <b>restarts on its own</b> at the end. A tiny <code>ok</code> tab may flash up &mdash; <b>ignore it, it's harmless and closes by itself</b>. This screen is the one that matters.<br><br><b>Do not unplug it.</b> Your music is kept; if anything goes wrong, the Jooki goes back to how it was by itself."
+    bi:"<b>Install OpenJooki now?</b><br><br>For about <b>10&ndash;15 minutes, nothing happens on screen &mdash; that is completely normal</b>. Your Jooki does everything by itself and <b>restarts on its own</b> at the end. A small tab saying <code>ok</code> opens: that's your Jooki saying yes. <b>Close it and come back here.</b> This screen is the one that matters.<br><br><b>Do not unplug it.</b> Your music is kept; if anything goes wrong, the Jooki goes back to how it was by itself."
   };
   var SECS={bi:900};
   var WT={bi:"Installing OpenJooki…"};
@@ -151,9 +152,9 @@
       if(left<=0){
         clearInterval(timer);
         wspin.style.display='none'; wdone.style.display='block'; wwarn.style.display='none';
-        wtitle.textContent='All done — your Jooki should be back';
+        wtitle.textContent='Your Jooki should be back';
         wclock.style.display='none';
-        wsub.innerHTML='Your Jooki has restarted on OpenJooki. If it’s still finishing, give it another minute.<br><br>Manage its playlists, tokens and music from its own page:';
+        wsub.innerHTML='If all went well, it has restarted on OpenJooki: its page has four tabs at the bottom. Still the old page? <b>See what my Jooki is doing</b>: the last line says whether it is still downloading, or why it stopped.';
         var wo=document.getElementById('wopen'); wo.href='http://'+normIP(ip.value)+'/'; wo.hidden=false;
         return;
       }
@@ -165,18 +166,14 @@
   // and do our best to auto-close that tab so the user never has to touch it.
   function fire(){
     var url="http://"+normIP(ip.value)+"/ll?action="+encodeURIComponent(C[cur]);
-    var w=null;
+    document.getElementById('wlog').href="http://"+normIP(ip.value)+"/openjooki-status.txt";
+    var w=null, opened=Date.now();
     try{ w=window.open(url,'ojll'); }catch(e){}
     try{ window.focus(); }catch(e){}
     startWait();
-    var n=0;
-    (function kill(){
-      n++;
-      try{ if(w && !w.closed) w.close(); }catch(e){}
-      if(w && !w.closed && n<12) setTimeout(kill, 600);
-    })();
-    // also close it whenever we regain focus / become visible
-    function closeNow(){ try{ if(w && !w.closed) w.close(); }catch(e){} }
+    // The tab is closed only once the person comes back here, and never in its first seconds: closed at
+    // once, the command never reached a slow Jooki (seen on a Jooki on a weak Wi-Fi, October 2026).
+    function closeNow(){ if(Date.now()-opened<5000) return; try{ if(w && !w.closed) w.close(); }catch(e){} }
     window.addEventListener('focus', closeNow);
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) closeNow(); });
     // popup blocked? fall back to a normal new-tab link so the command still fires

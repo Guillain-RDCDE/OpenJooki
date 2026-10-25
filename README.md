@@ -40,8 +40,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.4:** Settings → Spotify shows the Jooki's own Spotify account and can change it, so a token no longer stops another Spotify speaker at home.
-2.4.3: the Jooki finds its Wi-Fi by itself at every start again, and your Wi-Fi password no longer stays in its logs.
+**New in 2.4.5:** installing and updating go on where a weak Wi-Fi dropped them, and the Install button reaches every Jooki.
+2.4.4: Settings → Spotify shows the Jooki's own Spotify account and can change it, so a token no longer stops another Spotify speaker at home.
 [All the changes](CHANGELOG.md)
 
 ---

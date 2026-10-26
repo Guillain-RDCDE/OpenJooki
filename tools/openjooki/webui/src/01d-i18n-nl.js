@@ -160,6 +160,7 @@
     parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.',
     flat_tok: 'Plat figuurtje', thanks_tok: 'Bedankt-figuurtje',
     own_hint: 'Dit figuurtje is een personage op zich: geef het een naam, een plaatje en een afspeellijst.',
+    make_token: 'Er een echt Jooki-figuurtje van maken', make_token_tip: 'Dan pauzeert eraf halen, en werkt het twee keer na elkaar. Vanaf een Android-telefoon, of met een NFC-app.',
     flat_shared_hint: 'Platte figuurtjes die nog geen eigen afspeellijst hebben, starten deze.',
     lib_pick: 'Kies een plaatje', lib_search_ph: 'Zoek: kat, raket, slapen…', lib_loading: 'Plaatjes laden…',
     lib_fail: 'De plaatjes konden niet geladen worden. Probeer opnieuw.', lib_none: function (q) { return 'Geen plaatje voor “' + q + '”.'; },

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenJooki · a sticker becomes a Jooki token</title>
+<meta name="description" content="Turn an NFC sticker into a real Jooki token, from an Android phone: it pauses when you take it off, and it works on any Jooki. Nothing to install.">
+<style>
+  :root{--bg:#fffbf6;--fg:#222;--muted:#888;--accent:#f26b21;--card:#fff;--line:#eee;--ok:#188a3a;--okbg:#e8f6ec;--bad:#c0392b;--badbg:#fbeaea}
+  @media (prefers-color-scheme:dark){:root{--bg:#161514;--fg:#eee;--muted:#9a9a9a;--card:#201e1c;--line:#333;--okbg:#12301c;--badbg:#3a1a1a}}
+  *{box-sizing:border-box}
+  body{margin:0;font:17px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:0 20px 60px}
+  main{max-width:620px;margin:0 auto}
+  h1{color:var(--accent);font-size:1.8em;margin:.8em 0 .05em;text-align:center}
+  .sub{color:var(--muted);margin:0 0 1.4em;text-align:center}
+  h2{font-size:1.15em;margin:1.6em 0 .4em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .card.ok{background:var(--okbg);border-color:var(--ok)}
+  .card.bad{background:var(--badbg);border-color:var(--bad)}
+  .btn{display:block;width:100%;text-decoration:none;text-align:center;background:var(--accent);color:#fff;padding:15px;border:none;border-radius:12px;font-weight:700;margin:14px 0 4px;font-size:1.1em;font-family:inherit;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent);font-size:1em}
+  .btn:disabled{opacity:.35;cursor:default}
+  .tiny{color:var(--muted);font-size:.85em;margin:4px 0 0}
+  label{font-weight:600;display:block;margin:14px 0 6px}
+  input[type=text]{width:100%;padding:13px;font-size:1.1em;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font-family:ui-monospace,Menlo,Consolas,monospace}
+  .url{word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95em;background:var(--line);padding:10px 12px;border-radius:10px;margin:8px 0}
+  .spinner{width:48px;height:48px;border:5px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:6px auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spinner{animation:spin 2.4s linear infinite}}
+  .center{text-align:center}
+  .big{font-size:2.4em;line-height:1;margin:4px 0 10px}
+  a{color:var(--accent)}
+  .muted{color:var(--muted)}
+  details{margin:14px 0}summary{cursor:pointer;color:var(--accent)}
+  ul,ol{padding-left:1.3em}li{margin:.35em 0}
+  footer{color:var(--muted);font-size:.78em;text-align:center;margin-top:40px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>A sticker becomes a Jooki token</h1>
+  <p class="sub">An NFC sticker already starts a playlist on OpenJooki. Written as a real Jooki token, it also pauses the music when you take it off, works twice in a row, and works on any Jooki, even one without OpenJooki.</p>
+
+  <div class="card">
+    <b>You need</b>
+    <ul>
+      <li>an NFC sticker <b>NTAG213, NTAG215 or NTAG216</b> (the most common ones, a few cents each);</li>
+      <li>an <b>Android phone</b> with NFC switched on, and this page open in <b>Chrome</b>.</li>
+    </ul>
+    <p class="tiny" style="margin:0">On an iPhone or a computer: see <a href="#other">without an Android phone</a> below.</p>
+  </div>
+
+  <div id="nfc">
+    <div class="card bad" id="nonfc" hidden>
+      <b>This browser cannot write NFC stickers.</b>
+      <p style="margin:.4em 0 0">Only <b>Chrome on an Android phone</b> can, with NFC switched on in the phone's settings. On an iPhone, no web page can: Apple keeps NFC writing for apps. Use <a href="#other">the other way</a> below.</p>
+    </div>
+
+    <div id="ready">
+      <button class="btn" id="go" type="button">Write a sticker</button>
+      <p class="tiny center">Then hold the sticker against the back of the phone, and keep it there until the page says it's done.</p>
+    </div>
+
+    <div class="card center" id="wait" hidden>
+      <div class="spinner"></div>
+      <b>Hold the sticker against the back of the phone…</b>
+      <p class="tiny">Where the NFC antenna is: usually the middle of the back.</p>
+      <button class="btn ghost" id="stop" type="button">Cancel</button>
+    </div>
+
+    <div class="card ok" id="done" hidden>
+      <div class="big center">✅</div>
+      <b>It's a Jooki token now.</b>
+      <p style="margin:.4em 0 0">Put it on your Jooki. If it already played a playlist as a sticker, it keeps it, with its name and its picture (OpenJooki 2.4.6 or later).</p>
+      <p class="tiny" id="doneuid"></p>
+      <button class="btn ghost" id="again" type="button">Write another sticker</button>
+    </div>
+
+    <div class="card bad" id="err" hidden>
+      <b id="etitle"></b>
+      <p id="etext" style="margin:.4em 0 0"></p>
+      <button class="btn ghost" id="retry" type="button">Try again</button>
+    </div>
+
+    <div class="card" id="ask" hidden>
+      <b>This sticker already holds something else.</b>
+      <p id="asktext" style="margin:.4em 0 0"></p>
+      <button class="btn" id="erase" type="button">Replace it with a Jooki token</button>
+      <button class="btn ghost" id="keep" type="button">Keep it as it is</button>
+    </div>
+  </div>
+
+  <h2 id="other">Without an Android phone</h2>
+  <p>An app that writes NFC stickers does it too, on an iPhone or an Android phone: <b>NFC Tools</b>, for example (free).</p>
+  <ol>
+    <li>Find the sticker's number: put it on your Jooki with OpenJooki, then open <b>Tokens</b> and tap the sticker; or read it in the app (<i>Serial number</i>).</li>
+    <li>Type it here (14 letters and digits):</li>
+  </ol>
+  <input type="text" id="uid" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="04A1B2C3D49C41" maxlength="20">
+  <div id="manual" hidden>
+    <p style="margin:12px 0 0">3. In the app, write <b>one URL record</b> with exactly this, to <b>that same sticker</b>:</p>
+    <div class="url" id="url"></div>
+    <button class="btn ghost" id="copy" type="button">Copy</button>
+  </div>
+  <p class="tiny" id="baduid" hidden>That is not a sticker number: 14 characters, digits and letters A to F, like 04A1B2C3D49C41.</p>
+
+  <details>
+    <summary>How it works</summary>
+    <p>A Jooki token holds one web address, <code>https://s.jooki.rocks/s/?s=</code> followed by 16 characters. Those characters hide the kind of token and the sticker's own number, scrambled with a key the original Jooki program uses. The Jooki checks that the number inside matches the sticker it reads: a copy on another sticker is refused, so each sticker needs its own. The Jooki never visits that address.</p>
+    <p>This page writes the kind of token of the round flat tokens: OpenJooki gives each one a character of its own. Credits: the format was found by <a href="https://github.com/SveLil/JookiTagCreator">JookiTagCreator</a> (MIT), and Muuselabs published it with the Jooki's source in October 2026.</p>
+  </details>
+
+  <footer><a href="./">OpenJooki</a> · made by a parent for the Jooki · not affiliated with the original maker</footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  // The Jooki token format (docs/23-nfc-tags.md §2): 12 bytes = a 3-byte salt, the token type, the
+  // figure, the sticker's 7-byte UID; the first three XOR the key, the others XOR the key and
+  // the salt byte i % 3; base64, no padding. Same key and salt as JookiTagCreator (MIT) and
+  // Muuselabs' own nfc_ctrl/lib_decrypt.c.
+  var KEY = [0x03, 0x9c, 0x25, 0x6f, 0xb9, 0x2e, 0xe8, 0x08, 0x09, 0x83, 0xd9, 0x33, 0x56];
+  var SALT = [0x80, 0x77, 0x51];
+  var PREFIX = 'https://s.jooki.rocks/s/?s=';
+  var FLAT = 512;   // type 2, figure 0: the round flat tokens; OpenJooki makes each one its own character
+
+  function parseUid(s) {
+    var hex = String(s || '').replace(/[\s:-]/g, '').toUpperCase();
+    return /^[0-9A-F]{14}$/.test(hex) ? hex : null;
+  }
+  function tokenUrl(uid, code) {
+    var u = parseUid(uid); if (!u) return null;
+    code = code == null ? FLAT : code;
+    var d = SALT.concat([(code >> 8) & 255, code & 255]);
+    for (var i = 0; i < 7; i++) d.push(parseInt(u.substr(i * 2, 2), 16));
+    var e = d.map(function (b, i) { return i < 3 ? b ^ KEY[i] : b ^ KEY[i] ^ d[i % 3]; });
+    return PREFIX + btoa(String.fromCharCode.apply(null, e));
+  }
+  // what a token's address says: { code, uid } (null when it is not a Jooki token)
+  function readToken(url) {
+    var m = /\?s=([A-Za-z0-9+\/]{16})/.exec(String(url || ''));
+    if (!m) return null;
+    var b = atob(m[1]).split('').map(function (c) { return c.charCodeAt(0); });
+    var d = b.map(function (x, i) { return i < 3 ? x ^ KEY[i] : 0; });
+    for (var i = 3; i < 12; i++) d[i] = b[i] ^ KEY[i] ^ d[i % 3];
+    var uid = d.slice(5).map(function (x) { return (x < 16 ? '0' : '') + x.toString(16); }).join('').toUpperCase();
+    return { code: d[3] << 8 | d[4], uid: uid };
+  }
+  window.OJT = { tokenUrl: tokenUrl, readToken: readToken, parseUid: parseUid };
+
+  var $ = function (id) { return document.getElementById(id); };
+  function show(id) { ['ready', 'wait', 'done', 'err', 'ask'].forEach(function (k) { $(k).hidden = k !== id; }); }
+  function fail(title, text) { $('etitle').textContent = title; $('etext').textContent = text; show('err'); }
+
+  // --- the manual way: the address for a number typed in
+  var want = parseUid(new URLSearchParams(location.search).get('uid'));
+  function manual() {
+    var raw = $('uid').value, u = parseUid(raw);
+    $('manual').hidden = !u; $('baduid').hidden = !!u || !raw.trim();
+    if (u) $('url').textContent = tokenUrl(u);
+  }
+  $('uid').addEventListener('input', manual);
+  if (want) { $('uid').value = want; manual(); }
+  $('copy').addEventListener('click', function () {
+    var t = $('url').textContent, b = this;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+      b.textContent = 'Copied ✓'; setTimeout(function () { b.textContent = 'Copy'; }, 2000);
+    }, function () { var r = document.createRange(); r.selectNodeContents($('url')); var s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+  });
+
+  // --- the Android way: Web NFC
+  if (!('NDEFReader' in window)) { $('nonfc').hidden = false; $('ready').hidden = true; return; }
+  var ctrl = null, pending = null;
+  function stop() { if (ctrl) { try { ctrl.abort(); } catch (e) {} ctrl = null; } }
+  function write(uid, ndef) {
+    var url = tokenUrl(uid);
+    ndef.write({ records: [{ recordType: 'url', data: url }] }, { overwrite: true }).then(function () {
+      stop();
+      $('doneuid').textContent = 'Sticker ' + uid;
+      show('done');
+    }, function (e) {
+      stop();
+      if (e && e.name === 'NotAllowedError') fail('NFC is not allowed for this page.', 'Allow NFC for this site in Chrome (the lock next to the address), then try again.');
+      else fail('The sticker could not be written.', 'Keep it still against the phone until the page says it is done. A sticker locked against writing cannot become a token.');
+    });
+  }
+  function start() {
+    stop(); pending = null;
+    var ndef = new NDEFReader();
+    ctrl = new AbortController();
+    show('wait');
+    ndef.onreadingerror = function () { fail('The sticker could not be read.', 'Hold it still against the back of the phone, a bit longer.'); stop(); };
+    ndef.onreading = function (ev) {
+      var uid = parseUid(ev.serialNumber);
+      if (!uid) { stop(); fail('This sticker cannot become a Jooki token.', 'The Jooki only reads stickers with a 7-byte number: NTAG213, NTAG215 or NTAG216.'); return; }
+      var urls = (ev.message && ev.message.records || []).filter(function (r) { return r.recordType === 'url'; })
+        .map(function (r) { try { return new TextDecoder().decode(r.data); } catch (e) { return ''; } });
+      var tok = urls.map(readToken).filter(Boolean)[0];
+      if (tok && tok.uid === uid) {
+        stop();
+        if (tokenUrl(uid) === urls[0]) { $('doneuid').textContent = 'Sticker ' + uid + ' (it already was)'; show('done'); }
+        else fail('This is already a Jooki token.', 'A real Jooki token (a character or a coloured token) is never written over: it would lose what it is.');
+        return;
+      }
+      // asked and answered: written only to that same sticker (a token made for one is refused on another)
+      if (pending && pending.erase && pending.uid === uid) { pending = null; write(uid, ndef); return; }
+      if (ev.message && ev.message.records && ev.message.records.length) {
+        pending = { uid: uid };
+        $('asktext').textContent = urls.length ? 'It holds the address ' + urls[0] + '.' : 'It holds data of another kind.';
+        show('ask');
+        return;
+      }
+      write(uid, ndef);
+    };
+    ndef.scan({ signal: ctrl.signal }).catch(function (e) {
+      stop();
+      if (e && e.name === 'NotAllowedError') fail('NFC is not allowed for this page.', 'Allow NFC for this site in Chrome (the lock next to the address), then try again.');
+      else fail('NFC is off.', 'Switch NFC on in the phone’s settings, then try again.');
+    });
+  }
+  $('go').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+  $('retry').addEventListener('click', start);
+  $('stop').addEventListener('click', function () { stop(); show('ready'); });
+  $('erase').addEventListener('click', function () { if (pending) { pending.erase = true; show('wait'); } });
+  $('keep').addEventListener('click', function () { pending = null; stop(); show('ready'); });
+})();
+</script>
+</body>
+</html>

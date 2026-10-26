@@ -160,6 +160,7 @@
     parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.',
     flat_tok: 'Flat token', thanks_tok: 'Thank-you token',
     own_hint: 'This token is a character of its own: give it a name, a picture and its playlist.',
+    make_token: 'Make it a real Jooki token', make_token_tip: 'Then taking it off pauses, and it works twice in a row. From an Android phone, or with an NFC app.',
     flat_shared_hint: 'Flat tokens that have no playlist of their own yet start this one.',
     lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
     lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },

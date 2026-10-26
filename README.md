@@ -28,6 +28,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 |---|---|
 | My Jooki works, but the app doesn't any more | **[Install OpenJooki](guide/install.md)** · 15 min, from your phone |
 | I have OpenJooki: playlists, tokens, bedtime, Bluetooth speaker… | **[Use it](guide/use.md)** |
+| My NFC stickers should pause like real tokens | **[A sticker becomes a Jooki token](guide/use.md#tokens)** · Android phone, or an NFC app |
 | I want to read a story myself | **[Jookistory: a story read by you](guide/use.md#a-story-read-by-you)** |
 | Grandma reads from far away, and the book gets its own token | **[From far away](guide/use.md#a-story-read-from-far-away)** · **[Labels for the books](guide/use.md#labels-for-the-books)** |
 | I use Spotify on my phone | **[Spotify on the Jooki](guide/use.md#spotify)** |
@@ -40,8 +41,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.5:** installing and updating go on where a weak Wi-Fi dropped them, and the Install button reaches every Jooki.
-2.4.4: Settings → Spotify shows the Jooki's own Spotify account and can change it, so a token no longer stops another Spotify speaker at home.
+**New in 2.4.6:** an NFC sticker can become a real Jooki token, from an Android phone or an NFC app: it pauses when taken off and keeps its playlist.
+2.4.5: installing and updating go on where a weak Wi-Fi dropped them, and the Install button reaches every Jooki.
 [All the changes](CHANGELOG.md)
 
 ---

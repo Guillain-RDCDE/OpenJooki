@@ -3,9 +3,9 @@ name: core
 on:
   push:
     branches: [main]      # a tag push does not run this again: the nightly workflow covers tags
-    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", "docs/mp3-worker.js", "docs/lame.*", ".github/**", "README.md", "CHANGELOG.md"]
+    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/tokens.html", "docs/index.html", "docs/*.sh", "docs/mp3-worker.js", "docs/lame.*", ".github/**", "README.md", "CHANGELOG.md"]
   pull_request:
-    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/*.sh", "docs/mp3-worker.js", "docs/lame.*", ".github/**", "README.md", "CHANGELOG.md"]
+    paths: ["core/**", "tools/**", "scripts/**", "docs/wifi.html", "docs/tokens.html", "docs/index.html", "docs/*.sh", "docs/mp3-worker.js", "docs/lame.*", ".github/**", "README.md", "CHANGELOG.md"]
 
 permissions:
   contents: read
@@ -137,6 +137,9 @@ jobs:
       - name: the Wi-Fi page (docs/wifi.html) against a scripted Jooki
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_wifi_page.py
+      - name: the tokens page (docs/tokens.html) writes real Jooki tokens with a scripted NFC reader
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_tokens_page.py
       - name: the updater scripts (docs/o.sh, docs/b.sh) under busybox, checking what they fetch
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_updater.py

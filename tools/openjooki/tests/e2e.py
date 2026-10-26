@@ -201,6 +201,29 @@ with sync_playwright() as p:
     if pg.locator(".sheet").count(): pg.keyboard.press("Escape")
     J.nfc_foreign(amiibo); J.poll(lambda: J.np.get("playlistId") == tri)
     check("E11b the linked foreign tag starts its playlist", J.pls[tri].get("star") == fch and J.np.get("playlistId") == tri, (J.pls[tri], J.np))
+    # E11d a sticker written as a genuine Jooki token (docs/tokens.html): the sheet links there, and
+    # once written the sticker keeps its name, picture and playlist, and is on the Jooki like a token
+    STK = "04D00D00D00D01"; sch = "tag." + STK
+    J.nfc_foreign(STK); J.wait(lambda: STK in J.tokens)
+    spl = J.newpl("E11d sticker", files=["media/song3.mp3"], star=sch)
+    J.send("TOKEN_EDIT", {"tagId": STK, "name": "Bus", "image": "lib:unicorn"}); J.wait(lambda: (J.tokens.get(STK) or {}).get("name") == "Bus")
+    pg.goto(URL + "/#/tokens"); pg.wait_for_selector("[data-char='%s']" % sch)
+    pg.click("[data-char='%s']" % sch); pg.wait_for_selector("[data-k=maketoken]")
+    check("E11d a sticker's sheet offers to make it a real Jooki token, with its number",
+          pg.get_attribute("[data-k=maketoken]", "href") == "https://guillain-rdcde.github.io/OpenJooki/tokens.html?uid=" + STK
+          and pg.get_attribute("[data-k=maketoken]", "target") == "_blank", pg.get_attribute("[data-k=maketoken]", "href"))
+    pg.keyboard.press("Escape")
+    J.nfc(STK, "200"); J.wait(lambda: (J.tokens.get(STK) or {}).get("starId") == "flat." + STK)
+    J.poll(lambda: J.np.get("playlistId") == spl)
+    tk = J.tokens.get(STK) or {}
+    check("E11d written, it is a flat token of its own: same name and picture, its playlist follows it and plays",
+          tk.get("name") == "Bus" and tk.get("image") == "lib:unicorn" and J.pls[spl].get("star") == "flat." + STK
+          and J.np.get("playlistId") == spl and J.nfc_state.get("tagId") == STK, (tk, J.pls[spl], J.np, J.nfc_state))
+    pg.wait_for_selector("[data-char='flat.%s']" % STK)
+    check("E11d the page shows it as a token, no more as a sticker", pg.locator("[data-char='%s']" % sch).count() == 0)
+    J.poll(lambda: J.pb == "PLAYING", 5)   # really playing, not still starting (as test_backend.py TFL)
+    J.nfc_off(); J.wait(lambda: not J.nfc_state)
+    R.expect("E11d taking it off now pauses", lambda: J.pb == "PAUSED", 5, lambda: J.get("audio.playback"))
     # E22 flat tokens: one code (512) for all of them, but each one is its own tile; a picture from the library
     CAT, ELE = "04A1B2C3D49C41", "04A1B2C3D477A0"
     J.nfc(CAT, "200"); J.wait(lambda: CAT in J.tokens); J.nfc_off(); J.wait(lambda: not J.nfc_state)

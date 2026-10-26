@@ -14,6 +14,7 @@
     return { groups: groups, ids: ids, linkedOnly: linkedOnly };
   }
   // the details of one character (or foreign tag): its playlist, its physical tokens and their names
+  var TOKENS_PAGE = 'https://guillain-rdcde.github.io/OpenJooki/tokens.html';
   function charModal(sid) {
     var foreign = !!foreignUid(sid), own = !!ownUid(sid);
     openModal({
@@ -44,6 +45,9 @@
               h('div', { class: 'small muted' }, tags.length ? t('n_tokens', tags.length) : t('no_token')))),
           h('p', { class: 'small muted' }, foreign ? t('foreign_hint') : own ? t('own_hint')
             : sid === 'Jooki.Flat' || sid === 'Jooki.ThankYou' ? t('flat_shared_hint') : t('tokens_intro')),
+          // a sticker can be written as a genuine token (docs/tokens.html, Web NFC): it keeps its playlist (library.ops.retag)
+          foreign && tags.length ? [h('a', { class: 'btn', 'data-k': 'maketoken', href: TOKENS_PAGE + '?uid=' + tags[0], target: '_blank', rel: 'noopener' }, icon('tag'), t('make_token')),
+            h('p', { class: 'small muted' }, t('make_token_tip'))] : null,
           h('label', { class: 'field' }, h('span', null, t('launches')), sel),
           tags.map(function (tag, i) {
             var tk = S.db.tokens[tag] || {};

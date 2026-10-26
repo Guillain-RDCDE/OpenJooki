@@ -284,6 +284,20 @@ function ops.learn(lib, uid, star)
   return true
 end
 
+--- A sticker learned as a foreign tag ("tag.<uid>") and written since as a genuine Jooki token of its
+--- own ("flat.<uid>", tokens.html): its playlist follows it (its name and picture are kept by uid).
+--- Returns true when a playlist moved.
+function ops.retag(lib, uid, star)
+  local tok = lib.tokens[uid]
+  local old = tok and tok.starId
+  if old ~= "tag." .. tostring(uid) or type(star) ~= "string" or star == old or star:sub(-#uid) ~= uid then return false end
+  local moved = false
+  for _, p in pairs(lib.playlists) do
+    if p.star == old then p.star = star moved = true end
+  end
+  return moved
+end
+
 function ops.token_edit(lib, uid, name, image)
   local tok = lib.tokens[uid]
   if not tok then return nil, { code = "not_found", field = "tagId", message = "unknown token" } end

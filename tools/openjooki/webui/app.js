@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.4.5';
+  var VERSION = '2.4.6';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -172,6 +172,7 @@
     parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.',
     flat_tok: 'Jeton plat', thanks_tok: 'Jeton Merci',
     own_hint: 'Ce jeton est un personnage à lui tout seul : donne-lui un nom, une image et sa playlist.',
+    make_token: 'En faire un vrai jeton Jooki', make_token_tip: 'Le retirer mettra alors en pause, et il marchera deux fois de suite. Depuis un téléphone Android, ou avec une appli NFC.',
     flat_shared_hint: 'Les jetons plats qui n\'ont pas encore leur propre playlist lancent celle-ci.',
     lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
     lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },
@@ -369,6 +370,7 @@
     parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.',
     flat_tok: 'Flat token', thanks_tok: 'Thank-you token',
     own_hint: 'This token is a character of its own: give it a name, a picture and its playlist.',
+    make_token: 'Make it a real Jooki token', make_token_tip: 'Then taking it off pauses, and it works twice in a row. From an Android phone, or with an NFC app.',
     flat_shared_hint: 'Flat tokens that have no playlist of their own yet start this one.',
     lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
     lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },
@@ -566,6 +568,7 @@
     parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.',
     flat_tok: 'Plat figuurtje', thanks_tok: 'Bedankt-figuurtje',
     own_hint: 'Dit figuurtje is een personage op zich: geef het een naam, een plaatje en een afspeellijst.',
+    make_token: 'Er een echt Jooki-figuurtje van maken', make_token_tip: 'Dan pauzeert eraf halen, en werkt het twee keer na elkaar. Vanaf een Android-telefoon, of met een NFC-app.',
     flat_shared_hint: 'Platte figuurtjes die nog geen eigen afspeellijst hebben, starten deze.',
     lib_pick: 'Kies een plaatje', lib_search_ph: 'Zoek: kat, raket, slapen…', lib_loading: 'Plaatjes laden…',
     lib_fail: 'De plaatjes konden niet geladen worden. Probeer opnieuw.', lib_none: function (q) { return 'Geen plaatje voor “' + q + '”.'; },
@@ -2228,6 +2231,7 @@
     return { groups: groups, ids: ids, linkedOnly: linkedOnly };
   }
   // the details of one character (or foreign tag): its playlist, its physical tokens and their names
+  var TOKENS_PAGE = 'https://guillain-rdcde.github.io/OpenJooki/tokens.html';
   function charModal(sid) {
     var foreign = !!foreignUid(sid), own = !!ownUid(sid);
     openModal({
@@ -2258,6 +2262,9 @@
               h('div', { class: 'small muted' }, tags.length ? t('n_tokens', tags.length) : t('no_token')))),
           h('p', { class: 'small muted' }, foreign ? t('foreign_hint') : own ? t('own_hint')
             : sid === 'Jooki.Flat' || sid === 'Jooki.ThankYou' ? t('flat_shared_hint') : t('tokens_intro')),
+          // a sticker can be written as a genuine token (docs/tokens.html, Web NFC): it keeps its playlist (library.ops.retag)
+          foreign && tags.length ? [h('a', { class: 'btn', 'data-k': 'maketoken', href: TOKENS_PAGE + '?uid=' + tags[0], target: '_blank', rel: 'noopener' }, icon('tag'), t('make_token')),
+            h('p', { class: 'small muted' }, t('make_token_tip'))] : null,
           h('label', { class: 'field' }, h('span', null, t('launches')), sel),
           tags.map(function (tag, i) {
             var tk = S.db.tokens[tag] || {};

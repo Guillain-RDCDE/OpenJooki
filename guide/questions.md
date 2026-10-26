@@ -79,6 +79,11 @@ listens to that same account on another speaker, Spotify stops it: one account p
 at a time. In *Settings → Spotify*, tap **Change the Jooki's account**, then pick the Jooki in the
 Spotify app from the account the tokens should use ([Use it](use.md#spotify)).
 
+**My Spotify tokens stopped playing, after someone "forgot" the Jooki in the Spotify app.**
+In the Spotify app, *Forget this device* on the Jooki removes the Jooki's own account, whichever
+account does it. Pick the Jooki again in the Spotify app, from the account the tokens should use:
+it becomes the Jooki's account again ([Use it](use.md#spotify)).
+
 **What are *Home automation* and *Maintenance access* in Settings?**
 Two switches for tinkerers. Leave them off.
 

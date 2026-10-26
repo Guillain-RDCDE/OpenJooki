@@ -71,6 +71,34 @@ describe("services.tokens", function()
     assert_eq(emitted(r, "playback.request").playlist, "user_1")
   end)
 
+  it("a sticker written as a genuine token (tokens.html): it keeps its name, picture and playlist, and is on the Jooki now", function()
+    local uid = "046158B2661290"
+    local doc = doc_with({ user_1 = { title = "Mario", star = "tag." .. uid, tracks = {} },
+                           user_2 = { title = "Autre", star = "tag.04000000000002", tracks = {} } },
+                         { [uid] = { starId = "tag." .. uid, seen = 3, name = "Mario", image = "lib:cat" } })
+    local r = tokens.on_tag(doc, { type = "nfc.tag", uid = uid, star_code = 512 })
+    assert_eq(r.state.nfc, { starId = "flat." .. uid, tagId = uid })
+    assert_eq(r.state.library.tokens[uid], { starId = "flat." .. uid, seen = 4, name = "Mario", image = "lib:cat" })
+    assert_eq(r.state.library.playlists.user_1.star, "flat." .. uid)
+    assert_eq(r.state.library.playlists.user_2.star, "tag.04000000000002", "another sticker's playlist stays")
+    assert_eq(emitted(r, "playback.request"), { type = "playback.request", playlist = "user_1", source = "token" })
+    local paths = {}
+    for _, c in ipairs(r.commands) do if c.kind == "files.write" then paths[#paths + 1] = c.path end end
+    table.sort(paths)
+    assert_eq(paths, { "/d/playlists.json", "/d/tokens.json" })
+    assert_eq(doc.library.playlists.user_1.star, "tag." .. uid, "original document untouched")
+  end)
+
+  it("a genuine token seen again, or a foreign tag: no playlist moves, only tokens.json is written", function()
+    local uid = "04A1B2C3D49C41"
+    local doc = doc_with({ user_1 = { title = "Chat", star = "flat." .. uid, tracks = {} } }, { [uid] = { starId = "flat." .. uid, seen = 1 } })
+    local r = tokens.on_tag(doc, { type = "nfc.tag", uid = uid, star_code = 512 })
+    local writes = 0
+    for _, c in ipairs(r.commands) do if c.kind == "files.write" then writes = writes + 1 assert_eq(c.path, "/d/tokens.json") end end
+    assert_eq(writes, 1)
+    assert_eq(r.state.library.playlists.user_1.star, "flat." .. uid)
+  end)
+
   it("a character without playlist: learned, no playback, 'empty' event", function()
     local doc = doc_with({})
     local r = tokens.on_tag(doc, { type = "nfc.tag", uid = "04000000F00001", star_code = 257 })

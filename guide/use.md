@@ -117,6 +117,11 @@ the Jooki from reading the sticker: put it inside the cover instead.
 - **An amiibo or an NFC sticker** works too: put it on, and it shows up in Tokens. Taking
   it off does **not** pause (use the button), and another object has to go on the Jooki
   between two uses of the same one.
+- **A sticker becomes a real Jooki token**: tap the sticker in Tokens, then **Make it a real
+  Jooki token**. From an Android phone in Chrome, hold the sticker against the phone; from an
+  iPhone, the page gives what to write with an NFC app. Then taking it off pauses, it works twice
+  in a row, and it works on any Jooki. It keeps its name, picture and playlist. Stickers NTAG213,
+  NTAG215 or NTAG216 ([the page](https://guillain-rdcde.github.io/OpenJooki/tokens.html)).
 - **A picture** for a flat token or an NFC tag: **Choose a picture** (659 ready-made ones,
   with a search, no Internet needed) or **My photo** (take or pick a photo, then **Remove
   the background**).

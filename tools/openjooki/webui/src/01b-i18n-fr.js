@@ -160,6 +160,7 @@
     parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.',
     flat_tok: 'Jeton plat', thanks_tok: 'Jeton Merci',
     own_hint: 'Ce jeton est un personnage à lui tout seul : donne-lui un nom, une image et sa playlist.',
+    make_token: 'En faire un vrai jeton Jooki', make_token_tip: 'Le retirer mettra alors en pause, et il marchera deux fois de suite. Depuis un téléphone Android, ou avec une appli NFC.',
     flat_shared_hint: 'Les jetons plats qui n\'ont pas encore leur propre playlist lancent celle-ci.',
     lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
     lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },

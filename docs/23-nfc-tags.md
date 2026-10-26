@@ -38,9 +38,12 @@ fixed 13-byte key (`e[i] = d[i] ^ K[i]` for the first three bytes, then
 
 Because the UID is inside the scrambled content, copying a token's content to
 another tag is refused (`EVT_CLONE_DETECT: tagId mismatch`). A blank NTAG213
-sticker written with the content computed **for its own UID** should be read as
-a genuine token (not verified yet). The Jooki itself cannot write tags: its
-firmware says `Writing tags is not implemented`.
+sticker written with the content computed **for its own UID** is read as a
+genuine token: the computation was checked against Muuselabs' own decoder
+(`nfc_ctrl/lib_decrypt.c`, in the source they published in October 2026, §7),
+not yet on a real Jooki. The Jooki itself cannot write tags: its firmware says
+`Writing tags is not implemented` (the 2021 source has a write command, the
+2022 firmware in our Jookis does not).
 
 ## 3. Other tags in OpenJooki (2.x)
 
@@ -134,3 +137,29 @@ to try, and to put the sticker inside the cover when it fails.
   channel with `esp32_ctrl`, and every call writes a log line. `get_tag` only
   ever reports genuine tokens.
 - Reflashing the ESP32: the one real way to brick the Jooki.
+
+## 7. A sticker written as a genuine token (2.4.6)
+
+`docs/tokens.html` (GitHub Pages, so `https`: Web NFC needs it) turns an NFC sticker into a
+genuine Jooki token of the flat kind, code **512**: OpenJooki makes it its own character
+`flat.<UID>` (§4), and an original Jooki plays the flat tokens' playlist.
+
+- **Android, Chrome**: `NDEFReader.scan()` gives the sticker's `serialNumber`; the page writes one
+  URL record, `https://s.jooki.rocks/s/?s=` + the 16 characters computed for that UID (§2), salt
+  `80 77 51` like the factory tokens. It refuses a UID that is not 7 bytes (NTAG213/215/216 only),
+  never writes over a genuine Jooki token, asks before replacing other content, and after that
+  question writes only to the same sticker (a token made for one UID is refused on another).
+- **Anywhere else** (iPhone, computer: no Web NFC): the sticker's number typed in (or given by
+  OpenJooki's page, `?uid=`) gives the address to write with an app such as NFC Tools.
+- **OpenJooki's page**: a foreign tag's sheet links there (`data-k=maketoken`, `?uid=<UID>`).
+- **The core**: the first time a learned foreign tag `tag.<UID>` comes back as a genuine token,
+  its playlist follows it to `flat.<UID>` (`library.ops.retag`, `playlists.json` written with
+  `tokens.json`); its name and picture are kept by UID.
+- **Tests**: `test_tokens_page.py` (a scripted `NDEFReader`; the tokens decoded as
+  `lib_decrypt.c` does, and Muuselabs' example `L9XYQwDTxUP3q5XI` = code `0x00F0`, UID
+  `00010203040506`), `tokens_spec.lua`, e2e E11d. When the page was written, 501 tokens it made
+  were decoded by Muuselabs' C decoder itself, compiled on the bench (not in the repository: their
+  code carries no licence), to the same salt, code and UID.
+- Credits: the format was found by [JookiTagCreator](https://github.com/SveLil/JookiTagCreator)
+  (MIT, same key and salt); Muuselabs documented it in `README-NFC.md` of their source archive
+  (`https://jooki.com/jooki-archive-20261026.tgz`).

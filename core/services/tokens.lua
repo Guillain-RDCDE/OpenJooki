@@ -67,7 +67,13 @@ function tokens.on_tag(doc, ev)
     return result
   end
   -- learn the token (seen count, character), persist tokens.json
-  local mutated = library.mutate(doc, { tokens = true }, function(lib) return library.ops.learn(lib, ev.uid, star) end)
+  -- a sticker written as a genuine token keeps its playlist (library.ops.retag): playlists saved too
+  local known = doc.library and doc.library.tokens and doc.library.tokens[ev.uid]
+  local retag = known and known.starId == "tag." .. ev.uid and star ~= known.starId
+  local mutated = library.mutate(doc, { tokens = true, playlists = retag or nil }, function(lib)
+    library.ops.retag(lib, ev.uid, star)
+    return library.ops.learn(lib, ev.uid, star)
+  end)
   if mutated then
     result.state.library = mutated.state.library
     for _, c in ipairs(mutated.commands) do result.commands[#result.commands + 1] = c end

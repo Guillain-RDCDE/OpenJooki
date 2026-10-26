@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.6 (26 October 2026) — A sticker becomes a Jooki token
+- **A sticker becomes a real Jooki token.** In Tokens, tap an NFC sticker, then **Make it a real
+  Jooki token**: from an Android phone, hold it against the phone; from an iPhone, the page gives
+  what to write with an NFC app. Then taking it off pauses, it works twice in a row, it works on
+  any Jooki, and it keeps its name, picture and playlist ([Use it](guide/use.md#tokens)).
+- **Spotify**: "Forget this device" in the Spotify app removes the Jooki's own account, whichever
+  account does it; the questions say how to get it back ([questions](guide/questions.md)).
+- Thanks to Muuselabs, who published the Jooki's source in October 2026: it confirmed the token
+  format and how the Jooki keeps its Spotify account.
+- For the tinkerers: `docs/tokens.html` (Web NFC) writes the flat-token code 512 for the sticker's
+  own UID; `library.ops.retag` moves a foreign tag's playlist from `tag.<UID>` to `flat.<UID>` the
+  first time it comes back as a genuine token; `test_tokens_page.py` in CI and nightly; docs/23 §7.
+
 ## OpenJooki 2.4.5 (25 October 2026) — Installs on a weak Wi-Fi
 - **Installing and updating on a weak Wi-Fi.** The new system (about 40 MB) used to start again
   from zero every time the connection dropped, so a Jooki far from its internet box could never

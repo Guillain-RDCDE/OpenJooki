@@ -275,6 +275,8 @@ main { flex: 1; width: 100%; max-width: 900px; margin: 0 auto; padding: 16px 16p
 .np .controls { display: flex; justify-content: center; align-items: center; gap: 18px; margin: 14px 0; }
 .np .controls .icon-btn.accent { width: 64px; height: 64px; }
 .np .controls .icon-btn.accent svg { width: 30px; height: 30px; }
+.np .controls .skipsec { font-weight: 700; font-size: .9em; font-variant-numeric: tabular-nums; }
+@media (max-width: 380px) { .np .controls { gap: 10px; } }
 .range { width: 100%; accent-color: var(--accent); height: 28px; }
 .times { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .vol { display: flex; align-items: center; gap: 10px; margin-top: 8px; }

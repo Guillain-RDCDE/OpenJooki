@@ -41,8 +41,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.6:** an NFC sticker can become a real Jooki token, from an Android phone or an NFC app: it pauses when taken off and keeps its playlist.
-2.4.5: installing and updating go on where a weak Wi-Fi dropped them, and the Install button reaches every Jooki.
+**New in 2.4.7:** a parent-code gesture that works, a clean shutdown before the battery runs flat, ±15 s for audiobooks, repeat this song.
+2.4.6: an NFC sticker can become a real Jooki token, from an Android phone or an NFC app: it pauses when taken off and keeps its playlist.
 [All the changes](CHANGELOG.md)
 
 ---

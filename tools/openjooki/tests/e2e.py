@@ -96,7 +96,36 @@ with sync_playwright() as p:
     pg.click(".player .info"); pg.wait_for_selector(".np")
     pg.click("[data-k=nppp]")
     R.expect("E13 play from the sheet", lambda: J.pb == "PLAYING", 5, lambda: J.get("audio.playback"))
+    # E13b an audiobook (E9): ±15 s in the sheet, as the original page had; no shuffle / repeat, which do nothing there
+    check("E13b an audiobook: -15 s and +15 s, no shuffle or repeat",
+          pg.locator("[data-k=back15]").count() == 1 and pg.locator("[data-k=fwd15]").count() == 1
+          and pg.locator("[data-k=npshuffle]").count() == 0 and pg.locator("[data-k=nprepeat]").count() == 0)
+    J.poll(lambda: (J.get("audio.playback.position_ms") or 0) >= 2000, 5)
+    p0 = J.get("audio.playback.position_ms") or 0
+    pg.click("[data-k=fwd15]")
+    J.poll(lambda: (J.get("audio.playback.position_ms") or 0) >= p0 + 15000, 5)
+    p1 = J.get("audio.playback.position_ms") or 0
+    pg.click("[data-k=back15]")
+    J.poll(lambda: (J.get("audio.playback.position_ms") or 0) <= p1 - 10000, 5)
+    p2 = J.get("audio.playback.position_ms") or 0
+    check("E13b +15 s then -15 s move the reading by 15 s", p1 >= p0 + 15000 and p2 <= p1 - 10000, (p0, p1, p2))
     pg.keyboard.press("Escape")
+    # E13c a playlist that is not an audiobook: shuffle and repeat; repeat goes off -> all -> this one
+    pg.click("[data-k=audiobook]"); J.wait(lambda: not J.pls[pid].get("audiobook"))
+    pg.click(".player .info"); pg.wait_for_selector("[data-k=nprepeat]")
+    check("E13c not an audiobook: shuffle and repeat, no ±15 s",
+          pg.locator("[data-k=npshuffle]").count() == 1 and pg.locator("[data-k=back15]").count() == 0)
+    seen = []
+    for _ in range(3):
+        before = J.get("audio.config.repeat_mode")
+        pg.click("[data-k=nprepeat]")
+        J.poll(lambda: J.get("audio.config.repeat_mode") != before, 5)
+        pg.wait_for_function("m => document.querySelector('[data-k=nprepeat]').dataset.mode === String(m)", arg=J.get("audio.config.repeat_mode"), timeout=5000)
+        seen.append((J.get("audio.config.repeat_mode"), pg.locator("[data-k=nprepeat]").inner_text().strip()))
+    check("E13c repeat cycles all -> this one -> off -> all, the label says which (its own words for 'this one')",
+          [m for m, _ in seen] == [2, 0, 1] and seen[0][1] != seen[2][1] and seen[1][1] == seen[2][1], seen)
+    pg.keyboard.press("Escape")
+    pg.click("[data-k=audiobook]"); J.wait(lambda: J.pls[pid].get("audiobook") is True)
     # E6 reorder by drag (pointer events) on desktop-size page
     dctx = b.new_context(viewport={"width": 1200, "height": 900}, locale="fr-FR", bypass_csp=True); dp = dctx.new_page()
     dp.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))

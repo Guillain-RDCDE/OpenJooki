@@ -204,8 +204,8 @@ version.
 
 **Parents**
 - **Parent code**: a 4-digit code so that children and guests can play music but not
-  change anything (delete a playlist, change the Wi-Fi, start an update). Forgotten? Hold
-  ◀ and ▶ together on the Jooki for ten seconds.
+  change anything (delete a playlist, change the Wi-Fi, start an update). Forgotten? Turn
+  the volume all the way down, then hold the track knob to the left (◀) for ten seconds.
 
 **Advanced** (*Home automation* and *Maintenance access*): for tinkerers. Leave them off.
 

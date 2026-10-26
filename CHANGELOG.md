@@ -1,5 +1,28 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.7 (26 October 2026) — What the Jooki's source taught us
+- **Forgot the parent code? A gesture that works.** The old one (hold ◀ and ▶ together) could
+  not be done: on a Jooki 2 they are the two ends of one knob. Now: turn the volume all the way
+  down, then hold the track knob to the left for ten seconds ([Use it](guide/use.md)).
+- **The battery never runs flat mid-song any more.** The Jooki switches itself off cleanly a
+  little earlier (3.50 V), before the battery chip cuts the power at once, which can damage the
+  memory card. Plugged in, it never switches off for a low battery.
+- **Audiobooks: ±15 seconds** in the player, to go back a little after a nap. Shuffle and repeat
+  are no longer shown where they do nothing (an audiobook, a radio).
+- **Repeat this one**: the repeat button now goes off, all, this song.
+- **The lights**: the network check no longer cuts the light signals short (a red flash for an
+  empty token, for example).
+- **Bluetooth**: a speaker found without a name can be connected.
+- **What the heart's colours mean**, from the Jooki's own source: orange = battery low, blinking
+  red = very low, orange or red on the charger = the battery does not charge
+  ([the lights](guide/lights-and-battery.md)).
+- For the tinkerers, all read in Muuselabs' source: `ht_ctrl` keeps the top 4 bits of each light
+  value (night mode is off, not 5 %); the temperature is a fixed 40 °C on a Jooki 2 (the overheat
+  rule never fires); airplane mode is the knob held on *Previous* (on) or *Next* (off) at
+  start-up; the factory test tokens read as "decimal hex" (0x0410 = test.10); and holding the heart
+  ten seconds counts in the HT chip, where more than nine, plugged in, starts a factory reset (not
+  checked on our Jookis). Details in docs/24.
+
 ## OpenJooki 2.4.6 (26 October 2026) — A sticker becomes a Jooki token
 - **A sticker becomes a real Jooki token.** In Tokens, tap an NFC sticker, then **Make it a real
   Jooki token**: from an Android phone, hold it against the phone; from an iPhone, the page gives

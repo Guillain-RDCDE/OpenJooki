@@ -32,7 +32,8 @@ local STARS = {
   [780] = "sys.production_test_start", [781] = "sys.production_test_buttons", [782] = "sys.production_test_audio",
   [783] = "sys.production_test_radio", [1023] = "sys.factory_reset",
 }
-for i = 0, 20 do STARS[1024 + i] = "test." .. i end
+-- the factory test tokens are written in "decimal hex": 0x0410 is test.10 (Muuselabs' player.lua)
+for i = 0, 20 do STARS[0x400 + tonumber(tostring(i), 16)] = "test." .. i end
 for i = 0, 9 do STARS[2304 + i] = "Jooki.Temp" .. i end
 tokens.STARS = STARS
 

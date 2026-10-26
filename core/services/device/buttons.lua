@@ -12,6 +12,7 @@ local function volume() return require("services.device") end
 
 -- ------------------------------------------------------------------ buttons (1.x keys module)
 local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
+local RESET_MAX_VOLUME = 5   -- the volume wheel all the way down (it reads 0-100) for the parent-code gesture
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
 
 local function activity_of(doc)
@@ -87,9 +88,15 @@ function buttons.on_tick(doc, ev)
       cmds[#cmds + 1] = emit("radio.set", { wifi = n == "airplane_mode_off", bt = n == "airplane_mode_off" })
     end
   end
-  -- prev + next held together for 10 s: clear the parent code (docs/adr/0007 — whoever
-  -- holds the Jooki is allowed). A confirmation sound is played by services.security.
-  if act.buttons.prev and act.buttons.next and now - math.max(act.buttons.prev, act.buttons.next) >= LONG_RESET_S then
+  -- the parent code cleared by whoever holds the Jooki (docs/adr/0007); services.security plays a
+  -- confirmation sound. On a Jooki 2, prev and next are the two ends of ONE knob (Muuselabs' source:
+  -- esp32_ctrl.c KNOBS_EVENT_PREV/NEXT, one key in ml-j2000.dts), so they cannot be held together:
+  -- the gesture is the volume wheel all the way down, then the knob held on prev for 10 s. The
+  -- release that follows does nothing (prev is no longer held). prev + next stays for other hardware.
+  local quiet = (tonumber((doc.audiocfg or {}).volume) or 100) <= RESET_MAX_VOLUME
+  local reset = act.buttons.prev and act.buttons.next and now - math.max(act.buttons.prev, act.buttons.next) >= LONG_RESET_S
+  reset = reset or (act.buttons.prev and quiet and now - act.buttons.prev >= LONG_RESET_S)
+  if reset then
     a2.buttons.prev = nil; a2.buttons.next = nil; changed = true
     cmds[#cmds + 1] = emit("security.parent_clear", { physical = true })
   end

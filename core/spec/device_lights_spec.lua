@@ -36,6 +36,20 @@ describe("services.device.lights — ring, dots and event pulses", function()
     assert_true(has(lights.on_lights_refresh(doc), "bus.publish", "payload", "PREV,0,1,10"))
   end)
 
+  it("the 30 s network check paints the dots only when what they show changes (a running pulse is not cut)", function()
+    local doc = doc_with({ playback = { state = "idle" }, net = { connected = true, ip = "10.0.0.2" } })
+    local r = lights.on_net_status(doc)
+    same(kinds(r), { "led/output/set_raw RING,200,200,200", "led/output/set_raw PREV,200,200,200", "led/output/set_raw NEXT,200,200,200" })
+    doc.device = r.state.device
+    assert_true(doc.device.toy_safe, "the rest of state.device is kept")
+    assert_nil(lights.on_net_status(doc), "the same network again: nothing painted")
+    doc.net = { connected = true, ip = "" }
+    r = lights.on_net_status(doc)
+    assert_true(has(r, "bus.publish", "payload", "NEXT,200,40,0"), "the address lost: painted again")
+    doc.device = r.state.device
+    assert_nil(lights.on_net_status(doc))
+  end)
+
   it("event lights: detect, write, error and warning pulses", function()
     local doc = doc_with()
     assert_true(has(lights.on_lights_event(doc, { name = "Evt.Character.Detect" }), "bus.publish", "payload", "PREV,0,10,200"))

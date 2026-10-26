@@ -47,9 +47,9 @@ The Jooki 2 has four groups of lights: the **ring** around the top plate, the
 | side dots yellow, one pulse | a warning: kids-safe volume switched on or off, factory mode switched. **OpenJooki 2 only**: airplane mode switched on, battery under 20 % (every five minutes), and one minute before switching off for inactivity |
 | side dots red, two pulses | an error: the token's playlist is empty, the memory card is full, Spotify or Deezer failed |
 | **side dots red, steady, right after start-up** | 1.x only: the Jooki is in **airplane mode** (Wi-Fi and Bluetooth off). The original program's light code has no case for `Evt.Airplane.*` and lands on its "unknown event" branch, which is steady red; with the radios off nothing comes to repaint the dots. Owners read it as a dead Jooki ("the two side lights turn red and the app no longer connects"). The knob trick below switches the radios back on. OpenJooki 2 shows a yellow pulse instead, then the orange dots |
-| everything off, heart red | switching off: heart held two seconds, *Turn off* on the page, fifteen minutes without activity on battery, or battery under 10 % |
+| everything off, heart red | switching off: heart held two seconds, *Turn off* on the page, fifteen minutes without activity on battery, or battery under 10 % or under 3.50 V (on battery only, since 2.4.7) |
 | everything off, heart dim orange | suspend (a code path of the original program; not seen on a Jooki 2) |
-| everything at about 5 % brightness | night mode (OpenJooki bedtime, [19-bedtime.md](19-bedtime.md)) |
+| ring and side dots off | night mode (OpenJooki bedtime, [19-bedtime.md](19-bedtime.md)). Meant as 5 % brightness, it reads as off: `ht_ctrl` keeps only the top 4 bits of each value (Muuselabs' `ht_ctrl.c`), so 10 out of 200 is nothing. Kept that way on purpose (October 2026) |
 | all lights blue at once, then off | Jooki 1 only: factory mode toggled from the buttons (`factory_reset.sh`) |
 | all lights pulse yellow, then stay yellow | Jooki 1 only: factory reset in progress from the buttons |
 
@@ -61,9 +61,13 @@ app used to show "Jooki's battery is getting low", and the Jooki simply
 switches itself off under 10 %. OpenJooki 2 adds the yellow pulse.
 
 **Airplane mode and the knob.** The Wi-Fi and Bluetooth can be switched off
-from the Jooki itself (a system token, or the buttons: the button daemon
-`gpio_ctrl` reports `airplane_mode_on` / `airplane_mode_off` for a knob
-gesture, and the program acts once it is held five seconds). Both side dots
+from the Jooki itself: a system token, or the track knob held while the Jooki
+starts. Muuselabs' ESP32 source (`wcm.c`, older than the firmware in our Jookis)
+turns airplane mode **on** when the knob is held on *Previous* at start-up, and
+**off** when it is held on *Next*. A child holding the knob to the left while
+switching the Jooki on can do it by accident. (The `airplane_mode_on` / `_off`
+button messages the 1.x program waited for are never sent on a Jooki 2: its
+`gpio_ctrl` has no such switch.) Both side dots
 then stay orange for good (steady red on 1.x right after start-up), which
 looks like a fault. The way back, found by owners after Muuselabs' support had
 given it to them
@@ -91,6 +95,24 @@ version survives restarts). The knob gesture and the system tokens still switch
 the radios for good, and they cancel a bounded mode when used.
 
 ### 2.2 The heart while charging
+
+**What Muuselabs' source says** (`holtek-code/.../Main.c`, October 2026; its version is not
+confirmed against the chip in our Jookis): the heart is the Holtek's alone, Linux never sets it
+(`ht_ctrl.c` has that write commented out).
+
+| Heart | Meaning |
+|---|---|
+| white | on, battery normal |
+| bright white | the heart is being pressed |
+| green, blinking | charging |
+| green, steady | plugged in, full (or plugged in and not charging) |
+| orange | battery low (below about 3.62 V) |
+| red, blinking | battery very low (below about 3.47 V) |
+| red for 2 s, then off | battery empty (below about 3.40 V) off the charger: the Holtek cuts the power at once |
+| orange or red **on the charger** | plugged in but not charging, battery low: the signature of a cell that is refused |
+
+Holding the heart about ten seconds (255 × 40 ms) forces a hard power-off.
+
 
 The controller owns it. Off the charger the heart is **white**. Muuselabs' own
 description, in their charging notice of May 2024 (§4): once the cable is in,
@@ -139,7 +161,10 @@ cable, charging.
   original app did it; the flag is the file `/data/mode/FACTORY`, which
   OpenJooki 2 reads and ignores). OpenJooki 2 reuses the "factory mode off"
   voice for one thing: the confirmation when the parent code is cleared by
-  holding both arrows for ten seconds.
+  turning the volume all the way down and holding the track knob on *Previous*
+  for ten seconds (since 2.4.7: *Previous* and *Next* are the two ends of one
+  knob, which cannot be held together, so the old "both arrows" gesture could
+  not be done on a Jooki 2).
 
 ## 3. The battery
 
@@ -162,7 +187,7 @@ OpenJooki 2, `core/kernel/config.lua`):
 |---|---|
 | under 20 %, not charging | warning every five minutes (OpenJooki 2: yellow pulse) |
 | under 10 %, not charging | the power-off sequence (heart red, then off) |
-| **over 80 °C** | kids-safe volume forced on, volume set to 80, music paused, and the *overheat* voice message repeated every eight seconds (`power_overheat.sh`) until restart |
+| **over 80 °C** | kids-safe volume forced on, volume set to 80, music paused, and the *overheat* voice message repeated every eight seconds (`power_overheat.sh`) until restart  In practice never: on a Jooki 2 `ht_ctrl` reports a fixed 40 000 m°C (a `FIXME` in Muuselabs' `ht_ctrl.c`), which is the 40000 mC seen in `/tmp/power_state.txt` |
 | cable plugged or unplugged | the USB port is switched between charging and headphones use; a cable sound in the original program |
 
 **Signs of a worn cell**: the Jooki only works plugged in, or switches off
@@ -287,7 +312,11 @@ when the flag `/data/mode/ESP32_FIRMWARE_LOADED` is missing
 over SSH and restarting reprograms the chip from that file. It is the one
 operation that can brick a Jooki if the power goes during it: plug it in first.
 
-**"Restart it ten times."** Advice that goes round r/jooki, and it does
+**"Restart it ten times."** Careful: in Muuselabs' source the hard resets (the heart held ten
+seconds) are counted in the HT chip, read as `/sys/kernel/htdrv/bootcount`, and
+`ht_check_factory_reset.sh` (run at start by `init_ht_pmic.sh`) starts a **factory reset** when
+that count is over 9 **and the Jooki is plugged in**. Not checked on our Jookis; do it off the
+charger. The advice otherwise goes round r/jooki, and it does
 something real: the boot counter. U-Boot keeps `bootcount` in the HT chip's
 memory, with `bootlimit=1`; a boot that reaches the running system resets it to
 zero (`ht_reset_bootcount.sh`), a boot that is interrupted before that leaves

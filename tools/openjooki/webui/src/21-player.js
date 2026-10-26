@@ -68,6 +68,9 @@
         var cfg = S.audio.config;
         var d = Number(np.duration_ms) || 0;
         var stream = np.service === 'STREAM';
+        // an audiobook is never shuffled nor repeated (queue.lua): ±15 s instead of the two toggles, as the original page did
+        var book = !!(pl && pl.audiobook) && !stream;
+        var rep = Number(cfg.repeat_mode) || 0;
         var art = h('div', { class: 'art' });
         if (np.image) {
           var ai = h('img', { src: coverSrc(np.image), alt: '' });
@@ -83,14 +86,17 @@
               oninput: function () { seeking = true; }, onchange: function (e) { seeking = false; send('SEEK', { position_ms: Math.max(1, Number(e.target.value)) }); } }),
             h('div', { class: 'times' }, h('span', { 'data-cur': '1' }, fmtTime(curPos() / 1000)), h('span', null, fmtTime(d / 1000)))],
           h('div', { class: 'controls' },
+            book ? h('button', { class: 'icon-btn skipsec', 'aria-label': t('back15'), title: t('back15'), 'data-k': 'back15', onclick: function () { send('SKIP_SEC', { delta_s: -15 }); } }, '−15') : null,
             h('button', { class: 'icon-btn', 'aria-label': t('prev'), onclick: function () { send('DO_PREV', {}); } }, icon('prev')),
             h('button', { class: 'icon-btn accent', 'aria-label': isPlaying() ? t('pause') : t('play'), 'data-k': 'nppp', onclick: function () { send(isPlaying() ? 'DO_PAUSE' : 'DO_PLAY', {}); } }, icon(isPlaying() ? 'pause' : 'play')),
-            h('button', { class: 'icon-btn', 'aria-label': t('next'), onclick: function () { send('DO_NEXT', {}); } }, icon('next'))),
+            h('button', { class: 'icon-btn', 'aria-label': t('next'), onclick: function () { send('DO_NEXT', {}); } }, icon('next')),
+            book ? h('button', { class: 'icon-btn skipsec', 'aria-label': t('fwd15'), title: t('fwd15'), 'data-k': 'fwd15', onclick: function () { send('SKIP_SEC', { delta_s: 15 }); } }, '+15') : null),
           h('div', { class: 'vol' }, icon('vol'), h('input', { class: 'range', type: 'range', min: '0', max: '100', step: '5', value: String(vol), 'aria-label': t('volume'), 'data-k': 'vol',
             oninput: function (e) { volDrag = Number(e.target.value); }, onchange: function (e) { volDrag = null; send('SET_VOL', { vol: Number(e.target.value) }); } })),
-          h('div', { class: 'toggles' },
-            h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
-            h('button', { class: 'toggle' + (cfg.repeat_mode === 1 ? ' on' : ''), 'aria-pressed': String(cfg.repeat_mode === 1), onclick: function () { send('SET_CFG', { repeat_mode: cfg.repeat_mode === 1 ? 0 : 1 }); } }, icon('repeat'), t('repeat'))),
+          // shuffle and repeat do nothing for an audiobook or a radio: not shown then. Repeat goes off -> all -> this one
+          book || stream ? null : h('div', { class: 'toggles' },
+            h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), 'data-k': 'npshuffle', onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
+            h('button', { class: 'toggle' + (rep ? ' on' : ''), 'aria-pressed': String(rep > 0), 'data-k': 'nprepeat', 'data-mode': String(rep), onclick: function () { send('SET_CFG', { repeat_mode: (rep + 1) % 3 }); } }, icon('repeat'), rep === 2 ? t('repeat_one') : t('repeat'))),
           // Spotify started from the phone: offer to put it on a character
           np.service === 'SPOTIFY' && !np.playlistId ? h('div', { class: 'actions', style: 'justify-content:center;margin-top:12px' },
             h('button', { class: 'btn primary', 'data-k': 'spsave', onclick: spotifySaveModal }, icon('plus'), t('sp_save'))) : null,

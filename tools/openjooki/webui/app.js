@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.4.6';
+  var VERSION = '2.4.7';
 
   /* ------------------------------------------------------------------ i18n */
   // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
@@ -69,7 +69,7 @@
     name_text: function (u) { return 'Sa page est désormais à l\'adresse ' + u + ' — l\'ancienne ne répond plus. Garde ce lien en favori. Spotify affichera le nouveau nom au prochain redémarrage.'; },
     name_open: 'Ouvrir la nouvelle adresse',
     wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', version: 'Version',
-    toy_safe: 'Volume limité (mode enfant)', shuffle: 'Aléatoire', repeat: 'Répéter',
+    toy_safe: 'Volume limité (mode enfant)', shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',
@@ -169,7 +169,7 @@
     parent_label: 'Code parent', parent_help: 'Un code à 4 chiffres empêche enfants et invités de changer les réglages (supprimer une playlist, le Wi-Fi, lancer une mise à jour).',
     parent_change: 'Changer le code',
     parent_prompt: 'Entre le code parent', parent_new: 'Code à 4 chiffres', parent_cur: 'Code actuel', parent_bad: 'Code incorrect',
-    parent_reset: 'Code oublié ? Appuie 10 secondes sur ◀ et ▶ ensemble sur le Jooki.',
+    parent_reset: 'Code oublié ? Sur le Jooki, baisse le volume à fond, puis tiens la molette de piste à gauche (◀) pendant 10 secondes.',
     flat_tok: 'Jeton plat', thanks_tok: 'Jeton Merci',
     own_hint: 'Ce jeton est un personnage à lui tout seul : donne-lui un nom, une image et sa playlist.',
     make_token: 'En faire un vrai jeton Jooki', make_token_tip: 'Le retirer mettra alors en pause, et il marchera deux fois de suite. Depuis un téléphone Android, ou avec une appli NFC.',
@@ -267,7 +267,7 @@
     name_text: function (u) { return 'Its page is now at ' + u + ' — the old address no longer answers. Bookmark this link. Spotify will show the new name after the next restart.'; },
     name_open: 'Open the new address',
     wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', version: 'Version',
-    toy_safe: 'Limited volume (kids mode)', shuffle: 'Shuffle', repeat: 'Repeat',
+    toy_safe: 'Limited volume (kids mode)', shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',
@@ -367,7 +367,7 @@
     parent_label: 'Parent code', parent_help: 'A 4-digit code stops children and guests from changing settings (deleting a playlist, Wi-Fi, starting an update).',
     parent_change: 'Change the code',
     parent_prompt: 'Enter the parent code', parent_new: '4-digit code', parent_cur: 'Current code', parent_bad: 'Wrong code',
-    parent_reset: 'Forgot the code? Hold ◀ and ▶ together for 10 seconds on the Jooki.',
+    parent_reset: 'Forgot the code? On the Jooki, turn the volume all the way down, then hold the track knob to the left (◀) for 10 seconds.',
     flat_tok: 'Flat token', thanks_tok: 'Thank-you token',
     own_hint: 'This token is a character of its own: give it a name, a picture and its playlist.',
     make_token: 'Make it a real Jooki token', make_token_tip: 'Then taking it off pauses, and it works twice in a row. From an Android phone, or with an NFC app.',
@@ -465,7 +465,7 @@
     name_text: function (u) { return 'De pagina staat nu op ' + u + ' — het oude adres antwoordt niet meer. Sla deze link op als bladwijzer. Spotify toont de nieuwe naam na de volgende herstart.'; },
     name_open: 'Het nieuwe adres openen',
     wifi: 'Wifi', ip: 'IP-adres', storage: 'Opslag', version: 'Versie',
-    toy_safe: 'Begrensd volume (kindermodus)', shuffle: 'Willekeurig', repeat: 'Herhalen',
+    toy_safe: 'Begrensd volume (kindermodus)', shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
     air_title: 'Vliegtuigmodus',
@@ -565,7 +565,7 @@
     parent_label: 'Oudercode', parent_help: 'Een 4-cijferige code voorkomt dat kinderen en gasten instellingen wijzigen (afspeellijst verwijderen, wifi, een update starten).',
     parent_change: 'Code wijzigen',
     parent_prompt: 'Voer de oudercode in', parent_new: '4-cijferige code', parent_cur: 'Huidige code', parent_bad: 'Onjuiste code',
-    parent_reset: 'Code vergeten? Houd ◀ en ▶ 10 seconden samen ingedrukt op de Jooki.',
+    parent_reset: 'Code vergeten? Zet op de Jooki het volume helemaal laag en houd dan de nummerknop 10 seconden naar links (◀).',
     flat_tok: 'Plat figuurtje', thanks_tok: 'Bedankt-figuurtje',
     own_hint: 'Dit figuurtje is een personage op zich: geef het een naam, een plaatje en een afspeellijst.',
     make_token: 'Er een echt Jooki-figuurtje van maken', make_token_tip: 'Dan pauzeert eraf halen, en werkt het twee keer na elkaar. Vanaf een Android-telefoon, of met een NFC-app.',
@@ -3323,6 +3323,9 @@
         var cfg = S.audio.config;
         var d = Number(np.duration_ms) || 0;
         var stream = np.service === 'STREAM';
+        // an audiobook is never shuffled nor repeated (queue.lua): ±15 s instead of the two toggles, as the original page did
+        var book = !!(pl && pl.audiobook) && !stream;
+        var rep = Number(cfg.repeat_mode) || 0;
         var art = h('div', { class: 'art' });
         if (np.image) {
           var ai = h('img', { src: coverSrc(np.image), alt: '' });
@@ -3338,14 +3341,17 @@
               oninput: function () { seeking = true; }, onchange: function (e) { seeking = false; send('SEEK', { position_ms: Math.max(1, Number(e.target.value)) }); } }),
             h('div', { class: 'times' }, h('span', { 'data-cur': '1' }, fmtTime(curPos() / 1000)), h('span', null, fmtTime(d / 1000)))],
           h('div', { class: 'controls' },
+            book ? h('button', { class: 'icon-btn skipsec', 'aria-label': t('back15'), title: t('back15'), 'data-k': 'back15', onclick: function () { send('SKIP_SEC', { delta_s: -15 }); } }, '−15') : null,
             h('button', { class: 'icon-btn', 'aria-label': t('prev'), onclick: function () { send('DO_PREV', {}); } }, icon('prev')),
             h('button', { class: 'icon-btn accent', 'aria-label': isPlaying() ? t('pause') : t('play'), 'data-k': 'nppp', onclick: function () { send(isPlaying() ? 'DO_PAUSE' : 'DO_PLAY', {}); } }, icon(isPlaying() ? 'pause' : 'play')),
-            h('button', { class: 'icon-btn', 'aria-label': t('next'), onclick: function () { send('DO_NEXT', {}); } }, icon('next'))),
+            h('button', { class: 'icon-btn', 'aria-label': t('next'), onclick: function () { send('DO_NEXT', {}); } }, icon('next')),
+            book ? h('button', { class: 'icon-btn skipsec', 'aria-label': t('fwd15'), title: t('fwd15'), 'data-k': 'fwd15', onclick: function () { send('SKIP_SEC', { delta_s: 15 }); } }, '+15') : null),
           h('div', { class: 'vol' }, icon('vol'), h('input', { class: 'range', type: 'range', min: '0', max: '100', step: '5', value: String(vol), 'aria-label': t('volume'), 'data-k': 'vol',
             oninput: function (e) { volDrag = Number(e.target.value); }, onchange: function (e) { volDrag = null; send('SET_VOL', { vol: Number(e.target.value) }); } })),
-          h('div', { class: 'toggles' },
-            h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
-            h('button', { class: 'toggle' + (cfg.repeat_mode === 1 ? ' on' : ''), 'aria-pressed': String(cfg.repeat_mode === 1), onclick: function () { send('SET_CFG', { repeat_mode: cfg.repeat_mode === 1 ? 0 : 1 }); } }, icon('repeat'), t('repeat'))),
+          // shuffle and repeat do nothing for an audiobook or a radio: not shown then. Repeat goes off -> all -> this one
+          book || stream ? null : h('div', { class: 'toggles' },
+            h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), 'data-k': 'npshuffle', onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
+            h('button', { class: 'toggle' + (rep ? ' on' : ''), 'aria-pressed': String(rep > 0), 'data-k': 'nprepeat', 'data-mode': String(rep), onclick: function () { send('SET_CFG', { repeat_mode: (rep + 1) % 3 }); } }, icon('repeat'), rep === 2 ? t('repeat_one') : t('repeat'))),
           // Spotify started from the phone: offer to put it on a character
           np.service === 'SPOTIFY' && !np.playlistId ? h('div', { class: 'actions', style: 'justify-content:center;margin-top:12px' },
             h('button', { class: 'btn primary', 'data-k': 'spsave', onclick: spotifySaveModal }, icon('plus'), t('sp_save'))) : null,

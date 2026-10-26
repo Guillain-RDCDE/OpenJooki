@@ -59,6 +59,12 @@ describe("services.bluetooth", function()
     assert_nil(bluetooth.on_state(doc, { code = 1 }))   -- the 30 s poll: still "searching", ignored
   end)
 
+  it("connect a device found without a name: its address is sent as its name (esp32_ctrl refuses an empty one)", function()
+    local doc = { bluetooth = { state = 2, devices = { { mac = "8C:DE:52:BA:D9:F1", name = "", cod = 0x240414 }, { mac = "8C:DE:52:BA:D9:F2", cod = 0 } } } }
+    assert_eq(topics(bluetooth.on_connect(doc, { mac = "8C:DE:52:BA:D9:F1" }))[2], "connect_device 8C:DE:52:BA:D9:F1\t0x00240414\t8C:DE:52:BA:D9:F1")
+    assert_eq(topics(bluetooth.on_connect(doc, { mac = "8C:DE:52:BA:D9:F2" }))[2], "connect_device 8C:DE:52:BA:D9:F2\t0x00000000\t8C:DE:52:BA:D9:F2")
+  end)
+
   it("connect: autoconnect off, then MAC<TAB>COD<TAB>name; once connected, autoconnect on once", function()
     local doc = { bluetooth = { state = 2, devices = { { mac = "8C:DE:52:BA:D9:F0", name = "SRS-X11", cod = 0x240414 } } } }
     local r = bluetooth.on_connect(doc, { mac = "8c:de:52:ba:d9:f0" })

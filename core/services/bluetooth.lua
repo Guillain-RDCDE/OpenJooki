@@ -131,10 +131,14 @@ function bluetooth.on_connect(doc, p)
   if not dev then return nil, util.err("not_found", "mac", "unknown Bluetooth device") end
   local b = copy(doc.bluetooth)
   b.state, b.auto = 4, false
-  -- autoconnect off first, so the chip does not fight us for the previous speaker
+  -- autoconnect off first, so the chip does not fight us for the previous speaker. A device found
+  -- without a name is sent its address as its name: esp32_ctrl reads the three fields with strtok
+  -- and refuses the connection, silently, when the name is empty (Muuselabs' esp32_ctrl.c).
+  local name = (dev.name or ""):gsub("[\t\r\n]", " ")
+  if not name:find("%S") then name = mac end
   return { state = { bluetooth = b },
            commands = { pub("set_autoconnect", "false"),
-                        pub("connect_device", string.format("%s\t0x%08X\t%s", mac, dev.cod or 0, (dev.name or ""):gsub("[\t\r\n]", " "))) } }
+                        pub("connect_device", string.format("%s\t0x%08X\t%s", mac, dev.cod or 0, name)) } }
 end
 
 function bluetooth.on_forget(doc, p)

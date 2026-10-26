@@ -43,9 +43,15 @@ function power.on_battery(doc, ev)
     for _, c in ipairs(s.commands) do cmds[#cmds + 1] = c end
     return { state = { power = p, audiocfg = s.state.audiocfg }, commands = cmds }
   end
-  if not p.charging then
+  -- On battery only (plugged in, the Jooki never runs out, even when it does not charge). The Holtek
+  -- cuts the power at once, with no sync, below about 3.40 V, and blinks the heart red below about
+  -- 3.47 V (Muuselabs' holtek-code config.h: 0x80, 0x8A at 2500 + 7 mV a step); 10 % is only 3.48 V
+  -- (power_ctrl: 3400-4170 mV, linear). So the clean shutdown also looks at the voltage itself.
+  if not p.charging and not p.connected then
     local percent = (ev.tenths or 0) / 10
-    if percent < cfg(doc, "battery_off_percent", 10) then
+    local mv = tonumber(ev.mv) or 0
+    local low_mv = mv > 0 and mv < cfg(doc, "battery_off_mv", 3500)
+    if percent < cfg(doc, "battery_off_percent", 10) or low_mv then
       cmds[#cmds + 1] = emit("system.event", { name = "Evt.Power.Low.Shutdown", after = { type = "power.off_request", reason = "battery" } })
     elseif percent < cfg(doc, "battery_warn_percent", 20) and (not p.warned_at or ev.now - p.warned_at >= 300) then
       p.warned_at = ev.now

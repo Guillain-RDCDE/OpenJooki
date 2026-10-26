@@ -5,7 +5,10 @@
 | You see | It means |
 |---|---|
 | heart white | on |
-| heart green | charging (blinking = charging, steady = full) |
+| heart green | on the charger (blinking = charging, steady = full) |
+| heart orange | battery low: plug it in |
+| heart blinking red | battery very low: plug it in now |
+| heart orange or red **on the charger** | the battery does not charge: probably worn, see *Charging* below |
 | ring off while music plays | a token is playing: normal |
 | both side dots white | on the Wi-Fi |
 | side dots glowing orange, left then right | looking for the Wi-Fi, for about a minute after switching on |
@@ -13,8 +16,8 @@
 | side dots light blue | a token was recognised, or a phone opened the page |
 | side dots yellow, one pulse | a warning: battery under 20 %, airplane mode on, kids mode switched on or off, or it will switch off in a minute |
 | side dots red, two pulses | an error: empty playlist, memory card full, or Spotify could not play |
-| heart red, then everything off | switching off (heart held two seconds, or 15 minutes unused on battery, or battery under 10 %) |
-| everything very dim | night mode |
+| heart red, then everything off | switching off (heart held two seconds, or 15 minutes unused on battery, or battery very low) |
+| ring and side dots off | night mode |
 | every colour, for 5 seconds | the *Christmas tree* button of the page: just for fun |
 
 ## No Wi-Fi (both side dots orange)
@@ -26,9 +29,9 @@
 - **Still orange after that**: it may be in airplane mode, see just below.
 
 **Side dots stuck orange (or steady red right after start-up) and it won't reconnect?**
-It is probably in airplane mode, switched on from the Jooki itself. Switch it off, then
-switch it on while **holding the track knob turned to *Next*** (to the right) until the
-start-up chime.
+It is probably in airplane mode, switched on from the Jooki itself (holding the track knob
+to the left while switching it on does that). Switch it off, then switch it on while
+**holding the track knob turned to *Next*** (to the right) until the start-up chime.
 
 ## It doesn't start any more
 

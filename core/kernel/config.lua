@@ -45,6 +45,7 @@ config.defaults = {
   inactivity_off_s = 15 * 60,
   battery_warn_percent = 20,
   battery_off_percent = 10,
+  battery_off_mv = 3500,   -- shut down cleanly before the Holtek's hard cut at ~3.40 V (services.device.power)
   overheat_mc = 80000,
   -- streaming module (ADR-0009)
   streaming_enabled = true,

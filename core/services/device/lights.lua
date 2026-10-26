@@ -93,6 +93,23 @@ function lights.on_lights_refresh(doc)
   return { commands = cmds }
 end
 
+-- The network check reports every 30 s (services.network). Painting the lights again each time cut
+-- short whatever pulse was running (led_ctrl drops a pulse on any new set, Muuselabs' lib_led.c), so
+-- the dots are painted again only when what they show changes: the last one shown is kept as
+-- state.device.lit_net.
+local function net_key(doc)
+  local w = doc.net or {}
+  return tostring(not not w.connected) .. "|" .. tostring(w.ip ~= nil and w.ip ~= "") .. "|" .. tostring(wifi_waiting(doc)) .. "|" .. tostring(radios_off(doc))
+end
+function lights.on_net_status(doc)
+  local key = net_key(doc)
+  if (doc.device or {}).lit_net == key then return nil end
+  local r = lights.on_lights_refresh(doc)
+  local d = copy(doc.device or {}); d.lit_net = key
+  r.state = { device = d }
+  return r
+end
+
 local EVENT_LIGHTS = {
   ["Evt.Character.Detect"] = function(doc) return { set(doc, "PREV", COLOURS.LIGHTBLUE), set(doc, "NEXT", COLOURS.LIGHTBLUE) } end,
   ["Evt.Character.Write"] = function(doc) return { pulse(doc, "PREV", COLOURS.GREEN, 8), pulse(doc, "NEXT", COLOURS.GREEN, 8) } end,
@@ -181,7 +198,7 @@ function lights.install(api, dispatch)
   for name, fn in pairs(TIMERS) do dispatch.on_timer(name, "device.lights", fn) end
   dispatch.on("lights.event", "device.lights", lights.on_lights_event)
   dispatch.on("playback.changed", "device.lights", lights.on_lights_refresh)
-  dispatch.on("net.status", "device.lights", lights.on_lights_refresh)
+  dispatch.on("net.status", "device.lights", lights.on_net_status)
   dispatch.on("limits.changed", "device.lights", lights.on_lights_refresh)   -- after the facade's volume re-apply
   api.command("device.party", nil, function(doc) return lights.on_party(doc) end)
 end

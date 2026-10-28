@@ -42,8 +42,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.9:** the track knob, your way: change the song, wind it, or both.
-2.4.8: a new playlist straight from a token, the heart can skip a song, hold the knob halfway to wind a song.
+**New in 2.4.10:** ticking songs in From the library no longer jumps back to the top (thanks, oresh).
+2.4.9: the track knob, your way: change the song, wind it, or both.
 [All the changes](CHANGELOG.md)
 
 ---

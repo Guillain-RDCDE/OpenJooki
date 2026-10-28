@@ -8,8 +8,10 @@
   // o: checked, set(v), title, track (data-track), inner (under the title), after (end of the row)
   function trackCheckRow(k, o) {
     var tr = S.db.tracks[k];
-    return h('li', { class: 'clickable', 'data-track': o.track, onclick: function (e) { if (e.target.tagName !== 'INPUT') o.set(!o.checked); } },
-      h('input', { type: 'checkbox', class: 'check', checked: o.checked, 'aria-label': trackTitle(k), onchange: function (e) { o.set(e.target.checked); } }),
+    var check;
+    function set(v) { o.checked = !!v; check.checked = o.checked; o.set(o.checked); }
+    return h('li', { class: 'clickable', 'data-track': o.track, onclick: function (e) { if (e.target.tagName !== 'INPUT') set(!o.checked); } },
+      check = h('input', { type: 'checkbox', class: 'check', checked: o.checked, 'aria-label': trackTitle(k), onchange: function (e) { set(e.target.checked); } }),
       h('div', { class: 'grow' }, h('div', { class: 'title ellipsis' }, o.title), h('div', { class: 'sub ellipsis' }, trackSub(tr)), o.inner),
       o.after);
   }
@@ -19,6 +21,11 @@
     arr(p.tracks).forEach(function (x) { inPl[x] = true; });
     function ids() { return filterSortTracks(Object.keys(S.db.tracks).filter(function (k) { return !S.db.tracks[k].isUrl; }), q); }
     function count() { return Object.keys(sel).filter(function (k) { return sel[k] && S.db.tracks[k]; }).length; }
+    function setSelected(k, v) {
+      sel[k] = v;
+      var n = count(), add = modalRoot.querySelector('[data-k="libadd"]');
+      if (add) { add.disabled = !n; add.textContent = n ? t('add_n', n) : t('add'); }
+    }
     openModal({
       autofocus: 'libq',
       render: function () {
@@ -27,7 +34,7 @@
           h('div', { class: 'search' }, icon('search'), h('input', { class: 'input', 'data-k': 'libq', placeholder: t('search'), value: q,
             oninput: function (e) { q = e.target.value; renderModal(); } })),
           list.length ? h('ul', { class: 'list card', style: 'max-height:50vh;overflow:auto;box-shadow:none;border:1px solid var(--line)' }, list.map(function (k) {
-            return trackCheckRow(k, { checked: !!sel[k], set: function (v) { sel[k] = v; renderModal(); }, title: trackTitle(k),
+            return trackCheckRow(k, { track: k, checked: !!sel[k], set: function (v) { setSelected(k, v); }, title: trackTitle(k),
               after: inPl[k] ? h('span', { class: 'badge' }, t('already_in')) : null });
           })) : h('div', { class: 'empty' }, t('library_empty')),
           modalFoot(count() ? t('add_n', count()) : t('add'), function () {

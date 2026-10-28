@@ -14,10 +14,19 @@ local function volume() return require("services.device") end
 local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
 local RESET_MAX_VOLUME = 5   -- the volume wheel all the way down (it reads 0-100) for the parent-code gesture
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
--- The track knob held halfway (fwd / rew, knobs_ctrl.c's zones between the centre and next / prev)
--- winds the track: after SEEK_HOLD_S, SEEK_STEP_S at every tick. A turn all the way to next or prev
--- crosses that zone in a blink, so it never winds.
+-- The track knob, as the parents chose in Settings (audiocfg.knob_mode):
+--   "song" (default, the original Jooki): all the way = next / prev; halfway does nothing (Muuselabs'
+--          do_fwd / do_rev were never written)
+--   "both": halfway (fwd / rew, knobs_ctrl.c's zones between the centre and next / prev) winds the track
+--   "wind": the knob only winds, halfway or all the way (the heart can change the song)
+-- Winding: after SEEK_HOLD_S held, SEEK_STEP_S at every tick. A turn all the way crosses the halfway
+-- zone in a blink, so it never winds there. In "wind", a short turn all the way winds once.
 local SEEK_HOLD_S, SEEK_STEP_S = 1, 10
+local WINDERS = { song = {}, both = { fwd = 1, rew = -1 }, wind = { fwd = 1, rew = -1, next = 1, prev = -1 } }
+local function knob_mode(doc)
+  local m = (doc.audiocfg or {}).knob_mode
+  return WINDERS[m] and m or "song"
+end
 -- A short press on the heart (held 2 s it switches the Jooki off) does what the parents chose in
 -- Settings (audiocfg.heart_press): nothing, the next track, or pause / play.
 local HEART = { next = function() return emit("playback.next", {}) end,
@@ -67,7 +76,12 @@ function buttons.on_button(doc, ev)
   if name == "airplane_release" then act.buttons.airplane_mode_on, act.buttons.airplane_mode_off = nil, nil end
   tick_change(cmds, held_before, act.buttons)
   if not down_at then return { state = { activity = act }, commands = cmds } end
-  if name == "next" then cmds[#cmds + 1] = emit("playback.next", {})
+  if (name == "next" or name == "prev") and knob_mode(doc) == "wind" then
+    -- held, it was wound by the tick; a short turn winds once
+    if ev.now - down_at < SEEK_HOLD_S then
+      cmds[#cmds + 1] = emit("playback.skip_request", { seconds = WINDERS.wind[name] * SEEK_STEP_S })
+    end
+  elseif name == "next" then cmds[#cmds + 1] = emit("playback.next", {})
   elseif name == "prev" then cmds[#cmds + 1] = emit("playback.prev", {})
   elseif name == "circle" then
     -- a long press was taken by the tick (power off) and is no longer held here: this one is short
@@ -94,7 +108,7 @@ function buttons.on_tick(doc, ev)
     a2.buttons.circle = nil; changed = true
     cmds[#cmds + 1] = emit("power.off_request", { reason = "button" })
   end
-  for n, sign in pairs({ fwd = 1, rew = -1 }) do
+  for n, sign in pairs(WINDERS[knob_mode(doc)]) do
     if act.buttons[n] and now - act.buttons[n] >= SEEK_HOLD_S then
       cmds[#cmds + 1] = emit("playback.skip_request", { seconds = sign * SEEK_STEP_S })
     end

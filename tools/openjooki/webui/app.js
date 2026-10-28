@@ -70,6 +70,7 @@
     name_open: 'Ouvrir la nouvelle adresse',
     wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', version: 'Version',
     heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture',
+    knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
@@ -269,6 +270,7 @@
     name_open: 'Open the new address',
     wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', version: 'Version',
     heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play',
+    knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
@@ -468,6 +470,7 @@
     name_open: 'Het nieuwe adres openen',
     wifi: 'Wifi', ip: 'IP-adres', storage: 'Opslag', version: 'Versie',
     heart_press: 'Kort op het hart drukken', heart_press_sub: 'Twee seconden ingedrukt zet het de Jooki nog steeds uit', heart_none: 'Niets', heart_next: 'Volgend nummer', heart_pause: 'Pauze / afspelen',
+    knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
@@ -748,7 +751,8 @@
     bat: '<rect x="2.5" y="7" width="17" height="10" rx="2.5"/><path d="M22 10.5v3"/>',
     disk: '<rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="10" r="3"/><path d="M8 17h8"/>',
     tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8" r="1"/>',
-    heart: '<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>'
+    heart: '<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>',
+    knob: '<circle cx="12" cy="12" r="8"/><path d="M12 12V5.5"/>'
   };
   function icon(name) {
     var s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -2865,6 +2869,10 @@
         d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t('heart_press_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
             ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+        // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
+        d.core ? sRow({ tag: 'label', icon: 'knob', color: 'red', label: t('knob_mode'), sub: t('knob_mode_sub'),
+          right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
+            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null,
         canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
         typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null

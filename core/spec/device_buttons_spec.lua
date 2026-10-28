@@ -109,8 +109,34 @@ describe("services.device.buttons — presses and long presses", function()
     same(kinds(buttons.on_button(doc, { button = "circle", down = false, now = 12.5 })), {})
   end)
 
-  it("the knob held halfway winds the track after 1 s, 10 s at each tick; a turn to next crosses the zone without winding", function()
-    local doc = doc_with({ activity = { buttons = { fwd = 3 } } })
+  it("by default the knob is the original Jooki's: halfway does nothing, all the way changes the song", function()
+    for _, mode in ipairs({ "nil", "song", "dance" }) do
+      local doc = doc_with({ audiocfg = { volume = 40, knob_mode = mode ~= "nil" and mode or nil }, activity = { buttons = { fwd = 3 } } })
+      assert_nil(buttons.on_tick(doc, { now = 5 }), mode)
+      doc.activity = { buttons = { next = 3 } }
+      same(kinds(buttons.on_button(doc, { button = "next", down = false, now = 3.2 })), { "emit playback.next", "timer.cancel" })
+    end
+  end)
+
+  it("'wind': the knob only winds, halfway or all the way; a short turn winds once", function()
+    local function wound(r) for _, c in ipairs(r.commands) do if c.kind == "emit" then return c.event.seconds end end end
+    local doc = doc_with({ audiocfg = { volume = 40, knob_mode = "wind" }, activity = { buttons = { next = 3 } } })
+    local r = buttons.on_button(doc, { button = "next", down = false, now = 3.3 })
+    same(kinds(r), { "emit playback.skip_request", "timer.cancel" }); assert_eq(wound(r), 10)
+    doc.activity = { buttons = { prev = 3 } }
+    r = buttons.on_button(doc, { button = "prev", down = false, now = 3.3 })
+    assert_eq(wound(r), -10)
+    -- held all the way: wound by the tick, the release adds nothing and never changes the song
+    doc.activity = { buttons = { prev = 3 } }
+    r = buttons.on_tick(doc, { now = 4 })
+    same(kinds(r), { "emit playback.skip_request" }); assert_eq(r.commands[1].event.seconds, -10)
+    same(kinds(buttons.on_button(doc, { button = "prev", down = false, now = 4.2 })), { "timer.cancel" })
+    doc.activity = { buttons = { fwd = 3 } }
+    assert_eq(buttons.on_tick(doc, { now = 4 }).commands[1].event.seconds, 10)
+  end)
+
+  it("'both': the knob held halfway winds the track after 1 s, 10 s at each tick; a turn to next crosses the zone without winding", function()
+    local doc = doc_with({ audiocfg = { volume = 40, knob_mode = "both" }, activity = { buttons = { fwd = 3 } } })
     assert_nil(buttons.on_tick(doc, { now = 3.5 }))
     local r = buttons.on_tick(doc, { now = 4 })
     assert_eq(kinds(r), { "emit playback.skip_request" }); assert_eq(r.commands[1].event.seconds, 10)
@@ -123,7 +149,7 @@ describe("services.device.buttons — presses and long presses", function()
     -- released: nothing on release, the tick stops
     same(kinds(buttons.on_button(doc, { button = "rew", down = false, now = 4.2 })), { "timer.cancel" })
     -- a whole turn: fwd in, fwd out at once, then next: only the next track
-    doc = doc_with()
+    doc = doc_with({ audiocfg = { volume = 40, knob_mode = "both" } })
     r = buttons.on_button(doc, { button = "fwd", down = true, now = 1 }); doc.activity = r.state.activity
     r = buttons.on_button(doc, { button = "fwd", down = false, now = 1.05 }); doc.activity = r.state.activity
     r = buttons.on_button(doc, { button = "next", down = true, now = 1.06 }); doc.activity = r.state.activity

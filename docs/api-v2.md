@@ -202,6 +202,10 @@ Payload schema:
       "enum": ["none", "next", "pause"],
       "type": "string"
     },
+    "knob_mode": {
+      "enum": ["song", "both", "wind"],
+      "type": "string"
+    },
     "repeat_mode": {
       "maximum": 2,
       "minimum": 0,

@@ -58,6 +58,7 @@
     name_open: 'Ouvrir la nouvelle adresse',
     wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', version: 'Version',
     heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture',
+    knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',

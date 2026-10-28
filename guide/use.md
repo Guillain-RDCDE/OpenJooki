@@ -147,9 +147,9 @@ The bar at the bottom shows what is playing. Tap it for the volume, shuffle and 
 and the **sleep timer**: 10, 20, 30, 45 or 60 minutes, or **End of chapter**. The music
 fades out at the end.
 
-On the Jooki itself: turn the track knob all the way for the next or the previous song, or
-**hold it halfway** to wind the song forward or back. The heart can do something too on a
-short press: see *In Settings* below.
+On the Jooki itself: turn the track knob all the way for the next or the previous song. It
+can also wind the song forward or back, and the heart can skip a song on a short press: see
+*In Settings* below.
 
 ## Bedtime
 
@@ -188,6 +188,9 @@ version.
 - **Limited volume (kids mode)**, **Shuffle**, **Repeat**.
 - **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
   Held two seconds, the heart still switches the Jooki off.
+- **The track knob**: **Next / previous song** (as before), **Both (halfway winds)**: held
+  halfway, it winds the song, turned all the way it changes the song, or **Wind the song**:
+  the knob only winds, and the heart can change the song.
 - **MP3 quality**: for the FLAC and WAV files you send (see *Whole albums* above).
 - **Speaker or headphones** (Bluetooth): put them in pairing mode, then **Search** →
   **Connect**. The sound goes to the speaker, and comes back to the Jooki when you switch

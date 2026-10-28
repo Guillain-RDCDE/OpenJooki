@@ -75,6 +75,15 @@ describe("services.device — volume chain", function()
     r = device.update_config(doc, { shuffle_mode = true })
     assert_eq(r.state.audiocfg.heart_press, "next")
   end)
+
+  it("the track knob's choice is saved the same way; an unknown one keeps the current one", function()
+    local doc = doc_with()
+    local r = device.update_config(doc, { knob_mode = "wind" })
+    assert_eq(r.state.audiocfg.knob_mode, "wind"); assert_eq(find(r, "files.write").doc.knob_mode, "wind")
+    doc.audiocfg = r.state.audiocfg
+    r = device.update_config(doc, { knob_mode = "spin" })
+    assert_eq(r.state.audiocfg.knob_mode, "wind")
+  end)
 end)
 
 describe("services.device — audio output / amplifier", function()

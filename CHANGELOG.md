@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The track knob, your way** (#11): *Settings → The track knob*. **Next / previous song** is
+  back as the default, as on the original Jooki (in 2.4.8, holding it halfway always wound the
+  song). **Both (halfway winds)** is the 2.4.8 behaviour. **Wind the song**: the knob only winds
+  the song, held halfway or all the way, and the heart can change the song.
+- For the tinkerers: `knob_mode` in `audiocfg.json` (`song`, `both`, `wind`; `SET_CFG`, v2
+  `device.set_config`). In `wind`, a short turn all the way winds once by 10 s.
+
 ## OpenJooki 2.4.8 (28 October 2026) — Ideas from a dad
 Ideas from a dad whose daughter got her Jooki for her second birthday (thank you, vojtechj).
 - **A new playlist straight from a token** (#12): tap the character in Tokens, then

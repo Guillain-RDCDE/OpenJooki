@@ -198,12 +198,23 @@ R.expect("T22 heart short press -> pause", lambda: j.pb == "PAUSED", 5, lambda: 
 gpio("circle", 0.2)
 R.expect("T22 heart short press again -> play", lambda: j.pb == "PLAYING", 5, lambda: j.get("audio.playback"))
 p0 = j.get("audio.playback.position_ms") or 0
+gpio("fwd", 1.7)   # the original Jooki's knob (default): halfway does nothing
+B.quiet(1, "a wind, had the core asked for one, would have moved the position by now")
+check("T22 by default the knob held halfway does nothing", (j.get("audio.playback.position_ms") or 0) < p0 + 8000, (p0, j.get("audio.playback")))
+j.send("SET_CFG", {"knob_mode": "both"}); j.wait(lambda: j.get("audio.config.knob_mode") == "both")
+p0 = j.get("audio.playback.position_ms") or 0
 gpio("fwd", 1.7)   # wound at 1 s and 1.5 s: +20 s
 R.expect("T22 knob held halfway forward winds the song", lambda: (j.get("audio.playback.position_ms") or 0) >= p0 + 15000, 5, lambda: (p0, j.get("audio.playback")))
 p1 = j.get("audio.playback.position_ms") or 0
 gpio("rew", 1.2)   # wound back once at 1 s: -10 s
 R.expect("T22 knob held halfway back winds it back", lambda: (j.get("audio.playback.position_ms") or 0) <= p1 - 5000, 5, lambda: (p1, j.get("audio.playback")))
 check("T22 still the same song", j.np.get("trackIndex") == 2 and j.np.get("playlistId") == hp, j.np)
+j.send("SET_CFG", {"knob_mode": "wind"}); j.wait(lambda: j.get("audio.config.knob_mode") == "wind")
+p2 = j.get("audio.playback.position_ms") or 0
+gpio("next", 1.7)  # all the way, held: wound at 1 s and 1.5 s, and no next song
+R.expect("T22 'wind': the knob all the way winds the song", lambda: (j.get("audio.playback.position_ms") or 0) >= p2 + 15000, 5, lambda: (p2, j.get("audio.playback")))
+check("T22 'wind': and the song does not change", j.np.get("trackIndex") == 2 and j.np.get("playlistId") == hp, j.np)
+j.send("SET_CFG", {"knob_mode": "song"}); j.wait(lambda: j.get("audio.config.knob_mode") == "song")
 j.send("SET_CFG", {"heart_press": "none"}); j.wait(lambda: j.get("audio.config.heart_press") == "none")
 j.close()
 

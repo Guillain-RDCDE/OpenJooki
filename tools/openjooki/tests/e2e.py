@@ -298,6 +298,10 @@ with sync_playwright() as p:
     pg.select_option("[data-k=heartpress]", "next")
     R.expect("E12 the heart's short press is chosen in Settings (issue #11)", lambda: J.get("audio.config.heart_press") == "next", 5, lambda: J.get("audio.config"))
     pg.select_option("[data-k=heartpress]", "none"); J.wait(lambda: J.get("audio.config.heart_press") == "none")
+    check("E12 the track knob is the original Jooki's by default", pg.input_value("[data-k=knobmode]") == "song", pg.input_value("[data-k=knobmode]"))
+    pg.select_option("[data-k=knobmode]", "wind")
+    R.expect("E12 the track knob's choice is made in Settings (issue #11)", lambda: J.get("audio.config.knob_mode") == "wind", 5, lambda: J.get("audio.config"))
+    pg.select_option("[data-k=knobmode]", "song"); J.wait(lambda: J.get("audio.config.knob_mode") == "song")
     check("E12 the settings page is short: the topics open on their own pages",
           pg.locator("[data-k=nightstart]").count() == 0 and pg.locator("[data-k=sshkey]").count() == 0 and pg.locator("a[href='#/settings/night']").count() == 1)
     pg.click("[data-k=langnav]"); pg.wait_for_url("**/#/settings/language")

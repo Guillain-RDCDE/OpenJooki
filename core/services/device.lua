@@ -7,7 +7,7 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode }   (audiocfg.json, 1.x shape)
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press? }   (audiocfg.json, 1.x shape + the heart's short press)
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
 --   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
 -- (state.power and state.activity are power's, state.device.toy_safe / airplane and state.flags radio's.)
@@ -59,6 +59,8 @@ local function set_volume(doc, requested, persist)
 end
 device.set_volume = set_volume
 
+local HEART_PRESS = { none = true, next = true, pause = true }
+
 -- Shuffle and repeat arrive three ways: v2 device.set_config (schema-checked: a boolean and an integer
 -- 0-2), v1 SET_CFG (the page sends booleans; repeat_mode may be a boolean -- true = all, false = none --
 -- or a number, perhaps as a string) and the Spotify daemon's set_cfg (device.set_config_request: numbers,
@@ -77,6 +79,8 @@ function device.update_config(doc, changes, opts)
     if m == true then m = 1 elseif m == false then m = 0 end
     a.repeat_mode = tonumber(m) or a.repeat_mode
   end
+  -- the heart's short press (services.device.buttons); an unknown value keeps the current one
+  if HEART_PRESS[changes.heart_press] then a.heart_press = changes.heart_press end
   local cmds = { { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } }
   if not (opts and opts.silent) then
     cmds[#cmds + 1] = emit("audiocfg.changed", { shuffle_mode = changes.shuffle_mode, repeat_mode = changes.repeat_mode })
@@ -289,7 +293,8 @@ device.on_button, device.on_tick = buttons.on_button, buttons.on_tick
 
 local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
-S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 } }, additionalProperties = false }
+S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
+                                              heart_press = { type = "string", enum = { "none", "next", "pause" } } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

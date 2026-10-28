@@ -139,7 +139,7 @@ handler is caught (`ERR_HANDLER`) instead of killing the process.
 | `/j/nfc/input/tag` | `"<UID 14 hex>,<star hex>"` | token placed (4.4) |
 | `/j/nfc/input/tag_removed` | — | pause, clear `nfc` |
 | `/j/nfc/input/tag_written` | tagId | after writing a blank token |
-| `/j/gpio/input/{next,prev,fwd,rev,vol_inc,vol_dec,circle,airplane_mode_on/off,airplane_release}` | `"1"`/`"0"` | buttons (keys module) |
+| `/j/gpio/input/{next,prev,fwd,rew,vol_inc,vol_dec,circle,airplane_mode_on/off,airplane_release}` | `"1"`/`"0"` | buttons (keys module) |
 | `/j/gpio/input/vol_set` | `{vol}` | knob |
 | `/j/power/input/{battery_level,plugged_in,charging}` | `{mv,p,t}` / 0-1 | power |
 | `/j/esp32/input/net/sta/config` | `{ssid,bssid,ch,signal,crypt,stat,ip}` | Wi-Fi state → lights, state |

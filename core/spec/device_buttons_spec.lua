@@ -87,4 +87,47 @@ describe("services.device.buttons — presses and long presses", function()
     local rel = buttons.on_button(doc, { button = "prev", down = false, now = 12.5 })
     same(kinds(rel), { "emit playback.prev", "timer.cancel" })
   end)
+
+  it("the heart's short press does what Settings say: nothing by default, the next track, or pause / play", function()
+    local function short(choice)
+      local doc = doc_with({ audiocfg = { volume = 40, heart_press = choice }, activity = { buttons = { circle = 5 } } })
+      return buttons.on_button(doc, { button = "circle", down = false, now = 5.4 })
+    end
+    same(kinds(short(nil)), { "timer.cancel" })
+    same(kinds(short("none")), { "timer.cancel" })
+    same(kinds(short("next")), { "emit playback.next", "timer.cancel" })
+    local r = short("pause")
+    same(kinds(r), { "emit playback.toggle_request", "timer.cancel" })
+    local ev
+    for _, c in ipairs(r.commands) do if c.kind == "emit" then ev = c.event end end
+    assert_eq(ev.source, "button"); assert_eq(ev.now, 5.4)
+    -- held 2 s it switches off (the tick), and the release that follows does nothing more
+    local doc = doc_with({ audiocfg = { volume = 40, heart_press = "next" }, activity = { buttons = { circle = 10 } } })
+    r = buttons.on_tick(doc, { now = 12.1 })
+    same(kinds(r), { "emit power.off_request", "timer.cancel" })
+    doc.activity = r.state.activity
+    same(kinds(buttons.on_button(doc, { button = "circle", down = false, now = 12.5 })), {})
+  end)
+
+  it("the knob held halfway winds the track after 1 s, 10 s at each tick; a turn to next crosses the zone without winding", function()
+    local doc = doc_with({ activity = { buttons = { fwd = 3 } } })
+    assert_nil(buttons.on_tick(doc, { now = 3.5 }))
+    local r = buttons.on_tick(doc, { now = 4 })
+    assert_eq(kinds(r), { "emit playback.skip_request" }); assert_eq(r.commands[1].event.seconds, 10)
+    assert_nil(r.state)                                     -- still held: the tick goes on
+    r = buttons.on_tick(doc, { now = 4.5 })
+    assert_eq(r.commands[1].event.seconds, 10)
+    doc.activity = { buttons = { rew = 3 } }
+    r = buttons.on_tick(doc, { now = 4.1 })
+    assert_eq(r.commands[1].event.seconds, -10)
+    -- released: nothing on release, the tick stops
+    same(kinds(buttons.on_button(doc, { button = "rew", down = false, now = 4.2 })), { "timer.cancel" })
+    -- a whole turn: fwd in, fwd out at once, then next: only the next track
+    doc = doc_with()
+    r = buttons.on_button(doc, { button = "fwd", down = true, now = 1 }); doc.activity = r.state.activity
+    r = buttons.on_button(doc, { button = "fwd", down = false, now = 1.05 }); doc.activity = r.state.activity
+    r = buttons.on_button(doc, { button = "next", down = true, now = 1.06 }); doc.activity = r.state.activity
+    r = buttons.on_button(doc, { button = "next", down = false, now = 1.3 })
+    same(kinds(r), { "emit playback.next", "timer.cancel" })
+  end)
 end)

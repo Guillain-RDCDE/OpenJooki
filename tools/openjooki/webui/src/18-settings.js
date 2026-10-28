@@ -63,6 +63,10 @@
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
+        // the heart's short press on the Jooki (held 2 s it still switches off)
+        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t('heart_press_sub'),
+          right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
+            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
         canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
         typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null

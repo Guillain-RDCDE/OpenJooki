@@ -180,7 +180,32 @@ j.send("PLAYLIST_UPDATE", {"playlist": {"id": q, "tracks": j.pls[q]["tracks"][:1
 b0 = beeps(); j.nfc(FOX, "101"); j.wait(lambda: j.np.get("playlistId") == q)
 B.quiet(0.5, "an error beep, had the core asked for one, would be in the services log by now")
 check("T16 stale resume position still plays", beeps() == b0 and j.np.get("playlistId") == q, j.np)
-j.nfc_off(); j.close()
+j.nfc_off(); j.wait(lambda: not j.nfc_state)
+# T22 the Jooki's own controls (issue #11): the heart's short press as chosen in Settings, the knob held halfway
+def gpio(btn, hold):
+    j.c.publish("/j/gpio/input/" + btn, "1"); B.quiet(hold, "the button is held this long, as a hand would"); j.c.publish("/j/gpio/input/" + btn, "0")
+hp = newpl(j, "Heart")
+j.send("PLAYLIST_UPDATE", {"playlist": {"id": hp, "tracks": [k for k in j.tracks if j.tracks[k].get("userFilename") in ("song5.mp3", "song6.mp3")]}})
+j.wait(lambda: len(j.pls[hp]["tracks"]) == 2)
+j.send("SET_CFG", {"heart_press": "next"}); j.wait(lambda: j.get("audio.config.heart_press") == "next")
+check("T22 the heart's choice is saved", audiocfg().get("heart_press") == "next", audiocfg())
+j.send("PLAYLIST_PLAY", {"playlistId": hp, "trackIndex": 1}); j.wait(lambda: j.np.get("playlistId") == hp and j.pb == "PLAYING")
+gpio("circle", 0.2)
+R.expect("T22 heart short press -> next song", lambda: j.np.get("trackIndex") == 2, 5, lambda: j.np)
+j.send("SET_CFG", {"heart_press": "pause"}); j.wait(lambda: j.get("audio.config.heart_press") == "pause")
+gpio("circle", 0.2)
+R.expect("T22 heart short press -> pause", lambda: j.pb == "PAUSED", 5, lambda: j.get("audio.playback"))
+gpio("circle", 0.2)
+R.expect("T22 heart short press again -> play", lambda: j.pb == "PLAYING", 5, lambda: j.get("audio.playback"))
+p0 = j.get("audio.playback.position_ms") or 0
+gpio("fwd", 1.7)   # wound at 1 s and 1.5 s: +20 s
+R.expect("T22 knob held halfway forward winds the song", lambda: (j.get("audio.playback.position_ms") or 0) >= p0 + 15000, 5, lambda: (p0, j.get("audio.playback")))
+p1 = j.get("audio.playback.position_ms") or 0
+gpio("rew", 1.2)   # wound back once at 1 s: -10 s
+R.expect("T22 knob held halfway back winds it back", lambda: (j.get("audio.playback.position_ms") or 0) <= p1 - 5000, 5, lambda: (p1, j.get("audio.playback")))
+check("T22 still the same song", j.np.get("trackIndex") == 2 and j.np.get("playlistId") == hp, j.np)
+j.send("SET_CFG", {"heart_press": "none"}); j.wait(lambda: j.get("audio.config.heart_press") == "none")
+j.close()
 
 # ---------- persistence across restart
 snap = {k: json.load(open("%s/%s.json" % (DB, k))) for k in ("playlists", "tracks", "tokens")}

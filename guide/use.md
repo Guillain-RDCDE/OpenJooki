@@ -127,6 +127,8 @@ the Jooki from reading the sticker: put it inside the cover instead.
   the background**).
 - **Choose the character** in a playlist: pick it in the list, or just put the token on the
   Jooki while the sheet is open.
+- **A new playlist for a token**: tap the character, then in its list **+ New playlist…**.
+  Give it a name: it is made for that token and opens, ready for its music.
 - **Print the labels**: see *Labels for the books* above.
 
 <img src="../docs/img/shots/token-pictures.webp" width="640" alt="The Tokens page on a computer: the characters, the flat tokens, an amiibo, and the picture chooser with its search and its animals">
@@ -144,6 +146,10 @@ for good.
 The bar at the bottom shows what is playing. Tap it for the volume, shuffle and repeat,
 and the **sleep timer**: 10, 20, 30, 45 or 60 minutes, or **End of chapter**. The music
 fades out at the end.
+
+On the Jooki itself: turn the track knob all the way for the next or the previous song, or
+**hold it halfway** to wind the song forward or back. The heart can do something too on a
+short press: see *In Settings* below.
 
 ## Bedtime
 
@@ -180,6 +186,8 @@ version.
 
 **Listening**
 - **Limited volume (kids mode)**, **Shuffle**, **Repeat**.
+- **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
+  Held two seconds, the heart still switches the Jooki off.
 - **MP3 quality**: for the FLAC and WAV files you send (see *Whole albums* above).
 - **Speaker or headphones** (Bluetooth): put them in pairing mode, then **Search** →
   **Connect**. The sound goes to the speaker, and comes back to the Jooki when you switch

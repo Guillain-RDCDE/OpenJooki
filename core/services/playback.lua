@@ -411,6 +411,9 @@ function playback.install(api, dispatch)
   dispatch.on("playback.pause_request", "playback", playback.on_pause)
   dispatch.on("playback.next", "playback", playback.on_next)
   dispatch.on("playback.prev", "playback", playback.on_prev)
+  -- the Jooki's own controls (services.device.buttons): the heart's short press, the knob held halfway
+  dispatch.on("playback.toggle_request", "playback", playback.on_toggle)
+  dispatch.on("playback.skip_request", "playback", playback.on_skip)
   for _, k in ipairs({ "starting", "playing", "paused", "stopped", "ended", "position" }) do
     dispatch.on("audio." .. k, "playback", playback.on_audio)
   end

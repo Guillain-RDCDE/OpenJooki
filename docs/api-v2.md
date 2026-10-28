@@ -198,6 +198,10 @@ Payload schema:
 {
   "additionalProperties": false,
   "properties": {
+    "heart_press": {
+      "enum": ["none", "next", "pause"],
+      "type": "string"
+    },
     "repeat_mode": {
       "maximum": 2,
       "minimum": 0,

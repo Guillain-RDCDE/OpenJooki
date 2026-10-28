@@ -64,6 +64,17 @@ describe("services.device — volume chain", function()
     r = device.update_config(doc, { repeat_mode = "x", shuffle_mode = 1 })                    -- unreadable: kept; not exactly true: off
     assert_eq(r.state.audiocfg.repeat_mode, 1); assert_false(r.state.audiocfg.shuffle_mode)
   end)
+
+  it("the heart's short press is saved with the rest; an unknown choice keeps the current one", function()
+    local doc = doc_with()
+    local r = device.update_config(doc, { heart_press = "next" })
+    assert_eq(r.state.audiocfg.heart_press, "next"); assert_eq(find(r, "files.write").doc.heart_press, "next")
+    doc.audiocfg = r.state.audiocfg
+    r = device.update_config(doc, { heart_press = "dance" })
+    assert_eq(r.state.audiocfg.heart_press, "next")
+    r = device.update_config(doc, { shuffle_mode = true })
+    assert_eq(r.state.audiocfg.heart_press, "next")
+  end)
 end)
 
 describe("services.device — audio output / amplifier", function()

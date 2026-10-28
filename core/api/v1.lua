@@ -205,7 +205,7 @@ H.SET_VOL = function(doc, p)
   return device.set_volume(doc, v), nil, { "audio" }
 end
 -- the page's booleans (repeat_mode true/false too) are read by device.update_config
-H.SET_CFG = function(doc, p) return device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode }), nil, { "audio" } end
+H.SET_CFG = function(doc, p) return device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode, heart_press = p.heart_press }), nil, { "audio" } end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
 -- refused without echoing the payload: it holds a Wi-Fi password, and the error topic reaches every page
 H.SET_WIFI = function() return { commands = { err_cmd(device.WIFI_OVER_BLUETOOTH.message) } } end

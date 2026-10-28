@@ -34,7 +34,8 @@
     ];
   }
 
-  function newPlaylistModal(prefillTracks) {
+  // star: the character whose sheet asked for it (Tokens): the new playlist is born on that token
+  function newPlaylistModal(prefillTracks, star) {
     var name = '';
     function create() {
       var v = name.trim();
@@ -46,7 +47,9 @@
           toast(t('added', prefillTracks.length));
         } else go('#/p/' + encodeURIComponent(fresh));
       });
-      send('PLAYLIST_NEW', { title: v, audiobook: false });
+      var msg = { title: v, audiobook: false };
+      if (star) msg.star = star;
+      send('PLAYLIST_NEW', msg);
     }
     openModal({
       autofocus: 'plname',

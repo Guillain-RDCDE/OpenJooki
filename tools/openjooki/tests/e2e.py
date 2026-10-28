@@ -280,10 +280,24 @@ with sync_playwright() as p:
     check("E22 the tile shows the picture, served by the Jooki", src == "/tokimg/cat.webp" and loaded == 128, (src, loaded))
     with urllib.request.urlopen(URL + "/tokimg/cat.webp") as r:
         check("E22 the Jooki serves the pictures as WebP the phone may keep", r.headers.get("Content-Type") == "image/webp" and "max-age" in (r.headers.get("Cache-Control") or ""), dict(r.headers))
+    # E11e a new playlist straight from a token's sheet (issue #12): born on that token, then opened to add music
+    ech = "flat." + ELE
+    pg.click("[data-char='%s']" % ech); pg.wait_for_selector("[data-char-select='%s']" % ech)
+    before = set(J.pls)
+    pg.select_option("[data-char-select='%s']" % ech, "oj:new")
+    pg.wait_for_selector("[data-k=plname]"); pg.fill("[data-k=plname]", "Histoires de l'éléphant"); pg.click("[data-k=plcreate]")
+    J.wait(lambda: [k for k in J.pls if k not in before])
+    fresh = [k for k in J.pls if k not in before][0]
+    pg.wait_for_url("**/#/p/" + fresh, timeout=5000)
+    check("E11e '+ New playlist' in a token's sheet: created on that token, then opened",
+          J.pls[fresh].get("title") == "Histoires de l'éléphant" and J.pls[fresh].get("star") == ech and pg.url.endswith("#/p/" + fresh), (J.pls[fresh], pg.url))
     # E12 settings
     pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=shuffle]")
     pg.click("[data-k=shuffle]")
     R.expect("E12 shuffle toggle", lambda: J.get("audio.config.shuffle_mode") is True, 5, lambda: J.get("audio.config"))
+    pg.select_option("[data-k=heartpress]", "next")
+    R.expect("E12 the heart's short press is chosen in Settings (issue #11)", lambda: J.get("audio.config.heart_press") == "next", 5, lambda: J.get("audio.config"))
+    pg.select_option("[data-k=heartpress]", "none"); J.wait(lambda: J.get("audio.config.heart_press") == "none")
     check("E12 the settings page is short: the topics open on their own pages",
           pg.locator("[data-k=nightstart]").count() == 0 and pg.locator("[data-k=sshkey]").count() == 0 and pg.locator("a[href='#/settings/night']").count() == 1)
     pg.click("[data-k=langnav]"); pg.wait_for_url("**/#/settings/language")

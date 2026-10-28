@@ -14,6 +14,14 @@ local function volume() return require("services.device") end
 local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
 local RESET_MAX_VOLUME = 5   -- the volume wheel all the way down (it reads 0-100) for the parent-code gesture
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
+-- The track knob held halfway (fwd / rew, knobs_ctrl.c's zones between the centre and next / prev)
+-- winds the track: after SEEK_HOLD_S, SEEK_STEP_S at every tick. A turn all the way to next or prev
+-- crosses that zone in a blink, so it never winds.
+local SEEK_HOLD_S, SEEK_STEP_S = 1, 10
+-- A short press on the heart (held 2 s it switches the Jooki off) does what the parents chose in
+-- Settings (audiocfg.heart_press): nothing, the next track, or pause / play.
+local HEART = { next = function() return emit("playback.next", {}) end,
+                pause = function(now) return emit("playback.toggle_request", { source = "button", now = now }) end }
 
 local function activity_of(doc)
   local a = copy(doc.activity or {})
@@ -61,6 +69,10 @@ function buttons.on_button(doc, ev)
   if not down_at then return { state = { activity = act }, commands = cmds } end
   if name == "next" then cmds[#cmds + 1] = emit("playback.next", {})
   elseif name == "prev" then cmds[#cmds + 1] = emit("playback.prev", {})
+  elseif name == "circle" then
+    -- a long press was taken by the tick (power off) and is no longer held here: this one is short
+    local act_fn = HEART[(doc.audiocfg or {}).heart_press]
+    if act_fn then cmds[#cmds + 1] = act_fn(ev.now) end
   elseif name == "vol_inc" or name == "vol_dec" then
     local a = volume().audiocfg_of(doc)
     local s = volume().set_volume(doc, a.volume + (name == "vol_inc" and 10 or -10))
@@ -82,6 +94,11 @@ function buttons.on_tick(doc, ev)
     a2.buttons.circle = nil; changed = true
     cmds[#cmds + 1] = emit("power.off_request", { reason = "button" })
   end
+  for n, sign in pairs({ fwd = 1, rew = -1 }) do
+    if act.buttons[n] and now - act.buttons[n] >= SEEK_HOLD_S then
+      cmds[#cmds + 1] = emit("playback.skip_request", { seconds = sign * SEEK_STEP_S })
+    end
+  end
   for _, n in ipairs({ "airplane_mode_on", "airplane_mode_off" }) do
     if act.buttons[n] and now - act.buttons[n] >= LONG_AIRPLANE_S then
       a2.buttons[n] = nil; changed = true
@@ -100,7 +117,7 @@ function buttons.on_tick(doc, ev)
     a2.buttons.prev = nil; a2.buttons.next = nil; changed = true
     cmds[#cmds + 1] = emit("security.parent_clear", { physical = true })
   end
-  if not changed then return nil end
+  if not changed then return #cmds > 0 and { commands = cmds } or nil end   -- winding: the knob stays held
   tick_change(cmds, true, a2.buttons)   -- the press acted on was the last one held: the tick stops
   return { state = { activity = a2 }, commands = cmds }
 end

@@ -15,6 +15,7 @@
   }
   // the details of one character (or foreign tag): its playlist, its physical tokens and their names
   var TOKENS_PAGE = 'https://guillain-rdcde.github.io/OpenJooki/tokens.html';
+  var NEW_PL = 'oj:new';   // the "+ New playlist…" choice of a token's list (never a playlist id)
   function charModal(sid) {
     var foreign = !!foreignUid(sid), own = !!ownUid(sid);
     openModal({
@@ -29,6 +30,8 @@
         var sel = h('select', { class: 'input', 'aria-label': t('launches') + ' — ' + charName(sid), 'data-char-select': sid, onchange: function (e) {
           var v = e.target.value;
           e.target.blur();
+          // a new playlist, born on this token: named in its own sheet, then opened to add music
+          if (v === NEW_PL) { e.target.value = p ? p.id : ''; newPlaylistModal(null, sid); return; }
           if (!v) { if (p) send('PLAYLIST_UPDATE', { playlist: { id: p.id, star: false } }); return; }
           var pl = pls()[v]; var other = pl && pl.star && pl.star !== sid ? pl.star : null;
           if (!other) { send('PLAYLIST_UPDATE', { playlist: { id: v, star: sid } }); return; }
@@ -37,7 +40,8 @@
             if (ok) send('PLAYLIST_UPDATE', { playlist: { id: v, star: sid } });
             charModal(sid);   // the question replaced the sheet: back to it either way
           });
-        } }, h('option', { value: '' }, t('none_dash')), userPlaylists().map(function (x) { return h('option', { value: x.id, selected: p && p.id === x.id ? 'selected' : null }, x.title || '—'); }));
+        } }, h('option', { value: '' }, t('none_dash')), userPlaylists().map(function (x) { return h('option', { value: x.id, selected: p && p.id === x.id ? 'selected' : null }, x.title || '—'); }),
+          h('option', { value: NEW_PL }, '+ ' + t('new_playlist') + '…'));
         if (p) sel.value = p.id; else sel.value = '';
         return [
           h('div', { class: 'row', style: 'margin-bottom:8px' }, tokVisual(sid, '', S.nfc.starId === sid),

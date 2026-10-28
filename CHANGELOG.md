@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## Next release
+Ideas from a dad whose daughter got her Jooki for her second birthday (thank you, vojtechj).
+- **A new playlist straight from a token** (#12): tap the character in Tokens, then
+  **+ New playlist…** in its list. The playlist is made for that token and opens, ready for music.
+- **The heart can skip a song** (#11): *Settings → Short press on the heart*: **Nothing** (as
+  before), **Next song**, or **Pause / play**. Held two seconds, it still switches the Jooki off.
+- **Hold the track knob halfway to wind a song** forward or back (#11). Turned all the way, it
+  still goes to the next or the previous song.
+- For the tinkerers: the knob's halfway zones reach the bus as `/j/gpio/input/fwd` and `rew`
+  (`esp32_ctrl.c`); the core read `rev`, so winding back was never seen. After 1 s held, 10 s
+  per half second. The heart's choice is `heart_press` in `audiocfg.json` (`SET_CFG`, v2
+  `device.set_config`).
+
 ## OpenJooki 2.4.7 (26 October 2026) — What the Jooki's source taught us
 - **Forgot the parent code? A gesture that works.** The old one (hold ◀ and ▶ together) could
   not be done: on a Jooki 2 they are the two ends of one knob. Now: turn the volume all the way

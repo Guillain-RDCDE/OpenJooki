@@ -27,6 +27,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | Your situation | Go here |
 |---|---|
 | My Jooki works, but the app doesn't any more | **[Install OpenJooki](guide/install.md)** · 15 min, from your phone |
+| My Jooki is brand new, it has never been on our Wi-Fi | **[Give it your Wi-Fi](https://guillain-rdcde.github.io/OpenJooki/wifi.html)**, then **[install OpenJooki](guide/install.md)** · no need to open it |
 | I have OpenJooki: playlists, tokens, bedtime, Bluetooth speaker… | **[Use it](guide/use.md)** |
 | My NFC stickers should pause like real tokens | **[A sticker becomes a Jooki token](guide/use.md#tokens)** · Android phone, or an NFC app |
 | I want to read a story myself | **[Jookistory: a story read by you](guide/use.md#a-story-read-by-you)** |

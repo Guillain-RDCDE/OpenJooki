@@ -440,7 +440,7 @@ if ($env:JOOKI_SD_TEST -eq 'cards') {      # bench: what the window would offer,
 function Label-Of($d) { Fmt "{0}  ·  {1:N1} {2}" $d.FriendlyName ($d.Size / 1e9) (T "GB" "Go") }
 
 $form = New-Object Windows.Forms.Form
-$form.Text = T "Jooki: move to a bigger SD card" "Jooki : passer à une plus grande carte SD"
+$form.Text = T "The Jooki's SD card" "La carte SD du Jooki"
 $form.ClientSize = New-Object Drawing.Size(560, 352); $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'; $form.MaximizeBox = $false
 $form.Font = New-Object Drawing.Font('Segoe UI', 10)
@@ -502,7 +502,7 @@ function Show-Step {
         $go.Text = T "Download and write the new card" "Télécharger et écrire la carte neuve"
     } elseif ($state.step -eq 'o1') {
         $title.Text = T "The original Jooki" "Le Jooki d'origine"
-        $text.Text = T "The Jooki as it was sold, without OpenJooki. Choose a micro SD card of 4 GB or more: everything on it will be erased. Keep the Jooki's own card: it is your way back.`nWithout the official app, now gone, it can no longer be set up from a phone." "Le Jooki tel qu'il était vendu, sans OpenJooki. Choisis une carte micro SD de 4 Go ou plus : tout ce qui est dessus sera effacé. Garde la carte du Jooki : c'est ton retour en arrière.`nSans l'appli officielle, disparue, il ne se règle plus depuis un téléphone."
+        $text.Text = T "The Jooki as it was sold, without OpenJooki. Choose a micro SD card of 4 GB or more: everything on it will be erased. Keep the Jooki's own card: it is your way back.`nSet up only from the old official app, which still works on some phones." "Le Jooki tel qu'il était vendu, sans OpenJooki. Choisis une carte micro SD de 4 Go ou plus : tout ce qui est dessus sera effacé. Garde la carte du Jooki : c'est ton retour en arrière.`nIl se règle avec l'ancienne appli, qui ne marche plus que sur certains téléphones."
         $go.Text = T "Download and write the original card" "Télécharger et écrire la carte d'origine"
     } else {
         $title.Text = T "3. Done!" "3. C'est prêt !"

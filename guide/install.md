@@ -4,6 +4,10 @@ For a **Jooki 2** that works, but whose app no longer does.
 
 **You need:** the Jooki switched on and **plugged in**, and a **phone on the same Wi-Fi**.
 
+**Brand new Jooki, never on your Wi-Fi?** Give it your Wi-Fi first, from the
+[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html) (Android phone or computer,
+two minutes). No need for the old app, and no need to open the Jooki.
+
 1. **Find your Jooki's address.** Open your internet box's app or page, look at the
    connected devices, and find the one whose name starts with **jooki**. Its address
    looks like `192.168.1.19`.

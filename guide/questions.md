@@ -14,8 +14,13 @@ the music has to be added again.
 **Can I go back to the original Jooki?**
 Yes: the [SD card tool](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#original)
 makes a card with the Jooki exactly as it was sold, without OpenJooki. Keep the Jooki's own
-card: it is your way back. But the official app and Jooki's servers are gone, so the
-original program can no longer be set up from a phone.
+card: it is your way back. But the original program is set up only from the old official
+app, which is no longer maintained: it still works on some phones, not on others.
+
+**My Jooki is brand new (or second-hand), it has never been on our Wi-Fi.**
+No need for the old app, and no need to open it: give it your Wi-Fi from the
+[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html), from an Android phone or a
+computer, then [install OpenJooki](install.md) from your phone.
 
 **Can anyone outside my home see my Jooki?**
 No. No account, no cloud, no tracking.

@@ -6,8 +6,9 @@ without anyone's music or settings. Made by the SD card tool, third choice:
 *The original Jooki: back to the program it was sold with*
 ([sdcard.html](https://guillain-rdcde.github.io/OpenJooki/sdcard.html)).
 
-Good to know before using it: the official app and Jooki's servers are gone,
-so the original program can no longer be set up from a phone. The way back to
+Good to know before using it: the original program is set up only from the old
+official app, which is no longer maintained: it still works on some phones, not
+on others (Muuselabs' servers are gone). The way back to
 OpenJooki is the Jooki's own card (keep it), or a fresh OpenJooki install.
 
 ## What is on it

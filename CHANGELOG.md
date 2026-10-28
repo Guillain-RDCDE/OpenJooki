@@ -1,5 +1,29 @@
 # OpenJooki — Changelog
 
+## SD card tools (28 October 2026) — every card reader, and a brand-new Jooki
+- **Windows: the card shows up, whatever the card reader.** The tool only looked at USB card
+  readers and the ones Windows calls "SD". The readers built into many laptops (Realtek, for
+  example) go by another name, so the card was never offered ("No card found"), although
+  Windows showed it as a removable disk. Now every card Windows calls removable is offered;
+  the computer's own disk and external hard disks are still kept out. Thanks to vojtechj for
+  the report and the screenshots (issue #8).
+- **A brand-new Jooki, never on your Wi-Fi?** No need for the old app, and no need to open it:
+  the [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html) gives it your Wi-Fi,
+  then [install OpenJooki](guide/install.md). Said now in the README, the install guide and
+  the Questions.
+- **The original Jooki card, said right.** The tool said the original program could no longer
+  be set up from a phone. In fact the old official app is no longer maintained but still works
+  on some phones: the tool, the SD card page and the Questions now say so. The tool's window is
+  now called "The Jooki's SD card", whatever you choose.
+- **Mac (23 October): the window shows its words again.** Since 29 September its titles, texts
+  and buttons stayed empty, on every Mac (issue #7).
+- For the tinkerers: Windows puts built-in readers on a SCSI bus, so the tool now trusts the
+  disk's "Removable media" type, whatever the bus. A removable disk that `Get-Disk` does not
+  list is taken from `Win32_DiskDrive`, its exact size asked from the disk itself, and its
+  volumes locked through WMI before the write. `JOOKI_SD_TEST=cards` shows how Windows sees
+  every disk. Checked on 23 simulated disks and, on a virtual 8 GB FAT32 card, a full write of
+  the original card read back, through both paths.
+
 ## OpenJooki 2.4.7 (26 October 2026) — What the Jooki's source taught us
 - **Forgot the parent code? A gesture that works.** The old one (hold ◀ and ▶ together) could
   not be done: on a Jooki 2 they are the two ends of one knob. Now: turn the volume all the way

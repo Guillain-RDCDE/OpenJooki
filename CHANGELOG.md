@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.8 (28 October 2026) — Ideas from a dad
 Ideas from a dad whose daughter got her Jooki for her second birthday (thank you, vojtechj).
 - **A new playlist straight from a token** (#12): tap the character in Tokens, then
   **+ New playlist…** in its list. The playlist is made for that token and opens, ready for music.

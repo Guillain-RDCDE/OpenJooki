@@ -42,8 +42,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.7:** a parent-code gesture that works, a clean shutdown before the battery runs flat, ±15 s for audiobooks, repeat this song.
-2.4.6: an NFC sticker can become a real Jooki token, from an Android phone or an NFC app: it pauses when taken off and keeps its playlist.
+**New in 2.4.8:** a new playlist straight from a token, the heart can skip a song, hold the knob halfway to wind a song.
+2.4.7: a parent-code gesture that works, a clean shutdown before the battery runs flat, ±15 s for audiobooks, repeat this song.
 [All the changes](CHANGELOG.md)
 
 ---

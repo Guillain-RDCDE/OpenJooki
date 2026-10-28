@@ -21,7 +21,8 @@ exit /b
 #     ("content", the music) is grown to the end of the card (GPT: entry, both headers, CRCs).
 #  3. Back in the Jooki, its own start-up script (S10_init_fs.sh, resize2fs) grows the
 #     filesystem to the partition at the first boot.
-# Only removable cards and USB disks are offered, never a system disk. The source must have
+# Only removable cards are offered (any card reader: USB or built in), never a system or an
+# external hard disk. The source must have
 # the Jooki's layout; the target must be bigger; the target's name and size are confirmed.
 #
 # A NEW card from scratch (the Jooki's card is dead): the same write, but the source is
@@ -31,7 +32,8 @@ exit /b
 # Bench: JOOKI_SD_TEST="clone|<src.img>|<dst.img>" or "grow|<dst.img>" runs on files, no window;
 # "disks|<source disk>|<target disk>|<image>" runs the window's two steps on real disks (admin);
 # "new|<card.img.gz>|<dst.img>" unpacks and writes the card image to a file; "fetch|<dir>" only
-# downloads and unpacks (JOOKI_SD_MANIFEST=<url> points at a local copy of sdcard.json).
+# downloads and unpacks (JOOKI_SD_MANIFEST=<url> points at a local copy of sdcard.json);
+# "cards" lists the cards the window would offer, and how Windows sees every disk (admin).
 # Docs: JOOKI_SD_PREVIEW=<file.png> draws the window and closes it (JOOKI_SD_DEMO=1: an example
 # card reader in the list, JOOKI_SD_LANG=en|fr, JOOKI_SD_PREVIEW_STEP=0|1|n1); nothing is read or written then.
 # ----------------------------------------------------------------------------------------------
@@ -61,8 +63,18 @@ public static class JookiSd {
     static extern bool DeviceIoControl(SafeFileHandle h, uint code, IntPtr inBuf, uint inSize, IntPtr outBuf, uint outSize, out uint returned, IntPtr overlapped);
 
     const uint GENERIC_READ = 0x80000000, GENERIC_WRITE = 0x40000000, SHARE_RW = 3, OPEN_EXISTING = 3, WRITE_THROUGH = 0x80000000;
-    const uint FSCTL_LOCK_VOLUME = 0x00090018, FSCTL_DISMOUNT_VOLUME = 0x00090020;
+    const uint FSCTL_LOCK_VOLUME = 0x00090018, FSCTL_DISMOUNT_VOLUME = 0x00090020, IOCTL_DISK_GET_LENGTH_INFO = 0x0007405C;
     public const int Sector = 512;
+
+    // The exact size in bytes of a physical disk, asked from the disk itself (0 if it cannot say).
+    public static long DiskLength(string path) {
+        using (SafeFileHandle h = CreateFile(path, GENERIC_READ, SHARE_RW, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero)) {
+            if (h.IsInvalid) return 0;
+            IntPtr buf = Marshal.AllocHGlobal(8);
+            try { uint r; return DeviceIoControl(h, IOCTL_DISK_GET_LENGTH_INFO, IntPtr.Zero, 0, buf, 8, out r, IntPtr.Zero) ? Marshal.ReadInt64(buf) : 0; }
+            finally { Marshal.FreeHGlobal(buf); }
+        }
+    }
 
     // A physical disk (\\.\PhysicalDriveN) or, on the bench, a plain file.
     public static FileStream Open(string path, bool write) {
@@ -270,6 +282,12 @@ function Write-CardToDisk([int]$num, [long]$size, [string]$image, [scriptblock]$
     foreach ($p in (Get-Partition -DiskNumber $num -ErrorAction SilentlyContinue)) {
         foreach ($v in $p.AccessPaths) { if ($v -like '\\?\Volume*') { $h = [JookiSd]::LockVolume($v); if ($h) { $locks += $h } } }
     }
+    if (-not $locks) {      # a disk Get-Disk does not list (see Select-Cards): its drive letters, from WMI
+        try {
+            Get-CimInstance Win32_DiskDrive -Filter "Index=$num" | Get-CimAssociatedInstance -ResultClassName Win32_DiskPartition |
+                Get-CimAssociatedInstance -ResultClassName Win32_LogicalDisk | ForEach-Object { $h = [JookiSd]::LockVolume("\\.\" + $_.DeviceID); if ($h) { $locks += $h } }
+        } catch { }
+    }
     $t = [JookiSd]::Open("\\.\PhysicalDrive$num", $true)
     try { $n = Write-Card $image $t $size $progress $status } finally { $t.Dispose(); foreach ($h in $locks) { $h.Dispose() } }
     try { Update-Disk -Number $num } catch { }
@@ -355,7 +373,7 @@ function Get-NewCardImage([string]$dir, [scriptblock]$progress, [scriptblock]$st
 }
 
 # ---------------------------------------------------------------- bench mode (files, no window)
-if ($env:JOOKI_SD_TEST) {
+if ($env:JOOKI_SD_TEST -and $env:JOOKI_SD_TEST -ne 'cards') {
     $a = $env:JOOKI_SD_TEST.Split('|')
     $say = { param($m) Write-Host $m }
     $nop = { param($d, $t) }
@@ -390,15 +408,34 @@ if ($env:JOOKI_SD_TEST) {
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
-# Only card readers: an SD/MMC bus, or a USB device Windows reports as REMOVABLE media (a card
-# reader or a stick), never an external hard disk ("External hard disk media"), never a system disk.
-function Get-Cards {
-    $removable = @(Get-CimInstance Win32_DiskDrive | Where-Object { $_.MediaType -like 'Removable*' } | ForEach-Object { [int]$_.Index })
-    Get-Disk | Where-Object {
+# Only card readers: an SD/MMC bus, or a disk Windows reports as REMOVABLE media whatever its bus
+# (USB readers and sticks, but also readers built into laptops, such as Realtek's PCI-E ones,
+# which Windows puts on a SCSI bus: issue #8). Never an external hard disk ("External hard disk
+# media"), never a system disk. A removable disk Get-Disk does not list is taken from
+# Win32_DiskDrive, its exact size asked from the disk itself.
+function Select-Cards($disks, $drives, [scriptblock]$lengthOf) {
+    $removable = @($drives | Where-Object { $_.MediaType -like 'Removable*' } | ForEach-Object { [int]$_.Index })
+    $listed = @($disks | ForEach-Object { [int]$_.Number })
+    $cards = @($disks | Where-Object {
         -not $_.IsSystem -and -not $_.IsBoot -and $_.LogicalSectorSize -eq 512 -and
-        $_.Size -gt 1GB -and $_.Size -le 512GB -and
-        ($_.BusType -in 'SD', 'MMC' -or ($_.BusType -eq 'USB' -and $removable -contains [int]$_.Number))
-    } | Sort-Object Number
+        ($_.BusType -in 'SD', 'MMC' -or $removable -contains [int]$_.Number)
+    })
+    foreach ($w in $drives) {
+        if ($removable -contains [int]$w.Index -and $listed -notcontains [int]$w.Index -and $w.BytesPerSector -eq 512) {
+            $cards += [pscustomobject]@{ Number = [int]$w.Index; FriendlyName = $w.Model; Size = (& $lengthOf ([int]$w.Index)) }
+        }
+    }
+    $cards | Where-Object { $_.Size -gt 1GB -and $_.Size -le 512GB } | Sort-Object Number
+}
+function Get-Cards {
+    Select-Cards @(Get-Disk) @(Get-CimInstance Win32_DiskDrive) { param($n) [JookiSd]::DiskLength("\\.\PhysicalDrive$n") }
+}
+if ($env:JOOKI_SD_TEST -eq 'cards') {      # bench: what the window would offer, and why
+    Get-Disk | Format-Table Number, FriendlyName, BusType, Size, IsSystem, IsBoot, LogicalSectorSize -AutoSize | Out-String | Write-Host
+    Get-CimInstance Win32_DiskDrive | Format-Table Index, Model, MediaType, InterfaceType, BytesPerSector, Size -AutoSize | Out-String | Write-Host
+    Write-Host "Cards offered:"
+    Get-Cards | Format-Table Number, FriendlyName, Size -AutoSize | Out-String | Write-Host
+    return
 }
 function Label-Of($d) { Fmt "{0}  ·  {1:N1} {2}" $d.FriendlyName ($d.Size / 1e9) (T "GB" "Go") }
 

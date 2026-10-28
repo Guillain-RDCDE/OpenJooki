@@ -48,8 +48,10 @@ formats Windows cannot read.
 
 ## How it works
 
-- Only card readers are offered (an SD/MMC bus, or USB media Windows reports as
-  removable), never a system disk or an external hard disk. The source must have the
+- Only card readers are offered (an SD/MMC bus, or media Windows reports as removable,
+  whatever the bus: USB readers, but also readers built into laptops, such as Realtek's
+  PCI-E ones, which Windows puts on a SCSI bus), never a system disk or an external hard
+  disk. The source must have the
   Jooki's layout (GPT, last partition `content`, a `config` partition); the target must
   be bigger, and its name and size are confirmed before it is erased.
 - On the new card: the old partition table is erased, the data is written after it,

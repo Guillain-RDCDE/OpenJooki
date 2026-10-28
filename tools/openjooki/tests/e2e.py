@@ -59,7 +59,17 @@ with sync_playwright() as p:
     R.expect("E4 unlink character", lambda: not J.pls[pid].get("star"), 5, lambda: J.pls[pid])
     J.send("PLAYLIST_UPDATE", {"playlist": {"id": pierre, "star": "Jooki.Dragon"}}); J.wait(lambda: J.pls[pierre].get("star") == "Jooki.Dragon")
     # E5 add from library
-    pg.click("text=Depuis la bibliothèque"); pg.fill("[data-k=libq]", "cygne")
+    pg.click("text=Depuis la bibliothèque")
+    liblist = pg.locator(".sheet ul").first
+    liblist.evaluate("e => { e.scrollTop = e.scrollHeight; }")
+    scroll0 = liblist.evaluate("e => e.scrollTop")
+    checks = pg.locator(".sheet li input[type=checkbox]")
+    checks.last.click(); scroll1 = liblist.evaluate("e => e.scrollTop")
+    checks.nth(checks.count() - 2).click(); scroll2 = liblist.evaluate("e => e.scrollTop")
+    check("E5 selecting several library tracks keeps the list in place (issue #13)",
+          scroll0 > 0 and abs(scroll1 - scroll0) < 2 and abs(scroll2 - scroll0) < 2, (scroll0, scroll1, scroll2))
+    checks.last.click(); checks.nth(checks.count() - 2).click()  # leave the two scroll-test tracks unselected
+    pg.fill("[data-k=libq]", "cygne")
     pg.locator(".sheet li").first.click()
     pg.fill("[data-k=libq]", "hémiones"); pg.locator(".sheet li").first.click()
     pg.click("[data-k=libadd]")

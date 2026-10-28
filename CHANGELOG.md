@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.9 (28 October 2026) — The track knob, your way
 - **The track knob, your way** (#11): *Settings → The track knob*. **Next / previous song** is
   back as the default, as on the original Jooki (in 2.4.8, holding it halfway always wound the
   song). **Both (halfway winds)** is the 2.4.8 behaviour. **Wind the song**: the knob only winds

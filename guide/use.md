@@ -115,8 +115,8 @@ the Jooki from reading the sticker: put it inside the cover instead.
   name, picture and playlist. A flat token without a playlist of its own plays the one
   shared by all flat tokens.
 - **An amiibo or an NFC sticker** works too: put it on, and it shows up in Tokens. Taking
-  it off does **not** pause (use the button), and another object has to go on the Jooki
-  between two uses of the same one.
+  it off does **not** pause (use the button). Two NFC stickers or cards in a row may not
+  switch playlists; put a genuine Jooki token between them.
 - **A sticker becomes a real Jooki token**: tap the sticker in Tokens, then **Make it a real
   Jooki token**. From an Android phone in Chrome, hold the sticker against the phone; from an
   iPhone, the page gives what to write with an NFC app. Then taking it off pauses, it works twice

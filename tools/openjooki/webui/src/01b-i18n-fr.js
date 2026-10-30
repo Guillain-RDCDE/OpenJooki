@@ -36,7 +36,7 @@
     radio_url_bad: 'L\'adresse doit commencer par http:// ou https://',
     tokens_intro: 'Chaque personnage lance une playlist. Tous les jetons d\'un même personnage (par exemple tous tes dragons noirs) font exactement la même chose.',
     tokens_hint: 'Pose un jeton sur le Jooki pour le faire apparaître ici.',
-    nfc_tag: 'Tag NFC', foreign_hint: 'Un autre objet NFC (un amiibo, un autocollant) apparaît aussi ici quand tu le poses : il lance sa playlist, mais le retirer ne met pas en pause, et il faut poser autre chose entre deux poses. Utilise le bouton pour la pause.',
+    nfc_tag: 'Tag NFC', foreign_hint: 'Un autre objet NFC (un amiibo, un autocollant) apparaît aussi ici quand tu le poses : il lance sa playlist, mais le retirer ne met pas en pause, et deux cartes de suite peuvent nécessiter un vrai jeton Jooki entre les deux. Utilise le bouton pour la pause.',
     launches: 'Lance', none_dash: '— Aucune playlist —',
     token_n: function (n) { return 'Jeton ' + n; }, token_name_ph: 'Surnom (facultatif)', tag_name_ph: 'Nom de ce tag (pour t\'y retrouver)',
     tok_search_ph: 'Rechercher un jeton par son nom', tok_no_match: 'Aucun jeton ne porte ce nom.',

@@ -18,10 +18,13 @@ the tag's memory: the ESP32 sends up only what it has decided.
 | any other tag (amiibo, sticker) | `NFC: EVT_BAD_TAG: tagId=<UID> - missing prefix` | nothing | see §3 |
 | taking it off | nothing | nothing | nothing |
 
-`<UID>` is the tag's 7-byte identifier in hex (14 characters). The ESP32 only
-reports a tag when it **differs from the last one it saw**: a foreign tag put on
-again, with nothing else in between, gives no second line. A Jooki token in
-between resets it.
+`<UID>` is the tag's 7-byte identifier in hex (14 characters). For rejected tags, the firmware logs only when the **decryption error changes**,
+not when the UID changes. Two different foreign tags with the same error (commonly
+`missing prefix`) can therefore produce only one log line, even after removal.
+A valid Jooki token changes the result back to success, so the next rejected tag
+can be logged again. This follows from `nfc_read_ndef` in `hw_nfc.c` in the
+manufacturer's [source archive](https://jooki.com/jooki-archive-20261026.tgz);
+the reported card-to-card sequence still needs confirmation on real hardware.
 
 ## 2. What a Jooki token contains
 
@@ -67,8 +70,9 @@ into `nfc.tag { uid, foreign = true }`:
   and stores its address in `tokens.json` (`image`, with the file size as a
   cache key). `TOKEN_EDIT { image: false }` removes both.
 
-Limits, all on the ESP32's side: no pause on removal; the same tag twice in a
-row needs another tag in between (or the play button); the tag must sit close
+Limits, all on the ESP32's side: no pause on removal; consecutive foreign tags
+with the same error may need a genuine Jooki token between them (or the play
+button to resume the current playlist); the tag must sit close
 to the reader (an amiibo's base is wider than the Jooki's hollow and reads only
 at the right angle).
 

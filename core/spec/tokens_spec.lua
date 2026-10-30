@@ -41,6 +41,18 @@ describe("services.tokens", function()
     assert_eq(r2.state.library.tokens["046158B2661290"].seen, 2)
   end)
 
+  it("two foreign tag events request their respective playlists", function()
+    local a, b = "046158B2661290", "04A1B2C3D49C41"
+    local doc = doc_with({ user_1 = { title = "First", star = "tag." .. a, tracks = {} },
+                           user_2 = { title = "Second", star = "tag." .. b, tracks = {} } })
+    local first = tokens.on_tag(doc, { type = "nfc.tag", uid = a, foreign = true })
+    doc.library = first.state.library
+    local second = tokens.on_tag(doc, { type = "nfc.tag", uid = b, foreign = true })
+    assert_eq(emitted(first, "playback.request").playlist, "user_1")
+    assert_eq(emitted(second, "playback.request").playlist, "user_2")
+    assert_eq(second.state.library.tokens[b].seen, 1)
+  end)
+
   it("flat tokens (one code for all of them): each one is its own character flat.<uid>, on the Jooki like a token", function()
     local doc = doc_with({ user_1 = { title = "Chat", star = "flat.04A1B2C3D49C41", tracks = {} },
                            user_2 = { title = "Éléphant", star = "flat.04A1B2C3D477A0", tracks = {} } })

@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.11 (30 October 2026) — Keep the story going
 - **Keep playing when a token is taken off** (#17): *Settings → Keep playing when a token is
   removed*. Off by default: taking a token off still pauses, as on the original Jooki. Added by
   oresh (#18), thank you!

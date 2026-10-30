@@ -125,6 +125,19 @@ describe("services.tokens", function()
     assert_eq(emitted(r, "system.tag").name, "sys.record.stop")
   end)
 
+  it("keeps playing on removal when enabled, but still clears presence and stops the recording tag", function()
+    local doc = { nfc = { starId = "flat.04", tagId = "04" }, audiocfg = { continue_on_token_removal = true } }
+    local r = tokens.on_removed(doc)
+    assert_eq(r.state.nfc, {})
+    assert_nil(emitted(r, "playback.pause_request"))
+    doc.nfc.starId = "sys.record"
+    r = tokens.on_removed(doc)
+    assert_eq(emitted(r, "system.tag").name, "sys.record.stop")
+    assert_nil(emitted(r, "playback.pause_request"))
+    doc.audiocfg.continue_on_token_removal = false
+    assert_eq(emitted(tokens.on_removed(doc), "playback.pause_request").source, "token")
+  end)
+
   it("a picture for a token: the upload moves to artwork/, the token keeps its address with a cache key", function()
     local doc = doc_with({}, { ["046158B2661290"] = { starId = "tag.046158B2661290", seen = 2 } })
     local r = tokens.on_set_image(doc, { tagId = "046158B2661290", uploadId = "4242" })

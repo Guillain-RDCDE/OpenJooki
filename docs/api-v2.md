@@ -198,6 +198,9 @@ Payload schema:
 {
   "additionalProperties": false,
   "properties": {
+    "continue_on_token_removal": {
+      "type": "boolean"
+    },
     "heart_press": {
       "enum": ["none", "next", "pause"],
       "type": "string"

@@ -42,6 +42,7 @@ local function audiocfg_of(doc)
   a.volume = a.volume or 40
   a.headphones_en = a.headphones_en == true
   a.shuffle_mode = a.shuffle_mode == true
+  a.continue_on_token_removal = a.continue_on_token_removal == true
   a.repeat_mode = a.repeat_mode or 1
   return a
 end
@@ -75,6 +76,7 @@ local KNOB_MODE = { song = true, both = true, wind = true }
 function device.update_config(doc, changes, opts)
   local a = audiocfg_of(doc)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
+  if type(changes.continue_on_token_removal) == "boolean" then a.continue_on_token_removal = changes.continue_on_token_removal end
   if changes.repeat_mode ~= nil then
     local m = changes.repeat_mode
     if m == true then m = 1 elseif m == false then m = 0 end
@@ -298,7 +300,8 @@ local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
-                                              knob_mode = { type = "string", enum = { "song", "both", "wind" } } }, additionalProperties = false }
+                                              knob_mode = { type = "string", enum = { "song", "both", "wind" } },
+                                              continue_on_token_removal = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

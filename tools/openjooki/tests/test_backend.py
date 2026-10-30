@@ -74,6 +74,15 @@ check("TFL the cat and the elephant start different playlists", got_cat == pc an
 j.poll(lambda: j.pb == "PLAYING", 5)   # really playing, not still starting
 j.nfc_off()
 R.expect("TFL taking a flat token off pauses", lambda: j.pb == "PAUSED", 5, lambda: j.get("audio.playback"))
+# Continuing on removal applies to converted cards too; the next card still switches playlist.
+j.send("SET_CFG", {"continue_on_token_removal": True}); j.wait(lambda: j.get("audio.config.continue_on_token_removal") is True)
+j.nfc(CAT, "200"); j.wait(lambda: j.np.get("playlistId") == pc and j.pb == "PLAYING")
+no_tag(j); j.barrier()
+check("TFL continue on removal keeps playback going and clears presence", j.pb == "PLAYING" and not j.nfc_state, j.get("audio"))
+j.nfc(ELE, "200"); j.wait(lambda: j.np.get("playlistId") == pe and j.pb == "PLAYING")
+check("TFL a second card still switches playlists", j.np.get("playlistId") == pe, j.np)
+j.send("SET_CFG", {"continue_on_token_removal": False}); j.wait(lambda: j.get("audio.config.continue_on_token_removal") is False)
+j.nfc_off(); R.expect("TFL disabling continue restores pause", lambda: j.pb == "PAUSED", 5, lambda: j.get("audio.playback"))
 # a picture from the page's library; any other address is refused
 j.errors.clear(); j.send("TOKEN_EDIT", {"tagId": CAT, "image": "lib:cat_face"}); j.wait(lambda: j.tokens[CAT].get("image") == "lib:cat_face")
 check("TFL a library picture for a token", j.tokens[CAT].get("image") == "lib:cat_face" and not j.errors, (j.tokens[CAT], j.errors))

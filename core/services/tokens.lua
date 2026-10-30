@@ -99,7 +99,9 @@ function tokens.on_removed(doc)
   if was.starId == "sys.record" then
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "system.tag", name = "sys.record.stop" } }
   end
-  result.commands[#result.commands + 1] = { kind = "emit", event = { type = "playback.pause_request", source = "token" } }
+  if not (doc.audiocfg and doc.audiocfg.continue_on_token_removal == true) then
+    result.commands[#result.commands + 1] = { kind = "emit", event = { type = "playback.pause_request", source = "token" } }
+  end
   return result
 end
 

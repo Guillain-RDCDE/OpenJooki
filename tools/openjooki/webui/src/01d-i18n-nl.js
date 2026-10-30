@@ -36,7 +36,7 @@
     radio_url_bad: 'Het adres moet beginnen met http:// of https://',
     tokens_intro: 'Elk personage start één afspeellijst. Alle figuurtjes van hetzelfde personage (bijv. al je zwarte draken) doen precies hetzelfde.',
     tokens_hint: 'Zet een figuurtje op de Jooki om het hier te zien.',
-    nfc_tag: 'NFC-tag', foreign_hint: 'Een ander NFC-voorwerp (een amiibo, een sticker) verschijnt hier ook als je het erop zet: het start zijn afspeellijst, maar eraf halen pauzeert niet, en er moet iets anders op tussen twee keer. Gebruik de knop om te pauzeren.',
+    nfc_tag: 'NFC-tag', foreign_hint: 'Een ander NFC-voorwerp (een amiibo, een sticker) verschijnt hier ook als je het erop zet: het start zijn afspeellijst, maar eraf halen pauzeert niet, en twee na elkaar hebben vaak een echt Jooki-figuurtje ertussen nodig. Gebruik de knop om te pauzeren.',
     launches: 'Start', none_dash: '— Geen afspeellijst —',
     token_n: function (n) { return 'Figuurtje ' + n; }, token_name_ph: 'Bijnaam (optioneel)', tag_name_ph: 'Naam van deze tag (om ze uit elkaar te houden)',
     tok_search_ph: 'Zoek een figuurtje op naam', tok_no_match: 'Geen figuurtje met die naam.',

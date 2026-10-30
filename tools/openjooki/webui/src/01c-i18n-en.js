@@ -36,7 +36,7 @@
     radio_url_bad: 'The address must start with http:// or https://',
     tokens_intro: 'Each character starts one playlist. All tokens of the same character (e.g. all your black dragons) do exactly the same thing.',
     tokens_hint: 'Put a token on the Jooki to see it here.',
-    nfc_tag: 'NFC tag', foreign_hint: 'Another NFC object (an amiibo, a sticker) also shows up here when you put it on: it starts its playlist, but taking it off does not pause, and something else has to be put on between two taps. Use the button to pause.',
+    nfc_tag: 'NFC tag', foreign_hint: 'Another NFC object (an amiibo, a sticker) also shows up here when you put it on: it starts its playlist, but taking it off does not pause, and two of them in a row often need a real Jooki token in between. Use the button to pause.',
     launches: 'Starts', none_dash: '— No playlist —',
     token_n: function (n) { return 'Token ' + n; }, token_name_ph: 'Nickname (optional)', tag_name_ph: 'Name this tag (to tell them apart)',
     tok_search_ph: 'Search a token by name', tok_no_match: 'No token has that name.',

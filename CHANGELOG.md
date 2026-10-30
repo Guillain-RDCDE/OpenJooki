@@ -1,5 +1,16 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Keep playing when a token is taken off** (#17): *Settings → Keep playing when a token is
+  removed*. Off by default: taking a token off still pauses, as on the original Jooki. Added by
+  oresh (#18), thank you!
+- **Two NFC stickers in a row**: the Jooki often does not notice the second one, even a
+  different sticker, until a real Jooki token has been on it (#15). The page and the guide now
+  say so; **Make it a real Jooki token** avoids it.
+- For the tinkerers: `continue_on_token_removal` in `audiocfg.json` (`SET_CFG`, v2
+  `device.set_config`). The ESP32 logs a foreign tag only when its read error changes
+  (`hw_nfc.c`), not when its UID does (`docs/23` §1).
+
 ## OpenJooki 2.4.10 (28 October 2026) — Many songs, one list
 - **Adding several songs from the library is easy again** (#13): in *From the library*, ticking
   a song no longer sends the list back to the top. Fixed by oresh (#14), thank you!

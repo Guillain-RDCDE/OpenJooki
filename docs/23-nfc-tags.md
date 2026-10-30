@@ -19,9 +19,12 @@ the tag's memory: the ESP32 sends up only what it has decided.
 | taking it off | nothing | nothing | nothing |
 
 `<UID>` is the tag's 7-byte identifier in hex (14 characters). The ESP32 only
-reports a tag when it **differs from the last one it saw**: a foreign tag put on
-again, with nothing else in between, gives no second line. A Jooki token in
-between resets it.
+logs a foreign tag when the **error differs from the last one it saw**, not when
+the UID does (`nfc_read_ndef` in `hw_nfc.c`, Muuselabs' sources: a `static`
+`last_rv`). So after one sticker, the next sticker gives no line, the same one or
+another (both are `missing prefix`), and OpenJooki never hears of it. A Jooki
+token in between resets it; so does a tag with another error (some amiibos give
+`invalid NDEF`). Making the sticker a real Jooki token (§3) avoids it (issue #15).
 
 ## 2. What a Jooki token contains
 
@@ -67,8 +70,9 @@ into `nfc.tag { uid, foreign = true }`:
   and stores its address in `tokens.json` (`image`, with the file size as a
   cache key). `TOKEN_EDIT { image: false }` removes both.
 
-Limits, all on the ESP32's side: no pause on removal; the same tag twice in a
-row needs another tag in between (or the play button); the tag must sit close
+Limits, all on the ESP32's side: no pause on removal; two foreign tags in a row
+(the same or two different ones) need a Jooki token in between (or the play button
+to go on with the playlist already started); the tag must sit close
 to the reader (an amiibo's base is wider than the Jooki's hollow and reads only
 at the right angle).
 

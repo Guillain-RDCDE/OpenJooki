@@ -168,7 +168,7 @@
     lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
     lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },
     lib_n: function (n) { return n + (n > 1 ? ' images' : ' image'); }, lib_set: function (n) { return 'Image choisie : ' + n; },
-    s_listen: 'Écoute', s_bt: 'Enceinte ou casque', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
+    s_listen: 'Écoute', s_bt: 'Enceinte ou casque', hp_wired: 'Casque détecté', hp_wired_sub: 'Avec un adaptateur USB-C vers jack sans puce', hp_yes: 'Oui', hp_no: 'Non', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
     s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
     s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
     s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',

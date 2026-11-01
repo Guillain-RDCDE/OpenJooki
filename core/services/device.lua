@@ -9,6 +9,7 @@
 -- Owns:
 --   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode? }   (audiocfg.json, 1.x shape + the heart and the knob)
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
+--   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
 --   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
 -- (state.power and state.activity are power's, state.device.toy_safe / airplane and state.flags radio's.)
 local util = require("services.util")
@@ -104,9 +105,9 @@ end
 -- change: without the boot write, a Jooki that starts with no headphones plugged never turns its
 -- amplifier on, so nothing comes out of the speaker (tokens and Spotify look like they play, in
 -- silence) until some headphones transition happens to write it. 1.x set it at start-up; we must too.
--- v2 has no wired headphone jack (config headphone_jack); its ESP32 hp_state is ignored so a
--- spurious "plugged" reading never routes to a missing jack and never mutes the speaker.
-local function has_jack(doc) return cfg(doc, "headphone_jack", false) == true end
+-- Wired headphones go through the USB-C port (a passive USB-C to jack adapter); config
+-- headphone_jack = false turns the detection off and keeps the speaker.
+local function has_jack(doc) return cfg(doc, "headphone_jack", true) == true end
 local function output_commands(doc, headphones)
   headphones = headphones and has_jack(doc) or false
   local dev = headphones and "headphones" or "speaker"
@@ -120,6 +121,54 @@ end
 function device.on_gpio_volume(doc, ev)
   if ev.percent == nil then return nil end
   return set_volume(doc, ev.percent)
+end
+
+-- Wired headphones, as Muuselabs' player.lua (on_knobs_state, pwr_plug) does it. The ESP32 reads the
+-- detection line on the USB-C port, and only usb_mux pulls that line up: on battery, with usb_mux at
+-- 0, it reads "plugged" with nothing there (what made 2.1.3 switch the detection off). So on battery
+-- usb_mux is set to 1 first and the reading after it is skipped (the line needs 0.5 s to settle); on
+-- the charger the reading is good as it is. A change is made only when two readings in a row agree,
+-- which also covers the cable and the headphones coming out together. Muuselabs polled every
+-- second; here a reading that wants a change asks for the next one 1 s later (device.hp_check), and
+-- the ESP32's own plug event (hp_plugged) asks for one too.
+local HP_CHECK_S = 1
+local function hp_check() return { kind = "timer.once", name = "device.hp_check", seconds = HP_CHECK_S } end
+
+local function headphones_reading(doc, a, seen, cmds)
+  local hp = copy(doc.hp_int or {})
+  local before = copy(hp)
+  local switch = nil
+  if not (doc.power or {}).connected and hp.mux ~= "1" then
+    cmds[#cmds + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = "1" }
+    hp.mux, hp.fresh, hp.pending = "1", true, nil
+    cmds[#cmds + 1] = hp_check()
+  elseif hp.fresh then
+    hp.fresh = nil
+    cmds[#cmds + 1] = hp_check()
+  elseif seen == a.headphones_en then
+    hp.pending = nil
+  elseif hp.pending == seen then
+    hp.pending, switch = nil, seen
+  else
+    hp.pending = seen
+    cmds[#cmds + 1] = hp_check()
+  end
+  local changed = hp.mux ~= before.mux or hp.fresh ~= before.fresh or hp.pending ~= before.pending
+  return switch, changed and hp or nil
+end
+
+-- the sound to the headphones or the speaker: silent while it switches, then the volume again (1.x)
+local function switch_output(doc, headphones, cmds)
+  cmds[#cmds + 1] = { kind = "host.volume", percent = 0 }
+  for _, c in ipairs(output_commands(doc, headphones)) do cmds[#cmds + 1] = c end   -- 1.x: Spotify follows too
+  cmds[#cmds + 1] = { kind = "host.volume", percent = device.effective_volume(doc, audiocfg_of(doc).volume) }
+  cmds[#cmds + 1] = { kind = "log", level = "info", key = "device.headphones", fields = { on = headphones } }
+end
+
+--- The ESP32's plug event: read the knobs again soon instead of at the next slow poll.
+function device.on_hp_event(doc, ev)
+  if ev.button ~= "hp_plugged" or not has_jack(doc) then return nil end
+  return { commands = { hp_check() } }
 end
 
 --- The ESP32's knob report (polled slowly): volume position and headphones.
@@ -136,11 +185,15 @@ function device.on_knobs(doc, ev)
     r.state.audiocfg = s.state.audiocfg
     for _, c in ipairs(s.commands) do r.commands[#r.commands + 1] = c end
   end
-  if has_jack(doc) and ev.headphones ~= nil and ev.headphones ~= a.headphones_en then
-    local a2 = r.state.audiocfg or a
-    a2.headphones_en = ev.headphones
-    r.state.audiocfg = a2
-    for _, c in ipairs(output_commands(doc, ev.headphones)) do r.commands[#r.commands + 1] = c end   -- 1.x: Spotify follows too
+  if has_jack(doc) and ev.headphones ~= nil then
+    local switch, hp = headphones_reading(doc, a, ev.headphones, r.commands)
+    if hp then r.state.hp_int = hp end
+    if switch ~= nil then
+      local a2 = r.state.audiocfg or a
+      a2.headphones_en = switch
+      r.state.audiocfg = a2
+      switch_output({ config = doc.config, limits = doc.limits, audiocfg = a2 }, switch, r.commands)
+    end
   end
   if not next(r.state) and #r.commands == 0 then return nil end
   return r
@@ -223,10 +276,10 @@ device.on_bus_up = function(doc) return on_bus_up(doc) end
 function device.on_boot(doc, ev)
   local a = audiocfg_of({ audiocfg = ev.audiocfg })
   local cmds = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } }
-  -- route the sound and turn the amplifier on at boot (speaker unless headphones are set); without
-  -- this the speaker stays silent until a headphones toggle (see output_commands). With no jack
-  -- (v2), clear any stale "headphones on" so a past spurious detection cannot keep the speaker off.
-  if not has_jack(doc) then a.headphones_en = false end
+  -- route the sound and turn the amplifier on at boot; without this the speaker stays silent until a
+  -- headphones toggle (see output_commands). Always the speaker first, as 1.x did: headphones still
+  -- plugged in are found again by the knobs within seconds, a stale "headphones on" never mutes it.
+  a.headphones_en = false
   for _, c in ipairs(output_commands(doc, a.headphones_en)) do cmds[#cmds + 1] = c end
   for _, c in ipairs(esp32_init()) do cmds[#cmds + 1] = c end
   for i, s in ipairs(ESP32_RESEND_S) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
@@ -275,6 +328,7 @@ end
 -- the facade's own timers, each handler on its own name (kernel.dispatch on_timer)
 local TIMERS = {
   ["device.knobs"] = function() return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end,
+  ["device.hp_check"] = function() return { commands = { { kind = "bus.publish", topic = "/j/esp32/output/knobs/state", payload = "" } } } end,
   ["device.esp32_init.1"] = esp32_resend, ["device.esp32_init.2"] = esp32_resend, ["device.esp32_init.3"] = esp32_resend,
 }
 device.TIMERS = TIMERS
@@ -314,6 +368,7 @@ function device.install(api, dispatch)
   for name, fn in pairs(TIMERS) do dispatch.on_timer(name, "device", fn) end
   dispatch.on("gpio.volume", "device", device.on_gpio_volume)
   dispatch.on("knobs", "device", device.on_knobs)
+  dispatch.on("gpio.button", "device", device.on_hp_event)
   dispatch.on("volume.apply", "device", device.on_apply_volume)
   dispatch.on("limits.changed", "device", device.on_apply_volume)   -- then lights repaints (installed below)
   dispatch.on("upload.done", "device", device.on_disk_request)

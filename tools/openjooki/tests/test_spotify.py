@@ -142,13 +142,27 @@ with sync_playwright() as p:
     J.poll(lambda: any("Not playing spotify" in str(e) for e in J.errors_since(ne)))
     check("SP8 saving while Spotify is paused is refused", len([v for v in J.pls.values() if v.get("spotify")]) == before and any("Not playing spotify" in str(e) for e in J.errors), J.errors[-2:])
 
-    # SP6 the Jooki v2 has NO wired headphone jack, but its ESP32 can still report hp_state=1 with
-    # nothing there. That must be IGNORED (config headphone_jack=false), or the sound would be routed
-    # to a jack that does not exist and cut from the speaker. So a headphones report moves nothing.
-    J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 0, "control": 0})); J.barrier()
-    n = mark(); J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": 1, "control": 0})); J.barrier()
-    check("SP6 v2 has no jack: a headphones report is ignored, Spotify stays on the speaker",
-          ("/j/spotify/output/set_output_device", "headphones") not in since(n, "/j/spotify/output/"), since(n, "/j/"))
+    # SP6 wired headphones through the USB-C port (a passive adapter). The ESP32's reading is only
+    # trusted once usb_mux pulls the detection line up, and a change needs two readings in a row:
+    # one stray "plugged" (what made 2.1.3 switch the detection off) never mutes the speaker.
+    def knobs(hp):
+        J.c.publish("/j/esp32/input/knobs/state", json.dumps({"volume": 40, "hp_state": hp, "control": 0})); J.barrier()
+    def hp_out(n): return [p for t, p in since(n, "/j/spotify/output/") if t == "/j/spotify/output/set_output_device"]
+    for _ in range(3): knobs(0)                 # battery or charger: usb_mux up and settled, still the speaker
+    n = mark(); knobs(1); knobs(0)
+    check("SP6 one stray headphones reading moves nothing", not hp_out(n), since(n, "/j/"))
+    n = mark(); knobs(1); knobs(1)
+    B.poll(lambda: hp_out(n))
+    check("SP6 headphones plugged (two readings): Spotify follows them", hp_out(n) == ["headphones"], since(n, "/j/"))
+    J.wait_state("audio.config.headphones_en", True)
+    pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=hprow]")
+    check("SP6 Settings shows the headphones detected", "Oui" in pg.locator("[data-k=hprow]").inner_text(), pg.locator("[data-k=hprow]").inner_text())
+    n = mark(); knobs(0); knobs(0)
+    B.poll(lambda: hp_out(n))
+    check("SP6 headphones out: back to the speaker", hp_out(n) == ["speaker"], since(n, "/j/"))
+    J.wait_state("audio.config.headphones_en", False)
+    B.poll(lambda: "Non" in pg.locator("[data-k=hprow]").inner_text())
+    check("SP6 ... and Settings says so", "Non" in pg.locator("[data-k=hprow]").inner_text(), pg.locator("[data-k=hprow]").inner_text())
 
     # SP9 each Wi-Fi report tells Spotify the Jooki is online (a "no network" at boot must not stick)
     n = mark(); J.c.publish("/j/esp32/input/net/sta/config", json.dumps({"ssid": "Home", "stat": "fail", "ip": ""}))

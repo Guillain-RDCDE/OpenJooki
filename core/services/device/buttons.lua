@@ -53,6 +53,9 @@ local function tick_change(cmds, held_before, held)
 end
 
 function buttons.on_button(doc, ev)
+  -- headphones plugged in or out: not a button (services.device reads the knobs again); held, it
+  -- would keep the long-press tick running for as long as the headphones stay in
+  if ev.button == "hp_plugged" then return nil end
   local act = activity_of(doc)
   act.last = ev.now
   local cmds = {}

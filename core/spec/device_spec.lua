@@ -1,6 +1,6 @@
 local device = require("services.device")
 
--- o.jack = true: a Jooki with a wired headphone jack (config headphone_jack; the v2 default is none)
+-- o.jack = false: wired headphones detection off (config headphone_jack; on by default)
 local function doc_with(o)
   o = o or {}
   return { config = { data_dir = "/d", headphone_jack = o.jack }, audiocfg = o.audiocfg or { volume = 40, shuffle_mode = false, repeat_mode = 1 },
@@ -43,14 +43,12 @@ describe("services.device — volume chain", function()
     assert_eq(kinds(device.on_apply_volume(doc)), { "vol 20" })   -- 40 * 0.5
   end)
 
-  it("knob reports change the volume and the headphones only when they differ (jack enabled)", function()
-    local doc = doc_with({ jack = true }); doc.device.esp32_up = true   -- the first answer only marks esp32_ctrl up (see boot spec)
+  it("knob reports change the volume only when it differs", function()
+    local doc = doc_with({ jack = false }); doc.device.esp32_up = true   -- the first answer only marks esp32_ctrl up (see boot spec)
     assert_nil(device.on_knobs(doc, { volume = 40, headphones = false }))
     local r = device.on_knobs(doc, { volume = 55, headphones = true })
-    assert_eq(r.state.audiocfg.volume, 55); assert_true(r.state.audiocfg.headphones_en)
+    assert_eq(r.state.audiocfg.volume, 55); assert_false(r.state.audiocfg.headphones_en == true)
     assert_true(has(r, "host.volume", "percent", 55))
-    assert_eq(find(r, "bus.publish", "topic", "/j/audio/out/set_output_device").payload, "headphones")
-    assert_eq(find(r, "bus.publish", "topic", "/j/spotify/output/set_output_device").payload, "headphones")   -- Spotify follows the headphones too
   end)
 
   it("shuffle / repeat: one updater for the page (v1 booleans), the v2 command and the Spotify daemon", function()
@@ -116,25 +114,83 @@ describe("services.device — audio output / amplifier", function()
     assert_eq(amp, "1"); assert_eq(out, "speaker")
   end)
 
-  it("v2 has no jack (default): a headphones report is ignored, the amplifier stays on the speaker", function()
-    local doc = doc_with({ audiocfg = { volume = 40, headphones_en = false } }); doc.device.esp32_up = true
-    assert_nil(device.on_knobs(doc, { headphones = true }))   -- ignored, nothing changes
-    -- and a stale "headphones on" is cleared at boot so it can never keep the speaker off
+  -- the knobs answered one after another, each result applied to the document as the kernel does
+  local function step(doc, ev)
+    local r = device.on_knobs(doc, ev)
+    for k, v in pairs((r and r.state) or {}) do doc[k] = v end
+    return r
+  end
+  local function mux_written(r) return find(r, "files.write_text", "path", "/sys/kernel/htdrv/usb_mux") end
+  local function hp_doc(o)
+    local doc = doc_with(o); doc.device.esp32_up = true
+    return doc
+  end
+
+  it("wired headphones on battery: usb_mux first, the next reading skipped, then two readings in a row switch", function()
+    local doc = hp_doc({ power = { connected = false } })
+    local r = step(doc, { volume = 40, headphones = true })        -- usb_mux off: the line is not pulled up, nothing to trust
+    assert_eq(mux_written(r).text, "1"); assert_true(has(r, "timer.once", "name", "device.hp_check"))
+    assert_nil(select(2, amp_and_out(r)))
+    r = step(doc, { volume = 40, headphones = true })              -- read before the line settled: skipped
+    assert_nil(mux_written(r)); assert_nil(select(2, amp_and_out(r)))
+    r = step(doc, { volume = 40, headphones = true })              -- a first good reading only waits for the next one
+    assert_true(has(r, "timer.once", "name", "device.hp_check")); assert_nil(select(2, amp_and_out(r)))
+    r = step(doc, { volume = 40, headphones = true })              -- the second agrees: headphones
+    local amp, out = amp_and_out(r)
+    assert_eq(amp, "0"); assert_eq(out, "headphones"); assert_true(doc.audiocfg.headphones_en)
+    assert_eq(find(r, "bus.publish", "topic", "/j/spotify/output/set_output_device").payload, "headphones")   -- Spotify follows too
+    assert_eq(r.commands[1].kind, "host.volume"); assert_eq(r.commands[1].percent, 0)   -- silent while it switches (1.x)
+    assert_eq(r.commands[#r.commands - 1].percent, 40)                                   -- then its volume, the knob's
+    step(doc, { volume = 40, headphones = false })
+    amp, out = amp_and_out(step(doc, { volume = 40, headphones = false }))
+    assert_eq(amp, "1"); assert_eq(out, "speaker"); assert_false(doc.audiocfg.headphones_en)
+  end)
+
+  it("one stray 'plugged' reading never mutes the speaker", function()
+    local doc = hp_doc({ power = { connected = false } })
+    step(doc, { headphones = false }); step(doc, { headphones = false })   -- usb_mux up and settled
+    local r = step(doc, { headphones = true })
+    assert_nil(select(1, amp_and_out(r)))
+    r = step(doc, { headphones = false })
+    assert_nil(select(1, amp_and_out(r) or nil)); assert_nil(doc.hp_int.pending)
+    assert_false(doc.audiocfg.headphones_en == true)
+  end)
+
+  it("on the charger the reading counts as it is: no usb_mux write, two readings switch", function()
+    local doc = hp_doc({ power = { connected = true } })
+    local r = step(doc, { headphones = true })
+    assert_nil(mux_written(r)); assert_nil(select(1, amp_and_out(r)))
+    assert_eq(select(1, amp_and_out(step(doc, { headphones = true }))), "0")
+  end)
+
+  it("a cable change sets usb_mux and the reading after it is skipped", function()
+    local power = require("services.device.power")
+    local doc = hp_doc({ power = { connected = true } })
+    local r = power.on_plugged(doc, { on = false })
+    assert_eq(find(r, "files.write_text", "path", "/sys/kernel/htdrv/usb_mux").text, "1")
+    assert_eq(r.state.hp_int, { mux = "1", fresh = true })
+    doc.power, doc.hp_int = r.state.power, r.state.hp_int
+    r = step(doc, { headphones = true })
+    assert_nil(mux_written(r)); assert_nil(doc.hp_int.fresh); assert_nil(doc.hp_int.pending)
+  end)
+
+  it("the ESP32's plug event asks for a reading now; it is not a button", function()
+    local doc = hp_doc()
+    assert_true(has(device.on_hp_event(doc, { button = "hp_plugged", down = true }), "timer.once", "name", "device.hp_check"))
+    assert_nil(device.on_hp_event(doc, { button = "next", down = true }))
+    assert_nil(require("services.device.buttons").on_button(doc, { button = "hp_plugged", down = true, now = 3 }))
+    assert_nil(device.on_hp_event(hp_doc({ jack = false }), { button = "hp_plugged", down = true }))
+  end)
+
+  it("headphone_jack = false: a headphones report changes nothing, the speaker stays on", function()
+    local doc = hp_doc({ jack = false, power = { connected = false } })
+    assert_nil(device.on_knobs(doc, { headphones = true }))
+  end)
+
+  it("boot always starts on the speaker, a saved 'headphones on' included (1.x)", function()
     local r = device.on_boot(doc_with(), { audiocfg = { volume = 50, headphones_en = true }, flags = {}, now = 5 })
     local amp, out = amp_and_out(r)
     assert_eq(amp, "1"); assert_eq(out, "speaker"); assert_false(r.state.audiocfg.headphones_en)
-  end)
-
-  it("with a jack enabled, boot with headphones set routes to headphones and leaves the amplifier off", function()
-    local amp, out = amp_and_out(device.on_boot(doc_with({ jack = true }), { audiocfg = { volume = 50, headphones_en = true }, flags = {}, now = 5 }))
-    assert_eq(amp, "0"); assert_eq(out, "headphones")
-  end)
-
-  it("with a jack enabled, plugging headphones switches the amplifier off and back on when removed", function()
-    local on = doc_with({ jack = true, audiocfg = { volume = 40, headphones_en = false } })
-    assert_eq(select(1, amp_and_out(device.on_knobs(on, { headphones = true }))), "0")
-    local off = doc_with({ jack = true, audiocfg = { volume = 40, headphones_en = true } })
-    assert_eq(select(1, amp_and_out(device.on_knobs(off, { headphones = false }))), "1")
   end)
 end)
 

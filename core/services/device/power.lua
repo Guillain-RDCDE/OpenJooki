@@ -67,11 +67,15 @@ function power.on_plugged(doc, ev)
   local first = p.connected == nil
   p.connected = ev.on
   local cmds = {}
+  local st = { power = p }
   if not first then
-    cmds[#cmds + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = (ev.on and not volume().audiocfg_of(doc).headphones_en) and "0" or "1" }
+    -- usb_mux also pulls up the headphones detection (services.device): it is told, and skips the next reading
+    local mux = (ev.on and not volume().audiocfg_of(doc).headphones_en) and "0" or "1"
+    cmds[#cmds + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = mux }
+    st.hp_int = { mux = mux, fresh = true }
     cmds[#cmds + 1] = emit("system.event", { name = ev.on and "Evt.Power.Cable.Insert" or "Evt.Power.Cable.Remove" })
   end
-  return { state = { power = p }, commands = cmds }
+  return { state = st, commands = cmds }
 end
 
 function power.on_charging(doc, ev)

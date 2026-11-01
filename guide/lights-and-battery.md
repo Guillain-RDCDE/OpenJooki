@@ -46,6 +46,11 @@ to the left while switching it on does that). Switch it off, then switch it on w
 - Use a phone charger of **1 A at most**, a clean port and a cable in good shape, and keep
   an eye on the Jooki while it charges (Jooki's own advice, May 2024).
 - The port is for charging **or** wired headphones, not both at once.
+- **Wired headphones** need a USB-C to jack adapter with **no chip inside** (a "passive" or
+  "analog" one). Most adapters sold today have a small sound card inside: the Jooki can't use
+  them, nor USB-C headphones. A quick test: an adapter that works on an iPhone 15 or a Mac has
+  a chip, so it won't work here. **Settings → Headphones detected** tells you if the Jooki
+  sees yours.
 - **Worn battery** (only works plugged in, or switches off soon after): the cell can be
   replaced; it must have its temperature sensor, or it won't charge. Owners explain how:
   [the details](../docs/24-hardware-and-lights.md#3-the-battery).

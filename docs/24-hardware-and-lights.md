@@ -255,7 +255,20 @@ port do not mix**. When the cable goes in, the program only puts the
 multiplexer on the charger side if headphones are *not* enabled
 (`usb_mux`, in the original program and in `core/services/device/power.lua` alike),
 which matches what owners see: with a splitter, the headphones work and the
-charging does not (u/Rubman tried five). Muuselabs' own updater refuses to write
+charging does not (u/Rubman tried five).
+
+**Wired headphones: only a passive adapter.** The Jooki finds headphones by a
+voltage on the port's CC line, read by the ESP32 (`update_cc_state` in
+`knobs_ctrl.c`, Muuselabs' sources): only a passive USB-C to jack adapter (no
+chip; its CC pulled down, the USB "audio accessory" wiring) gives it, and the
+sound then comes from the X1000's own codec (`card0`). An adapter with a DAC
+inside, and USB-C headphones, look like ordinary USB devices, and the system has
+no USB sound driver (`snd-usb-audio`) nor host mode: they cannot work (issue
+#19). The detection line is pulled up by `usb_mux` only, so on battery it reads
+"plugged" while `usb_mux` is 0: the original `player.lua` sets it to 1 first and
+waits for two readings in a row, and `core/services/device.lua` does the same
+since 2.4.12 (2.1.3 to 2.4.11 ignored the readings, so wired headphones never
+played). *Settings → Headphones detected* shows the result. Muuselabs' own updater refuses to write
 a firmware while the battery is low; OpenJooki asks you to keep the Jooki
 plugged in for the same reason.
 

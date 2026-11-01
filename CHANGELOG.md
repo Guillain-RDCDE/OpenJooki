@@ -1,5 +1,17 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Wired headphones work again** (#19): since 2.1.3 OpenJooki kept the speaker on, even with
+  headphones plugged into the USB-C port. They play again, as on the original Jooki, with a
+  USB-C to jack adapter that has **no chip inside**. New in *Settings*: **Headphones detected**,
+  to see whether the Jooki finds yours. Most adapters sold today have a small sound card inside:
+  those, and USB-C headphones, can't work on a Jooki.
+- For the tinkerers: the ESP32 reads the headphones on the port's CC line, a line only pulled
+  up by `usb_mux`; on battery it read "plugged" with nothing there, which is why 2.1.3 switched
+  the detection off. Now as Muuselabs' `player.lua`: `usb_mux` set to 1 on battery, the next
+  reading skipped, two readings in a row to switch, the speaker at boot. Config
+  `headphone_jack = false` keeps the speaker.
+
 ## OpenJooki 2.4.11 (30 October 2026) — Keep the story going
 - **Keep playing when a token is taken off** (#17): *Settings → Keep playing when a token is
   removed*. Off by default: taking a token off still pauses, as on the original Jooki. Added by

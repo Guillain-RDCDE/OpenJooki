@@ -42,8 +42,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.11:** a new setting keeps the music playing when a token is taken off (thanks, oresh).
-2.4.10: ticking songs in From the library no longer jumps back to the top (thanks, oresh).
+**New in 2.4.12:** wired headphones work again with an adapter that has no chip inside (thanks, Rubman).
+2.4.11: a new setting keeps the music playing when a token is taken off (thanks, oresh).
 [All the changes](CHANGELOG.md)
 
 ---

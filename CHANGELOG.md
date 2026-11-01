@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.12 (1 November 2026) — Headphones are back
 - **Wired headphones work again** (#19): since 2.1.3 OpenJooki kept the speaker on, even with
   headphones plugged into the USB-C port. They play again, as on the original Jooki, with a
   USB-C to jack adapter that has **no chip inside**. New in *Settings*: **Headphones detected**,

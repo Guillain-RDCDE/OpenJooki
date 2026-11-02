@@ -1,5 +1,19 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.16 (2 November 2026) — Updates in half the time
+- **Updates take about half the time** (#26), the work of oresh, thank you! The Jooki used to
+  unpack the new version twice just to learn what to compare it with, then read it back in small
+  pieces. On our Jooki 2 the install step went from about 9 minutes to under 5, starting with this
+  very update. The check is as strict as before: every byte is still compared before anything
+  changes.
+- For the tinkerers: `make-release.sh` writes `img_sha256` and `img_size` (the decompressed image)
+  into `version.json`. `openjooki-selfupdate.sh` takes them from the manifest when its `file` is
+  the image being installed (the `.gz` itself is checked against the same manifest's `sha256`
+  first), and falls back to the two decompressions for direct installs and older releases. The
+  read-back goes in 1 MiB blocks; a partial last block goes through a second `dd`, since the
+  Jooki's busybox has no `head -c`. Tried with `--dry` on a Jooki 2: 279 s instead of 527 s, and on
+  a file one byte short of a whole MiB the partial-block read-back gave the right SHA-256.
+
 ## OpenJooki 2.4.15 (2 November 2026) — Picks up where it stopped, for real
 - **A Spotify character can pick up where it stopped** (#24), the work of sbfnk (#25), thank you
   so much! Taking the character off and putting it

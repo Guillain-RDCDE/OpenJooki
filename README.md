@@ -42,8 +42,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.15:** a Spotify character picks up where it stopped, thanks to sbfnk's patch of the Jooki's own Spotify program.
-2.4.14: a Spotify character marked Audiobook resumes on the same song (thanks, sbfnk).
+**New in 2.4.16:** updates install in about half the time, thanks to oresh.
+2.4.15: a Spotify character picks up where it stopped, thanks to sbfnk's patch of the Jooki's own Spotify program.
 [All the changes](CHANGELOG.md)
 
 ---

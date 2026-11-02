@@ -16,6 +16,13 @@ OUT="release-$VER"; mkdir -p "$OUT"
 FILE="openjooki-firmware-$VER.img.gz"
 case "$IMG" in *.gz) cp "$IMG" "$OUT/$FILE";; *) gzip -c "$IMG" > "$OUT/$FILE";; esac
 HASH=$($SHA "$OUT/$FILE" | cut -d' ' -f1)
+case "$IMG" in
+  *.gz) RAW=$(mktemp); trap 'rm -f "$RAW"' EXIT
+        gzip -dc "$OUT/$FILE" > "$RAW";;
+  *) RAW="$IMG";;
+esac
+IMG_HASH=$($SHA "$RAW" | cut -d' ' -f1)
+IMG_SIZE=$(wc -c < "$RAW" | tr -d '[:space:]')
 cp "$DOCS/openjooki-ota.sh" "$DOCS/openjooki-selfupdate.sh" "$OUT/"
 OTA_HASH=$($SHA "$OUT/openjooki-ota.sh" | cut -d' ' -f1)
 SELF_HASH=$($SHA "$OUT/openjooki-selfupdate.sh" | cut -d' ' -f1)
@@ -25,6 +32,8 @@ cat > "$OUT/version.json" <<EOF
   "version": "$VER",
   "file": "$FILE",
   "sha256": "$HASH",
+  "img_sha256": "$IMG_HASH",
+  "img_size": $IMG_SIZE,
   "device_type": "$DEVTYPE",
   "date": "$(date +%Y-%m-%d)",
   "ota_sha256": "$OTA_HASH",

@@ -39,12 +39,27 @@ fi
 umount /mnt/spchk /mnt/p2patch 2>/dev/null
 
 log "reference fingerprint (source)…"
+WANT=; TOTAL=
+# Only use the OTA manifest for its named compressed image. Direct installs and
+# older releases continue to calculate the fingerprint from the source.
+MANIFEST=/data/openjooki/version.json
+if [ -f "$MANIFEST" ] && [ "${IMG##*/}" = "$(sed -n 's/.*"file"[^"]*"\([^"]*\)".*/\1/p' "$MANIFEST" | head -n 1)" ]; then
+  case "$IMG" in
+    *.gz) WANT=$(sed -n 's/.*"img_sha256"[^"]*"\([^"]*\)".*/\1/p' "$MANIFEST" | head -n 1)
+          TOTAL=$(sed -n 's/.*"img_size"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\)[[:space:]]*[,}]*[[:space:]]*$/\1/p' "$MANIFEST" | head -n 1);;
+  esac
+fi
+case "$WANT" in *[!0-9a-f]*|'') WANT=;; esac
+[ "${#WANT}" -eq 64 ] || WANT=
+case "$TOTAL" in *[!0-9]*|''|0) TOTAL=;; esac
+if [ -z "$WANT" ] || [ -z "$TOTAL" ]; then
 case "$IMG" in
   *.gz) WANT=$(gzip -dc "$IMG" | sha256sum | cut -d' ' -f1)
         TOTAL=$(gzip -dc "$IMG" | wc -c);;
   *)    WANT=$(sha256sum "$IMG" | cut -d' ' -f1)
         TOTAL=$(wc -c < "$IMG");;
 esac
+fi
 PBYTES=$((P2*512))
 [ "$TOTAL" -le "$PBYTES" ] || { log "SAFETY: image too large ($TOTAL > $PBYTES)"; exit 2; }
 
@@ -56,11 +71,11 @@ esac
 sync
 
 log "bit-for-bit verification…"
-B=$((TOTAL/512)); R=$((TOTAL%512))
+B=$((TOTAL/1048576)); R=$((TOTAL%1048576))
 if [ "$R" -gt 0 ]; then
-  GOT=$({ dd if="$SDEV" bs=512 count="$B" 2>/dev/null; dd if="$SDEV" bs=1 skip=$((B*512)) count="$R" 2>/dev/null; } | sha256sum | cut -d' ' -f1)
+  GOT=$({ dd if="$SDEV" bs=1M count="$B" 2>/dev/null; dd if="$SDEV" bs=1M skip="$B" count=1 2>/dev/null | head -c "$R"; } | sha256sum | cut -d' ' -f1)
 else
-  GOT=$(dd if="$SDEV" bs=512 count="$B" 2>/dev/null | sha256sum | cut -d' ' -f1)
+  GOT=$(dd if="$SDEV" bs=1M count="$B" 2>/dev/null | sha256sum | cut -d' ' -f1)
 fi
 [ "$GOT" = "$WANT" ] || { log "VERIFY FAILED ($GOT != $WANT) — nothing activated, Jooki intact"; exit 3; }
 log "transfer bit-perfect identical OK"

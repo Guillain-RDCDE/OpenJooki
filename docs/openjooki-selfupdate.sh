@@ -73,7 +73,7 @@ sync
 log "bit-for-bit verification…"
 B=$((TOTAL/1048576)); R=$((TOTAL%1048576))
 if [ "$R" -gt 0 ]; then
-  GOT=$({ dd if="$SDEV" bs=1M count="$B" 2>/dev/null; dd if="$SDEV" bs=1M skip="$B" count=1 2>/dev/null | head -c "$R"; } | sha256sum | cut -d' ' -f1)
+  GOT=$({ dd if="$SDEV" bs=1M count="$B" 2>/dev/null; dd if="$SDEV" bs=1M skip="$B" count=1 2>/dev/null | dd bs=1 count="$R" 2>/dev/null; } | sha256sum | cut -d' ' -f1)
 else
   GOT=$(dd if="$SDEV" bs=1M count="$B" 2>/dev/null | sha256sum | cut -d' ' -f1)
 fi

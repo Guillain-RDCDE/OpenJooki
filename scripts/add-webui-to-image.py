@@ -31,7 +31,8 @@ TOOL = os.path.join(HERE, "..", "tools", "openjooki")
 sys.path.insert(0, TOOL)
 sys.path.insert(0, os.path.join(HERE, "..", "tools", "sdcard"))
 import playerlib as L  # noqa: E402
-from jooki import SYSTEM_DIR, WEBUI_FILES, WEBUI_DIRS, webui_dir_files, file_mode, load_core, core_side_files, system_files  # noqa: E402
+from jooki import SYSTEM_DIR, WEBUI_FILES, WEBUI_DIRS, webui_dir_files, file_mode, load_core, core_side_files, system_files, SPOTIFY_CTRL, SPOTIFY_DIRECT_FLAG  # noqa: E402
+import spotify_direct  # noqa: E402
 from make_card_image import scrub_rootfs  # noqa: E402
 
 WEBUI = os.path.join(TOOL, "webui")
@@ -176,6 +177,24 @@ def main():
         put(out, os.path.join(SYSTEM_DIR, f), path, mode="0100" + file_mode(path))
     print("system files installed:", ", ".join(sorted(sysfiles)))
 
+    # --- spotify_ctrl patched to start a playlist at a track and time, from the image's own copy ---
+    spotify = {}
+    sp_orig = cat(out, SPOTIFY_CTRL + ".openjooki-orig") if exists(out, SPOTIFY_CTRL + ".openjooki-orig") else cat(out, SPOTIFY_CTRL)
+    sp_patched = sp_orig if spotify_direct.is_patched(sp_orig) else spotify_direct.patch(sp_orig)
+    if sp_patched:
+        spotify = {SPOTIFY_CTRL: sp_patched, SPOTIFY_DIRECT_FLAG: b"spotify_ctrl patched by spotify_direct.py\n"}
+        if not exists(out, SPOTIFY_CTRL + ".openjooki-orig"):
+            local = os.path.join(work, "spotify_ctrl.orig")
+            open(local, "wb").write(sp_orig)
+            put(out, local, SPOTIFY_CTRL + ".openjooki-orig", mode="0100" + file_mode(SPOTIFY_CTRL))
+        for path, data in sorted(spotify.items()):
+            local = os.path.join(work, os.path.basename(path) + ".new")
+            open(local, "wb").write(data)
+            put(out, local, path, mode="0100" + file_mode(path))
+        print("spotify_ctrl patched (track and time on play_preset)")
+    else:
+        print("spotify_ctrl: unknown build (%d B), left as it is" % len(sp_orig))
+
     # --- version ---
     vf = os.path.join(work, "version")
     open(vf, "w").write(version + "\n")
@@ -207,6 +226,7 @@ def main():
     for path, f in sysfiles.items():
         expect[path] = open(os.path.join(SYSTEM_DIR, f), "rb").read()
     expect.update(NEUTRAL)
+    expect.update(spotify)
     for path, data in expect.items():
         if hashlib.sha256(cat(out, path)).hexdigest() != hashlib.sha256(data).hexdigest():
             raise SystemExit("read-back mismatch: " + path)

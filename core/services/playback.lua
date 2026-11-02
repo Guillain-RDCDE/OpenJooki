@@ -84,14 +84,26 @@ local function start(doc, pb, playlist_id, opts)
   local has_streaming, streaming = pcall(require, "services.streaming")
   local svc = has_streaming and streaming.service_of(p)
   if svc then
-    local now, cmds0 = streaming.start(doc, playlist_id, p)
+    -- a playlist set to resume continues where it paused when its token is put back, and goes on
+    -- playing when it still plays (the token taken off with continue_on_token_removal): the preset
+    -- would start it again from the top
+    local was = pb.now
+    if p.resume and not opts.restart and was and was.playlist == playlist_id and was.service == svc then
+      -- paused: continued only while the Jooki is still the account's device on that playlist; the
+      -- phone may have moved on since, and streaming.start checks what `cont` brings back
+      local sp = doc.spotify or {}
+      local here = svc ~= "SPOTIFY" or (sp.active and p.spotify and (sp.track or {}).source_uri == p.spotify.uri)
+      if pb.state == "paused" and here then return { commands = streaming.transport(svc, "resume") } end
+      if pb.state == "playing" then return { commands = {} } end
+    end
+    local now, cmds0, seek_ms = streaming.start(doc, playlist_id, p)
     if not now then return { commands = cmds0 } end
     local cmds = {}
     if pb.state == "playing" or pb.state == "paused" or pb.state == "starting" then
       if pb.now and pb.now.service == "FILE" then cmds[#cmds + 1] = cmd_audio("stop", MUSIC) end
     end
     for _, c in ipairs(cmds0) do cmds[#cmds + 1] = c end
-    pb.now, pb.state, pb.position_ms, pb.resume_ms = now, "starting", 0, nil
+    pb.now, pb.state, pb.position_ms, pb.resume_ms = now, "starting", 0, seek_ms
     pb.paused_by, pb.paused_at = nil, nil
     cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
     return { state = st(pb), commands = cmds }
@@ -188,6 +200,11 @@ function playback.on_pause(doc, ev)
   if is_streaming(pb) then
     -- taking a token off pauses what a token started, not Spotify started from the phone
     if ev.source == "token" and not pb.now.playlist then return nil end
+    -- a Spotify playlist set to resume first asks Spotify where it is (services.streaming saves it)
+    local p = ev.source == "token" and doc.library and doc.library.playlists[pb.now.playlist]
+    if p and p.resume and pb.now.service == "SPOTIFY" then
+      return { commands = { emit("streaming.save_resume", { playlist = pb.now.playlist, position_ms = pb.position_ms }) } }
+    end
     return stream_cmds(pb, "pause")
   end
   pb.paused_by, pb.paused_at = ev.source, ev.now
@@ -299,6 +316,11 @@ function playback.on_external(doc, ev)
   if ev.state then
     pb.state = ev.state
     cmds[#cmds + 1] = emit("playback.changed", { state = ev.state })
+    -- a saved Spotify position: the preset starts its track at 0, the seek waits until it plays
+    if ev.state == "playing" and pb.resume_ms and pb.now and pb.now.service == "SPOTIFY" then
+      for _, c in ipairs(require("services.streaming").transport("SPOTIFY", "seek", pb.resume_ms)) do cmds[#cmds + 1] = c end
+      pb.resume_ms = nil
+    end
   end
   return { state = { playback = pb }, commands = #cmds > 0 and cmds or nil }
 end

@@ -22,7 +22,7 @@
       live: true,
       sig: function () {
         var g = tokenGroups(); var p = playlistOfChar(sid);
-        return JSON.stringify([g.groups[sid], p && p.id, S.nfc.tagId, (g.groups[sid] || []).map(function (tag) { return (S.db.tokens[tag] || {}).image || ''; })]);
+        return JSON.stringify([g.groups[sid], p && p.id, p && !!p.resume, S.nfc.tagId, (g.groups[sid] || []).map(function (tag) { return (S.db.tokens[tag] || {}).image || ''; })]);
       },
       render: function () {
         var p = playlistOfChar(sid);
@@ -53,6 +53,7 @@
           foreign && tags.length ? [h('a', { class: 'btn', 'data-k': 'maketoken', href: TOKENS_PAGE + '?uid=' + tags[0], target: '_blank', rel: 'noopener' }, icon('tag'), t('make_token')),
             h('p', { class: 'small muted' }, t('make_token_tip'))] : null,
           h('label', { class: 'field' }, h('span', null, t('launches')), sel),
+          p && p.spotify ? resumeSwitch(p, p.id) : null,
           tags.map(function (tag, i) {
             var tk = S.db.tokens[tag] || {};
             var live = S.nfc.tagId === tag;

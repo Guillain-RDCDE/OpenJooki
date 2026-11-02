@@ -4,7 +4,7 @@
 --                 (mutate the table they are given; the handlers copy first)
 --   handlers      boot + api commands, returning state changes and file writes
 -- Data shapes are those of 1.x (docs/22 §4) so that 1.x and 2.0 share files.
---   playlists[id] = { title, tracks = {trackId...}, star?, audiobook?, shuffle_mode?, repeat_mode?, image?, plType?, spotify?, deezer? }
+--   playlists[id] = { title, tracks = {trackId...}, star?, audiobook?, resume?, shuffle_mode?, repeat_mode?, image?, plType?, spotify?, deezer? }
 --   (shuffle_mode / repeat_mode: the playlist's own, #22; absent = the Settings')
 --   tracks[id]    = { filename, userFilename?, title, album, artist, duration, size, hasImage, isUrl? }
 --   tokens[uid]   = { starId, seen, name?, image? }
@@ -206,7 +206,7 @@ function ops.playlist_add_stream(lib, id, title, url, now)
   return tid
 end
 
---- Update title / character / audiobook / shuffle / repeat / track order. Returns true, { removed_files = {...} }.
+--- Update title / character / audiobook / resume / shuffle / repeat / track order. Returns true, { removed_files = {...} }.
 function ops.playlist_update(lib, args)
   local id = args.id
   if id == TRASH and (args.title ~= nil or args.star ~= nil or args.audiobook ~= nil) then
@@ -229,6 +229,8 @@ function ops.playlist_update(lib, args)
     if not ok then return nil, err end
   end
   if type(args.audiobook) == "boolean" then p.audiobook = args.audiobook or nil end
+  -- a Spotify or Deezer playlist put back on continues where it paused (services.playback)
+  if type(args.resume) == "boolean" then p.resume = args.resume or nil end
   -- its own shuffle / repeat (#22); "settings" goes back to the Settings' ones
   if args.shuffle_mode == "settings" then p.shuffle_mode = nil
   elseif type(args.shuffle_mode) == "boolean" then p.shuffle_mode = args.shuffle_mode
@@ -377,7 +379,7 @@ S.id = { type = "string", minLength = 1, maxLength = 80 }
 S.playlist_new = { type = "object", properties = { title = { type = "string", maxLength = 200 }, audiobook = { type = "boolean" }, star = { type = "string", maxLength = 64 } }, additionalProperties = false }
 S.playlist_id = { type = "object", required = { "id" }, properties = { id = S.id }, additionalProperties = false }
 S.playlist_update = { type = "object", required = { "id" }, additionalProperties = false,
-  properties = { id = S.id, title = { type = "string", maxLength = 200 }, star = { type = { "string", "boolean" } }, audiobook = { type = "boolean" },
+  properties = { id = S.id, title = { type = "string", maxLength = 200 }, star = { type = { "string", "boolean" } }, audiobook = { type = "boolean" }, resume = { type = "boolean" },
                  shuffle_mode = { type = { "boolean", "string" } }, repeat_mode = { type = { "integer", "string" } },
                  tracks = { type = "array", items = { type = "string" }, maxItems = 2000 } } }
 S.add_track = { type = "object", required = { "id", "trackId" }, properties = { id = S.id, trackId = S.id }, additionalProperties = false }
@@ -396,15 +398,6 @@ function library.install(api, dispatch)
       if not id then return nil, err end
       lib.playlists[id].image, lib.playlists[id].spotify, lib.playlists[id].deezer = ev.image, ev.spotify, ev.deezer
       return id
-    end)
-  end)
-  -- a Spotify character saved again where it is, to resume there next time (services.streaming, #24)
-  dispatch.on("library.set_preset", "library", function(doc, ev)
-    return mutate(doc, { playlists = true }, function(lib)
-      local p = lib.playlists[ev.id]
-      if not (p and p.spotify and type(ev.preset) == "string" and ev.preset ~= "") then return nil, { code = "not_found", field = "id", message = "no Spotify playlist" } end
-      p.spotify = { uri = p.spotify.uri, preset = ev.preset }
-      return true
     end)
   end)
   api.command("playlist.new", S.playlist_new, function(doc, p, ev)

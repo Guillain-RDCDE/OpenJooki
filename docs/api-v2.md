@@ -551,6 +551,9 @@ Payload schema:
     "repeat_mode": {
       "type": ["integer", "string"]
     },
+    "resume": {
+      "type": "boolean"
+    },
     "shuffle_mode": {
       "type": ["boolean", "string"]
     },

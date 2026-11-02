@@ -229,6 +229,8 @@ local boot_event = {
   -- the Wi-Fi watchdog (services.network): restarts it already made in a row, and a silent start after one
   wifi_watchdog = files.read_text(config.get("wifi_watchdog_file")),
   quiet_boot = files.exists(config.get("quiet_boot_file")),
+  -- spotify_ctrl can start a playlist at a track and time (services.streaming)
+  spotify_direct = files.exists(config.get("spotify_direct_file")),
   -- the security switches (services.security): the LAN flag, the maintenance keys, the parent code
   security = { mqtt_lan = files.exists(security.FILES.lan), authorized_keys = files.read_text(security.FILES.keys),
                parent_code = files.read_text(security.FILES.parent) },

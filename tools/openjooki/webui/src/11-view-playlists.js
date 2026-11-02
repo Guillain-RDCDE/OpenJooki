@@ -157,6 +157,12 @@
       });
     } }, icon('trash'), t('delete_playlist')));
   }
+  // "Pick up where it stopped" of a Spotify playlist: on its page and on its character's sheet
+  function resumeSwitch(p, id) {
+    return h('div', { class: 'card', style: 'margin-top:16px' },
+      h('label', { class: 'switch' }, h('div', null, h('div', null, t('sp_resume')), h('div', { class: 'small muted' }, t('sp_resume_help'))),
+        h('input', { type: 'checkbox', role: 'switch', checked: !!p.resume, 'data-k': 'spresume', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, resume: e.target.checked } }); } })));
+  }
   function viewPlaylist(id) {
     if (id === 'TRASH') { setTimeout(function () { go('#/library/unused'); }, 0); return []; }
     var p = pls()[id];
@@ -191,10 +197,7 @@
       return [head, h('div', { class: 'actions' },
           h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
-        // resume where it stopped (#24): saved again from Spotify when its token comes off
-        h('div', { class: 'card', style: 'margin-top:16px' },
-          h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('sp_resume_help'))),
-            h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'spresume', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } }))),
+        resumeSwitch(p, id),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },

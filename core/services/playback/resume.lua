@@ -1,5 +1,6 @@
 -- services.playback.resume: where an audiobook starts again (the 1.3 rules), kept in resume.json.
--- Owns state.resume = { [playlist] = { id, pos, t } } (persisted as resume.json, 1.3 shape) and the
+-- Owns state.resume = { [playlist] = { id, pos, t } } (persisted as resume.json, 1.3 shape; a Spotify
+-- playlist set to resume adds `preset`, Spotify's for the track `id` names, see services.streaming) and the
 -- flag playback_int.resume_dirty: a position noted but not yet on disk, which the save timer (every
 -- 60 s) and the shutdown flush write. The facade, services.playback, notes the positions the engine
 -- reports (on_audio) with the helpers here and asks resume_for where an audiobook starts. The
@@ -62,7 +63,10 @@ end
 function resume.on_boot(_, ev)
   local saved = {}
   for k, v in pairs(ev.resume or {}) do
-    if type(v) == "table" and type(v.id) == "string" then saved[k] = { id = v.id, pos = tonumber(v.pos) or 0, t = v.t == true or nil } end
+    if type(v) == "table" and type(v.id) == "string" then
+      saved[k] = { id = v.id, pos = tonumber(v.pos) or 0, t = v.t == true or nil, preset = type(v.preset) == "string" and v.preset or nil,
+                   album = type(v.album) == "string" and v.album or nil }
+    end
   end
   return { state = { resume = saved }, commands = { { kind = "timer.every", name = "playback.save", seconds = 60 } } }
 end
@@ -88,6 +92,33 @@ function resume.on_resume_reset(doc, playlist_id)
   return { state = { resume = saved }, commands = { write_resume(doc, saved) } }
 end
 
+--- playback.spotify_resume { playlist, title, album?, position_ms, preset?, flush? } (services.streaming):
+--- with a preset, the new place of a Spotify playlist; without, the time in the track already
+--- saved, when it is still that track. `flush`: the token was taken off, written at once; otherwise
+--- the save timer writes it.
+function resume.on_spotify(doc, ev)
+  local playback = facade()
+  local saved = resume_copy(doc)
+  local e, ms = saved[ev.playlist], math.floor(tonumber(ev.position_ms) or 0)
+  local title = tostring(ev.title or "")
+  if ev.preset then
+    saved[ev.playlist] = { id = title, album = ev.album, pos = ms, preset = ev.preset }
+  elseif e and e.preset and e.id == title and e.album == ev.album and math.abs((e.pos or 0) - ms) >= 1000 then
+    e.pos = ms
+  else
+    return nil
+  end
+  local pb = playback.pb_of(doc)
+  if ev.flush then
+    pb.resume_dirty = nil
+    local s = playback.st(pb); s.resume = saved
+    return { state = s, commands = { write_resume(doc, saved) } }
+  end
+  pb.resume_dirty = true
+  local s = playback.st(pb); s.resume = saved
+  return { state = s }
+end
+
 function resume.on_shutdown(doc)
   local pb = facade().pb_of(doc)
   if not pb.resume_dirty then return nil end
@@ -102,6 +133,7 @@ function resume.install(api, dispatch)
   dispatch.on("boot", "playback.resume", resume.on_boot)
   dispatch.on_timer("playback.save", "playback.resume", resume.on_save)
   dispatch.on("host.terminating", "playback.resume", resume.on_shutdown)
+  dispatch.on("playback.spotify_resume", "playback.resume", resume.on_spotify)
   api.command("playback.resume_reset", S.playlist, function(doc, p) return resume.on_resume_reset(doc, p.playlist) end)
 end
 

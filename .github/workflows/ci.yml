@@ -143,6 +143,9 @@ jobs:
       - name: the updater scripts (docs/o.sh, docs/b.sh) under busybox, checking what they fetch
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_updater.py
+      - name: the spotify_ctrl patch, and patch webui with an unknown build
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_spotify_direct.py
       - name: jooki.py's A/B switch waits for a slow Jooki and leaves an armed trial alone
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_ab_switch.py

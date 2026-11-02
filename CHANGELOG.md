@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.14 (2 November 2026) — A story picks up where it stopped
 - **A Spotify character can resume where it stopped** (#24, asked by sbfnk): open its playlist
   and switch **Audiobook** on. Taking its token off keeps the place, and next time it starts again
   on the same song. Not always at the same second: that part is up to Spotify. Off by default.

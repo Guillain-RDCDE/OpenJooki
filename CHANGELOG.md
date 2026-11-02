@@ -8,7 +8,9 @@
   the character still on it. If the playlist was played on the phone since, the character goes
   on from the phone's place instead. Each character has its own switch. When new episodes have
   been added at the top of the playlist since, the Jooki finds the chapter it stopped in: it skips
-  ahead in silence for a few seconds until that chapter comes.
+  ahead in silence for a few seconds until that chapter comes. This switch replaces the
+  *Audiobook* switch that 2.4.14 put on Spotify playlists: with it, Spotify still started the
+  playlist from its first track.
 - For the tinkerers: playlists gain `resume` (v1 `PLAYLIST_UPDATE`, v2 `playlist.update`). With
   it, the place goes to `resume.json` next to the audiobooks' (`preset`, the track as `id`, `pos`):
   every 30 s while it plays the time in the track is noted, counted on from Spotify's last
@@ -31,6 +33,14 @@
   its SHA-256, and writes `/jooki/lib/spotify-direct` for the core. With any other build nothing
   changes, and a saved place plays its preset and seeks once Spotify plays, from the playlist's
   first track.
+
+## OpenJooki 2.4.14 (2 November 2026) — A story picks up where it stopped
+- **A Spotify character can resume where it stopped** (#24, asked by sbfnk): open its playlist
+  and switch **Audiobook** on. Taking its token off keeps the place, and next time it starts again
+  on the same song. Not always at the same second: that part is up to Spotify. Off by default.
+- For the tinkerers: Spotify's own daemon always starts a preset from its beginning
+  (`SpPlayPreset` with `playback_position` 0, in Muuselabs' closed binary), so the core asks it
+  for a new preset (`save_preset`) when such a token comes off and keeps it in the playlist.
 
 ## OpenJooki 2.4.13 (2 November 2026) — Shuffle your way
 - **The heart no longer switches off by accident** (#20): when *Short press on the heart* does

@@ -548,6 +548,9 @@ Payload schema:
       "minLength": 1,
       "type": "string"
     },
+    "resume": {
+      "type": "boolean"
+    },
     "star": {
       "type": ["string", "boolean"]
     },

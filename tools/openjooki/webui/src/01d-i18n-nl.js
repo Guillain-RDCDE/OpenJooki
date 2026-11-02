@@ -90,7 +90,7 @@
     sp_saved: function (c, n) { return 'Klaar: ' + c + ' speelt „' + n + '”'; },
     sp_timeout: 'Spotify antwoordde niet. Speel de muziek opnieuw af in de Spotify-app en probeer het nog eens.',
     err_sp_not_playing: 'Speel eerst de muziek op de Jooki af vanuit de Spotify-app.',
-    sp_playlist: 'Spotify-afspeellijst', sp_playlist_help: 'Deze afspeellijst speelt vanuit Spotify: er kunnen geen bestanden aan worden toegevoegd. Om de muziek te veranderen, speel ze af in Spotify en zet ze opnieuw op het figuurtje.',
+    sp_resume: 'Verdergaan waar het stopte', sp_resume_help: 'Zet het figuurtje terug en de afspeellijst speelt verder waar ze stopte, een paar seconden eerder, ook na een ander figuurtje of een herstart. Uit: ze begint telkens opnieuw bij het begin.', sp_playlist: 'Spotify-afspeellijst', sp_playlist_help: 'Deze afspeellijst speelt vanuit Spotify: er kunnen geen bestanden aan worden toegevoegd. Om de muziek te veranderen, speel ze af in Spotify en zet ze opnieuw op het figuurtje.',
     s_sp: 'Spotify', sp_set: 'Ingesteld', sp_unset: 'Niet ingesteld', sp_guest_v: 'Ander account',
     sp_own_t: 'Spotify is ingesteld', sp_own: 'Figuurtjes spelen op het eigen account van de Jooki, ook na een herstart.',
     sp_guest_t: 'Er speelt een ander account', sp_guest: 'Op dit moment speelt de Jooki voor een ander Spotify-account. Bij de volgende herstart gaat hij terug naar zijn eigen account, en dan spelen de figuurtjes daarop.',

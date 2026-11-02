@@ -90,7 +90,7 @@
     sp_saved: function (c, n) { return 'C\'est fait : ' + c + ' lance « ' + n + ' »'; },
     sp_timeout: 'Spotify n\'a pas répondu. Relance la musique dans l\'appli Spotify et réessaie.',
     err_sp_not_playing: 'Lance d\'abord la musique sur le Jooki depuis l\'appli Spotify.',
-    sp_playlist: 'Playlist Spotify', sp_playlist_help: 'Cette playlist se joue depuis Spotify : on ne peut pas y ajouter de fichiers. Pour changer la musique, fais-la jouer dans Spotify et remets-la sur le personnage.',
+    sp_resume: 'Reprendre où on s’est arrêté', sp_resume_help: 'Le personnage reposé, la playlist reprend là où elle s’est arrêtée, quelques secondes avant, même après un autre personnage ou un redémarrage. Désactivé : elle repart du début à chaque fois.', sp_playlist: 'Playlist Spotify', sp_playlist_help: 'Cette playlist se joue depuis Spotify : on ne peut pas y ajouter de fichiers. Pour changer la musique, fais-la jouer dans Spotify et remets-la sur le personnage.',
     s_sp: 'Spotify', sp_set: 'Configuré', sp_unset: 'Pas configuré', sp_guest_v: 'Autre compte',
     sp_own_t: 'Spotify est configuré', sp_own: 'Les jetons jouent sur le compte du Jooki, même après un redémarrage.',
     sp_guest_t: 'Un autre compte joue', sp_guest: 'En ce moment, le Jooki joue pour un autre compte Spotify. À son prochain redémarrage, il revient à son propre compte, et les jetons jouent sur celui-là.',

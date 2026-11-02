@@ -13,6 +13,9 @@ config.defaults = {
   plugged_file = "/sys/kernel/htdrv/plugged",  -- "1" when the charger is in (read once at boot, like 1.x)
   wifi_watchdog_file = "/data/openjooki/wifi_watchdog",   -- restarts in a row made by the Wi-Fi watchdog
   quiet_boot_file = "/data/openjooki/quiet_boot",         -- present: the next start plays no "ready" chime
+  -- present when the installer patched spotify_ctrl to start a playlist at a track and time
+  -- (tools/openjooki/spotify_direct.py); on the partition itself, so a rollback leaves it behind
+  spotify_direct_file = "/jooki/lib/spotify-direct",
   -- bus
   mqtt_host = "127.0.0.1",
   mqtt_port = 1883,

@@ -340,8 +340,13 @@ CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh",
                      # the broker always starts from its own settings, never from the card's FAT partition
                      "/etc/rcS.d/S58_mosquitto.sh": "S58_mosquitto.sh"}
 def system_files(core=None): return dict(SYSTEM_FILES, **(CORE_SYSTEM_FILES if core else {}))
+# Only with the core: spotify_ctrl patched to start a playlist at a track and time
+# (spotify_direct.py), built from the Jooki's own copy, and the file that tells the core so.
+SPOTIFY_CTRL = "/jooki/bin/spotify_ctrl"
+SPOTIFY_DIRECT_FLAG = "/jooki/lib/spotify-direct"
 # Files that must stay executable (init runs rcS directly: without +x the Jooki would not start).
 SYSTEM_MODES = {"/etc/init.d/rcS": "755", "/jooki/bin/ml-start-app.sh": "755", "/jooki/bin/ml-jooki-hostname.sh": "755",
+                SPOTIFY_CTRL: "755",
                 "/etc/rcS.d/S57_oj-security.sh": "755", "/etc/rcS.d/S55_ml-start-wifi.sh": "755",
                 "/etc/rcS.d/S58_mosquitto.sh": "755"}
 def file_mode(path): return SYSTEM_MODES.get(path, "644")
@@ -481,7 +486,19 @@ def _webui_build(host, core):
     for path, f in system_files(core).items():
         with open(os.path.join(SYSTEM_DIR, f), "rb") as fh: files[path] = fh.read()
     files.update(core_side_files(core))   # /jooki/lib/core.lua for a loader player.lib (ADR-0011)
+    if core: files.update(spotify_direct_files(host))
     return r.stdout, lib, files
+
+def spotify_direct_files(host):
+    """The patched spotify_ctrl and its flag, built from the Jooki's original; nothing for a build
+       the patch was not made for (Spotify characters then start their playlist from the top)."""
+    import spotify_direct
+    r = ssh_bytes(host, "cat %s.openjooki-orig 2>/dev/null || cat %s" % (SPOTIFY_CTRL, SPOTIFY_CTRL))
+    data = r.stdout if r.returncode == 0 else b""
+    patched = data if spotify_direct.is_patched(data) else spotify_direct.patch(data)
+    if not patched:
+        log("spotify_ctrl: unknown build (%d bytes), left as it is" % len(data)); return {}
+    return {SPOTIFY_CTRL: patched, SPOTIFY_DIRECT_FLAG: b"spotify_ctrl patched by spotify_direct.py\n"}
 
 def _webui_expected(lib, files, root=""):
     exp = {root+PLAYER_LIB: _md5(lib)}
@@ -537,7 +554,7 @@ def ab_webui(host, dry_run=False, core=None):
                  % (WWW_PUBLIC, o, WWW_ORIG, o, WWW_ORIG, d, WWW_PUBLIC, o, WWW_ORIG, o))
     for o in WEBUI_STALE:
         prep += "rm -f $R%s/%s; " % (WWW_PUBLIC, o)
-    for path in system_files(core):
+    for path in list(system_files(core)) + ([SPOTIFY_CTRL] if SPOTIFY_CTRL in files else []):
         # keep the original once; a file OpenJooki adds (no original on the base image) has none
         prep += "if [ -e $R%s ] && [ ! -e $R%s.openjooki-orig ]; then cp -a $R%s $R%s.openjooki-orig; fi; " % (path, path, path, path)
     prep += "sync; echo PREP_OK"

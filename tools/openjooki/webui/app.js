@@ -102,7 +102,7 @@
     sp_saved: function (c, n) { return 'C\'est fait : ' + c + ' lance « ' + n + ' »'; },
     sp_timeout: 'Spotify n\'a pas répondu. Relance la musique dans l\'appli Spotify et réessaie.',
     err_sp_not_playing: 'Lance d\'abord la musique sur le Jooki depuis l\'appli Spotify.',
-    sp_playlist: 'Playlist Spotify', sp_playlist_help: 'Cette playlist se joue depuis Spotify : on ne peut pas y ajouter de fichiers. Pour changer la musique, fais-la jouer dans Spotify et remets-la sur le personnage.',
+    sp_resume: 'Reprendre où on s’est arrêté', sp_resume_help: 'Le personnage reposé, la playlist reprend là où elle s’est arrêtée, quelques secondes avant, même après un autre personnage ou un redémarrage. Désactivé : elle repart du début à chaque fois.', sp_playlist: 'Playlist Spotify', sp_playlist_help: 'Cette playlist se joue depuis Spotify : on ne peut pas y ajouter de fichiers. Pour changer la musique, fais-la jouer dans Spotify et remets-la sur le personnage.',
     s_sp: 'Spotify', sp_set: 'Configuré', sp_unset: 'Pas configuré', sp_guest_v: 'Autre compte',
     sp_own_t: 'Spotify est configuré', sp_own: 'Les jetons jouent sur le compte du Jooki, même après un redémarrage.',
     sp_guest_t: 'Un autre compte joue', sp_guest: 'En ce moment, le Jooki joue pour un autre compte Spotify. À son prochain redémarrage, il revient à son propre compte, et les jetons jouent sur celui-là.',
@@ -303,7 +303,7 @@
     sp_saved: function (c, n) { return 'Done: ' + c + ' plays “' + n + '”'; },
     sp_timeout: 'Spotify did not answer. Play the music again in the Spotify app and try again.',
     err_sp_not_playing: 'First play the music on the Jooki from the Spotify app.',
-    sp_playlist: 'Spotify playlist', sp_playlist_help: 'This playlist plays from Spotify: files cannot be added to it. To change the music, play it in Spotify and put it on the character again.',
+    sp_resume: 'Pick up where it stopped', sp_resume_help: 'Put the character back on and the playlist continues where it stopped, a few seconds back, even after another character or a restart. Off: it starts from the beginning every time.', sp_playlist: 'Spotify playlist', sp_playlist_help: 'This playlist plays from Spotify: files cannot be added to it. To change the music, play it in Spotify and put it on the character again.',
     s_sp: 'Spotify', sp_set: 'Set up', sp_unset: 'Not set up', sp_guest_v: 'Another account',
     sp_own_t: 'Spotify is set up', sp_own: 'Tokens play on the Jooki’s own account, even after a restart.',
     sp_guest_t: 'Another account is playing', sp_guest: 'Right now the Jooki plays for another Spotify account. At its next restart it goes back to its own account, and tokens play on that one.',
@@ -504,7 +504,7 @@
     sp_saved: function (c, n) { return 'Klaar: ' + c + ' speelt „' + n + '”'; },
     sp_timeout: 'Spotify antwoordde niet. Speel de muziek opnieuw af in de Spotify-app en probeer het nog eens.',
     err_sp_not_playing: 'Speel eerst de muziek op de Jooki af vanuit de Spotify-app.',
-    sp_playlist: 'Spotify-afspeellijst', sp_playlist_help: 'Deze afspeellijst speelt vanuit Spotify: er kunnen geen bestanden aan worden toegevoegd. Om de muziek te veranderen, speel ze af in Spotify en zet ze opnieuw op het figuurtje.',
+    sp_resume: 'Verdergaan waar het stopte', sp_resume_help: 'Zet het figuurtje terug en de afspeellijst speelt verder waar ze stopte, een paar seconden eerder, ook na een ander figuurtje of een herstart. Uit: ze begint telkens opnieuw bij het begin.', sp_playlist: 'Spotify-afspeellijst', sp_playlist_help: 'Deze afspeellijst speelt vanuit Spotify: er kunnen geen bestanden aan worden toegevoegd. Om de muziek te veranderen, speel ze af in Spotify en zet ze opnieuw op het figuurtje.',
     s_sp: 'Spotify', sp_set: 'Ingesteld', sp_unset: 'Niet ingesteld', sp_guest_v: 'Ander account',
     sp_own_t: 'Spotify is ingesteld', sp_own: 'Figuurtjes spelen op het eigen account van de Jooki, ook na een herstart.',
     sp_guest_t: 'Er speelt een ander account', sp_guest: 'Op dit moment speelt de Jooki voor een ander Spotify-account. Bij de volgende herstart gaat hij terug naar zijn eigen account, en dan spelen de figuurtjes daarop.',
@@ -1975,6 +1975,12 @@
       });
     } }, icon('trash'), t('delete_playlist')));
   }
+  // "Pick up where it stopped" of a Spotify playlist: on its page and on its character's sheet
+  function resumeSwitch(p, id) {
+    return h('div', { class: 'card', style: 'margin-top:16px' },
+      h('label', { class: 'switch' }, h('div', null, h('div', null, t('sp_resume')), h('div', { class: 'small muted' }, t('sp_resume_help'))),
+        h('input', { type: 'checkbox', role: 'switch', checked: !!p.resume, 'data-k': 'spresume', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, resume: e.target.checked } }); } })));
+  }
   function viewPlaylist(id) {
     if (id === 'TRASH') { setTimeout(function () { go('#/library/unused'); }, 0); return []; }
     var p = pls()[id];
@@ -2009,6 +2015,7 @@
       return [head, h('div', { class: 'actions' },
           h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
+        resumeSwitch(p, id),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },
@@ -2260,7 +2267,7 @@
       live: true,
       sig: function () {
         var g = tokenGroups(); var p = playlistOfChar(sid);
-        return JSON.stringify([g.groups[sid], p && p.id, S.nfc.tagId, (g.groups[sid] || []).map(function (tag) { return (S.db.tokens[tag] || {}).image || ''; })]);
+        return JSON.stringify([g.groups[sid], p && p.id, p && !!p.resume, S.nfc.tagId, (g.groups[sid] || []).map(function (tag) { return (S.db.tokens[tag] || {}).image || ''; })]);
       },
       render: function () {
         var p = playlistOfChar(sid);
@@ -2291,6 +2298,7 @@
           foreign && tags.length ? [h('a', { class: 'btn', 'data-k': 'maketoken', href: TOKENS_PAGE + '?uid=' + tags[0], target: '_blank', rel: 'noopener' }, icon('tag'), t('make_token')),
             h('p', { class: 'small muted' }, t('make_token_tip'))] : null,
           h('label', { class: 'field' }, h('span', null, t('launches')), sel),
+          p && p.spotify ? resumeSwitch(p, p.id) : null,
           tags.map(function (tag, i) {
             var tk = S.db.tokens[tag] || {};
             var live = S.nfc.tagId === tag;

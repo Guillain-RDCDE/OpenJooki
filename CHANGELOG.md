@@ -1,5 +1,37 @@
 # OpenJooki — Changelog
 
+## Next release
+- **A Spotify character can pick up where it stopped.** Taking the character off and putting it
+  back used to start its playlist from the beginning every time. Switch on *Pick up where it
+  stopped*, on that playlist's page or on the character's sheet in Tokens, and it continues where
+  it stopped, 15 seconds back, even after another character, or after the Jooki switched off with
+  the character still on it. If the playlist was played on the phone since, the character goes
+  on from the phone's place instead. Each character has its own switch. When new episodes have
+  been added at the top of the playlist since, the Jooki finds the chapter it stopped in: it skips
+  ahead in silence for a few seconds until that chapter comes.
+- For the tinkerers: playlists gain `resume` (v1 `PLAYLIST_UPDATE`, v2 `playlist.update`). With
+  it, the place goes to `resume.json` next to the audiobooks' (`preset`, the track as `id`, `pos`):
+  every 30 s while it plays the time in the track is noted, counted on from Spotify's last
+  `position`, and each new track asks `spotify_ctrl` for a preset (`save_preset`); the save timer
+  writes it every minute. Taking the token off asks for a preset before pausing and writes at once.
+  Putting the token back sends `cont`, which moves the account's playback to the Jooki. When
+  Spotify then reports that playlist, it goes on from there; when it reports another one, or
+  nothing within 5 s, the saved track starts at its time in one request, through `spotify_ctrl`
+  patched for it. When the Jooki already plays another Spotify playlist, the saved place starts
+  at once. The place keeps the track's title and album too (`album` in `resume.json`): a track that
+  starts with another title or album, because tracks were added above it, is skipped (`next`,
+  muted) until the saved one, at most 60 tracks or 90 s, and then the time is sought
+  (`streaming.place_found`; `streaming.place_lost` when it is not found).
+- Spotify starts a preset at the top of its playlist, whatever track the preset names. The update
+  therefore patches the Jooki's own `spotify_ctrl` (`tools/openjooki/spotify_direct.py`, the
+  original kept as `spotify_ctrl.openjooki-orig`): an 84-byte payload on `play_preset` (the
+  playlist URI null-padded to 64 bytes, then five little-endian 32-bit words: track index, 0, time
+  in ms, 0, 0) goes to the Spotify library's own entry for a context at a track and time; any other
+  payload is a preset, as before. The patch is made only for the 2022 firmware's build, checked by
+  its SHA-256, and writes `/jooki/lib/spotify-direct` for the core. With any other build nothing
+  changes, and a saved place plays its preset and seeks once Spotify plays, from the playlist's
+  first track.
+
 ## OpenJooki 2.4.12 (1 November 2026) — Headphones are back
 - **Wired headphones work again** (#19): since 2.1.3 OpenJooki kept the speaker on, even with
   headphones plugged into the USB-C port. They play again, as on the original Jooki, with a

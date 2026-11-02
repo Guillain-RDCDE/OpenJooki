@@ -57,6 +57,8 @@ describe("library.ops — playlists", function()
     assert_eq(err.field, "title")
     assert_true(ops.playlist_update(l, { id = p, audiobook = false }))
     assert_nil(l.playlists[p].audiobook)
+    assert_true(ops.playlist_update(l, { id = p, resume = true })); assert_true(l.playlists[p].resume)
+    assert_true(ops.playlist_update(l, { id = p, resume = false })); assert_nil(l.playlists[p].resume)
   end)
 
   it("TRASH is read-only except for deleting really unused files", function()

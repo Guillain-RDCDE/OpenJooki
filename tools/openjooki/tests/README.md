@@ -31,6 +31,7 @@ python3 test_spotify.py && python3 test_robustness.py && python3 test_loader.py
 python3 test_httpd.py && python3 test_clock.py && python3 test_wifi_page.py
 python3 test_tokens_page.py                   # docs/tokens.html: no core needed
 python3 test_updater.py                       # docs/o.sh, docs/b.sh: no core needed
+python3 test_spotify_direct.py                # the spotify_ctrl patch: no core needed
 python3 test_ab_switch.py                     # jooki.py's A/B switch, scripted Jooki: no core needed
 python3 ../../../core/spec/integration/endurance.py 3     # minutes (default 10, what nightly.yml runs)
 ```

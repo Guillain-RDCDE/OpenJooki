@@ -90,7 +90,7 @@
     sp_saved: function (c, n) { return 'Done: ' + c + ' plays “' + n + '”'; },
     sp_timeout: 'Spotify did not answer. Play the music again in the Spotify app and try again.',
     err_sp_not_playing: 'First play the music on the Jooki from the Spotify app.',
-    sp_playlist: 'Spotify playlist', sp_playlist_help: 'This playlist plays from Spotify: files cannot be added to it. To change the music, play it in Spotify and put it on the character again.',
+    sp_resume: 'Pick up where it stopped', sp_resume_help: 'Put the character back on and the playlist continues where it stopped, a few seconds back, even after another character or a restart. Off: it starts from the beginning every time.', sp_playlist: 'Spotify playlist', sp_playlist_help: 'This playlist plays from Spotify: files cannot be added to it. To change the music, play it in Spotify and put it on the character again.',
     s_sp: 'Spotify', sp_set: 'Set up', sp_unset: 'Not set up', sp_guest_v: 'Another account',
     sp_own_t: 'Spotify is set up', sp_own: 'Tokens play on the Jooki’s own account, even after a restart.',
     sp_guest_t: 'Another account is playing', sp_guest: 'Right now the Jooki plays for another Spotify account. At its next restart it goes back to its own account, and tokens play on that one.',

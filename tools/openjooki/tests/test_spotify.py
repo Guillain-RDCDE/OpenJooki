@@ -4,7 +4,7 @@ What the family saw on 29/09/2026 with Spotify started from the phone: the page 
 and a token put on played on top of Spotify. Here, the daemon's messages are sent in the order that
 broke it ("playing" before "now_playing"), then a token, then Spotify again, then the headphones.
 """
-import json
+import json, os, struct
 from playwright.sync_api import sync_playwright
 import bench as B
 from jk import PAGE
@@ -21,6 +21,10 @@ spy = B.Spy("/j/spotify/output/#", "/j/audio/out/#", "/j/audio/input/#", name="s
 mark, since = spy.mark, spy.since
 def daemon(kind, payload=""):
     J.c.publish("/j/spotify/input/" + kind, payload if isinstance(payload, str) else json.dumps(payload))
+def resume_file():
+    try: return json.load(open(B.DB + "/resume.json"))
+    except (OSError, ValueError): return {}
+def vols(): return [int(x) for x in open(B.VOL_LOG).read().split()] if os.path.exists(B.VOL_LOG) else []
 def np(): return J.np
 def pb(): return J.pb
 
@@ -136,6 +140,58 @@ with sync_playwright() as p:
     B.poll(lambda: since(n, "/j/spotify/output/pauz"))
     check("SP8 taking the whale off pauses Spotify (a token started it)", since(n, "/j/spotify/output/pauz"), since(n, "/j/"))
     daemon("paused"); J.wait_state("audio.playback.state", "PAUSED")
+    # SP12 the whale's playlist set to pick up where it stopped: put back on, Spotify continues
+    pg.goto(URL + "/#/p/" + pid); pg.wait_for_selector("[data-k=spresume]")
+    check("SP12 the Spotify playlist's page has the switch, off", not pg.is_checked("[data-k=spresume]"))
+    pg.locator("[data-k=spresume]").check()
+    J.poll(lambda: J.pls[pid].get("resume") is True)
+    check("SP12 the switch sets the playlist's resume", J.pls[pid].get("resume") is True, J.pls[pid])
+    n = mark(); J.nfc(WHALE, "105")
+    B.poll(lambda: since(n, "/j/spotify/output/cont"))
+    check("SP12 the whale put back on continues Spotify", since(n, "/j/spotify/output/cont") and not since(n, "/j/spotify/output/play_preset"), since(n, "/j/"))
+    daemon("playing"); J.wait_state("audio.playback.state", "PLAYING")
+    daemon("position", "96824"); J.poll(lambda: J.get("audio.playback.position_ms") == 96824)
+    # taking it off asks Spotify where it is before pausing; the answer goes to resume.json
+    n = mark(); J.nfc_off()
+    B.poll(lambda: since(n, "/j/spotify/output/pauz"))
+    got = [t for t, _ in since(n, "/j/spotify/output/")]
+    check("SP12 the whale taken off asks for a preset, then pauses", got[:2] == ["/j/spotify/output/save_preset", "/j/spotify/output/pauz"], got)
+    daemon("new_preset", "WHERE-IT-WAS"); daemon("paused"); J.wait_state("audio.playback.state", "PAUSED")
+    B.poll(lambda: resume_file().get(pid, {}).get("preset"))
+    sp = resume_file().get(pid, {})
+    # the time is the last report plus the moment since, while it played
+    check("SP12 ... and resume.json keeps that preset and the time", sp.get("preset") == "WHERE-IT-WAS".encode().hex().upper()
+          and 96824 <= sp.get("pos", 0) < 96824 + 3000, sp)
+    # another character in between, then the whale: Spotify is asked to continue; with no answer, the
+    # saved preset, and the seek once Spotify plays the whale's playlist
+    J.nfc(FOX, "101"); J.wait_state("audio.playback.state", "PLAYING"); J.nfc_off(); J.wait_state("audio.playback.state", "PAUSED")
+    n = mark(); J.nfc(WHALE, "105")
+    B.poll(lambda: since(n, "/j/spotify/output/play_preset"), 10)   # after the 5 s wait for Spotify to continue
+    got = since(n, "/j/spotify/output/play_preset")
+    check("SP12 after another character the whale asks Spotify to continue first", since(n, "/j/spotify/output/cont"), since(n, "/j/"))
+    check("SP12 ... then, with no answer, plays where it stopped", got and got[0][1] == "WHERE-IT-WAS", got)
+    n = mark(); daemon("now_playing", TRACK); daemon("playing")
+    B.poll(lambda: since(n, "/j/spotify/output/seek"))
+    got = since(n, "/j/spotify/output/seek")
+    check("SP12 ... and seeks to its time, 15 s back", got and got[0][1] == str(sp.get("pos", 0) - 15000), (got, sp))
+    J.wait_state("audio.playback.state", "PLAYING")
+    n = mark(); J.nfc_off()
+    B.poll(lambda: since(n, "/j/spotify/output/pauz"))
+    daemon("new_preset", "WHERE-IT-WAS"); daemon("paused"); J.wait_state("audio.playback.state", "PAUSED")
+    # SP13 the same switch on the whale's sheet in Tokens, not on a character with files
+    pg.goto(URL + "/#/tokens"); pg.click("[data-char='Jooki.Whale']"); pg.wait_for_selector(".sheet [data-k=spresume]")
+    check("SP13 the whale's sheet has the switch, on", pg.is_checked(".sheet [data-k=spresume]"))
+    pg.locator(".sheet [data-k=spresume]").uncheck()
+    J.poll(lambda: "resume" not in J.pls[pid])
+    check("SP13 switching it off on the sheet clears the playlist's resume", "resume" not in J.pls[pid], J.pls[pid])
+    pg.locator(".sheet [data-k=spresume]").check()
+    J.poll(lambda: J.pls[pid].get("resume") is True)
+    check("SP13 ... and on again sets it", J.pls[pid].get("resume") is True, J.pls[pid])
+    pg.click("[data-k=charclose]")
+    fox = J.tokens[FOX]["starId"]
+    pg.click("[data-char='%s']" % fox); pg.wait_for_selector(".sheet [data-char-select]")
+    check("SP13 a character with files has no such switch", pg.locator(".sheet [data-k=spresume]").count() == 0)
+    pg.click("[data-k=charclose]")
     # asking while Spotify does not play: a clear message, no playlist
     before = len([v for v in J.pls.values() if v.get("spotify")])
     ne = J.mark_errors(); J.send("PLAYLIST_NEW_SPOTIFY", {"title": "x"})
@@ -193,7 +249,8 @@ with sync_playwright() as p:
     pg2 = ctx2.new_page(); csp = []
     pg2.on("console", lambda m: csp.append(m.text) if "Content Security Policy" in m.text else None)
     pg2.goto(URL + "/"); pg2.wait_for_selector(".pl[data-pl]")
-    daemon("playing"); B.quiet(0.2, "'playing' on its own first, as the daemon does"); daemon("now_playing", dict(TRACK, track="Primavera", image="spotify:image:" + COVER))
+    # another playlist than the whale's: the whale's, set to resume, played from the phone counts as the whale's
+    daemon("playing"); B.quiet(0.2, "'playing' on its own first, as the daemon does"); daemon("now_playing", dict(TRACK, source_uri="spotify:playlist:0cover", track="Primavera", image="spotify:image:" + COVER))
     J.wait_state("audio.nowPlaying.track", "Primavera")
     check("SP10 the core turns spotify:image:<id> into Spotify's image address", np().get("image") == SRC, np().get("image"))
     try: pg2.wait_for_function("s => window.__img.some(function (x) { return x[0] === 'load' && x[1] === s && x[2] > 0; })", arg=SRC, timeout=15000)
@@ -245,5 +302,78 @@ with sync_playwright() as p:
 
     check("SP7 no page error", not errs, errs)
     b.close()
+
+# SP14 the whale playing when the Jooki goes off (no token off: the button, the battery, inactivity):
+# while it plays its place is noted and saved, and after the restart the whale starts there
+TRACK2 = dict(TRACK, track="Gymnopedie No. 1", duration_ms=600000)
+J.nfc_off(); B.quiet(0.5, "the token off settles")
+n = mark(); J.nfc(WHALE, "105")
+B.poll(lambda: since(n, "/j/spotify/output/cont") or since(n, "/j/spotify/output/play_preset"))
+daemon("playing"); daemon("now_playing", TRACK2); J.wait_state("audio.playback.state", "PLAYING")
+daemon("position", "200000"); J.poll(lambda: J.get("audio.playback.position_ms") == 200000)
+B.poll(lambda: since(n, "/j/spotify/output/save_preset"), 40)
+check("SP14 while the whale plays a new track, the Jooki asks Spotify for its preset", since(n, "/j/spotify/output/save_preset"), since(n, "/j/spotify/output/"))
+daemon("new_preset", "MID-TRACK")
+B.poll(lambda: resume_file().get(pid, {}).get("preset") == "MID-TRACK".encode().hex().upper(), 75)
+check("SP14 ... and saves it to resume.json within the save timer's minute", resume_file().get(pid, {}).get("preset") == "MID-TRACK".encode().hex().upper(), resume_file())
+B.run("pkill", "-9", "-f", "harness.lua", check=False)       # power cut: no flush at exit
+saved = resume_file().get(pid, {})
+check("SP14 ... with the time in the track, counted on from Spotify's last report", saved.get("id") == "Gymnopedie No. 1" and saved.get("pos", 0) >= 200000, saved)
+J = B.restart(J)
+n = mark(); J.nfc(WHALE, "105")
+B.poll(lambda: since(n, "/j/spotify/output/play_preset"), 10)   # after the 5 s wait for Spotify to continue
+got = since(n, "/j/spotify/output/play_preset")
+check("SP14 after the restart the whale plays the saved preset", got and got[0][1] == "MID-TRACK", got)
+n = mark(); daemon("now_playing", TRACK2); daemon("playing")
+B.poll(lambda: since(n, "/j/spotify/output/seek"))
+got = since(n, "/j/spotify/output/seek")
+check("SP14 ... and seeks to the saved time, 15 s back", got and got[0][1] == str(saved.get("pos", 0) - 15000), (got, saved))
+J.wait_state("audio.playback.state", "PLAYING")
+n = mark(); J.nfc_off()
+B.poll(lambda: since(n, "/j/spotify/output/pauz"))
+daemon("new_preset", "MID-TRACK"); daemon("paused"); J.wait_state("audio.playback.state", "PAUSED")
+# SP15 the whale's playlist listened to on the phone since: Spotify continues it there, and the saved
+# place is not played over it
+J.nfc(FOX, "101"); J.wait_state("audio.playback.state", "PLAYING"); J.nfc_off(); J.wait_state("audio.playback.state", "PAUSED")
+n = mark(); J.nfc(WHALE, "105")
+B.poll(lambda: since(n, "/j/spotify/output/cont"))
+daemon("now_playing", dict(TRACK, track="Part 24")); daemon("playing"); J.wait_state("audio.playback.state", "PLAYING")
+B.quiet(6, "longer than the wait for Spotify's answer")
+check("SP15 the whale continues the phone's place", J.get("audio.nowPlaying.track") == "Part 24" and not since(n, "/j/spotify/output/play_preset"),
+      (J.get("audio.nowPlaying"), since(n, "/j/spotify/output/")))
+# SP16 spotify_ctrl patched, and two chapters added at the top of the whale's playlist since its place
+# was saved: the place starts at its saved index, where another chapter now is; that one is skipped,
+# muted, until the saved chapter, which then plays from its time at the volume it had
+J.nfc_off(); B.poll(lambda: since(n, "/j/spotify/output/pauz")); daemon("paused"); J.wait_state("audio.playback.state", "PAUSED"); J.close()
+B.run("pkill", "-9", "-f", "harness.lua", check=False)
+DIRECT = "/tmp/oj-spotify-direct"; open(DIRECT, "w").close()
+ctx_uri = TRACK["source_uri"].encode()
+def field(n, b): return bytes([n * 8 + 2, len(b)]) + b
+preset = (bytes.fromhex("088180FCFFFFFFFFFFFF01") + field(2, ctx_uri) + bytes.fromhex("1A0408001029") + bytes.fromhex("2206080010001800")
+          + field(5, b"spotify:track:0ExampleTrack000000041"))
+places = resume_file(); places[pid] = {"id": "Chapter 14", "album": "Episode 103", "pos": 96824, "preset": preset.hex().upper()}
+places["_"] = {"version": 1}   # written by hand: no sum, as 1.x wrote it
+json.dump(places, open(B.DB + "/resume.json", "w"))
+J = B.restart(config=B.core_config({"spotify_credentials_file": CRED, "spotify_direct_file": DIRECT}, "spotify-direct"))
+n = mark(); J.nfc(WHALE, "105")
+B.poll(lambda: since(n, "/j/spotify/output/play_preset"), 10)   # after the 5 s wait for Spotify to continue
+got = since(n, "/j/spotify/output/play_preset")
+req = ctx_uri + b"\0" * (64 - len(ctx_uri)) + struct.pack("<5I", 41, 0, 96824 - 15000, 0, 0)
+check("SP16 patched: the saved place goes as one request for its index and time", got and got[0][1] == req.decode(errors="replace"), got)   # the spy reads payloads as text
+CH = dict(TRACK, album="Episode 103")
+n = mark(); daemon("playing"); daemon("now_playing", dict(CH, track="Chapter 12"))
+B.poll(lambda: since(n, "/j/spotify/output/next"))
+check("SP16 another chapter at that index is skipped", since(n, "/j/spotify/output/next"), since(n, "/j/spotify/output/"))
+check("SP16 ... muted", vols()[-1:] == [0], vols()[-3:])
+n = mark(); daemon("now_playing", dict(CH, track="Chapter 13"))
+B.poll(lambda: since(n, "/j/spotify/output/next"))
+check("SP16 ... and the next one", since(n, "/j/spotify/output/next"), since(n, "/j/spotify/output/"))
+n = mark(); daemon("now_playing", dict(CH, track="Chapter 14"))
+B.poll(lambda: since(n, "/j/spotify/output/seek"))
+got = since(n, "/j/spotify/output/seek")
+check("SP16 the saved chapter plays from its time, 15 s back", got and got[0][1] == "81824" and not since(n, "/j/spotify/output/next"), since(n, "/j/spotify/output/"))
+B.poll(lambda: vols()[-1:] != [0])
+check("SP16 ... at the volume it had", vols()[-1:] not in ([], [0]), vols()[-3:])
+os.remove(DIRECT)
 spy.close(); J.nfc_off(); J.close()
 R.finish()

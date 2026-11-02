@@ -8,6 +8,8 @@
 - **Shuffle starts on a random song** (#22): with **Shuffle** on, a token starts its playlist on a
   new random order, not on the last song played. Put the same token back and the song goes on.
   Audiobooks still go on where they stopped.
+- The guide now describes the heart as it really is (#21): white (a little blue) when on,
+  orange for a low battery (it can look greenish), and still lit while the Jooki switches off.
 
 ## OpenJooki 2.4.12 (1 November 2026) — Headphones are back
 - **Wired headphones work again** (#19): since 2.1.3 OpenJooki kept the speaker on, even with

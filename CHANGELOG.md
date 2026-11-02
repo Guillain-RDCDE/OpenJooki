@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.13 (2 November 2026) — Shuffle your way
 - **The heart no longer switches off by accident** (#20): when *Short press on the heart* does
   something (**Next song** or **Pause / play**), it must be held **5 seconds** to switch the
   Jooki off, not 2. A small child pressing a bit too long keeps the music. With **Nothing**, it

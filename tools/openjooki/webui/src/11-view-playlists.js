@@ -225,10 +225,34 @@
     var more = h('div', { class: 'card', style: 'margin-top:16px' },
       h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('audiobook_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
+      // its own shuffle and repeat (#22); nothing for an audiobook or a streaming service, which do not use them
+      p.audiobook || p.spotify || p.deezer ? null : modeRows(p, id),
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
         ri >= 0 ? h('button', { class: 'btn ghost', 'data-k': 'resumereset', onclick: function () { send('OJ_RESUME_RESET', { playlistId: id }); } }, t('resume_restart')) : null) : null);
     return [head, actions, uploadsBlock(id), canHover ? dropZone(id) : null, list, more, deletePlaylistBtn(p, id)];
+  }
+  // shuffle / repeat of a playlist: its own (#22) or, without one, the Settings'
+  function plModes(p) {
+    var c = S.audio.config || {};
+    return { shuffle: p && typeof p.shuffle_mode === 'boolean' ? p.shuffle_mode : !!c.shuffle_mode,
+             rep: p && typeof p.repeat_mode === 'number' ? p.repeat_mode : (Number(c.repeat_mode) || 0) };
+  }
+  function repName(r) { return r === 2 ? t('rep_one') : r === 1 ? t('rep_all') : t('s_off'); }
+  function modeRows(p, id) {
+    var c = S.audio.config || {};
+    function row(label, k, cur, opts, onch) {
+      return h('label', { class: 'switch' }, h('div', null, label),
+        h('select', { class: 'input mini', 'data-k': k, onchange: function (e) { e.target.blur(); onch(e.target.value); } },
+          opts.map(function (o) { return h('option', { value: o[0], selected: o[0] === cur ? 'selected' : null }, o[1]); })));
+    }
+    return [
+      row(t('shuffle'), 'plshuffle', typeof p.shuffle_mode === 'boolean' ? (p.shuffle_mode ? 'on' : 'off') : 'settings',
+        [['settings', t('pl_settings', c.shuffle_mode ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
+        function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, shuffle_mode: v === 'settings' ? 'settings' : v === 'on' } }); }),
+      row(t('repeat'), 'plrepeat', typeof p.repeat_mode === 'number' ? String(p.repeat_mode) : 'settings',
+        [['settings', t('pl_settings', repName(Number(c.repeat_mode) || 0))], ['0', t('s_off')], ['1', t('rep_all')], ['2', t('rep_one')]],
+        function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, repeat_mode: v === 'settings' ? 'settings' : Number(v) } }); })];
   }
   function optimisticTracks(id, tracks) { if (pls()[id]) { pls()[id].tracks = tracks; IDX = null; render(); } }
 

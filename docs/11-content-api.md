@@ -28,7 +28,7 @@ Every command = publish a **JSON payload** on the topic **`/j/web/input/<TYPE>`*
 | Add an existing track | `PLAYLIST_ADD_TRACK` | `{playlistId, trackId}` |
 | Add a stream | `PLAYLIST_ADD_STREAM` | `{playlistId, title, url}` |
 | Remove a track | (remove) | `{playlistId, trackIndex}` |
-| Update playlist (title, order, token) | `PLAYLIST_UPDATE` | `{playlist:{…}}` |
+| Update playlist (title, order, token, its own shuffle / repeat) | `PLAYLIST_UPDATE` | `{playlist:{…}}` (`shuffle_mode` true/false, `repeat_mode` 0-2, `"settings"` for the Settings') |
 | Delete playlist | `PLAYLIST_DELETE` | `{playlistId}` |
 | Play playlist | `PLAYLIST_PLAY` | `{playlistId}` |
 | Name a token | `TOKEN_EDIT` | `{tagId, name}` |

@@ -86,6 +86,23 @@ describe("services.playback.queue — the order of a playlist", function()
     assert_eq(playback.on_request(doc, { playlist = "big", now = 501 }).state.playback.now.index, index)
   end)
 
+  it("a playlist's own shuffle wins over the Settings', both ways (#22)", function()
+    local doc = doc_with()
+    local music = doc.library.playlists.music
+    assert_false((queue.modes(doc, music)))
+    music.shuffle_mode = true
+    local pb = { shuffle = {}, seed = 7 }
+    assert_true((queue.modes(doc, music)))
+    assert_eq(#queue.queue_for(doc, pb, "music", music), 3); assert_eq(pb.shuffle.music ~= nil, true)
+    doc.audiocfg.shuffle_mode = true; music.shuffle_mode = false
+    assert_eq(queue.queue_for(doc, { shuffle = {}, seed = 7 }, "music", music), { 1, 2, 3 })
+    music.shuffle_mode = nil
+    doc.audiocfg.repeat_mode = 2
+    assert_eq(select(2, queue.modes(doc, music)), 2)
+    music.repeat_mode = 0
+    assert_eq(select(2, queue.modes(doc, music)), 0)
+  end)
+
   it("index_of: where a track sits in the queue", function()
     assert_eq(queue.index_of({ 3, 1, 2 }, 1), 2); assert_eq(queue.index_of({ 3, 1, 2 }, 3), 1)
     assert_nil(queue.index_of({ 3, 1, 2 }, 4))

@@ -17,11 +17,20 @@ local function shuffled(n, seed)
   return order
 end
 
+--- Shuffle (true / false) and repeat (0 none, 1 all, 2 this one) for a playlist: its own when it
+--- has one (playlists[id].shuffle_mode / repeat_mode, #22), else the Settings' (audiocfg).
+function queue.modes(doc, p)
+  local cfg = doc.audiocfg or {}
+  local shuffle, rep = p.shuffle_mode, p.repeat_mode
+  if shuffle == nil then shuffle = cfg.shuffle_mode == true end
+  if rep == nil then rep = tonumber(cfg.repeat_mode) or 0 end
+  return shuffle, rep
+end
+
 --- The order in which a playlist's tracks are played (identity or a memoised shuffle).
 function queue.queue_for(doc, pb, playlist_id, p)
   local n = #p.tracks
-  local cfg = doc.audiocfg or {}
-  if not cfg.shuffle_mode or p.audiobook then
+  if not queue.modes(doc, p) or p.audiobook then
     local q = {}
     for i = 1, n do q[i] = i end
     return q

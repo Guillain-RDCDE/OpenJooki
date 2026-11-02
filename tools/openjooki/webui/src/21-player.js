@@ -59,9 +59,9 @@
     openModal({
       live: true,
       sig: function () {
-        var np = S.audio.nowPlaying, c = S.audio.config;
+        var np = S.audio.nowPlaying, c = S.audio.config, pl0 = pls()[np.playlistId];
         var sl = sleepInfo() || {};
-        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, sl.mode, sl.total, sl.auto].join('|');
+        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];
@@ -70,7 +70,12 @@
         var stream = np.service === 'STREAM';
         // an audiobook is never shuffled nor repeated (queue.lua): ±15 s instead of the two toggles, as the original page did
         var book = !!(pl && pl.audiobook) && !stream;
-        var rep = Number(cfg.repeat_mode) || 0;
+        // a playlist of ours: its own shuffle / repeat (#22), and the toggles change that playlist's;
+        // Spotify (from the phone or a playlist) keeps the Jooki-wide ones, which go to the Spotify app
+        var own = !!(pl && np.playlistId && !isSpotify());
+        var md = own ? plModes(pl) : { shuffle: !!cfg.shuffle_mode, rep: Number(cfg.repeat_mode) || 0 };
+        var rep = md.rep;
+        function setMode(k, v) { if (own) { var o = { id: np.playlistId }; o[k] = v; send('PLAYLIST_UPDATE', { playlist: o }); } else { var c2 = {}; c2[k] = v; send('SET_CFG', c2); } }
         var art = h('div', { class: 'art' });
         if (np.image) {
           var ai = h('img', { src: coverSrc(np.image), alt: '' });
@@ -95,8 +100,8 @@
             oninput: function (e) { volDrag = Number(e.target.value); }, onchange: function (e) { volDrag = null; send('SET_VOL', { vol: Number(e.target.value) }); } })),
           // shuffle and repeat do nothing for an audiobook or a radio: not shown then. Repeat goes off -> all -> this one
           book || stream ? null : h('div', { class: 'toggles' },
-            h('button', { class: 'toggle' + (cfg.shuffle_mode ? ' on' : ''), 'aria-pressed': String(!!cfg.shuffle_mode), 'data-k': 'npshuffle', onclick: function () { send('SET_CFG', { shuffle_mode: !cfg.shuffle_mode }); } }, icon('shuffle'), t('shuffle')),
-            h('button', { class: 'toggle' + (rep ? ' on' : ''), 'aria-pressed': String(rep > 0), 'data-k': 'nprepeat', 'data-mode': String(rep), onclick: function () { send('SET_CFG', { repeat_mode: (rep + 1) % 3 }); } }, icon('repeat'), rep === 2 ? t('repeat_one') : t('repeat'))),
+            h('button', { class: 'toggle' + (md.shuffle ? ' on' : ''), 'aria-pressed': String(md.shuffle), 'data-k': 'npshuffle', onclick: function () { setMode('shuffle_mode', !md.shuffle); } }, icon('shuffle'), t('shuffle')),
+            h('button', { class: 'toggle' + (rep ? ' on' : ''), 'aria-pressed': String(rep > 0), 'data-k': 'nprepeat', 'data-mode': String(rep), onclick: function () { setMode('repeat_mode', (rep + 1) % 3); } }, icon('repeat'), rep === 2 ? t('repeat_one') : t('repeat'))),
           // Spotify started from the phone: offer to put it on a character
           np.service === 'SPOTIFY' && !np.playlistId ? h('div', { class: 'actions', style: 'justify-content:center;margin-top:12px' },
             h('button', { class: 'btn primary', 'data-k': 'spsave', onclick: spotifySaveModal }, icon('plus'), t('sp_save'))) : null,

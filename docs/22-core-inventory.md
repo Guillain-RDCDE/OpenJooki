@@ -114,7 +114,7 @@ handler is caught (`ERR_HANDLER`) instead of killing the process.
 | `PLAYLIST_ADD_STREAM` | `{playlistId, title, url}` | web radio track `stream_<time>` |
 | `PLAYLIST_ADD_FILE` | `{playlistId?, filename}` | imports a file already in `uploads/` |
 | `PLAYLIST_ADD_UPLOAD` | `{playlistId?, uploadId, filename}` | see 4.3 |
-| `PLAYLIST_UPDATE` | `{playlist{id, title?, star?/tagId?, tracks?, audiobook?}}` | rename / link / reorder / remove / flag |
+| `PLAYLIST_UPDATE` | `{playlist{id, title?, star?/tagId?, tracks?, audiobook?, shuffle_mode?, repeat_mode?}}` (the last two: the playlist's own, `"settings"` = the Settings', 2.4.13) | rename / link / reorder / remove / flag |
 | `PLAYLIST_DELETE` | `{playlistId}` | tracks go to "Unused tracks" |
 | `TOKEN_EDIT` | `{tagId, name?, image?}` | label a physical token |
 | `TOKEN_DELETE` | `{tagId}` | forget a token |

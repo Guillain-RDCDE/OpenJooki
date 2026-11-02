@@ -142,6 +142,24 @@ describe("services.playback — transport and end of track", function()
     assert_eq(r.state.playback.now.index, 2); assert_true(has(r, "play 7\tfile:///d/uploads/b"))
   end)
 
+  it("a playlist's own repeat wins over the Settings' (#22)", function()
+    local doc = doc_with({ repeat_mode = 1 })                     -- Settings: repeat all
+    doc.library.playlists.music.repeat_mode = 0                   -- this playlist: no repeat
+    apply(doc, playback.on_request(doc, { playlist = "music", index = 3 }))
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    assert_eq(playback.on_audio(doc, { type = "audio.ended", id = 7 }).state.playback.state, "ended")
+    doc = doc_with()                                              -- Settings: no repeat
+    doc.library.playlists.music.repeat_mode = 2                   -- this playlist: this one
+    apply(doc, playback.on_request(doc, { playlist = "music", index = 2 }))
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    local r = playback.on_audio(doc, { type = "audio.ended", id = 7 })
+    assert_eq(r.state.playback.now.index, 2); assert_true(has(r, "play 7\tfile:///d/uploads/b"))
+    doc.library.playlists.music.repeat_mode = 1                   -- all: next past the end wraps
+    apply(doc, playback.on_request(doc, { playlist = "music", index = 3, now = 5 }))
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    assert_eq(playback.on_next(doc, {}).state.playback.now.index, 1)
+  end)
+
   it("streams pause by stopping and cannot seek", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "live" }))

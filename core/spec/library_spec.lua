@@ -59,6 +59,24 @@ describe("library.ops — playlists", function()
     assert_nil(l.playlists[p].audiobook)
   end)
 
+  it("update: a playlist's own shuffle and repeat (#22); 'settings' goes back to the Settings'", function()
+    local l = lib_with({ "t1" })
+    local p = ops.playlist_new(l, { title = "P" }, 1)
+    assert_true(ops.playlist_update(l, { id = p, shuffle_mode = true, repeat_mode = 2 }))
+    assert_true(l.playlists[p].shuffle_mode); assert_eq(l.playlists[p].repeat_mode, 2)
+    assert_true(ops.playlist_update(l, { id = p, shuffle_mode = false, repeat_mode = 0 }))
+    assert_false(l.playlists[p].shuffle_mode); assert_eq(l.playlists[p].repeat_mode, 0)   -- off, which is not "as in Settings"
+    assert_true(ops.playlist_update(l, { id = p, shuffle_mode = "settings", repeat_mode = "settings" }))
+    assert_nil(l.playlists[p].shuffle_mode); assert_nil(l.playlists[p].repeat_mode)
+    for _, bad in ipairs({ { shuffle_mode = "yes" }, { repeat_mode = 3 }, { repeat_mode = "all" } }) do
+      bad.id = p
+      local ok, err = ops.playlist_update(l, bad)
+      assert_nil(ok); assert_eq(err.code, "invalid_argument")
+    end
+    local schema = require("api.schema")
+    assert_true(schema.validate({ id = p, shuffle_mode = "settings", repeat_mode = 1 }, require("services.library").schemas.playlist_update))
+  end)
+
   it("TRASH is read-only except for deleting really unused files", function()
     local l = lib_with({ "t1", "t2" })
     local p = ops.playlist_new(l, { title = "P" }, 1)

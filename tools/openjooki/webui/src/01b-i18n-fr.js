@@ -60,7 +60,7 @@
     heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_press_sub5: 'Tenu 5 secondes, il éteint le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture',
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
-    toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',

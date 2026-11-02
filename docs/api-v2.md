@@ -548,6 +548,12 @@ Payload schema:
       "minLength": 1,
       "type": "string"
     },
+    "repeat_mode": {
+      "type": ["integer", "string"]
+    },
+    "shuffle_mode": {
+      "type": ["boolean", "string"]
+    },
     "star": {
       "type": ["string", "boolean"]
     },

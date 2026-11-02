@@ -157,7 +157,7 @@ H.PLAYLIST_UPDATE = function(doc, p)
   if pl.title ~= nil and type(pl.title) ~= "string" then return nil, { code = "invalid_argument", field = "title", message = "invalid title type" } end
   local star = pl.star
   local r, err = lib(doc, { playlists = true, tracks = true }, function(l)
-    local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, tracks = pl.tracks }
+    local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, tracks = pl.tracks, shuffle_mode = pl.shuffle_mode, repeat_mode = pl.repeat_mode }
     if pl.tagId and star == nil and pl.star == nil then
       local tok = l.tokens[pl.tagId]
       if not tok then return nil, { code = "invalid_argument", field = "star", message = "invalid token type" } end

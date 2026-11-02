@@ -41,6 +41,13 @@ they are sent, so an album takes three times less room. Keep the tab in front wh
 works. The quality is in *Settings → MP3 quality* (256 kbps is the recommended one).
 On a phone, add the songs with **Add files** instead.
 
+### Shuffle and repeat, playlist by playlist
+
+In a playlist, **Shuffle** and **Repeat** can be its own: **On** or **Off** for shuffle, **Off**,
+**All songs** or **This song** for repeat. **As in Settings** (the default) follows *Settings*.
+The shuffle and repeat buttons of the player change the playlist that is playing. With shuffle,
+a token starts its playlist on a random song; put the same token back and the song goes on.
+
 ### Audiobooks
 
 Switch **Audiobook** on in a playlist: it always resumes where it stopped, and is never
@@ -188,9 +195,8 @@ version.
 <img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version up to date, then Limited volume, Shuffle, Repeat, MP3 quality, Speaker or headphones">
 
 **Listening**
-- **Limited volume (kids mode)**, **Shuffle**, **Repeat**. With **Shuffle** on, a token starts its
-  playlist on a random song (an audiobook still goes on where it stopped); put the same token back
-  and the song goes on.
+- **Limited volume (kids mode)**, **Shuffle**, **Repeat**. Shuffle and repeat here are for the
+  playlists that have no choice of their own ([playlist by playlist](#shuffle-and-repeat-playlist-by-playlist)).
 - **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
   Held two seconds, the heart still switches the Jooki off; five seconds when its short press
   does something, so a small child pressing a bit too long does not switch it off.

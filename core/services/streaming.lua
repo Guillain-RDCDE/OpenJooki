@@ -193,6 +193,13 @@ function streaming.on_spotify(doc, ev)
   elseif kind == "new_preset" then
     local pending = doc.streaming_int and doc.streaming_int.preset_for
     if not pending then return { commands = { { kind = "log", level = "warn", key = "streaming.preset_unexpected" } } } end
+    if pending.update then   -- a Spotify character taken off, saved where it is (on_token_removed)
+      if (ev.raw or "") == "" then
+        return { state = { streaming_int = {} }, commands = { { kind = "log", level = "warn", key = "streaming.resume_empty" } } }
+      end
+      return { state = { streaming_int = {} }, commands = { emit("library.set_preset", { id = pending.update, preset = str2hex(ev.raw) }),
+                                                            { kind = "log", level = "info", key = "streaming.resume_saved", fields = { playlist = pending.update } } } }
+    end
     if (ev.raw or "") == "" then   -- Spotify refused: no playlist that would play nothing (the page says Spotify did not answer)
       return { state = { streaming_int = {} }, commands = { { kind = "log", level = "warn", key = "streaming.preset_empty" } } }
     end
@@ -239,6 +246,19 @@ function streaming.on_deezer(doc, ev)
     return external(doc, { service = "DEEZER", position_ms = tonumber(ev.ms) or 0 })
   end
   return nil
+end
+
+-- ------------------------------------------------------------------ a Spotify character that resumes (#24)
+-- spotify_ctrl always starts a preset from its beginning (SpPlayPreset with playback_position 0, in
+-- Muuselabs' closed binary). So a Spotify playlist marked "Audiobook" (resume where it stopped) is
+-- saved again when its token comes off: Spotify gives a new preset where it is, and the character's
+-- playlist keeps it, its address unchanged. Asked before the pause the removal emits.
+function streaming.on_token_removed(doc)
+  local now = (doc.playback or {}).now
+  if not (now and now.playlist and active(doc, "SPOTIFY")) then return nil end
+  local p = doc.library and doc.library.playlists and doc.library.playlists[now.playlist]
+  if not (p and p.spotify and p.audiobook) then return nil end
+  return { state = { streaming_int = { preset_for = { update = now.playlist } } }, commands = { pub(SP .. "save_preset") } }
 end
 
 -- ------------------------------------------------------------------ requests from the page
@@ -294,6 +314,7 @@ function streaming.install(api, dispatch)
     dispatch.on("deezer." .. k, "streaming", streaming.on_deezer)
   end
   dispatch.on("audiocfg.changed", "streaming", streaming.on_config)
+  dispatch.on("nfc.removed", "streaming", streaming.on_token_removed)
   dispatch.on("net.status", "streaming", streaming.on_net)
   dispatch.on("spotify.saved_read", "streaming", streaming.on_saved_read)
   dispatch.on("boot", "streaming", streaming.on_boot)

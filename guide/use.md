@@ -178,6 +178,9 @@ listen stops by itself after the **Automatic timer**, the volume stays under the
   the bottom of the page, then **Put on a character**. Afterwards the character plays that
   music by itself, even without the phone. The Spotify account must stay connected to the
   Jooki.
+- **A Spotify character that resumes** (an audiobook, a long story): open its playlist and switch
+  **Audiobook** on. When you take its token off, the Jooki keeps the place, and next time it starts
+  again on the same song (not always at the same second: Spotify decides).
 - **The Jooki's own account**: Spotify only remembers the first account that sets the Jooki up.
   Another account can play on it too, but only until the Jooki restarts: then it goes back to its
   own account, and tokens play on that one. *Settings → Spotify* shows which account is the

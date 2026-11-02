@@ -6,7 +6,7 @@
     new_playlist: 'Nouvelle playlist', create: 'Créer', cancel: 'Annuler', save: 'Enregistrer', close: 'Fermer',
     name: 'Nom', playlist_name_ph: 'Ex. : Comptines du soir',
     n_tracks: function (n) { return n + (n > 1 ? ' pistes' : ' piste'); },
-    audiobook: 'Livre audio', audiobook_help: 'Reprend toujours là où on s\'était arrêté, sans lecture aléatoire.',
+    audiobook: 'Livre audio', sp_resume_help: 'Son jeton retiré, elle repartira sur le même morceau (pas toujours à la même seconde)', audiobook_help: 'Reprend toujours là où on s\'était arrêté, sans lecture aléatoire.',
     no_token: 'Aucun jeton', choose_token: 'Choisir le personnage', token_for: 'Personnage qui lance cette playlist',
     token_help: 'Tous les jetons d\'un même personnage lancent cette playlist (par exemple tous les dragons noirs).',
     used_by: function (t) { return 'déjà sur « ' + t + ' »'; },

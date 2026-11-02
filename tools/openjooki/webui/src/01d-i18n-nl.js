@@ -6,7 +6,7 @@
     new_playlist: 'Nieuwe afspeellijst', create: 'Aanmaken', cancel: 'Annuleren', save: 'Opslaan', close: 'Sluiten',
     name: 'Naam', playlist_name_ph: 'Bijv. Slaapliedjes',
     n_tracks: function (n) { return n + (n === 1 ? ' nummer' : ' nummers'); },
-    audiobook: 'Luisterboek', audiobook_help: 'Gaat altijd verder waar het gestopt is, nooit in willekeurige volgorde.',
+    audiobook: 'Luisterboek', sp_resume_help: 'Haal je het figuurtje eraf, dan begint ze de volgende keer bij hetzelfde nummer (niet altijd op dezelfde seconde)', audiobook_help: 'Gaat altijd verder waar het gestopt is, nooit in willekeurige volgorde.',
     no_token: 'Geen figuurtje', choose_token: 'Kies het personage', token_for: 'Personage dat deze afspeellijst start',
     token_help: 'Elk figuurtje van hetzelfde personage start deze afspeellijst (bijv. alle zwarte draken).',
     used_by: function (t) { return 'bij “' + t + '”'; },

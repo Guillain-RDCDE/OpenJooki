@@ -6,7 +6,7 @@
     new_playlist: 'New playlist', create: 'Create', cancel: 'Cancel', save: 'Save', close: 'Close',
     name: 'Name', playlist_name_ph: 'E.g. Bedtime songs',
     n_tracks: function (n) { return n + (n === 1 ? ' track' : ' tracks'); },
-    audiobook: 'Audiobook', audiobook_help: 'Always resumes where it stopped, never shuffled.',
+    audiobook: 'Audiobook', sp_resume_help: 'Its token taken off, it starts again on the same song next time (not always at the same second)', audiobook_help: 'Always resumes where it stopped, never shuffled.',
     no_token: 'No token', choose_token: 'Choose the character', token_for: 'Character that starts this playlist',
     token_help: 'Every token of the same character starts this playlist (e.g. all black dragons).',
     used_by: function (t) { return 'on “' + t + '”'; },

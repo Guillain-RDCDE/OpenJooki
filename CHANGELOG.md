@@ -1,5 +1,13 @@
 # OpenJooki — Changelog
 
+## Next release
+- **A Spotify character can resume where it stopped** (#24, asked by sbfnk): open its playlist
+  and switch **Audiobook** on. Taking its token off keeps the place, and next time it starts again
+  on the same song. Not always at the same second: that part is up to Spotify. Off by default.
+- For the tinkerers: Spotify's own daemon always starts a preset from its beginning
+  (`SpPlayPreset` with `playback_position` 0, in Muuselabs' closed binary), so the core asks it
+  for a new preset (`save_preset`) when such a token comes off and keeps it in the playlist.
+
 ## OpenJooki 2.4.13 (2 November 2026) — Shuffle your way
 - **The heart no longer switches off by accident** (#20): when *Short press on the heart* does
   something (**Next song** or **Pause / play**), it must be held **5 seconds** to switch the

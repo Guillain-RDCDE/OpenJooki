@@ -398,6 +398,15 @@ function library.install(api, dispatch)
       return id
     end)
   end)
+  -- a Spotify character saved again where it is, to resume there next time (services.streaming, #24)
+  dispatch.on("library.set_preset", "library", function(doc, ev)
+    return mutate(doc, { playlists = true }, function(lib)
+      local p = lib.playlists[ev.id]
+      if not (p and p.spotify and type(ev.preset) == "string" and ev.preset ~= "") then return nil, { code = "not_found", field = "id", message = "no Spotify playlist" } end
+      p.spotify = { uri = p.spotify.uri, preset = ev.preset }
+      return true
+    end)
+  end)
   api.command("playlist.new", S.playlist_new, function(doc, p, ev)
     return mutate(doc, { playlists = true }, function(lib) return ops.playlist_new(lib, p, ev.wall or ev.now or 0) end)
   end)

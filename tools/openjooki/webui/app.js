@@ -18,7 +18,7 @@
     new_playlist: 'Nouvelle playlist', create: 'Créer', cancel: 'Annuler', save: 'Enregistrer', close: 'Fermer',
     name: 'Nom', playlist_name_ph: 'Ex. : Comptines du soir',
     n_tracks: function (n) { return n + (n > 1 ? ' pistes' : ' piste'); },
-    audiobook: 'Livre audio', audiobook_help: 'Reprend toujours là où on s\'était arrêté, sans lecture aléatoire.',
+    audiobook: 'Livre audio', sp_resume_help: 'Son jeton retiré, elle repartira sur le même morceau (pas toujours à la même seconde)', audiobook_help: 'Reprend toujours là où on s\'était arrêté, sans lecture aléatoire.',
     no_token: 'Aucun jeton', choose_token: 'Choisir le personnage', token_for: 'Personnage qui lance cette playlist',
     token_help: 'Tous les jetons d\'un même personnage lancent cette playlist (par exemple tous les dragons noirs).',
     used_by: function (t) { return 'déjà sur « ' + t + ' »'; },
@@ -219,7 +219,7 @@
     new_playlist: 'New playlist', create: 'Create', cancel: 'Cancel', save: 'Save', close: 'Close',
     name: 'Name', playlist_name_ph: 'E.g. Bedtime songs',
     n_tracks: function (n) { return n + (n === 1 ? ' track' : ' tracks'); },
-    audiobook: 'Audiobook', audiobook_help: 'Always resumes where it stopped, never shuffled.',
+    audiobook: 'Audiobook', sp_resume_help: 'Its token taken off, it starts again on the same song next time (not always at the same second)', audiobook_help: 'Always resumes where it stopped, never shuffled.',
     no_token: 'No token', choose_token: 'Choose the character', token_for: 'Character that starts this playlist',
     token_help: 'Every token of the same character starts this playlist (e.g. all black dragons).',
     used_by: function (t) { return 'on “' + t + '”'; },
@@ -420,7 +420,7 @@
     new_playlist: 'Nieuwe afspeellijst', create: 'Aanmaken', cancel: 'Annuleren', save: 'Opslaan', close: 'Sluiten',
     name: 'Naam', playlist_name_ph: 'Bijv. Slaapliedjes',
     n_tracks: function (n) { return n + (n === 1 ? ' nummer' : ' nummers'); },
-    audiobook: 'Luisterboek', audiobook_help: 'Gaat altijd verder waar het gestopt is, nooit in willekeurige volgorde.',
+    audiobook: 'Luisterboek', sp_resume_help: 'Haal je het figuurtje eraf, dan begint ze de volgende keer bij hetzelfde nummer (niet altijd op dezelfde seconde)', audiobook_help: 'Gaat altijd verder waar het gestopt is, nooit in willekeurige volgorde.',
     no_token: 'Geen figuurtje', choose_token: 'Kies het personage', token_for: 'Personage dat deze afspeellijst start',
     token_help: 'Elk figuurtje van hetzelfde personage start deze afspeellijst (bijv. alle zwarte draken).',
     used_by: function (t) { return 'bij “' + t + '”'; },
@@ -2009,6 +2009,10 @@
       return [head, h('div', { class: 'actions' },
           h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
+        // resume where it stopped (#24): saved again from Spotify when its token comes off
+        h('div', { class: 'card', style: 'margin-top:16px' },
+          h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('sp_resume_help'))),
+            h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'spresume', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } }))),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },

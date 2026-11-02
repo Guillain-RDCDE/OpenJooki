@@ -175,6 +175,34 @@ describe("services.streaming — presets, config, login", function()
     assert_eq(r.commands[1].key, "streaming.preset_empty"); assert_eq(r.state.streaming_int, {})
   end)
 
+  it("a Spotify character marked Audiobook is saved again when its token comes off, to resume there (#24)", function()
+    local doc = doc_with()
+    doc.playback = { state = "playing", now = { service = "SPOTIFY", playlist = "sp", uri = "spotify:playlist:1" }, last = {}, shuffle = {} }
+    assert_nil(streaming.on_token_removed(doc))                        -- not marked: starts from the beginning, as before
+    doc.library.playlists.sp.audiobook = true
+    local r = streaming.on_token_removed(doc)
+    assert_eq(topics(r), { "spotify/output/save_preset " }); assert_eq(r.state.streaming_int.preset_for, { update = "sp" })
+    apply(doc, r)
+    r = streaming.on_spotify(doc, { type = "spotify.new_preset", raw = "CD" })
+    local ev = r.commands[1].event
+    assert_eq(ev.type, "library.set_preset"); assert_eq(ev.id, "sp"); assert_eq(ev.preset, "4344"); assert_eq(r.state.streaming_int, {})
+    -- the library keeps the new preset under the same address, and nothing new is created
+    local library = require("services.library")
+    local handlers = {}
+    library.install({ command = function() end }, { on = function(t, _, fn) handlers[t] = fn end, on_timer = function() end })
+    local lr = handlers["library.set_preset"](doc, ev)
+    assert_eq(lr.state.library.playlists.sp.spotify, { uri = "spotify:playlist:1", preset = "4344" })
+    local n = 0
+    for _ in pairs(lr.state.library.playlists) do n = n + 1 end
+    assert_eq(n, 3)
+    assert_nil(handlers["library.set_preset"](doc, { id = "loc", preset = "4344" }))   -- not a Spotify playlist: nothing
+    -- Spotify refused: nothing changes; a local playlist or another service is left alone
+    apply(doc, streaming.on_token_removed(doc))
+    assert_eq(streaming.on_spotify(doc, { type = "spotify.new_preset", raw = "" }).commands[1].key, "streaming.resume_empty")
+    doc.playback.now = { service = "FILE", playlist = "loc" }
+    assert_nil(streaming.on_token_removed(doc))
+  end)
+
   it("a token linked to a Spotify preset plays it; taking it off pauses it (a token started it)", function()
     local doc = doc_with()
     doc.library.playlists.sp.star = "Jooki.Fox"

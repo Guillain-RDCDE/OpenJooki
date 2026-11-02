@@ -113,6 +113,13 @@ local function start(doc, pb, playlist_id, opts)
       -- an audiobook follows its saved position only; without one it starts at chapter 1 (1.3 rule)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
+    elseif (doc.audiocfg or {}).shuffle_mode and n > 1 and not (pb.now and pb.now.playlist == playlist_id) then
+      -- shuffle, and another playlist than the one on: a new order, from its first song (#22; 1.x
+      -- restarted the last song played, shuffle or not). Put back on, the same token goes on.
+      pb.seed = ((pb.seed or 0) * 1103515245 + 12345 + math.floor(tonumber(opts.now_s) or 0)) % 2147483648
+      pb.shuffle[playlist_id] = nil
+      q = queue_for(doc, pb, playlist_id, p)
+      queue_pos, index = 1, q[1]
     end
     index = index or pb.last[playlist_id] or 1
     if not p.tracks[index] then index = 1 end

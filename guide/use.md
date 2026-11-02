@@ -188,7 +188,9 @@ version.
 <img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version up to date, then Limited volume, Shuffle, Repeat, MP3 quality, Speaker or headphones">
 
 **Listening**
-- **Limited volume (kids mode)**, **Shuffle**, **Repeat**.
+- **Limited volume (kids mode)**, **Shuffle**, **Repeat**. With **Shuffle** on, a token starts its
+  playlist on a random song (an audiobook still goes on where it stopped); put the same token back
+  and the song goes on.
 - **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
   Held two seconds, the heart still switches the Jooki off; five seconds when its short press
   does something, so a small child pressing a bit too long does not switch it off.

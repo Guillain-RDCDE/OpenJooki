@@ -42,8 +42,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.14:** a Spotify character marked Audiobook resumes on the same song (thanks, sbfnk).
-2.4.13: shuffle and repeat playlist by playlist, a random first song, and a heart that no longer switches off by accident (thanks, vojtechj and sbfnk).
+**New in 2.4.15:** a Spotify character picks up where it stopped, thanks to sbfnk's patch of the Jooki's own Spotify program.
+2.4.14: a Spotify character marked Audiobook resumes on the same song (thanks, sbfnk).
 [All the changes](CHANGELOG.md)
 
 ---

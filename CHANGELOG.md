@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.15 (2 November 2026) — Picks up where it stopped, for real
 - **A Spotify character can pick up where it stopped** (#24), the work of sbfnk (#25), thank you
   so much! Taking the character off and putting it
   back used to start its playlist from the beginning every time. Switch on *Pick up where it

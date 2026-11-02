@@ -206,6 +206,10 @@ gpio("circle", 0.2)
 R.expect("T22 heart short press -> pause", lambda: j.pb == "PAUSED", 5, lambda: j.get("audio.playback"))
 gpio("circle", 0.2)
 R.expect("T22 heart short press again -> play", lambda: j.pb == "PLAYING", 5, lambda: j.get("audio.playback"))
+gpio("circle", 2.6)   # #20: with a job, 2.6 s held is still a press, not a power off (that is 5 s)
+R.expect("T22 heart held 2.6 s with a job: no power off, it pauses", lambda: j.pb == "PAUSED", 5, lambda: j.get("audio.playback"))
+gpio("circle", 0.2)
+R.expect("T22 ... and the Jooki is still there (play again)", lambda: j.pb == "PLAYING", 5, lambda: j.get("audio.playback"))
 p0 = j.get("audio.playback.position_ms") or 0
 gpio("fwd", 1.7)   # the original Jooki's knob (default): halfway does nothing
 B.quiet(1, "a wind, had the core asked for one, would have moved the position by now")

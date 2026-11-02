@@ -101,12 +101,19 @@ describe("services.device.buttons — presses and long presses", function()
     local ev
     for _, c in ipairs(r.commands) do if c.kind == "emit" then ev = c.event end end
     assert_eq(ev.source, "button"); assert_eq(ev.now, 5.4)
-    -- held 2 s it switches off (the tick), and the release that follows does nothing more
+    -- with a job, the heart switches off only held 5 s, not 2 (#20), and the release that follows does nothing more
     local doc = doc_with({ audiocfg = { volume = 40, heart_press = "next" }, activity = { buttons = { circle = 10 } } })
-    r = buttons.on_tick(doc, { now = 12.1 })
+    assert_nil(buttons.on_tick(doc, { now = 12.1 }))
+    assert_nil(buttons.on_tick(doc, { now = 14.9 }))
+    r = buttons.on_tick(doc, { now = 15.1 })
     same(kinds(r), { "emit power.off_request", "timer.cancel" })
     doc.activity = r.state.activity
-    same(kinds(buttons.on_button(doc, { button = "circle", down = false, now = 12.5 })), {})
+    same(kinds(buttons.on_button(doc, { button = "circle", down = false, now = 15.5 })), {})
+    -- with nothing to do (the default) it stays 2 s, as the original Jooki
+    for _, choice in ipairs({ "none", "nil" }) do
+      local d = doc_with({ audiocfg = { volume = 40, heart_press = choice ~= "nil" and choice or nil }, activity = { buttons = { circle = 10 } } })
+      same(kinds(buttons.on_tick(d, { now = 12.1 })), { "emit power.off_request", "timer.cancel" })
+    end
   end)
 
   it("by default the knob is the original Jooki's: halfway does nothing, all the way changes the song", function()

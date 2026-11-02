@@ -57,7 +57,7 @@
     name_text: function (u) { return 'Its page is now at ' + u + ' — the old address no longer answers. Bookmark this link. Spotify will show the new name after the next restart.'; },
     name_open: 'Open the new address',
     wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', version: 'Version',
-    heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play',
+    heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_press_sub5: 'Held 5 seconds, it switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play',
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',

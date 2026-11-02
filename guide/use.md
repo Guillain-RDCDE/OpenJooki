@@ -190,7 +190,8 @@ version.
 **Listening**
 - **Limited volume (kids mode)**, **Shuffle**, **Repeat**.
 - **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
-  Held two seconds, the heart still switches the Jooki off.
+  Held two seconds, the heart still switches the Jooki off; five seconds when its short press
+  does something, so a small child pressing a bit too long does not switch it off.
 - **The track knob**: **Next / previous song** (as before), **Both (halfway winds)**: held
   halfway, it winds the song, turned all the way it changes the song, or **Wind the song**:
   the knob only winds, and the heart can change the song.

@@ -1,7 +1,8 @@
 # OpenJooki — Changelog
 
 ## Next release
-- **A Spotify character can pick up where it stopped.** Taking the character off and putting it
+- **A Spotify character can pick up where it stopped** (#24), the work of sbfnk (#25), thank you
+  so much! Taking the character off and putting it
   back used to start its playlist from the beginning every time. Switch on *Pick up where it
   stopped*, on that playlist's page or on the character's sheet in Tokens, and it continues where
   it stopped, 15 seconds back, even after another character, or after the Jooki switched off with

@@ -4,7 +4,8 @@
 --                 (mutate the table they are given; the handlers copy first)
 --   handlers      boot + api commands, returning state changes and file writes
 -- Data shapes are those of 1.x (docs/22 §4) so that 1.x and 2.0 share files.
---   playlists[id] = { title, tracks = {trackId...}, star?, audiobook?, resume?, image?, plType?, spotify?, deezer? }
+--   playlists[id] = { title, tracks = {trackId...}, star?, audiobook?, resume?, shuffle_mode?, repeat_mode?, image?, plType?, spotify?, deezer? }
+--   (shuffle_mode / repeat_mode: the playlist's own, #22; absent = the Settings')
 --   tracks[id]    = { filename, userFilename?, title, album, artist, duration, size, hasImage, isUrl? }
 --   tokens[uid]   = { starId, seen, name?, image? }
 local util = require("services.util")
@@ -205,7 +206,7 @@ function ops.playlist_add_stream(lib, id, title, url, now)
   return tid
 end
 
---- Update title / character / audiobook / resume / track order. Returns true, { removed_files = {...} }.
+--- Update title / character / audiobook / resume / shuffle / repeat / track order. Returns true, { removed_files = {...} }.
 function ops.playlist_update(lib, args)
   local id = args.id
   if id == TRASH and (args.title ~= nil or args.star ~= nil or args.audiobook ~= nil) then
@@ -230,6 +231,13 @@ function ops.playlist_update(lib, args)
   if type(args.audiobook) == "boolean" then p.audiobook = args.audiobook or nil end
   -- a Spotify or Deezer playlist put back on continues where it paused (services.playback)
   if type(args.resume) == "boolean" then p.resume = args.resume or nil end
+  -- its own shuffle / repeat (#22); "settings" goes back to the Settings' ones
+  if args.shuffle_mode == "settings" then p.shuffle_mode = nil
+  elseif type(args.shuffle_mode) == "boolean" then p.shuffle_mode = args.shuffle_mode
+  elseif args.shuffle_mode ~= nil then return nil, { code = "invalid_argument", field = "shuffle_mode", message = "invalid shuffle_mode" } end
+  if args.repeat_mode == "settings" then p.repeat_mode = nil
+  elseif args.repeat_mode == 0 or args.repeat_mode == 1 or args.repeat_mode == 2 then p.repeat_mode = args.repeat_mode
+  elseif args.repeat_mode ~= nil then return nil, { code = "invalid_argument", field = "repeat_mode", message = "invalid repeat_mode" } end
   if args.tracks ~= nil then
     if id == TRASH then
       -- the page removed tracks from "Unused": delete only files that are really unused
@@ -372,6 +380,7 @@ S.playlist_new = { type = "object", properties = { title = { type = "string", ma
 S.playlist_id = { type = "object", required = { "id" }, properties = { id = S.id }, additionalProperties = false }
 S.playlist_update = { type = "object", required = { "id" }, additionalProperties = false,
   properties = { id = S.id, title = { type = "string", maxLength = 200 }, star = { type = { "string", "boolean" } }, audiobook = { type = "boolean" }, resume = { type = "boolean" },
+                 shuffle_mode = { type = { "boolean", "string" } }, repeat_mode = { type = { "integer", "string" } },
                  tracks = { type = "array", items = { type = "string" }, maxItems = 2000 } } }
 S.add_track = { type = "object", required = { "id", "trackId" }, properties = { id = S.id, trackId = S.id }, additionalProperties = false }
 S.add_stream = { type = "object", required = { "id", "url" }, properties = { id = S.id, url = { type = "string", maxLength = 500 }, title = { type = "string", maxLength = 200 } }, additionalProperties = false }

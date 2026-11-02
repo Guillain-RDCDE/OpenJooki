@@ -12,6 +12,14 @@ local function volume() return require("services.device") end
 
 -- ------------------------------------------------------------------ buttons (1.x keys module)
 local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
+-- the heart held to switch off: 2 s as the original, 5 s when its short press does something (#20:
+-- a small child pressing "next song" a bit too long switched the Jooki off). The Holtek cuts the
+-- power by itself only at about 10 s (holtek-code Main.c: 255 steps of 40 ms), so 5 s stays clean.
+local LONG_CIRCLE_BUSY_S = 5
+local function long_circle_s(doc)
+  local hp = (doc.audiocfg or {}).heart_press
+  return (hp == "next" or hp == "pause") and LONG_CIRCLE_BUSY_S or LONG_CIRCLE_S
+end
 local RESET_MAX_VOLUME = 5   -- the volume wheel all the way down (it reads 0-100) for the parent-code gesture
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
 -- The track knob, as the parents chose in Settings (audiocfg.knob_mode):
@@ -99,7 +107,7 @@ function buttons.on_button(doc, ev)
   return { state = { activity = act }, commands = cmds }
 end
 
---- Long presses are detected on the tick (like 1.x): circle 2 s -> power off, airplane 5 s.
+--- Long presses are detected on the tick (like 1.x): circle 2 s (5 s when the heart has a job) -> power off, airplane 5 s.
 function buttons.on_tick(doc, ev)
   local act = doc.activity
   if not act or not act.buttons then return nil end
@@ -107,7 +115,7 @@ function buttons.on_tick(doc, ev)
   local cmds = {}
   local changed = false
   local a2 = activity_of(doc)
-  if act.buttons.circle and now - act.buttons.circle >= LONG_CIRCLE_S then
+  if act.buttons.circle and now - act.buttons.circle >= long_circle_s(doc) then
     a2.buttons.circle = nil; changed = true
     cmds[#cmds + 1] = emit("power.off_request", { reason = "button" })
   end

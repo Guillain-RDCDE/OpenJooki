@@ -28,7 +28,7 @@ local AUDIO_OUT = "/j/audio/out/"
 local INT = { last = true, shuffle = true, seed = true, sys = true, resume_dirty = true }   -- the playback_int keys
 
 local copy, emit, is_playing = util.copy, util.emit, util.is_playing
-local queue_for, index_of = queue.queue_for, queue.index_of
+local queue_for, index_of, modes = queue.queue_for, queue.index_of, queue.modes
 local resume_copy, note_position, note_ended, write_resume = resume_rules.resume_copy, resume_rules.note_position, resume_rules.note_ended, resume_rules.write_resume
 
 local function cmd_audio(action, id, arg)
@@ -125,6 +125,13 @@ local function start(doc, pb, playlist_id, opts)
       -- an audiobook follows its saved position only; without one it starts at chapter 1 (1.3 rule)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
+    elseif (modes(doc, p)) and n > 1 and not (pb.now and pb.now.playlist == playlist_id) then
+      -- shuffle, and another playlist than the one on: a new order, from its first song (#22; 1.x
+      -- restarted the last song played, shuffle or not). Put back on, the same token goes on.
+      pb.seed = ((pb.seed or 0) * 1103515245 + 12345 + math.floor(tonumber(opts.now_s) or 0)) % 2147483648
+      pb.shuffle[playlist_id] = nil
+      q = queue_for(doc, pb, playlist_id, p)
+      queue_pos, index = 1, q[1]
     end
     index = index or pb.last[playlist_id] or 1
     if not p.tracks[index] then index = 1 end
@@ -231,8 +238,7 @@ local function step(doc, pb, delta, ev)
   local p = doc.library and doc.library.playlists[now.playlist]
   if not p then return nil end
   local q = queue_for(doc, pb, now.playlist, p)
-  local cfg = doc.audiocfg or {}
-  local repeat_all = cfg.repeat_mode == 1 and not p.audiobook
+  local repeat_all = select(2, modes(doc, p)) == 1 and not p.audiobook
   local pos = now.queue_pos + delta
   if pos < 1 or pos > #q then
     if not repeat_all then return nil end
@@ -381,11 +387,10 @@ function playback.on_audio(doc, ev)
       note_ended(resume, now, p)
       resume_changed = true
     end
-    local cfg = doc.audiocfg or {}
     -- with the sleep timer in "end of chapter" mode, stay ended (bedtime clears its flag on playback.changed)
     local stop_here = doc.bedtime_int and doc.bedtime_int.stop_at_end
     -- (start and step work on this very pb: only their commands are to be collected)
-    if not stop_here and p and cfg.repeat_mode == 2 and not p.audiobook then
+    if not stop_here and p and select(2, modes(doc, p)) == 2 and not p.audiobook then
       local r = start(doc, pb, now.playlist, { index = now.index, restart = true })
       if r then for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end end
     elseif not stop_here and p then

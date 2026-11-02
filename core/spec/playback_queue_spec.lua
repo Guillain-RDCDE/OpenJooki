@@ -55,6 +55,54 @@ describe("services.playback.queue — the order of a playlist", function()
     assert_true(n > 1)
   end)
 
+  it("shuffle: a token starts its playlist on a new order, from its first song; put back, it goes on (#22)", function()
+    local doc = doc_with({ shuffle = true })
+    local ids = {}
+    for i = 1, 8 do ids[i] = "t" .. i; doc.library.tracks["t" .. i] = { title = "Song " .. i, filename = "/d/uploads/t" .. i, duration = 100 } end
+    doc.library.playlists.big = { title = "Big", tracks = ids }
+    doc.playback_int = { last = {}, shuffle = {}, seed = 42 }
+    local firsts = {}
+    for k = 1, 12 do
+      local r = playback.on_request(doc, { playlist = "big", now = 100 + k })
+      local now = r.state.playback.now
+      assert_eq(now.queue_pos, 1); assert_eq(now.index, r.state.playback_int.shuffle.big[1])
+      firsts[now.index] = true
+      apply(doc, r)
+      apply(doc, playback.on_request(doc, { playlist = "music", now = 200 + k }))   -- another token in between
+    end
+    local n = 0
+    for _ in pairs(firsts) do n = n + 1 end
+    assert_true(n > 2)                                                            -- not always the same first song
+    -- the same token again while its playlist is on: the song goes on, nothing drawn again
+    local r = playback.on_request(doc, { playlist = "big", now = 400 })
+    apply(doc, r); apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    local index, order = doc.playback.now.index, doc.playback_int.shuffle.big
+    local again = playback.on_request(doc, { playlist = "big", now = 401 })
+    if again.state.playback_int then assert_eq(again.state.playback_int.shuffle.big, order) end
+    assert_eq((again.state.playback or doc.playback).now.index, index)
+    -- without shuffle, as before: the last song played of that playlist
+    doc.audiocfg.shuffle_mode = false
+    apply(doc, playback.on_request(doc, { playlist = "music", now = 500 }))
+    assert_eq(playback.on_request(doc, { playlist = "big", now = 501 }).state.playback.now.index, index)
+  end)
+
+  it("a playlist's own shuffle wins over the Settings', both ways (#22)", function()
+    local doc = doc_with()
+    local music = doc.library.playlists.music
+    assert_false((queue.modes(doc, music)))
+    music.shuffle_mode = true
+    local pb = { shuffle = {}, seed = 7 }
+    assert_true((queue.modes(doc, music)))
+    assert_eq(#queue.queue_for(doc, pb, "music", music), 3); assert_eq(pb.shuffle.music ~= nil, true)
+    doc.audiocfg.shuffle_mode = true; music.shuffle_mode = false
+    assert_eq(queue.queue_for(doc, { shuffle = {}, seed = 7 }, "music", music), { 1, 2, 3 })
+    music.shuffle_mode = nil
+    doc.audiocfg.repeat_mode = 2
+    assert_eq(select(2, queue.modes(doc, music)), 2)
+    music.repeat_mode = 0
+    assert_eq(select(2, queue.modes(doc, music)), 0)
+  end)
+
   it("index_of: where a track sits in the queue", function()
     assert_eq(queue.index_of({ 3, 1, 2 }, 1), 2); assert_eq(queue.index_of({ 3, 1, 2 }, 3), 1)
     assert_nil(queue.index_of({ 3, 1, 2 }, 4))

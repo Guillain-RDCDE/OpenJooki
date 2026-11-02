@@ -125,16 +125,30 @@ with sync_playwright() as p:
     pg.click(".player .info"); pg.wait_for_selector("[data-k=nprepeat]")
     check("E13c not an audiobook: shuffle and repeat, no ±15 s",
           pg.locator("[data-k=npshuffle]").count() == 1 and pg.locator("[data-k=back15]").count() == 0)
+    # #22: the toggles of a playlist of ours change that playlist's own repeat / shuffle, not the Settings'
+    glob = J.get("audio.config.repeat_mode")
     seen = []
     for _ in range(3):
-        before = J.get("audio.config.repeat_mode")
+        before = J.pls[pid].get("repeat_mode")
         pg.click("[data-k=nprepeat]")
-        J.poll(lambda: J.get("audio.config.repeat_mode") != before, 5)
-        pg.wait_for_function("m => document.querySelector('[data-k=nprepeat]').dataset.mode === String(m)", arg=J.get("audio.config.repeat_mode"), timeout=5000)
-        seen.append((J.get("audio.config.repeat_mode"), pg.locator("[data-k=nprepeat]").inner_text().strip()))
+        J.poll(lambda: J.pls[pid].get("repeat_mode") != before, 5)
+        pg.wait_for_function("m => document.querySelector('[data-k=nprepeat]').dataset.mode === String(m)", arg=J.pls[pid].get("repeat_mode"), timeout=5000)
+        seen.append((J.pls[pid].get("repeat_mode"), pg.locator("[data-k=nprepeat]").inner_text().strip()))
     check("E13c repeat cycles all -> this one -> off -> all, the label says which (its own words for 'this one')",
           [m for m, _ in seen] == [2, 0, 1] and seen[0][1] != seen[2][1] and seen[1][1] == seen[2][1], seen)
+    check("E13c ... on the playlist only: the Settings' repeat is untouched", J.get("audio.config.repeat_mode") == glob, (glob, J.get("audio.config")))
+    sh0 = bool(J.get("audio.config.shuffle_mode"))
+    pg.click("[data-k=npshuffle]"); J.poll(lambda: J.pls[pid].get("shuffle_mode") is (not sh0), 5)
+    check("E13c shuffle in the player: the playlist's own", J.pls[pid].get("shuffle_mode") is (not sh0) and bool(J.get("audio.config.shuffle_mode")) == sh0, (J.pls[pid], J.get("audio.config")))
     pg.keyboard.press("Escape")
+    # E13d the playlist page: its shuffle / repeat, or "as in Settings"
+    pg.wait_for_selector("[data-k=plshuffle]")
+    pg.select_option("[data-k=plrepeat]", "2"); J.poll(lambda: J.pls[pid].get("repeat_mode") == 2, 5)
+    pg.select_option("[data-k=plshuffle]", "on"); J.poll(lambda: J.pls[pid].get("shuffle_mode") is True, 5)
+    check("E13d the playlist page sets its own shuffle and repeat", J.pls[pid].get("repeat_mode") == 2 and J.pls[pid].get("shuffle_mode") is True, J.pls[pid])
+    pg.select_option("[data-k=plrepeat]", "settings"); pg.select_option("[data-k=plshuffle]", "settings")
+    J.poll(lambda: "repeat_mode" not in J.pls[pid] and "shuffle_mode" not in J.pls[pid], 5)
+    check("E13d 'As in Settings' takes the playlist's own choice away", "repeat_mode" not in J.pls[pid] and "shuffle_mode" not in J.pls[pid], J.pls[pid])
     pg.click("[data-k=audiobook]"); J.wait(lambda: J.pls[pid].get("audiobook") is True)
     # E6 reorder by drag (pointer events) on desktop-size page
     dctx = b.new_context(viewport={"width": 1200, "height": 900}, locale="fr-FR", bypass_csp=True); dp = dctx.new_page()

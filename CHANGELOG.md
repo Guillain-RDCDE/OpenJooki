@@ -32,6 +32,23 @@
   changes, and a saved place plays its preset and seeks once Spotify plays, from the playlist's
   first track.
 
+## OpenJooki 2.4.13 (2 November 2026) — Shuffle your way
+- **The heart no longer switches off by accident** (#20): when *Short press on the heart* does
+  something (**Next song** or **Pause / play**), it must be held **5 seconds** to switch the
+  Jooki off, not 2. A small child pressing a bit too long keeps the music. With **Nothing**, it
+  stays 2 seconds, as on the original Jooki.
+- **Shuffle and repeat, playlist by playlist** (#22, asked by vojtechj and sbfnk): in a playlist,
+  **Shuffle** and **Repeat** can be its own, or **As in Settings** (the default, so nothing
+  changes until you choose). The player's shuffle and repeat buttons now change the playlist
+  that is playing.
+- **Shuffle starts on a random song** (#22): with shuffle on, a token starts its playlist on a
+  new random order, not on the last song played. Put the same token back and the song goes on.
+  Audiobooks still go on where they stopped.
+- For the tinkerers: `shuffle_mode` / `repeat_mode` in a playlist (`PLAYLIST_UPDATE`, v2
+  `playlist.update`; `"settings"` removes them).
+- The guide now describes the heart as it really is (#21): white (a little blue) when on,
+  orange for a low battery (it can look greenish), and still lit while the Jooki switches off.
+
 ## OpenJooki 2.4.12 (1 November 2026) — Headphones are back
 - **Wired headphones work again** (#19): since 2.1.3 OpenJooki kept the speaker on, even with
   headphones plugged into the USB-C port. They play again, as on the original Jooki, with a

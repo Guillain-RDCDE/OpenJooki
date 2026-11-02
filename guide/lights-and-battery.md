@@ -4,9 +4,9 @@
 
 | You see | It means |
 |---|---|
-| heart white | on |
+| heart white (it can look a little blue), brighter while pressed | on |
 | heart green | on the charger (blinking = charging, steady = full) |
-| heart orange | battery low: plug it in |
+| heart orange (closer to yellow, it can look greenish) | battery low: plug it in |
 | heart blinking red | battery very low: plug it in now |
 | heart orange or red **on the charger** | the battery does not charge: probably worn, see *Charging* below |
 | ring off while music plays | a token is playing: normal |
@@ -16,7 +16,7 @@
 | side dots light blue | a token was recognised, or a phone opened the page |
 | side dots yellow, one pulse | a warning: battery under 20 %, airplane mode on, kids mode switched on or off, or it will switch off in a minute |
 | side dots red, two pulses | an error: empty playlist, memory card full, or Spotify could not play |
-| heart red, then everything off | switching off (heart held two seconds, or 15 minutes unused on battery, or battery very low) |
+| everything off, the heart still lit until the end (10 to 15 seconds) | switching off (heart held two seconds, five if its short press does something, or 15 minutes unused on battery, or battery very low) |
 | ring and side dots off | night mode |
 | every colour, for 5 seconds | the *Christmas tree* button of the page: just for fun |
 

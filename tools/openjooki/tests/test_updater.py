@@ -21,7 +21,7 @@ address asked, in order). The device's own paths are used (/data/openjooki, /dat
 
   sudo python3 test_updater.py        (root, like every bench suite; busybox installed)
 """
-import hashlib, http.server, os, shutil, subprocess, sys, tempfile, threading
+import gzip, hashlib, http.server, json, os, shutil, subprocess, sys, tempfile, threading
 import bench as B
 
 DOCS = os.path.join(B.REPO, "docs")
@@ -226,6 +226,35 @@ def resume_cases(R):
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def selfupdate_cases(R, tmp):
+    """Exercise the real fingerprint and read-back code without touching device partitions."""
+    src = docs("openjooki-selfupdate.sh").decode()
+    fingerprint = src[src.index('log "reference fingerprint'):src.index('PBYTES=')]
+    verify = src[src.index('B=$((TOTAL/1048576))'):src.index('[ "$GOT" = "$WANT" ]')]
+    manifest_path = os.path.join(tmp, "version.json")
+    fingerprint = fingerprint.replace('/data/openjooki/version.json', manifest_path)
+    image_path = os.path.join(tmp, "firmware.img.gz")
+    partition_path = os.path.join(tmp, "partition")
+    script = os.path.join(tmp, "fingerprint.sh")
+    with open(script, "w") as f:
+        f.write('log(){ :; }\nIMG="$1"; SDEV="$2"\n' + fingerprint + verify
+                + '\nprintf "%s %s %s\\n" "$WANT" "$TOTAL" "$GOT"\n')
+    for size in (1048576, 1048576 + 37):
+        body = os.urandom(size)
+        with open(image_path, "wb") as f: f.write(gzip.compress(body))
+        with open(partition_path, "wb") as f: f.write(body + b"extra partition data")
+        for mode in ("manifest", "old", "different-file", "bad-hash"):
+            metadata = {"file": os.path.basename(image_path), "img_sha256": sha(body), "img_size": size}
+            if mode == "old": metadata = {"file": os.path.basename(image_path)}
+            if mode == "different-file": metadata.update(file="other.img.gz", img_sha256="0" * 64)
+            if mode == "bad-hash": metadata["img_sha256"] = "0" * 64
+            with open(manifest_path, "w") as f: json.dump(metadata, f, indent=2)
+            r = subprocess.run([BUSYBOX, "ash", script, image_path, partition_path], capture_output=True, text=True)
+            want = "0" * 64 if mode == "bad-hash" else sha(body)
+            R.check("selfupdate: %s, %d bytes" % (mode, size), r.returncode == 0
+                    and r.stdout.strip() == "%s %d %s" % (want, size, sha(body)), r.stdout + r.stderr)
+
+
 def main():
     R = B.Results()
     if not BUSYBOX:
@@ -234,14 +263,24 @@ def main():
     image = os.urandom(4096)
     w = World()
     try:
+        selfupdate_cases(R, w.tmp)
         # --- 1. make-release.sh: the hashes in version.json, the scripts next to it; check_versions agrees
         rel = os.path.join(w.tmp, "rel")
         os.makedirs(rel)
-        with open(os.path.join(rel, "out.img.gz"), "wb") as f: f.write(image)
+        with open(os.path.join(rel, "out.img.gz"), "wb") as f: f.write(gzip.compress(image))
         mk = subprocess.run(["bash", os.path.join(B.REPO, "scripts", "make-release.sh"), "out.img.gz", "9.9.9"],
                             cwd=rel, capture_output=True, text=True)
         man_path = os.path.join(rel, "release-9.9.9", "version.json")
         man = read(man_path, "rb")
+        metadata = json.loads(man)
+        R.check("make-release.sh: uncompressed image hash and size", metadata.get("img_sha256") == sha(image)
+                and metadata.get("img_size") == len(image), metadata)
+        with open(os.path.join(rel, "out.img"), "wb") as f: f.write(image)
+        raw = subprocess.run(["bash", os.path.join(B.REPO, "scripts", "make-release.sh"), "out.img", "9.9.8"],
+                             cwd=rel, capture_output=True, text=True)
+        raw_man = json.loads(read(os.path.join(rel, "release-9.9.8", "version.json")))
+        R.check("make-release.sh: raw image hash and size", raw.returncode == 0
+                and raw_man.get("img_sha256") == sha(image) and raw_man.get("img_size") == len(image), raw_man)
         R.check("make-release.sh: version.json gives ota_sha256, selfupdate_sha256, o_sha256 of docs/",
                 mk.returncode == 0 and b'"ota_sha256": "%s"' % sha(real_ota).encode() in man
                 and b'"selfupdate_sha256": "%s"' % sha(real_self).encode() in man

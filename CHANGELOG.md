@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.17 (3 November 2026) — The page always comes up
 - **The Jooki's page no longer disappears when the card's music space is worn out** (#27). If the
   part of the SD card that holds the music could not be written any more, every address of the
   Jooki answered "404 Not Found", even though the Jooki was on the Wi-Fi. The page now always

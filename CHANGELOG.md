@@ -1,5 +1,14 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The Jooki's page no longer disappears when the card's music space is worn out** (#27). If the
+  part of the SD card that holds the music could not be written any more, every address of the
+  Jooki answered "404 Not Found", even though the Jooki was on the Wi-Fi. The page now always
+  comes up, so you can still see what the Jooki is doing and update it.
+- For the tinkerers: `setup_web_dirs` (core/adapters/shell.lua) links the page into
+  `/tmp/web_ctrl_dirs/public` before it makes `uploads/` and `artwork/` on the content partition.
+  A failing `mkdir` there used to exit before the first link, leaving an empty docroot.
+
 ## OpenJooki 2.4.16 (2 November 2026) — Updates in half the time
 - **Updates take about half the time** (#26), the work of oresh, thank you! The Jooki used to
   unpack the new version twice just to learn what to compare it with, then read it back in small

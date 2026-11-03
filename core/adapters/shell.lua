@@ -113,16 +113,19 @@ done
 exit 0]] } end, background = true },
   -- what web_ctrl serves: /tmp/web_ctrl_dirs/{public,uploads,wifi_setup,deezer} rebuilt once at boot (1.x setupWebServer).
   -- In the background (0.8 s on the device, web_ctrl starts 5 s after the core): a failure goes to syslog itself.
+  -- The page is linked BEFORE the family's folders are made: a music partition that cannot be written (a worn
+  -- card, #27) used to stop the script before any link, and every address answered 404.
   setup_web_dirs = { argv = function(a) if not is_path(a.data) then return nil, "bad path" end
                              return { "sh", "-c", [[
 D="$1"; W=/tmp/web_ctrl_dirs
 fail() { logger -t openjooki-core "error boot.web_dirs_failed"; exit 1; }
-rm -f "$D"/uploads/upload_* 2>/dev/null
-rm -rf "$W" && mkdir -p "$W/public" "$W/wifi_setup/setup" "$W/deezer" "$D/uploads" "$D/artwork" || fail
+rm -rf "$W" && mkdir -p "$W/public" "$W/wifi_setup/setup" "$W/deezer" || fail
 ln -s "$D/uploads" "$W/uploads" && ln -s "$D/artwork" "$W/public/artwork" || fail
 for f in /jooki/app/www/public/*; do [ -e "$f" ] && ln -s "$f" "$W/public/"; done
 for f in /jooki/app/www/wifi_setup/public/*; do [ -e "$f" ] && ln -s "$f" "$W/wifi_setup/setup/"; done
 for f in /jooki/app/www/deezer/*; do [ -e "$f" ] && ln -s "$f" "$W/deezer/"; done
+rm -f "$D"/uploads/upload_* 2>/dev/null
+mkdir -p "$D/uploads" "$D/artwork" || fail
 exit 0]], "setup_web_dirs", a.data } end, background = true },
   -- the Jooki's own Spotify account forgotten (services.streaming): spotify_ctrl only saves the first account
   -- that reaches it with none, so it is stopped, its file removed, and it starts again with no account, as

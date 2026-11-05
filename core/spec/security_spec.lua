@@ -85,6 +85,32 @@ describe("services.security", function()
     assert_eq(find(r2.commands, "shell", "action", "mqtt_lan").args.on, false)
   end)
 
+  it("MQTT on the LAN: set up again once the Wi-Fi has an address, and when it changes (#28)", function()
+    security.on_boot({}, { security = { mqtt_lan = true } })
+    local on = { mqtt_lan = true }
+    local function net(ip, route) return { connected = true, ip = ip, route = route } end
+    -- the boot script ran without an address: nothing to do until the Jooki is online
+    assert_nil(security.on_lan_check({ maintenance = on }))
+    assert_nil(security.on_lan_check({ maintenance = on, net = net("192.168.1.11", nil) }))
+    assert_nil(security.on_lan_check({ maintenance = on, net = { connected = false, route = true } }))
+    local r = security.on_lan_check({ maintenance = on, net = net("192.168.1.11", true) })
+    assert_eq(find(r.commands, "shell", "action", "mqtt_lan").args.on, true)
+    assert_eq(find(r.commands, "log", "key", "security.mqtt_lan_address").fields.ip, "192.168.1.11")
+    -- once per address: no broker restart every 30 s
+    assert_nil(security.on_lan_check({ maintenance = on, net = net("192.168.1.11", true) }))
+    -- a new address (another network, a new lease): set up again
+    assert_true(has_shell(security.on_lan_check({ maintenance = on, net = net("192.168.1.42", true) }).commands, "mqtt_lan"))
+    -- switch off: never touched
+    assert_nil(security.on_lan_check({ maintenance = { mqtt_lan = false }, net = net("10.0.0.2", true) }))
+    -- turned on from the page while online: the script already bound this address
+    security.on_mqtt_lan({ net = net("192.168.1.42", true) }, { on = false })
+    security.on_mqtt_lan({ net = net("192.168.1.50", true) }, { on = true })
+    assert_nil(security.on_lan_check({ maintenance = on, net = net("192.168.1.50", true) }))
+    -- after a restart the address is set up again, even the same one
+    security.on_boot({}, { security = { mqtt_lan = true } })
+    assert_true(has_shell(security.on_lan_check({ maintenance = on, net = net("192.168.1.50", true) }).commands, "mqtt_lan"))
+  end)
+
   it("parent code: set the first time, persisted, marks it enabled", function()
     local r = security.on_parent_set({}, { code = "1234" })
     assert_true(r.state.maintenance.parent)

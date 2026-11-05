@@ -92,6 +92,13 @@ it becomes the Jooki's account again ([Use it](use.md#spotify)).
 **What are *Home automation* and *Maintenance access* in Settings?**
 Two switches for tinkerers. Leave them off.
 
+**How do I connect Home Assistant?**
+In the Jooki's page, open Settings, then *Home automation*, and turn it on. The page then shows
+four things: the host, the port (1883), the user (`jooki`) and a password. Home Assistant needs
+all four: in its MQTT settings, or in a bridge from its own Mosquitto (`remote_username` and
+`remote_password`). Without the user and password, the Jooki says no. Before 2.4.18, after the
+Jooki was switched off and on, turn *Home automation* off and on again.
+
 **And the Jooki 1?**
 It's on the way, but it's a much more closed box: it takes more work.
 

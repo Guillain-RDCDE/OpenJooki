@@ -114,9 +114,33 @@ function security.on_ssh_key(doc, ev)
 end
 
 -- ---------------------------------------------------------------- MQTT on the LAN
+-- The LAN listener is bound to the Wi-Fi address, and at boot the script (S57) runs long before
+-- the Wi-Fi has one: it found none and left the listener out, so after every restart Home Assistant
+-- could not connect while the switch said on (#28). The core sets it up again once the Jooki is
+-- online, and each time its address changes (checked on the network.status timer, every 30 s).
+local lan_ip = nil   -- the address the LAN listener was last set up on (nil: not set up yet)
+function security._set_lan_ip(v) lan_ip = v end                    -- tests only
+
+local function lan_address(doc)
+  local n = doc.net or {}
+  if n.connected and n.route == true and type(n.ip) == "string" and n.ip ~= "" then return n.ip end
+  return nil
+end
+
+function security.on_lan_check(doc)
+  if not (doc.maintenance or {}).mqtt_lan then return nil end
+  local ip = lan_address(doc)
+  if not ip or ip == lan_ip then return nil end
+  lan_ip = ip
+  return { commands = {
+    { kind = "shell", action = "mqtt_lan", args = { on = true } },
+    { kind = "log", level = "info", key = "security.mqtt_lan_address", fields = { ip = ip } } } }
+end
+
 function security.on_mqtt_lan(doc, ev)
   local m = maint(doc)
   m.mqtt_lan = ev.on == true
+  lan_ip = m.mqtt_lan and lan_address(doc) or nil
   -- the boot script writes/removes the flag, rebuilds the broker config and, since
   -- the broker is already running, restarts it (adds/removes the LAN listener).
   return { state = { maintenance = m }, commands = {
@@ -168,6 +192,7 @@ function security.on_boot(doc, ev)
   m.ssh = false            -- dropbear on 2222 never survives a reboot
   m.ssh_until = nil
   m.mqtt_lan = s.mqtt_lan == true
+  lan_ip = nil
   ssh_keys = {}
   for line in (s.authorized_keys or ""):gmatch("[^\n]+") do
     if line:match("%S") then ssh_keys[#ssh_keys + 1] = line end
@@ -196,6 +221,7 @@ security.schemas = S
 function security.install(_, dispatch)
   dispatch.on("boot", "security", security.on_boot)
   dispatch.on_timer("security.ssh_off", "security", security.on_ssh_off)
+  dispatch.on_timer("network.status", "security", security.on_lan_check)
   -- the page's switches arrive through api.v1, which calls the handlers above directly;
   -- only the physical reset (services.device) comes as an event
   dispatch.on("security.parent_clear", "security", security.on_parent_clear)

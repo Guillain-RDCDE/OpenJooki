@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Home automation stays on after a restart** (#28). With *Home automation* on in Settings, Home
+  Assistant could connect only until the Jooki was switched off: after a restart the switch still
+  said on, but the Jooki no longer let anything in from the network. It now opens again by
+  itself about half a minute after the Wi-Fi comes up, and again if the Jooki gets a new address.
+- For the tinkerers: the LAN listener is bound to the Wi-Fi address, and `S57_oj-security.sh`
+  runs at boot long before DHCP gives one (`udhcpc -b`), so it left the listener out. The core
+  (services.security, on the `network.status` timer) now re-runs the script once the Jooki is
+  online (chip connected, address known, default route present) and whenever the address changes;
+  once per address, so the broker restarts at most once per new address. Home Assistant needs
+  the login shown on the page (user `jooki` and the password): an integration that connects
+  without one is refused.
+
 ## OpenJooki 2.4.17 (3 November 2026) — The page always comes up
 - **The Jooki's page no longer disappears when the card's music space is worn out** (#27). If the
   part of the SD card that holds the music could not be written any more, every address of the

@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.18 (5 November 2026) — Home Assistant after a restart
 - **Home automation stays on after a restart** (#28). With *Home automation* on in Settings, Home
   Assistant could connect only until the Jooki was switched off: after a restart the switch still
   said on, but the Jooki no longer let anything in from the network. It now opens again by

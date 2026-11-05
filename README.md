@@ -42,8 +42,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.17:** the Jooki's page comes up even when its SD card is worn (thanks, Rubman86).
-2.4.16: updates install in about half the time, thanks to oresh.
+**New in 2.4.18:** Home Assistant can connect again after the Jooki is switched off and on (thanks, clem-25).
+2.4.17: the Jooki's page comes up even when its SD card is worn (thanks, Rubman86).
 [All the changes](CHANGELOG.md)
 
 ---

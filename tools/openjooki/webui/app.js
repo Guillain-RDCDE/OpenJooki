@@ -180,7 +180,7 @@
     lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
     lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },
     lib_n: function (n) { return n + (n > 1 ? ' images' : ' image'); }, lib_set: function (n) { return 'Image choisie : ' + n; },
-    s_listen: 'Écoute', s_bt: 'Enceinte ou casque', hp_wired: 'Casque détecté', hp_wired_sub: 'Avec un adaptateur USB-C vers jack sans puce', hp_yes: 'Oui', hp_no: 'Non', hp_boost: 'Casque plus fort', hp_boost_sub: 'Baissez le volume avant de mettre le casque', hp_boost_kids: 'Marche seulement sans le volume limité (mode enfant)', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
+    s_listen: 'Écoute', s_bt: 'Enceinte ou casque', hp_wired: 'Casque détecté', hp_wired_sub: 'Avec un adaptateur USB-C vers jack sans puce', hp_yes: 'Oui', hp_no: 'Non', hp_boost: 'Casque plus fort', hp_boost_sub: 'Baissez le volume avant de mettre le casque', hp_boost_kids: 'Marche seulement sans le volume limité (mode enfant)', s_upnp: 'Jouer depuis d\'autres applis', s_upnp_sub: 'UPnP / DLNA, sur le Wi-Fi de la maison : BubbleUPnP, mconnect, un serveur de musique', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
     s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
     s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
     s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
@@ -381,7 +381,7 @@
     lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
     lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },
     lib_n: function (n) { return n + (n > 1 ? ' pictures' : ' picture'); }, lib_set: function (n) { return 'Picture chosen: ' + n; },
-    s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_none: 'None', s_night_trip: 'Bedtime and travel',
+    s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_upnp: 'Play from other apps', s_upnp_sub: 'UPnP / DLNA, from the home Wi-Fi: BubbleUPnP, mconnect, a music server', s_none: 'None', s_night_trip: 'Bedtime and travel',
     s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
     s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
     s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
@@ -582,7 +582,7 @@
     lib_pick: 'Kies een plaatje', lib_search_ph: 'Zoek: kat, raket, slapen…', lib_loading: 'Plaatjes laden…',
     lib_fail: 'De plaatjes konden niet geladen worden. Probeer opnieuw.', lib_none: function (q) { return 'Geen plaatje voor “' + q + '”.'; },
     lib_n: function (n) { return n + (n > 1 ? ' plaatjes' : ' plaatje'); }, lib_set: function (n) { return 'Plaatje gekozen: ' + n; },
-    s_listen: 'Luisteren', s_bt: 'Speaker of koptelefoon', hp_wired: 'Koptelefoon gevonden', hp_wired_sub: 'Met een USB-C-naar-jack-adapter zonder chip', hp_yes: 'Ja', hp_no: 'Nee', hp_boost: 'Luidere koptelefoon', hp_boost_sub: 'Zet het volume eerst lager voor je hem opzet', hp_boost_kids: 'Werkt alleen als Begrensd volume (kindermodus) uit staat', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
+    s_listen: 'Luisteren', s_bt: 'Speaker of koptelefoon', hp_wired: 'Koptelefoon gevonden', hp_wired_sub: 'Met een USB-C-naar-jack-adapter zonder chip', hp_yes: 'Ja', hp_no: 'Nee', hp_boost: 'Luidere koptelefoon', hp_boost_sub: 'Zet het volume eerst lager voor je hem opzet', hp_boost_kids: 'Werkt alleen als Begrensd volume (kindermodus) uit staat', s_upnp: 'Afspelen vanuit andere apps', s_upnp_sub: 'UPnP / DLNA, via de wifi thuis: BubbleUPnP, mconnect, een muziekserver', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
     s_general: 'Algemeen', s_parents: 'Ouders', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
     s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
     s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
@@ -2922,6 +2922,8 @@
         d.core ? sRow({ icon: 'vol', color: 'gray', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
         // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
         d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', color: 'orange', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null,
+        // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
+        d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
       c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
@@ -3327,7 +3329,8 @@
   function isPlaying() { return S.audio.playback.state === 'PLAYING' || S.audio.playback.state === 'STARTING'; }
   // Spotify started from the phone has no playlist of ours, and its title may arrive a moment later
   function isSpotify() { var np = S.audio.nowPlaying; return !!(np && (np.service === 'SPOTIFY' || np.service === 'DEEZER')); }
-  function hasNow() { var np = S.audio.nowPlaying; return !!(np && ((np.playlistId && np.uri) || isSpotify())); }
+  // a song of ours, Spotify, or a song sent by an app over the network (UPnP, #29)
+  function hasNow() { var np = S.audio.nowPlaying; return !!(np && ((np.playlistId && np.uri) || isSpotify() || (np.service === 'UPNP' && np.uri))); }
   function nowTitle() {
     var np = S.audio.nowPlaying;
     if (isSpotify()) return cleanTitle(np.track) || (np.service === 'DEEZER' ? 'Deezer' : 'Spotify');

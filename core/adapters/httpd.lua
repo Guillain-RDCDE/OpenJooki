@@ -1,6 +1,8 @@
 -- adapters.httpd: our own small web server, so web_ctrl (closed, with /ll and /cmd) can stop.
 -- It serves the page's static files and the one POST it needs -- /upload -- and NOTHING else:
--- there is no /ll and no /cmd, so a root shell over HTTP is gone (ADR-0007). The realtime channel
+-- there is no /ll and no /cmd, so a root shell over HTTP is gone (ADR-0007). The one exception is
+-- /upnp/, handed whole to opts.extra (adapters.upnp: the UPnP player's descriptions, its SOAP
+-- control and its event subscriptions, #29), with a small body (64 KiB at most). The realtime channel
 -- stays on the MQTT WebSocket (port 8000, mosquitto); this server is only files + upload.
 --
 --   local h = require("adapters.httpd").new({ port=80, docroot=..., uploads_dir=..., name=fn, log=fn })
@@ -31,6 +33,7 @@ local CACHED = "Cache-Control: public, max-age=2592000"
 local READ_CHUNK = 16384
 local MAX_HEAD = 16 * 1024               -- a request head over this is refused
 local MAX_UPLOAD = 200 * 1024 * 1024     -- an upload body over this is refused
+local MAX_SMALL_BODY = 64 * 1024          -- a /upnp/ request body over this is refused
 local CONN_TIMEOUT = 30                   -- a connection idle this long is dropped
 local MAX_CONNS = 24
 
@@ -43,6 +46,7 @@ function httpd.new(opts)
     name_fn = opts.name,                  -- function() -> the Jooki's own name (rebinding guard)
     log = opts.log or function() end,
     on_upload = opts.on_upload,
+    extra = opts.extra,                   -- function(method, path, headers, body) -> status, ctype, body, header lines | nil
     server = nil, conns = {}, socket_lib = nil,
   }, httpd)
 end
@@ -145,9 +149,9 @@ local function head(status, ctype, len, extra, cache)
 end
 
 -- responses (no `self` needed: they only fill the connection's output fields)
-local function respond_text(c, status, body, ctype)
+local function respond_text(c, status, body, ctype, extra)
   body = body or ""
-  c.out = head(status, ctype or "text/plain; charset=utf-8", #body) .. (c.method == "HEAD" and "" or body)
+  c.out = head(status, ctype or "text/plain; charset=utf-8", #body, extra) .. (c.method == "HEAD" and "" or body)
   c.out_off = 1
   c.out_file = nil
   c.phase = "resp"
@@ -169,6 +173,7 @@ function httpd:route(c)
   if not self:host_ok(host) then
     return respond_text(c, "421 Misdirected Request", "bad host", "text/plain")
   end
+  if self.extra and c.path:gsub("%?.*$", ""):sub(1, 6) == "/upnp/" then return self:begin_extra(c) end
   if c.method == "GET" or c.method == "HEAD" then
     local path = safe_path(self.docroot, c.path)
     if not path then return respond_text(c, "400 Bad Request", "bad path", "text/plain") end
@@ -180,6 +185,33 @@ function httpd:route(c)
   end
   -- everything else, /ll and /cmd included, does not exist here
   return respond_text(c, "404 Not Found", "not found", "text/plain")
+end
+
+-- ---- /upnp/ (opts.extra): the whole small body, then one answer ------------------
+function httpd:begin_extra(c)
+  if (c.headers["transfer-encoding"] or ""):lower():find("chunked", 1, true) then
+    return respond_text(c, "411 Length Required", "length required", "text/plain")
+  end
+  local clen = tonumber(c.headers["content-length"] or "") or 0
+  if clen < 0 or clen > MAX_SMALL_BODY then return respond_text(c, "413 Payload Too Large", "too large", "text/plain") end
+  if (c.headers["expect"] or ""):lower() == "100-continue" and #c.inbuf < clen then
+    pcall(function() c.sock:send("HTTP/1.1 100 Continue\r\n\r\n") end)
+  end
+  c.need, c.phase = clen, "body"
+  return self:feed_body(c)
+end
+
+function httpd:feed_body(c)
+  if #c.inbuf < c.need then return end
+  local body = c.inbuf:sub(1, c.need)
+  c.inbuf = ""
+  local ok, status, ctype, rbody, extra = pcall(self.extra, c.method, c.path, c.headers, body)
+  if not ok then
+    self.log("httpd.extra_failed", { err = tostring(status) })
+    return respond_text(c, "500 Internal Server Error", "error", "text/plain")
+  end
+  if not status then return respond_text(c, "404 Not Found", "not found", "text/plain") end
+  return respond_text(c, status, rbody, ctype, extra)
 end
 
 -- ---- upload (streaming multipart to disk) -----------------------------------
@@ -330,6 +362,8 @@ function httpd:on_readable(c, now)
   if data and #data > 0 then c.inbuf = c.inbuf .. data end
   if c.phase == "head" then
     self:parse_head(c)
+  elseif c.phase == "body" then
+    self:feed_body(c)
   elseif c.phase == "upload" then
     if c.up then c.up.left = c.up.left - (data and #data or 0) end
     self:feed_upload(c)

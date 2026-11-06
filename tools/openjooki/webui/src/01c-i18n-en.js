@@ -168,7 +168,7 @@
     lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
     lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },
     lib_n: function (n) { return n + (n > 1 ? ' pictures' : ' picture'); }, lib_set: function (n) { return 'Picture chosen: ' + n; },
-    s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_none: 'None', s_night_trip: 'Bedtime and travel',
+    s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_upnp: 'Play from other apps', s_upnp_sub: 'UPnP / DLNA, from the home Wi-Fi: BubbleUPnP, mconnect, a music server', s_none: 'None', s_night_trip: 'Bedtime and travel',
     s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
     s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
     s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',

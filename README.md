@@ -33,6 +33,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | I want to read a story myself | **[Jookistory: a story read by you](guide/use.md#a-story-read-by-you)** |
 | Grandma reads from far away, and the book gets its own token | **[From far away](guide/use.md#a-story-read-from-far-away)** · **[Labels for the books](guide/use.md#labels-for-the-books)** |
 | I use Spotify on my phone | **[Spotify on the Jooki](guide/use.md#spotify)** |
+| I want to send music from another app: TIDAL, Qobuz, a music server | **[From other apps](guide/use.md#from-other-apps-upnp--dlna)** · UPnP / DLNA |
 | A new version is out | **[Update it](guide/update.md)** · from the Jooki's page |
 | My Jooki doesn't start any more | **[A new SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#new)** · 10 min with a computer |
 | No more room for music | **[A bigger SD card](https://guillain-rdcde.github.io/OpenJooki/sdcard.html#bigger)** · with a computer |

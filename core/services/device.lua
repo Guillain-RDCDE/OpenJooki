@@ -7,7 +7,7 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode?, hp_boost }   (audiocfg.json, 1.x shape + the heart, the knob, louder headphones)
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp }   (audiocfg.json, 1.x shape + the heart, the knob, louder headphones, play from other apps)
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
 --   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
@@ -45,6 +45,7 @@ local function audiocfg_of(doc)
   a.shuffle_mode = a.shuffle_mode == true
   a.continue_on_token_removal = a.continue_on_token_removal == true
   a.hp_boost = a.hp_boost == true
+  a.upnp = a.upnp == true
   a.repeat_mode = a.repeat_mode or 1
   return a
 end
@@ -94,6 +95,8 @@ function device.update_config(doc, changes, opts)
     a.hp_boost = changes.hp_boost
     cmds[#cmds + 1] = util.hp_gain(a.hp_boost, (doc.device or {}).toy_safe ~= false)
   end
+  -- play from other apps (services.upnp, adapters.upnp): only a real boolean
+  if type(changes.upnp) == "boolean" then a.upnp = changes.upnp end
   if not (opts and opts.silent) then
     cmds[#cmds + 1] = emit("audiocfg.changed", { shuffle_mode = changes.shuffle_mode, repeat_mode = changes.repeat_mode })
   end
@@ -363,7 +366,8 @@ S.volume = { type = "object", required = { "percent" }, properties = { percent =
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind" } },
-                                              continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" } }, additionalProperties = false }
+                                              continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
+                                              upnp = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

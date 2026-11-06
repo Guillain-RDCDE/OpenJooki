@@ -116,6 +116,9 @@ jobs:
       - name: network MQTT switch (the real S57 script, #28)
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_mqtt_lan.py
+      - name: UPnP player (a fake phone app, #29)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_upnp.py
       - name: e2e (the page)
         if: ${{ !cancelled() }}
         run: sudo -E python3 e2e.py

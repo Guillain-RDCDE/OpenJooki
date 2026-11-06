@@ -2,7 +2,8 @@
   function isPlaying() { return S.audio.playback.state === 'PLAYING' || S.audio.playback.state === 'STARTING'; }
   // Spotify started from the phone has no playlist of ours, and its title may arrive a moment later
   function isSpotify() { var np = S.audio.nowPlaying; return !!(np && (np.service === 'SPOTIFY' || np.service === 'DEEZER')); }
-  function hasNow() { var np = S.audio.nowPlaying; return !!(np && ((np.playlistId && np.uri) || isSpotify())); }
+  // a song of ours, Spotify, or a song sent by an app over the network (UPnP, #29)
+  function hasNow() { var np = S.audio.nowPlaying; return !!(np && ((np.playlistId && np.uri) || isSpotify() || (np.service === 'UPNP' && np.uri))); }
   function nowTitle() {
     var np = S.audio.nowPlaying;
     if (isSpotify()) return cleanTitle(np.track) || (np.service === 'DEEZER' ? 'Deezer' : 'Spotify');

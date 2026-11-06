@@ -6,7 +6,7 @@
 --   services.playback.queue    the order of a playlist's tracks (identity or a memoised shuffle)
 -- Owns state.playback (what the page sees):
 --   { state = "idle"|"starting"|"playing"|"paused"|"ended",
---     position_ms, now = { playlist, index, queue_pos, track, uri, service, audiobook,
+--     position_ms, now = { playlist, index, queue_pos, track, uri, service (FILE, STREAM, UPNP, SPOTIFY, DEEZER), audiobook,
 --                          title, album, artist, duration_ms, has_next, has_prev, image },
 --     paused_by, paused_at, resume_ms (pending seek) }
 -- and state.playback_int (its own bookkeeping, never published):
@@ -194,6 +194,31 @@ end
 local function is_streaming(pb) return pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER") end
 local function stream_cmds(pb, action, arg) return { commands = require("services.streaming").transport(pb.now.service, action, arg) } end
 
+--- A song sent by an app over the network (services.upnp): an http(s) address the engine fetches,
+--- like a web radio, but with an end, a position and a seek. now.service = "UPNP", no playlist: the
+--- heart, the page and a token act on it like on any song, and the last one to start wins.
+function playback.play_uri(doc, uri, info)
+  local pb = pb_of(doc)
+  info = info or {}
+  local cmds = {}
+  local has_streaming, streaming = pcall(require, "services.streaming")
+  local streamed = is_streaming(pb)
+  if has_streaming and (streamed or (doc.spotify and doc.spotify.playing)) then
+    for _, c in ipairs(streaming.transport(streamed and pb.now.service or "SPOTIFY", "stop")) do cmds[#cmds + 1] = c end
+  end
+  if not streamed and (pb.state == "playing" or pb.state == "paused" or pb.state == "starting") then
+    cmds[#cmds + 1] = cmd_audio("stop", MUSIC)
+  end
+  pb.now = { service = "UPNP", uri = uri, title = info.title, artist = info.artist, album = info.album,
+             image = info.image, duration_ms = math.floor(tonumber(info.duration_ms) or 0),
+             has_next = false, has_prev = false, source = info.album }
+  pb.state, pb.position_ms, pb.resume_ms = "starting", 0, nil
+  pb.paused_by, pb.paused_at = nil, nil
+  cmds[#cmds + 1] = cmd_audio("play", MUSIC, uri)
+  cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
+  return { state = st(pb), commands = cmds }
+end
+
 function playback.on_pause(doc, ev)
   local pb = pb_of(doc)
   if not is_playing(doc) then return nil end
@@ -220,6 +245,10 @@ function playback.on_resume(doc, ev)
   -- Spotify started from the phone has no playlist of ours: "play" asks the daemon to continue
   if is_streaming(pb) and not pb.now.playlist and pb.state ~= "playing" then return stream_cmds(pb, "resume") end
   if pb.state == "paused" then return playback.resume_paused(doc, pb, ev.now) end
+  -- a song from an app, ended or stopped: from the start again
+  if (pb.state == "ended" or pb.state == "idle") and pb.now and pb.now.service == "UPNP" then
+    return playback.play_uri(doc, pb.now.uri, pb.now)
+  end
   if (pb.state == "ended" or pb.state == "idle") and pb.now then
     return start(doc, pb, pb.now.playlist, { index = pb.now.index, restart = true, now_s = ev.now })
   end
@@ -289,10 +318,10 @@ function playback.on_stop(doc)
 end
 
 -- what the streaming daemons report ---------------------------------------------
---- Local music (a file or a web radio) loaded on the engine: playing, starting or paused.
+--- Local music (a file, a web radio, a song from an app) loaded on the engine: playing, starting or paused.
 function playback.local_busy(doc)
   local pb = doc.playback or {}
-  return pb.now and (pb.now.service == "FILE" or pb.now.service == "STREAM")
+  return pb.now and (pb.now.service == "FILE" or pb.now.service == "STREAM" or pb.now.service == "UPNP")
     and (pb.state == "playing" or pb.state == "starting" or pb.state == "paused")
 end
 
@@ -339,6 +368,14 @@ function playback.on_audio(doc, ev)
   local pb = pb_of(doc)
   -- Spotify/Deezer plays: late reports of the local track it stopped must not touch its state
   if is_streaming(pb) then return nil end
+  -- the engine could not play it (audio_ctrl's cb_error): only a song from an app is concerned, so
+  -- the app sees it stopped and moves on (a file or a radio keep their 1.x behaviour)
+  if kind == "error" then
+    if not (pb.now and pb.now.service == "UPNP") or pb.state == "idle" then return nil end
+    pb.state, pb.position_ms = "idle", 0
+    return { state = st(pb), commands = { emit("playback.changed", { state = "idle" }),
+      { kind = "log", level = "warn", key = "playback.upnp_failed", fields = { uri = tostring(pb.now.uri):sub(1, 120) } } } }
+  end
   local cmds = {}
   local resume, resume_changed = nil, false
   if kind == "position" then
@@ -441,7 +478,7 @@ function playback.install(api, dispatch)
   -- the Jooki's own controls (services.device.buttons): the heart's short press, the knob held halfway
   dispatch.on("playback.toggle_request", "playback", playback.on_toggle)
   dispatch.on("playback.skip_request", "playback", playback.on_skip)
-  for _, k in ipairs({ "starting", "playing", "paused", "stopped", "ended", "position" }) do
+  for _, k in ipairs({ "starting", "playing", "paused", "stopped", "ended", "position", "error" }) do
     dispatch.on("audio." .. k, "playback", playback.on_audio)
   end
   api.command("playback.play", S.play, function(doc, p, ev)

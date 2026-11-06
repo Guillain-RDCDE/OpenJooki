@@ -78,6 +78,8 @@
         d.core ? sRow({ icon: 'vol', color: 'gray', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
         // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
         d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', color: 'orange', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null,
+        // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
+        d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
       c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [

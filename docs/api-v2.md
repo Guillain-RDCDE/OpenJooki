@@ -219,6 +219,9 @@ Payload schema:
     },
     "shuffle_mode": {
       "type": "boolean"
+    },
+    "upnp": {
+      "type": "boolean"
     }
   },
   "type": "object"

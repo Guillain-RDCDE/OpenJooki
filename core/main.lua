@@ -120,6 +120,8 @@ v1.install(dispatch)
 
 require("services.network").install(api, dispatch)
 require("services.bluetooth").install(api, dispatch)
+-- the UPnP player (#29): off until Settings > Play from other apps; its network side is adapters.upnp
+require("services.upnp").install(api, dispatch)
 mark("services")
 
 -- health: every 60 s, memory and bus statistics into the state
@@ -162,6 +164,7 @@ end
 -- port still held by the core before this one, or not root on the bench) is not fatal: the core runs
 -- on and the server tries again by itself (httpd:tick). Without LuaSocket there is no server at all.
 local httpd = nil
+local upnp_net = require("adapters.upnp").new({ http_port = config.get("http_port"), emit = loop.emit })
 if config.get("http_port") > 0 then
   httpd = require("adapters.httpd").new({
     port = config.get("http_port"),
@@ -170,6 +173,7 @@ if config.get("http_port") > 0 then
     name = function() local d = state.doc(); return d.net and d.net.name end,
     log = function(key, fields) log.info(key, fields) end,
     on_upload = function(n) log.info("httpd.upload", { parts = n }) end,
+    extra = function(method, path, headers, body) return upnp_net:http(state.doc(), method, path, headers, body, clock.now()) end,
   })
   local ok, err = httpd:start()
   if not ok then
@@ -190,6 +194,7 @@ loop.init(adapters, { translate = translate_with_time, publisher = publisher,
       if doc.net.name and not mdns.names[doc.net.name:lower()] then mdns:set_names({ doc.net.name }) end
       mdns:serve(doc.net.ip, clock.now())
     end
+    if httpd then upnp_net:serve(doc, clock.now()) end
   end })
 timers.every("health", 60, clock.now())
 

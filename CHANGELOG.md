@@ -1,5 +1,25 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Play from other apps (UPnP / DLNA)** (#29). The Jooki can now play music sent from an app on
+  your phone or from a music server at home, over your Wi-Fi: BubbleUPnP (Android), mconnect
+  (iPhone), a NAS, or an app that lets TIDAL or Qobuz play on other speakers. Switch it on in
+  Settings, *Play from other apps*; the Jooki then shows up in those apps under its name. It plays
+  MP3, FLAC, Ogg and WAV (not AAC: most apps convert by themselves), from `http://` addresses
+  only. The heart button, the page
+  and the volume work as usual, and a token put on takes over. Off by default.
+- For the tinkerers: a UPnP AV MediaRenderer:1 in the core, no new program. SSDP on UDP 1900
+  (answers M-SEARCH, announces itself at start, on a new address and every 30 s like the `.local`
+  name), the descriptions and the SOAP control under `/upnp/` on the page's own web server,
+  AVTransport (set URI, play, pause, stop, seek), RenderingControl (volume and mute = the Jooki's
+  volume, limits included), ConnectionManager, and GENA events (LastChange) sent without ever
+  blocking the loop. The song is an `http(s)` address handed to `audio_ctrl` like a web radio
+  (`now.service = "UPNP"`); an `https` address is refused at once (fault 714: the image has no GIO
+  TLS module, `uridecodebin` could not open it), and a song the player cannot play
+  (`/j/audio/input/error`, so far ignored) now ends as STOPPED, so the app moves on. TIDAL itself (TIDAL Connect) is only for licensed makers. New
+  `audiocfg.upnp`, `services.upnp`, `adapters.upnp`; bench suite `test_upnp.py`, checked as well
+  with Home Assistant's DLNA library (`async_upnp_client`, strict mode).
+
 ## OpenJooki 2.4.20 (6 November 2026) — Louder headphones
 - **Louder headphones** (#10). Wired headphones can sound quiet on a Jooki 2, even with the knob
   all the way up: the original Jooki keeps them low. A new switch in Settings, *Louder

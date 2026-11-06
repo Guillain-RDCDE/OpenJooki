@@ -12,7 +12,7 @@ local function jsonish(payload)
   return nil
 end
 
-local AUDIO = { starting = true, playing = true, paused = true, stopped = true, ended = true }
+local AUDIO = { starting = true, playing = true, paused = true, stopped = true, ended = true, error = true }
 -- fwd / rew: the track knob held halfway (esp32_ctrl.c publishes "rew"; "rev" is kept for other hardware)
 local BUTTONS = { next = true, prev = true, fwd = true, rew = true, rev = true, vol_inc = true, vol_dec = true, circle = true,
                   airplane_mode_on = true, airplane_mode_off = true, airplane_release = true, hp_plugged = true }

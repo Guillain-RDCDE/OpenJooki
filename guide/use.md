@@ -192,6 +192,20 @@ listen stops by itself after the **Automatic timer**, the volume stays under the
   becomes the Jooki's own, even after a restart. Do it if a token stops the music of another
   Spotify speaker at home, or if the tokens play on the wrong account after a restart.
 
+## From other apps (UPnP / DLNA)
+
+Apps on your phone, or a music server at home, can send music to the Jooki over your Wi-Fi.
+
+- **Switch it on**: *Settings* → **Play from other apps**. It is off until you do.
+- **Then, in the app**: pick the Jooki in its list of speakers or players (it has the Jooki's
+  name). For example **BubbleUPnP** on Android, **mconnect** on iPhone, or your NAS's music app.
+- **TIDAL, Qobuz**: through an app that can send them to other speakers (BubbleUPnP and mconnect
+  can). TIDAL's own app cannot: TIDAL keeps that for the speakers of its partner brands.
+- **What it plays**: MP3, FLAC, Ogg and WAV. Not AAC: most apps convert by themselves. The app
+  must send plain `http://` addresses: the Jooki cannot open `https://` ones.
+- **One sound at a time**: put a token on and it takes over; press play in the app to take it back.
+  The heart button, the page and the volume work as usual.
+
 ## In Settings
 
 At the top: the Jooki's name (**Rename**), its battery, the room left for music, and its
@@ -213,6 +227,8 @@ version.
   jack adapter with no chip inside ([which one](lights-and-battery.md#charging)).
 - **Louder headphones**: if wired headphones are too quiet. It only works with **Limited
   volume (kids mode)** off. Turn the volume down before putting them on.
+- **Play from other apps**: lets apps on your Wi-Fi send music to the Jooki
+  ([UPnP / DLNA](#from-other-apps-upnp--dlna)). Off until you switch it on.
 - **Speaker or headphones** (Bluetooth): put them in pairing mode, then **Search** →
   **Connect**. The sound goes to the speaker, and comes back to the Jooki when you switch
   the speaker off. Next time, just switch the speaker on: the Jooki reconnects by itself.

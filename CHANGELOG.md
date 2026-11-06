@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.20 (6 November 2026) — Louder headphones
 - **Louder headphones** (#10). Wired headphones can sound quiet on a Jooki 2, even with the knob
   all the way up: the original Jooki keeps them low. A new switch in Settings, *Louder
   headphones*, makes them louder. It only works with *Limited volume (kids mode)* off: with kids

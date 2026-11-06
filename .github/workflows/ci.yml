@@ -113,6 +113,9 @@ jobs:
       - name: security backend
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_security_backend.py
+      - name: network MQTT switch (the real S57 script, #28)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_mqtt_lan.py
       - name: e2e (the page)
         if: ${{ !cancelled() }}
         run: sudo -E python3 e2e.py

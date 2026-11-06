@@ -369,7 +369,9 @@ As built ([ADR-0007](adr/0007-security-model.md), complete since 2.1.0):
   Holding *previous* and *next* for 10 s clears it.
 - Off by default, on the page's Settings: maintenance SSH (dropbear on 2222,
   closes itself after one hour; public keys kept on `/data`) and MQTT on the LAN
-  for home automation (a listener on the Wi-Fi address, with the password).
+  for home automation (a listener on the Wi-Fi address, with the password; the
+  broker restart that adds or removes it starts the hardware controllers again,
+  as `broker_start` does, #28).
 - `adapters.shell` is a list of named actions with checked arguments, never a
   free string.
 - **Updates**: the two addresses are configuration keys (`update_manifest_url`,

@@ -73,17 +73,60 @@ if [ -f "$LANFLAG" ]; then
     logger -t oj-security "network mqtt requested but no LAN IP yet"
   fi
 fi
+CHANGED=1
+cmp -s "$CONF.tmp" "$CONF" 2>/dev/null && CHANGED=0
 mv "$CONF.tmp" "$CONF" 2>/dev/null
 
 # 6. a settings change (not the boot path): the broker is already up -> restart it with
-#    the new config. This device daemonizes mosquitto with -d, keeps no pidfile and has
-#    no working init.d, so restart by hand (mirrors /etc/rcS.d/S58_mosquitto.sh). At boot
-#    S57 runs before S58, so nothing is running yet and this is skipped.
+#    the new config, only if the config changed. This device daemonizes mosquitto with -d,
+#    keeps no pidfile and has no working init.d, so restart by hand (mirrors
+#    /etc/rcS.d/S58_mosquitto.sh). At boot S57 runs before S58, so nothing is running yet
+#    and this is skipped.
+#    The hardware controllers (tokens and knobs, buttons, lights) leave "cleanly" (exit 0)
+#    when the broker goes, and their launcher only restarts a crash: without them the
+#    Jooki is deaf until the next restart (#28, the same as adapters.broker_watch knows).
+#    So wait until they are gone and start them again, as ml-start-app.sh starts them.
 MPID=$(ps 2>/dev/null | grep '[m]osquitto -c' | awk '{print $1}' | head -n 1)
-if [ -n "$MPID" ]; then
+if [ -n "$MPID" ] && [ "$CHANGED" = 1 ]; then
+  CTRL="gpio_ctrl:-5 ht_ctrl:-1 esp32_ctrl:-5"
+  L=/jooki/bin/ml-launch-controller.sh
+  # a launcher's command line, read from /proc (busybox ps may cut long lines)
+  launcher_alive() {
+    for f in /proc/[0-9]*/cmdline; do
+      case "$(tr '\000' ' ' 2>/dev/null < "$f")" in *"ml-launch-controller.sh /jooki/bin/$1 "*) return 0 ;; esac
+    done
+    return 1
+  }
+  OLD=""
+  for c in $CTRL; do OLD="$OLD $(pidof "${c%%:*}" 2>/dev/null)"; done
   kill "$MPID" 2>/dev/null
-  sleep 1
+  # the controllers on the old broker see it close and leave at once: wait for them (10 s at most)
+  i=0
+  while [ $i -lt 10 ]; do
+    left=0
+    for p in $OLD; do kill -0 "$p" 2>/dev/null && left=1; done
+    [ $left = 0 ] && break
+    sleep 1; i=$((i+1))
+  done
   rm -f /var/run/mosquitto.pid 2>/dev/null
-  /usr/sbin/mosquitto -c "$CONF" -d 2>/dev/null
+  /usr/sbin/mosquitto -c "$CONF" -d </dev/null >/dev/null 2>&1
+  # a controller still running, or a launcher still alive (it starts a crashed one again by itself),
+  # needs nothing; a launcher alone is between two states (a crash: it starts it again in 1 s; a
+  # clean exit: it ends): wait for one or the other. Only a controller with no launcher is started.
+  n=0
+  for c in $CTRL; do
+    b=${c%%:*}
+    i=0; start=0
+    while [ $i -lt 10 ]; do
+      pidof "$b" >/dev/null 2>&1 && break
+      launcher_alive "$b" || { start=1; break; }
+      sleep 1; i=$((i+1))
+    done
+    if [ $start = 1 ] && [ -x "$L" ] && [ -x "/jooki/bin/$b" ]; then
+      "$L" "/jooki/bin/$b" "${c#*:}" </dev/null >/dev/null 2>&1 &
+      n=$((n+1))
+    fi
+  done
+  logger -t oj-security "broker restarted for the network mqtt setting; controllers started again: $n"
 fi
 exit 0

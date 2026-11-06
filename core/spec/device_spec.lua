@@ -78,6 +78,38 @@ describe("services.device — volume chain", function()
     assert_false(device.update_config(doc, { continue_on_token_removal = false }).state.audiocfg.continue_on_token_removal)
   end)
 
+  it("louder headphones: saved, said at once and at every boot, never with kids mode on", function()
+    local schema = require("api.schema")
+    assert_true(schema.validate({ hp_boost = true }, device.schemas.config))
+    assert_false(schema.validate({ hp_boost = "true" }, device.schemas.config))
+    local function gain(r) local c = find(r, "shell", "action", "hp_gain") return c and c.args.db end
+    -- off by default; kids mode on (doc_with): the setting is saved but the gain stays at the factory 0 dB
+    local doc = doc_with()
+    assert_false(device.audiocfg_of(doc).hp_boost)
+    local r = device.update_config(doc, { hp_boost = true })
+    assert_true(find(r, "files.write").doc.hp_boost); assert_eq(gain(r), 0)
+    -- kids mode off: +6 dB at once, back to 0 when switched off
+    local free = doc_with(); free.device.toy_safe = false
+    r = device.update_config(free, { hp_boost = true })
+    assert_eq(gain(r), 6)
+    free.audiocfg = r.state.audiocfg
+    assert_eq(gain(device.update_config(free, { hp_boost = false })), 0)
+    -- not a boolean, or no change: nothing said, nothing changed
+    assert_nil(gain(device.update_config(free, { hp_boost = "false" })))
+    assert_true(device.update_config(free, { hp_boost = "false" }).state.audiocfg.hp_boost)
+    assert_nil(gain(device.update_config(free, { hp_boost = true })))
+    assert_nil(gain(device.update_config(free, { shuffle_mode = true })))
+    -- every boot says it (the factory start script restores whatever alsactl last stored)
+    assert_eq(gain(device.on_boot(doc_with(), { audiocfg = { hp_boost = true }, flags = { TOY_SAFE_OFF = true }, now = 5 })), 6)
+    assert_eq(gain(device.on_boot(doc_with(), { audiocfg = { hp_boost = true }, flags = {}, now = 5 })), 0)
+    assert_eq(gain(device.on_boot(doc_with(), { audiocfg = {}, flags = { TOY_SAFE_OFF = true }, now = 5 })), 0)
+    -- the shell action takes only the two values
+    local shell = require("adapters.shell")
+    assert_eq(shell._argv("hp_gain", { db = 6 }), { "/usr/bin/amixer", "-q", "-c", "0", "cset", "name=MERCURY Playback Volume", "37" })
+    assert_eq(shell._argv("hp_gain", { db = 0 })[7], "31")
+    for _, bad in ipairs({ 32, -31, "6", 6.5 }) do assert_nil(shell._argv("hp_gain", { db = bad })) end
+  end)
+
   it("the heart's short press is saved with the rest; an unknown choice keeps the current one", function()
     local doc = doc_with()
     local r = device.update_config(doc, { heart_press = "next" })

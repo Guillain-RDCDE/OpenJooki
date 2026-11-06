@@ -16,6 +16,8 @@ function radio.on_toy_safe(doc, ev)
   flags.TOY_SAFE_OFF = (not d.toy_safe) or nil
   return { state = { device = d, flags = flags }, commands = {
     { kind = "files.flag", name = "TOY_SAFE_OFF", set = not d.toy_safe },
+    -- louder headphones only with kids mode off (before the script: its alsactl store keeps the gain)
+    util.hp_gain((doc.audiocfg or {}).hp_boost, d.toy_safe),
     { kind = "shell", action = "toysafe_update" },
     { kind = "bus.publish", topic = "/j/esp32/output/audio/set_toysafe", payload = d.toy_safe and "1" or "0" },
     emit("lights.event", { name = d.toy_safe and "Evt.ToySafe.On" or "Evt.ToySafe.Off" }) } }

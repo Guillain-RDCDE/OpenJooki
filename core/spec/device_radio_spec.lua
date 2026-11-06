@@ -33,7 +33,24 @@ describe("services.device.radio — toy safe and the radios", function()
     local doc = doc_with()
     local r = radio.on_toy_safe(doc, { enable = false })
     assert_false(r.state.device.toy_safe); assert_true(r.state.flags.TOY_SAFE_OFF)
-    same(kinds(r), { "files.flag", "shell toysafe_update", "esp32/output/audio/set_toysafe 0", "emit lights.event Evt.ToySafe.Off" })
+    same(kinds(r), { "files.flag", "shell hp_gain", "shell toysafe_update", "esp32/output/audio/set_toysafe 0", "emit lights.event Evt.ToySafe.Off" })
+  end)
+
+  it("louder headphones follow kids mode: +6 dB only with it off and the setting on, said before the script stores it", function()
+    local function gain(r) for _, c in ipairs(r.commands) do if c.kind == "shell" and c.action == "hp_gain" then return c.args.db end end end
+    local function before_script(r)
+      local g, s
+      for i, c in ipairs(r.commands) do
+        if c.kind == "shell" and c.action == "hp_gain" then g = i elseif c.kind == "shell" and c.action == "toysafe_update" then s = i end
+      end
+      return g ~= nil and s ~= nil and g < s
+    end
+    local on = doc_with({ audiocfg = { volume = 40, hp_boost = true } })
+    local r = radio.on_toy_safe(on, { enable = false })
+    assert_eq(gain(r), 6); assert_true(before_script(r))
+    assert_eq(gain(radio.on_toy_safe(on, { enable = true })), 0)
+    assert_eq(gain(radio.on_toy_safe(doc_with(), { enable = false })), 0)
+    assert_eq(gain(radio.on_system_tag(on, { name = "sys.toy_safe_on" })), 0)
   end)
 
   it("radio.set switches the radios and the flags", function()

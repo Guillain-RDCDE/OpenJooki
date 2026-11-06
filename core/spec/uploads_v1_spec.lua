@@ -146,6 +146,8 @@ describe("api.v1", function()
     assert_eq(r.state.audiocfg.repeat_mode, 0); assert_true(r.state.audiocfg.shuffle_mode); assert_true(has(r, "files.write"))
     r = cmd(doc, "SET_CFG", { continue_on_token_removal = true })
     assert_true(r.state.audiocfg.continue_on_token_removal); assert_true(has(r, "files.write"))
+    r = cmd(doc, "SET_CFG", { hp_boost = true })
+    assert_true(r.state.audiocfg.hp_boost); assert_true(has(r, "files.write"))
     r = cmd(doc, "MESSAGE_DISMISS", { id = "a" })
     assert_match(r.commands[1].payload.msg, "invalid msg id")
     doc.device = { id = "jooki2-A1B2C3" }

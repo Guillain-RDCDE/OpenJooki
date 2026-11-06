@@ -211,6 +211,8 @@ version.
 - **MP3 quality**: for the FLAC and WAV files you send (see *Whole albums* above).
 - **Headphones detected**: **Yes** when wired headphones are plugged in. They need a USB-C to
   jack adapter with no chip inside ([which one](lights-and-battery.md#charging)).
+- **Louder headphones**: if wired headphones are too quiet. It only works with **Limited
+  volume (kids mode)** off. Turn the volume down before putting them on.
 - **Speaker or headphones** (Bluetooth): put them in pairing mode, then **Search** →
   **Connect**. The sound goes to the speaker, and comes back to the Jooki when you switch
   the speaker off. Next time, just switch the speaker on: the Jooki reconnects by itself.

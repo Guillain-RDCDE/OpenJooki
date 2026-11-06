@@ -1,5 +1,18 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Louder headphones** (#10). Wired headphones can sound quiet on a Jooki 2, even with the knob
+  all the way up: the original Jooki keeps them low. A new switch in Settings, *Louder
+  headphones*, makes them louder. It only works with *Limited volume (kids mode)* off: with kids
+  mode on, the headphones stay as quiet as before. Turn the volume down before putting them on.
+- For the tinkerers: the headphones are the only output of the X1000's own codec (card 0; the
+  speaker goes through the ESP32). Muuselabs caps their volume at -3 dB (softvol `Softmaster`,
+  plus `toysafe_factor 0.3` with kids mode on) and leaves the codec's `MERCURY Playback Volume`
+  at 31 (0 dB) of 63. The switch sets it to 37 (+6 dB) while `TOY_SAFE_OFF` is set, and back to
+  31 otherwise; the core says it at every boot (the factory start script restores what
+  `alsactl store` last saved) and before `toy_safe_update.sh` stores the mixer. New shell action
+  `hp_gain` (two values only), `audiocfg.hp_boost`.
+
 ## OpenJooki 2.4.19 (6 November 2026) — Home automation, without the hiccup
 - **Tokens and buttons keep working with Home automation on** (#28). In 2.4.18, with *Home
   automation* on in Settings, the Jooki stopped hearing its tokens and its heart button, and Home

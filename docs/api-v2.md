@@ -205,6 +205,9 @@ Payload schema:
       "enum": ["none", "next", "pause"],
       "type": "string"
     },
+    "hp_boost": {
+      "type": "boolean"
+    },
     "knob_mode": {
       "enum": ["song", "both", "wind"],
       "type": "string"

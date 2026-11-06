@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.20:** a switch makes wired headphones louder (only with kids mode off).
-2.4.19: with Home automation on, the Jooki keeps hearing its tokens and buttons (it stopped in 2.4.18).
+**New in 2.4.21:** the Jooki can play music sent from other apps (UPnP / DLNA): BubbleUPnP, mconnect, a music server, TIDAL or Qobuz through those apps.
+2.4.20: a switch makes wired headphones louder (only with kids mode off).
 [All the changes](CHANGELOG.md)
 
 ---

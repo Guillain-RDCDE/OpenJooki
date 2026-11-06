@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.4.21 (6 November 2026) — Play from other apps
 - **Play from other apps (UPnP / DLNA)** (#29). The Jooki can now play music sent from an app on
   your phone or from a music server at home, over your Wi-Fi: BubbleUPnP (Android), mconnect
   (iPhone), a NAS, or an app that lets TIDAL or Qobuz play on other speakers. Switch it on in

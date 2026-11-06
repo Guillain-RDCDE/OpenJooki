@@ -1,3 +1,3 @@
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.4.20';
+  var VERSION = '2.4.21';
 

@@ -97,7 +97,8 @@ In the Jooki's page, open Settings, then *Home automation*, and turn it on. The 
 four things: the host, the port (1883), the user (`jooki`) and a password. Home Assistant needs
 all four: in its MQTT settings, or in a bridge from its own Mosquitto (`remote_username` and
 `remote_password`). Without the user and password, the Jooki says no. Before 2.4.18, after the
-Jooki was switched off and on, turn *Home automation* off and on again.
+Jooki was switched off and on, turn *Home automation* off and on again. In 2.4.18, with it on,
+the Jooki stopped hearing its tokens and buttons: update to 2.4.19.
 
 **And the Jooki 1?**
 It's on the way, but it's a much more closed box: it takes more work.

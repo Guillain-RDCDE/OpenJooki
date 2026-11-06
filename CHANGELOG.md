@@ -1,5 +1,21 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.4.19 (6 November 2026) — Home automation, without the hiccup
+- **Tokens and buttons keep working with Home automation on** (#28). In 2.4.18, with *Home
+  automation* on in Settings, the Jooki stopped hearing its tokens and its heart button, and Home
+  Assistant stopped hearing it, about half a minute after it was switched on (and each time the
+  switch was turned on or off). Only turning the switch off and restarting brought it back. Sorry!
+  It now keeps working, and Home Assistant stays connected.
+- For the tinkerers: turning the network listener on or off restarts the broker
+  (`S57_oj-security.sh`; mosquitto 1.6 cannot add a listener on reload), and since 2.4.18 the core
+  does it once the Wi-Fi has an address. The closed hardware controllers (`gpio_ctrl`, `ht_ctrl`,
+  `esp32_ctrl`) leave with exit 0 when the broker goes and `ml-launch-controller.sh` only restarts
+  a crash, so they stayed gone. The script now waits for them to leave and starts them again the
+  way `ml-start-app.sh` does (only a controller with no launcher left, so never twice), and it
+  no longer restarts the broker when the config did not change. New bench suite
+  `test_mqtt_lan.py`: the real script under busybox, a real mosquitto and stand-in controllers
+  that leave like the real ones.
+
 ## OpenJooki 2.4.18 (5 November 2026) — Home Assistant after a restart
 - **Home automation stays on after a restart** (#28). With *Home automation* on in Settings, Home
   Assistant could connect only until the Jooki was switched off: after a restart the switch still

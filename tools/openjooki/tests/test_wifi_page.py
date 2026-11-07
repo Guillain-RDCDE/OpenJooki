@@ -77,7 +77,7 @@ MOCK = r"""
         var v = new Uint8Array(last); last = null; return new DataView(v.buffer); } };
   }
   var device = { name: J.name, addEventListener: function () {}, gatt: { connected: false,
-    connect: async function () { this.connected = true; return { getPrimaryService: async function (u) { if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
+    connect: async function () { this.connected = true; return { getPrimaryService: async function (u) { if (J.noService) throw err('NotFoundError', 'No Services matching UUID ' + u + ' found in Device.'); if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
     disconnect: function () { this.connected = false; } } };
   var bt = { available: true,
     getAvailability: async function () { return bt.available; },
@@ -178,6 +178,16 @@ with sync_playwright() as p:
     pg.click("#again"); pg.click(".net[data-ssid='Home']"); pg.fill("#pw", "goodpassword"); pg.click("#connect")
     pg.wait_for_selector("#result:not([hidden])", timeout=20000)
     check("W9 one failed Bluetooth read does not end the attempt", "ok" in pg.locator("#result").get_attribute("class") and not pg.evaluate("window.__jooki.dropOnce"))
+    # W15 a new link finds no set-up service (the Jooki ends it once it has joined a network):
+    # the page says where to look, never a bare "Something went wrong" (mail of 07/11/2026)
+    pg.evaluate("window.__jooki.noService = true; document.querySelector('#again').click()")
+    pg.evaluate("navigator.bluetooth.requestDevice({}).then(d => d.gatt.disconnect())")
+    pg.click(".net[data-ssid='Home']"); pg.fill("#pw", "goodpassword"); pg.click("#connect")
+    pg.wait_for_selector("#result:not([hidden])", timeout=60000)
+    txt = pg.locator("#rtext").inner_text()
+    check("W15 no set-up service on a new link: the page says it may have joined and to look for jooki in the box",
+          "joined your Wi-Fi" in txt and "jooki" in txt and "off and on" in txt and "went wrong" not in txt, txt)
+    pg.evaluate("window.__jooki.noService = false")
     # W10 forget: cancelled, then confirmed
     before = pg.locator("[data-forget]").evaluate_all("els => els.map(e => e.getAttribute('data-forget'))")
     accept["v"] = False

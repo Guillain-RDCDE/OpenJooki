@@ -20,6 +20,13 @@
   `audiocfg.upnp`, `services.upnp`, `adapters.upnp`; bench suite `test_upnp.py`, checked as well
   with Home Assistant's DLNA library (`async_upnp_client`, strict mode).
 
+## Wi-Fi page (7 November 2026)
+- When the Bluetooth link to the Jooki comes back without its set-up service, the
+  [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html) no longer says a bare
+  *Something went wrong*. It says the Jooki may have joined the Wi-Fi already (it ends its Bluetooth
+  set-up once it has), to look for a device named *jooki…* in the internet box, and what to do
+  otherwise. Only closing the Jooki list without a choice still shows nothing. Test W15.
+
 ## OpenJooki 2.4.20 (6 November 2026) — Louder headphones
 - **Louder headphones** (#10). Wired headphones can sound quiet on a Jooki 2, even with the knob
   all the way up: the original Jooki keeps them low. A new switch in Settings, *Louder

@@ -297,9 +297,12 @@
   function noerr() { show('err', false); }
   function bars(rssi) { return rssi >= -55 ? 4 : rssi >= -65 ? 3 : rssi >= -75 ? 2 : 1; }
   function words(rssi) { return rssi >= -65 ? 'good signal' : rssi >= -75 ? 'fair signal' : 'weak signal'; }
-  function explain(e) {
+  function explain(e, chooser) {
     var m = String(e && e.message || e);
-    if (e && e.name === 'NotFoundError') return null;                 // the list was closed without a choice
+    if (e && e.name === 'NotFoundError' && chooser) return null;      // the list was closed without a choice
+    // Anywhere else NotFoundError = the Jooki's set-up service was not there on a new link. It ends that
+    // service once it has joined a network (factory chip code), so it may well be on the Wi-Fi already.
+    if (e && e.name === 'NotFoundError') return 'The Jooki stopped answering over Bluetooth. It may have joined your Wi-Fi already: look in your internet box\'s list of connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If not, switch the Jooki off and on, then try again.';
     if (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(m)) return 'The Bluetooth link dropped. Bring the Jooki closer and try again.';
     if (/nodevice/.test(m)) return 'Find the Jooki first.';
     if (/refused|session/.test(m)) return 'The Jooki refused the request. Switch it off and on, then try again.';
@@ -354,7 +357,7 @@
     if (!navigator.bluetooth) return;
     try {
       device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'JOOKI2_' }], optionalServices: [PROV, WCM] });
-    } catch (e) { var x = explain(e); if (x) err('No Jooki found', x); return; }
+    } catch (e) { var x = explain(e, true); if (x) err('No Jooki found', x); return; }
     device.addEventListener('gattserverdisconnected', function () { chars = {}; });
     $('who').textContent = '· ' + (device.name || 'Jooki');
     show('step1', false); show('step2', true); show('result', false);
@@ -402,7 +405,7 @@
                                         : st.reason === 1 ? 'The Jooki cannot find that network. Bring it closer to the box, and check the network is 2.4 GHz.'
                                         : 'The Jooki could not join it.')
               : st.state === 'timeout' ? 'The Jooki could not join it in 45 seconds. Most often the password is wrong (capitals, spaces and symbols count), or the network is out of reach or 5 GHz only. Until it joins a network it stays off Wi-Fi: try again.'
-              : st.message || 'Something went wrong.';
+              : st.message || 'The Bluetooth link failed. Switch the Jooki off and on, then try again.';
       $('rtitle').textContent = 'Not connected';
       $('rtext').textContent = why;
       $('again').textContent = 'Try again';

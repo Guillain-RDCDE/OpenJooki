@@ -26,6 +26,21 @@ end
 
 function clock.wall() return os.time() end
 
+-- A Jooki boots without an RTC: its wall clock can still be 1970. Read a bounded
+-- amount of OS entropy rather than repeating the same shuffle after every boot.
+function clock.seed(read)
+  local bytes
+  if read then bytes = read() else
+    local f = io.open("/dev/urandom", "rb")
+    if f then bytes = f:read(4); f:close() end
+  end
+  if type(bytes) == "string" and #bytes == 4 then
+    local a, b, c, d = bytes:byte(1, 4)
+    return ((a * 256 + b) * 256 + c) * 256 + d
+  end
+  return math.floor(clock.wall() + clock.now() * 1000)
+end
+
 --- Tests inject their own reader.
 function clock._set_reader(fn) reader = fn end
 

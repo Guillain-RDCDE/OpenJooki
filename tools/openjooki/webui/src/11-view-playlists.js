@@ -1,4 +1,10 @@
   /* ------------------------------------------------------------------ views */
+  function playPlaylist(p) {
+    var random = typeof p.random_start === 'boolean' ? p.random_start : !!S.audio.config.random_start;
+    var args = { playlistId: p.id };
+    if (p.spotify || (random && !p.audiobook)) args.restart = true;
+    send('PLAYLIST_PLAY', args);
+  }
   function viewPlaylists() {
     var list = userPlaylists();
     var np = S.audio.nowPlaying;
@@ -13,7 +19,7 @@
         h('div', { class: 'name' }, p.title || '—'),
         h('div', { class: 'meta' }, p.spotify ? t('sp_playlist') : t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
         n || p.spotify ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
-          e.stopPropagation(); send('PLAYLIST_PLAY', { playlistId: p.id }); } }, icon('play')) : null);
+          e.stopPropagation(); playPlaylist(p); } }, icon('play')) : null);
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
@@ -195,13 +201,13 @@
     if (p.spotify) {
       // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
       return [head, h('div', { class: 'actions' },
-          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
+          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { playPlaylist(p); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
-        resumeSwitch(p, id),
+        resumeSwitch(p, id), p.resume || p.audiobook ? null : h('div', { class: 'card', style: 'margin-top:16px' }, modeRows(p, id)),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },
-      tracks.length ? h('button', { class: 'btn primary', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play')) : null,
+      tracks.length ? h('button', { class: 'btn primary', onclick: function () { playPlaylist(p); } }, icon('play'), t('play')) : null,
       fileButton(t('add_files'), id, !tracks.length),
       h('button', { class: 'btn', onclick: function () { libraryPickerModal(p); } }, icon('lib'), t('from_library')),
       h('button', { class: 'btn', onclick: function () { radioModal(p); } }, icon('radio'), t('web_radio')),
@@ -232,7 +238,7 @@
     var more = h('div', { class: 'card', style: 'margin-top:16px' },
       h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('audiobook_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
-      // its own shuffle and repeat (#22); nothing for an audiobook or a streaming service, which do not use them
+      // its own playback modes; nothing for an audiobook or a streaming service, which do not use them
       p.audiobook || p.spotify || p.deezer ? null : modeRows(p, id),
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
@@ -257,6 +263,9 @@
       row(t('shuffle'), 'plshuffle', typeof p.shuffle_mode === 'boolean' ? (p.shuffle_mode ? 'on' : 'off') : 'settings',
         [['settings', t('pl_settings', c.shuffle_mode ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, shuffle_mode: v === 'settings' ? 'settings' : v === 'on' } }); }),
+      row(t('random_start'), 'plrandomstart', typeof p.random_start === 'boolean' ? (p.random_start ? 'on' : 'off') : 'settings',
+        [['settings', t('pl_settings', c.random_start ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
+        function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, random_start: v === 'settings' ? 'settings' : v === 'on' } }); }),
       row(t('repeat'), 'plrepeat', typeof p.repeat_mode === 'number' ? String(p.repeat_mode) : 'settings',
         [['settings', t('pl_settings', repName(Number(c.repeat_mode) || 0))], ['0', t('s_off')], ['1', t('rep_all')], ['2', t('rep_one')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, repeat_mode: v === 'settings' ? 'settings' : Number(v) } }); })];

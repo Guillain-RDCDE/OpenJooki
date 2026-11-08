@@ -75,6 +75,7 @@
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     toy_safe_maxvol_unavailable: 'Nécessite un micrologiciel à jour pour limiter aussi le haut-parleur.',
     toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
+    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
     lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur éteints jour et nuit, même après un redémarrage ou sans mode nuit.',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Anneau, voyants et cœur s’éteignent pendant les heures définies et se rallument ensuite.',
     night_dim_help: 'Le réglage est conservé et reprend quand les lumières s’allument.',
@@ -281,6 +282,7 @@
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
     toy_safe_maxvol_unavailable: 'Requires updated device firmware to limit the speaker as well.',
     toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
+    random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off all day, even after restarting or with night mode off.',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Ring, side lights and heart turn off during the scheduled hours and come back on afterwards.',
     night_dim_help: 'Dimming is saved and resumes when the lights are on.',
@@ -471,6 +473,8 @@
     toy_safe_maxvol_unavailable: 'Benötigt aktualisierte Gerätefirmware, damit auch der Lautsprecher begrenzt wird.',
     toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
     toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
+    random_start: 'Mit einem zufälligen Titel starten',
+    random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
     lights_off: 'Alle Lichter dauerhaft ausschalten', lights_off_help: 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.',
     night_lights_off: 'Alle Lichter während der Nacht ausschalten', night_lights_off_help: 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.',
@@ -579,6 +583,7 @@
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
     toy_safe_maxvol_unavailable: 'Bijgewerkte apparaatfirmware nodig om ook de luidspreker te begrenzen.',
     toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
+    random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven de hele dag uit, ook na opnieuw opstarten of zonder nachtmodus.',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Ring, zijlampjes en hart gaan tijdens de ingestelde uren uit en daarna weer aan.',
     night_dim_help: 'De diminstelling blijft bewaard en geldt als de lampjes aan zijn.',
@@ -1924,6 +1929,12 @@
   var ui = { search: '', sel: {}, editTitle: null, dragging: false };
 
   /* ------------------------------------------------------------------ views */
+  function playPlaylist(p) {
+    var random = typeof p.random_start === 'boolean' ? p.random_start : !!S.audio.config.random_start;
+    var args = { playlistId: p.id };
+    if (p.spotify || (random && !p.audiobook)) args.restart = true;
+    send('PLAYLIST_PLAY', args);
+  }
   function viewPlaylists() {
     var list = userPlaylists();
     var np = S.audio.nowPlaying;
@@ -1938,7 +1949,7 @@
         h('div', { class: 'name' }, p.title || '—'),
         h('div', { class: 'meta' }, p.spotify ? t('sp_playlist') : t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
         n || p.spotify ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
-          e.stopPropagation(); send('PLAYLIST_PLAY', { playlistId: p.id }); } }, icon('play')) : null);
+          e.stopPropagation(); playPlaylist(p); } }, icon('play')) : null);
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
@@ -2120,13 +2131,13 @@
     if (p.spotify) {
       // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
       return [head, h('div', { class: 'actions' },
-          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
+          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { playPlaylist(p); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
-        resumeSwitch(p, id),
+        resumeSwitch(p, id), p.resume || p.audiobook ? null : h('div', { class: 'card', style: 'margin-top:16px' }, modeRows(p, id)),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },
-      tracks.length ? h('button', { class: 'btn primary', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play')) : null,
+      tracks.length ? h('button', { class: 'btn primary', onclick: function () { playPlaylist(p); } }, icon('play'), t('play')) : null,
       fileButton(t('add_files'), id, !tracks.length),
       h('button', { class: 'btn', onclick: function () { libraryPickerModal(p); } }, icon('lib'), t('from_library')),
       h('button', { class: 'btn', onclick: function () { radioModal(p); } }, icon('radio'), t('web_radio')),
@@ -2157,7 +2168,7 @@
     var more = h('div', { class: 'card', style: 'margin-top:16px' },
       h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('audiobook_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
-      // its own shuffle and repeat (#22); nothing for an audiobook or a streaming service, which do not use them
+      // its own playback modes; nothing for an audiobook or a streaming service, which do not use them
       p.audiobook || p.spotify || p.deezer ? null : modeRows(p, id),
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
@@ -2182,6 +2193,9 @@
       row(t('shuffle'), 'plshuffle', typeof p.shuffle_mode === 'boolean' ? (p.shuffle_mode ? 'on' : 'off') : 'settings',
         [['settings', t('pl_settings', c.shuffle_mode ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, shuffle_mode: v === 'settings' ? 'settings' : v === 'on' } }); }),
+      row(t('random_start'), 'plrandomstart', typeof p.random_start === 'boolean' ? (p.random_start ? 'on' : 'off') : 'settings',
+        [['settings', t('pl_settings', c.random_start ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
+        function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, random_start: v === 'settings' ? 'settings' : v === 'on' } }); }),
       row(t('repeat'), 'plrepeat', typeof p.repeat_mode === 'number' ? String(p.repeat_mode) : 'settings',
         [['settings', t('pl_settings', repName(Number(c.repeat_mode) || 0))], ['0', t('s_off')], ['1', t('rep_all')], ['2', t('rep_one')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, repeat_mode: v === 'settings' ? 'settings' : Number(v) } }); })];
@@ -3018,6 +3032,7 @@
               oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
               onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')) }) : null,
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
+        sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', color: 'teal', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
         // the heart's short press on the Jooki (held 2 s it still switches off)

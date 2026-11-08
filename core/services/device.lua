@@ -7,9 +7,9 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp, toy_safe_maxvol }
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp, toy_safe_maxvol }
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
---   state.volume_int = { knob } (last physical position, independent of the saved request; private)
+--   state.volume_int = { knob, pending, skipped } (physical position and ordered volume acknowledgments; private)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
 --   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
 -- (state.power and state.activity are power's, state.device.toy_safe / airplane and state.flags radio's.)
@@ -36,6 +36,7 @@ function device.effective_volume(doc, requested)
   local v = clamp(requested)
   local find = (doc.streaming_int or {}).find
   if (doc.upnp or {}).muted or (find and (find.skips or 0) > 0) then return 0 end
+  if (doc.streaming_int or {}).random_start then return 0 end
   local lim = doc.limits or {}
   -- Older firmware still applies its fixed kids attenuation in the sound chip.
   -- Its percentages cannot also be capped on the new global scale.
@@ -60,6 +61,7 @@ local function audiocfg_of(doc)
   a.volume = a.volume or 40
   a.headphones_en = a.headphones_en == true
   a.shuffle_mode = a.shuffle_mode == true
+  a.random_start = a.random_start == true
   a.continue_on_token_removal = a.continue_on_token_removal == true
   a.hp_boost = a.hp_boost == true
   a.upnp = a.upnp == true
@@ -104,6 +106,9 @@ local KNOB_MODE = { song = true, both = true, wind = true }
 -- straight back to it. (v1 used to copy audiocfg without audiocfg_of's defaults; since boot always
 -- stores a normalised audiocfg, the written file is the same.)
 function device.update_config(doc, changes, opts)
+  if changes.random_start ~= nil and type(changes.random_start) ~= "boolean" then
+    return nil, err("invalid_argument", "random_start", "expected a boolean")
+  end
   if changes.toy_safe_maxvol ~= nil then
     local v = changes.toy_safe_maxvol
     if type(v) ~= "number" or v < 0 or v > 100 or v % 1 ~= 0 then
@@ -115,6 +120,7 @@ function device.update_config(doc, changes, opts)
   end
   local a = audiocfg_of(doc)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
+  if changes.random_start ~= nil then a.random_start = changes.random_start end
   if type(changes.continue_on_token_removal) == "boolean" then a.continue_on_token_removal = changes.continue_on_token_removal end
   if changes.repeat_mode ~= nil then
     local m = changes.repeat_mode
@@ -174,6 +180,22 @@ local function output_commands(doc, headphones)
   }
 end
 
+-- Controller replies contain only a result. Match them in publish order so
+-- an older successful volume reply cannot acknowledge a newer mute request.
+function device.on_volume_sent(doc, ev)
+  local v = copy(doc.volume_int or {})
+  v.pending = v.pending or {}; v.pending[#v.pending + 1] = ev.percent
+  if #v.pending > 128 then table.remove(v.pending, 1); v.skipped = (v.skipped or 0) + 1 end
+  return { state = { volume_int = v } }
+end
+function device.on_volume_ack(doc, ev)
+  local v = copy(doc.volume_int or {})
+  if (v.skipped or 0) > 0 then v.skipped = v.skipped - 1; return { state = { volume_int = v } } end
+  if not v.pending or #v.pending == 0 then return nil end
+  local p = table.remove(v.pending, 1)
+  return { state = { volume_int = v }, commands = { emit("volume.confirmed", { percent = p, ok = ev.result == 0 }) } }
+end
+
 function device.on_gpio_volume(doc, ev)
   if ev.percent == nil then return nil end
   local position = clamp(ev.percent)
@@ -182,12 +204,12 @@ function device.on_gpio_volume(doc, ev)
   -- a level the Jooki is not playing at. So the saved volume follows the dial, as it always did.
   if (doc.device or {}).volume_api ~= 2 and position ~= audiocfg_of(doc).volume then
     local r = set_volume(doc, position)
-    r.state.volume_int = { knob = position }
+    r.state.volume_int = copy(doc.volume_int or {}); r.state.volume_int.knob = position
     return r
   end
   if previous == position then return nil end
   local r = previous ~= nil and set_volume(doc, position) or { state = {} }
-  r.state.volume_int = { knob = position }
+  r.state.volume_int = copy(doc.volume_int or {}); r.state.volume_int.knob = position
   return r
 end
 
@@ -454,7 +476,7 @@ device.on_button, device.on_tick = buttons.on_button, buttons.on_tick
 
 local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
-S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
+S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, random_start = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
@@ -472,6 +494,8 @@ function device.install(api, dispatch)
   dispatch.on("gpio.volume", "device", device.on_gpio_volume)
   dispatch.on("knobs", "device", device.on_knobs)
   dispatch.on("gpio.button", "device", device.on_hp_event)
+  dispatch.on("volume.sent", "device", device.on_volume_sent)
+  dispatch.on("volume.ack", "device", device.on_volume_ack)
   dispatch.on("volume.apply", "device", device.on_apply_volume)
   dispatch.on("limits.changed", "device", device.on_apply_volume)   -- then lights repaints (installed below)
   dispatch.on("upload.done", "device", device.on_disk_request)

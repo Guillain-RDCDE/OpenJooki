@@ -63,6 +63,7 @@
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
     toy_safe_maxvol_unavailable: 'Bijgewerkte apparaatfirmware nodig om ook de luidspreker te begrenzen.',
     toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
+    random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven de hele dag uit, ook na opnieuw opstarten of zonder nachtmodus.',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Ring, zijlampjes en hart gaan tijdens de ingestelde uren uit en daarna weer aan.',
     night_dim_help: 'De diminstelling blijft bewaard en geldt als de lampjes aan zijn.',

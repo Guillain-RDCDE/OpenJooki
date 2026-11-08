@@ -60,6 +60,7 @@ function bus_events.translate(topic, payload)
     return { type = "net.status", ssid = d.ssid, bssid = d.bssid, channel = tonumber(d.ch), signal = tonumber(d.signal),
              connected = d.stat == "success", ip = d.ip }
   end
+  if topic == "/j/esp32/input/audio/volume" then return { type = "volume.ack", result = tonumber(payload) } end
   if topic == "/j/esp32/input/knobs/state" then
     local d = jsonish(payload) or {}
     return { type = "knobs", volume = tonumber(d.volume), headphones = tonumber(d.hp_state) == 1, control = tonumber(d.control), volume_api = tonumber(d.volume_api) }
@@ -85,6 +86,11 @@ function bus_events.translate(topic, payload)
     if sp == "new_preset" then return { type = "spotify.new_preset", raw = payload } end
     local d = jsonish(payload) or {}
     if sp == "now_playing" then return { type = "spotify.now_playing", data = d } end
+    if sp == "status" then
+      local active
+      if d.active == true or d.active == 1 then active = true elseif d.active == false or d.active == 0 then active = false end
+      return { type = "spotify.status", active = active }
+    end
     if sp == "login" then return { type = "spotify.login", username = d.username } end
     if sp == "set_cfg" then return { type = "spotify.set_cfg", shuffle_mode = d.shuffle_mode, repeat_mode = d.repeat_mode } end
     return { type = "spotify." .. sp }

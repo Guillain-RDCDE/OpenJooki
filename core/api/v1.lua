@@ -136,7 +136,7 @@ H.GET_STATE = function(doc) return { commands = { { kind = "bus.publish", topic 
 H.CONNECT = function() return { commands = { util.emit("system.event", { name = "Evt.Mobile.connect", no_pause = true }) } } end
 H.PLAYLIST_PLAY = function(doc, p, ev)
   if type(p.playlistId) ~= "string" then return nil, { code = "not_found", field = "playlist", message = "nil playlistId" } end
-  return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.trackIndex ~= nil })
+  return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.restart == true or p.trackIndex ~= nil })
 end
 H.PLAYLIST_NEW = function(doc, p, ev)
   return lib(doc, { playlists = true }, function(l) return library.ops.playlist_new(l, { title = p.title, audiobook = p.audiobook == true, star = type(p.star) == "string" and p.star or nil }, ev.wall or ev.now or 0) end)
@@ -157,7 +157,7 @@ H.PLAYLIST_UPDATE = function(doc, p)
   if pl.title ~= nil and type(pl.title) ~= "string" then return nil, { code = "invalid_argument", field = "title", message = "invalid title type" } end
   local star = pl.star
   local r, err = lib(doc, { playlists = true, tracks = true }, function(l)
-    local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, resume = pl.resume, tracks = pl.tracks, shuffle_mode = pl.shuffle_mode, repeat_mode = pl.repeat_mode }
+    local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, resume = pl.resume, tracks = pl.tracks, shuffle_mode = pl.shuffle_mode, random_start = pl.random_start, repeat_mode = pl.repeat_mode }
     if pl.tagId and star == nil and pl.star == nil then
       local tok = l.tokens[pl.tagId]
       if not tok then return nil, { code = "invalid_argument", field = "star", message = "invalid token type" } end
@@ -206,7 +206,7 @@ H.SET_VOL = function(doc, p)
 end
 -- the page's booleans (repeat_mode true/false too) are read by device.update_config
 H.SET_CFG = function(doc, p)
-  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, toy_safe_maxvol = p.toy_safe_maxvol, lights_off = p.lights_off })
+  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, random_start = p.random_start, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, toy_safe_maxvol = p.toy_safe_maxvol, lights_off = p.lights_off })
   return r, e, { "audio" }
 end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end

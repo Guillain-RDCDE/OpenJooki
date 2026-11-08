@@ -151,6 +151,12 @@ jobs:
       - name: security (page)
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_security.py
+      - name: Fresh random playlist Play in the browser
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_random_playlist_ui.py
+      - name: Spotify random startup and immediate resume over MQTT
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_random_spotify_bus.py
       - name: spotify
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_spotify.py

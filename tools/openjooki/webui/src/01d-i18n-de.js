@@ -47,6 +47,8 @@
     toy_safe_maxvol_unavailable: 'Benötigt aktualisierte Gerätefirmware, damit auch der Lautsprecher begrenzt wird.',
     toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
     toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
+    random_start: 'Mit einem zufälligen Titel starten',
+    random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
     lights_off: 'Alle Lichter dauerhaft ausschalten', lights_off_help: 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.',
     night_lights_off: 'Alle Lichter während der Nacht ausschalten', night_lights_off_help: 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.',

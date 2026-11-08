@@ -272,6 +272,17 @@ ignore; else stop current, `/j/audio/out/play "7\t<uri>"`. `ended` on stream 7
 stop). `prev` restarts the track when > 5 s in. `fwd`/`rev` are not implemented.
 Token removed → pause (Spotify/Deezer variants dropped).
 
+The current core seeds local-playlist shuffle from OS entropy at boot, including
+before the clock is set. A fresh shuffled start after the playlist has ended draws
+a new order and a random first song. The independent `random_start` setting applies
+to local music and Spotify music playlists. The playlist Play buttons request a
+fresh draw on every click; pausing and resuming through the player or replacing a
+paused token keeps the current song. Explicit track choices, audiobooks and saved
+Spotify positions take priority. Spotify startup waits for the hardware mute,
+confirmed shuffle and new-track position before restoring the bounded volume.
+The controller's actual active-device status avoids a needless five-second
+continuation wait when switching to another saved Spotify playlist.
+
 ### 4.5 Tokens
 `tokens.json`: `UID → {starId, seen, name?, image?, write?}`. A tag event
 increments `seen`, learns the character (`updateTokens`), and if a `write`

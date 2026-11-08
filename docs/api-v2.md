@@ -193,7 +193,7 @@ No payload.
 
 ### `device.set_config`
 
-Audio and device settings, including toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.
+Shuffle, repeat (0 none, 1 all, 2 one), and `random_start` (boolean, default false). Random start chooses the starting song independently of shuffle; subsequent songs follow the playback order, with repeat deciding whether the end wraps. Saved in audiocfg.json. Local music and Spotify music playlists support random starts; audiobooks, saved Spotify positions, albums, podcasts and Deezer retain their own start behavior. Also toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.
 
 Payload schema:
 
@@ -216,6 +216,9 @@ Payload schema:
       "type": "string"
     },
     "lights_off": {
+      "type": "boolean"
+    },
+    "random_start": {
       "type": "boolean"
     },
     "repeat_mode": {
@@ -344,7 +347,7 @@ No payload.
 
 ### `playback.play`
 
-Plays a playlist (optional 1-based track index). Audiobooks resume where they stopped.
+Plays a playlist (optional 1-based track index, which takes priority over random start). A fresh start with `random_start` picks a random song, then follows the playback order. Set `restart: true` to draw again for an already loaded playlist (as the playlist Play buttons do); otherwise paused or playing playlists continue their current song. Audiobooks and saved Spotify playlists resume where they stopped. Spotify music playlists support random starts; albums, podcasts and Deezer keep their provider start behavior.
 
 Payload schema:
 
@@ -359,6 +362,9 @@ Payload schema:
     "playlist": {
       "minLength": 1,
       "type": "string"
+    },
+    "restart": {
+      "type": "boolean"
     }
   },
   "required": ["playlist"],
@@ -549,7 +555,7 @@ Payload schema:
 
 ### `playlist.update`
 
-Renames / links a character (star, or false to unlink) / reorders or removes tracks / sets audiobook. On TRASH only `tracks` is allowed: files really unused are deleted.
+Renames / links a character (star, or false to unlink) / reorders or removes tracks / sets audiobook. Playback modes override Settings; `random_start` accepts true, false or `"settings"` to inherit. On TRASH only `tracks` is allowed: files really unused are deleted.
 
 Payload schema:
 
@@ -564,6 +570,10 @@ Payload schema:
       "maxLength": 80,
       "minLength": 1,
       "type": "string"
+    },
+    "random_start": {
+      "enum": [true, false, "settings"],
+      "type": ["boolean", "string"]
     },
     "repeat_mode": {
       "type": ["integer", "string"]

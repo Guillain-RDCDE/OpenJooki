@@ -88,7 +88,7 @@ local function start(doc, pb, playlist_id, opts)
     -- playing when it still plays (the token taken off with continue_on_token_removal): the preset
     -- would start it again from the top
     local was = pb.now
-    if p.resume and not opts.restart and was and was.playlist == playlist_id and was.service == svc then
+    if (p.resume or streaming.wants_random(doc, p)) and not opts.restart and was and was.playlist == playlist_id and was.service == svc then
       -- paused: continued only while the Jooki is still the account's device on that playlist; the
       -- phone may have moved on since, and streaming.start checks what `cont` brings back
       local sp = doc.spotify or {}
@@ -115,6 +115,7 @@ local function start(doc, pb, playlist_id, opts)
     return { commands = cmds }
   end
   local q = queue_for(doc, pb, playlist_id, p)
+  local shuffle, _, random_start = modes(doc, p)
   local index, queue_pos, seek_ms = nil, nil, nil
   if opts.index and p.tracks[opts.index] then
     index = opts.index; queue_pos = index_of(q, index) or 1
@@ -125,13 +126,24 @@ local function start(doc, pb, playlist_id, opts)
       -- an audiobook follows its saved position only; without one it starts at chapter 1 (1.3 rule)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
-    elseif (modes(doc, p)) and n > 1 and not (pb.now and pb.now.playlist == playlist_id) then
-      -- shuffle, and another playlist than the one on: a new order, from its first song (#22; 1.x
-      -- restarted the last song played, shuffle or not). Put back on, the same token goes on.
-      pb.seed = ((pb.seed or 0) * 1103515245 + 12345 + math.floor(tonumber(opts.now_s) or 0)) % 2147483648
-      pb.shuffle[playlist_id] = nil
-      q = queue_for(doc, pb, playlist_id, p)
-      queue_pos, index = 1, q[1]
+    elseif n > 1 and (shuffle or random_start) and
+        (not (pb.now and pb.now.playlist == playlist_id) or opts.restart or pb.state == "idle" or pb.state == "ended") then
+      -- A fresh start draws again; a paused or still playing token keeps its song.
+      pb.seed = queue.next_seed(pb.seed, math.floor((tonumber(opts.now_s) or 0) * 1000))
+      local first
+      if random_start then first, pb.seed = queue.draw(pb.seed, n) end
+      if shuffle then
+        pb.shuffle[playlist_id] = nil
+        q = queue_for(doc, pb, playlist_id, p)
+        if first then
+          local pos = index_of(q, first)
+          q[1], q[pos] = q[pos], q[1] -- retain every song in the shuffled queue
+        end
+        queue_pos = 1
+      else
+        queue_pos = first
+      end
+      index = q[queue_pos]
     end
     index = index or pb.last[playlist_id] or 1
     if not p.tracks[index] then index = 1 end
@@ -449,9 +461,9 @@ end
 --- Boot: an idle machine and the shuffle seed. (resume.json and the save timer are
 --- services.playback.resume's boot, the sound catalogue services.playback.sounds'.)
 function playback.on_boot(_, ev)
-  -- the shuffle seed: the clock at boot, so that two starts (or two playlists of the same length)
-  -- do not play in the same "random" order
-  local seed = math.floor(tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483648
+  -- OS entropy supplied by main.lua works before the network sets the clock;
+  -- clock values remain a fallback for callers without an entropy source.
+  local seed = math.floor(tonumber(ev.seed) or tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483647
   return { state = { playback = { state = "idle" }, playback_int = { last = {}, shuffle = {}, seed = seed } } }
 end
 
@@ -463,7 +475,7 @@ playback.on_system_event, playback.on_sound_audio = sounds.on_system_event, soun
 playback.on_save, playback.on_resume_reset, playback.on_shutdown = resume_rules.on_save, resume_rules.on_resume_reset, resume_rules.on_shutdown
 
 local S = {}
-S.play = { type = "object", required = { "playlist" }, properties = { playlist = { type = "string", minLength = 1 }, index = { type = "integer", minimum = 1 } }, additionalProperties = false }
+S.play = { type = "object", required = { "playlist" }, properties = { playlist = { type = "string", minLength = 1 }, index = { type = "integer", minimum = 1 }, restart = { type = "boolean" } }, additionalProperties = false }
 S.seek = { type = "object", required = { "ms" }, properties = { ms = { type = "integer", minimum = 0 } }, additionalProperties = false }
 S.skip = { type = "object", required = { "seconds" }, properties = { seconds = { type = "integer", minimum = -3600, maximum = 3600 } }, additionalProperties = false }
 S.playlist = resume_rules.schemas.playlist
@@ -483,7 +495,7 @@ function playback.install(api, dispatch)
   end
   api.command("playback.play", S.play, function(doc, p, ev)
     local pb = pb_of(doc)
-    local r, err = start(doc, pb, p.playlist, { index = p.index, now_s = ev.now, restart = p.index ~= nil })
+    local r, err = start(doc, pb, p.playlist, { index = p.index, now_s = ev.now, restart = p.restart == true or p.index ~= nil })
     return r, err
   end)
   api.command("playback.pause", nil, function(doc, _, ev) return playback.on_pause(doc, { source = "page", now = ev.now }) or {} end)

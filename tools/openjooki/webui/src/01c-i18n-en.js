@@ -63,6 +63,7 @@
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
     toy_safe_maxvol_unavailable: 'Requires updated device firmware to limit the speaker as well.',
     toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
+    random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off all day, even after restarting or with night mode off.',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Ring, side lights and heart turn off during the scheduled hours and come back on afterwards.',
     night_dim_help: 'Dimming is saved and resumes when the lights are on.',

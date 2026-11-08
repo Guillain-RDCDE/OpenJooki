@@ -25,6 +25,7 @@ def ended(j): j.c.publish("/j/audio/input/ended", json.dumps({"id": MUSIC}))
 
 # ---------- settings
 j = start()
+j.send("SET_TOY_SAFE", {"enable": False})  # isolate the night ceiling from the independent kids ceiling
 b = bt(j)
 check("B1 defaults: 20:00-07:00, 20 min, 30 %, dimmed lights, Paris time",
       b.get("cfg") == {"enabled": True, "start": 1200, "stop": 420, "timer": 20, "maxvol": 30, "dim": True, "lights_off": False, "tzbase": 60, "tzdst": "EU"}, b)

@@ -62,7 +62,7 @@ function bus_events.translate(topic, payload)
   end
   if topic == "/j/esp32/input/knobs/state" then
     local d = jsonish(payload) or {}
-    return { type = "knobs", volume = tonumber(d.volume), headphones = tonumber(d.hp_state) == 1, control = tonumber(d.control) }
+    return { type = "knobs", volume = tonumber(d.volume), headphones = tonumber(d.hp_state) == 1, control = tonumber(d.control), volume_api = tonumber(d.volume_api) }
   end
   if topic == "/j/ht/input/raw_read_response" then
     local addr, value = tostring(payload):match("^%s*(%d+)%s+(%d+)%s*$")

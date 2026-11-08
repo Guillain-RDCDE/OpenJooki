@@ -7,8 +7,9 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp }   (audiocfg.json, 1.x shape + the heart, the knob, louder headphones, play from other apps)
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp, toy_safe_maxvol }
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
+--   state.volume_int = { knob } (last physical position, independent of the saved request; private)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
 --   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
 -- (state.power and state.activity are power's, state.device.toy_safe / airplane and state.flags radio's.)
@@ -18,6 +19,7 @@ local power = require("services.device.power")
 local radio = require("services.device.radio")
 local buttons = require("services.device.buttons")
 local device = {}
+local DEFAULT_KIDS_MAX = 56 -- factory speaker ceiling on the shared 0–100 curve
 
 local copy, emit, err = util.copy, util.emit, util.err
 local function cfg(doc, key, default)
@@ -29,13 +31,28 @@ end
 -- ------------------------------------------------------------------ volume
 local function clamp(v) v = math.floor(tonumber(v) or 0) if v < 0 then return 0 elseif v > 100 then return 100 end return v end
 
---- What reaches the speaker: requested volume through the night limit and the fade.
+--- Requested volume through the kids/night ceilings, mute and the fade.
 function device.effective_volume(doc, requested)
   local v = clamp(requested)
+  local find = (doc.streaming_int or {}).find
+  if (doc.upnp or {}).muted or (find and (find.skips or 0) > 0) then return 0 end
   local lim = doc.limits or {}
+  -- Older firmware still applies its fixed kids attenuation in the sound chip.
+  -- Its percentages cannot also be capped on the new global scale.
+  if (doc.device or {}).volume_api == 2 and (doc.device or {}).toy_safe ~= false then
+    v = math.min(v, (doc.audiocfg or {}).toy_safe_maxvol or DEFAULT_KIDS_MAX)
+  end
   if lim.maxvol and lim.maxvol < 100 and v > lim.maxvol then v = lim.maxvol end
   if lim.fade and lim.fade < 1 then v = math.floor(v * lim.fade + 0.5) end
   return v
+end
+
+-- One route for every volume write, including temporary silence and output switches.
+function device.volume_command(doc, percent)
+  local global = (doc.device or {}).volume_api == 2
+  return { kind = "host.volume", percent = percent, esp32 = global, global_volume = global,
+           toy_safe = (doc.device or {}).toy_safe ~= false,
+           maximum = percent == 0 and 0 or device.effective_volume(doc, 100) }
 end
 
 local function audiocfg_of(doc)
@@ -46,6 +63,8 @@ local function audiocfg_of(doc)
   a.continue_on_token_removal = a.continue_on_token_removal == true
   a.hp_boost = a.hp_boost == true
   a.upnp = a.upnp == true
+  local max = a.toy_safe_maxvol
+  a.toy_safe_maxvol = type(max) == "number" and max >= 0 and max <= 100 and max % 1 == 0 and max or DEFAULT_KIDS_MAX
   a.lights_off = a.lights_off == true
   a.repeat_mode = a.repeat_mode or 1
   return a
@@ -58,9 +77,16 @@ device.audiocfg_path = audiocfg_path
 local function set_volume(doc, requested, persist)
   local a = audiocfg_of(doc)
   a.volume = clamp(requested)
-  local cmds = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } }
+  local state, after = { audiocfg = a }, doc
+  -- A new volume from the page / a moved dial unmutes, as before. Limit and
+  -- fade reapplications use on_apply_volume instead and preserve mute.
+  if (doc.upnp or {}).muted then
+    state.upnp = copy(doc.upnp); state.upnp.muted = nil
+    after = copy(doc); after.upnp = state.upnp
+  end
+  local cmds = { device.volume_command(after, device.effective_volume(after, a.volume)) }
   if persist ~= false then cmds[#cmds + 1] = { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } end
-  return { state = { audiocfg = a }, commands = cmds }
+  return { state = state, commands = cmds }
 end
 device.set_volume = set_volume
 
@@ -78,6 +104,12 @@ local KNOB_MODE = { song = true, both = true, wind = true }
 -- straight back to it. (v1 used to copy audiocfg without audiocfg_of's defaults; since boot always
 -- stores a normalised audiocfg, the written file is the same.)
 function device.update_config(doc, changes, opts)
+  if changes.toy_safe_maxvol ~= nil then
+    local v = changes.toy_safe_maxvol
+    if type(v) ~= "number" or v < 0 or v > 100 or v % 1 ~= 0 then
+      return nil, err("invalid_argument", "toy_safe_maxvol", "expected an integer from 0 to 100")
+    end
+  end
   if changes.lights_off ~= nil and type(changes.lights_off) ~= "boolean" then
     return nil, err("invalid_argument", "lights_off", "expected a boolean")
   end
@@ -101,6 +133,11 @@ function device.update_config(doc, changes, opts)
   end
   -- play from other apps (services.upnp, adapters.upnp): only a real boolean
   if type(changes.upnp) == "boolean" then a.upnp = changes.upnp end
+  if changes.toy_safe_maxvol ~= nil and changes.toy_safe_maxvol ~= a.toy_safe_maxvol then
+    a.toy_safe_maxvol = changes.toy_safe_maxvol
+    cmds[#cmds + 1] = emit("volume.apply", {})
+  end
+  if changes.toy_safe_maxvol ~= nil then a.toy_safe_maxvol_global = true end
   if changes.lights_off ~= nil and changes.lights_off ~= a.lights_off then
     a.lights_off = changes.lights_off
     cmds[#cmds + 1] = emit("lights.apply", {})
@@ -112,9 +149,11 @@ function device.update_config(doc, changes, opts)
 end
 
 --- limits changed (bedtime): re-apply the current volume through the new chain.
-function device.on_apply_volume(doc)
+function device.on_apply_volume(doc, ev)
   local a = audiocfg_of(doc)
-  return { commands = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } } }
+  local c = device.volume_command(doc, device.effective_volume(doc, a.volume))
+  c.force_mode = ev and ev.force == true
+  return { commands = { c } }
 end
 
 -- Route the sound and, crucially, ENABLE THE AMPLIFIER. `/sys/kernel/htdrv/amp_en` = 1 for the
@@ -137,7 +176,19 @@ end
 
 function device.on_gpio_volume(doc, ev)
   if ev.percent == nil then return nil end
-  return set_volume(doc, ev.percent)
+  local position = clamp(ev.percent)
+  local previous = (doc.volume_int or {}).knob
+  -- Without volume API 2 the dial alone sets the speaker: a request kept against it would show
+  -- a level the Jooki is not playing at. So the saved volume follows the dial, as it always did.
+  if (doc.device or {}).volume_api ~= 2 and position ~= audiocfg_of(doc).volume then
+    local r = set_volume(doc, position)
+    r.state.volume_int = { knob = position }
+    return r
+  end
+  if previous == position then return nil end
+  local r = previous ~= nil and set_volume(doc, position) or { state = {} }
+  r.state.volume_int = { knob = position }
+  return r
 end
 
 -- Wired headphones, as Muuselabs' player.lua (on_knobs_state, pwr_plug) does it. The ESP32 reads the
@@ -176,9 +227,9 @@ end
 
 -- the sound to the headphones or the speaker: silent while it switches, then the volume again (1.x)
 local function switch_output(doc, headphones, cmds)
-  cmds[#cmds + 1] = { kind = "host.volume", percent = 0 }
+  cmds[#cmds + 1] = device.volume_command(doc, 0)
   for _, c in ipairs(output_commands(doc, headphones)) do cmds[#cmds + 1] = c end   -- 1.x: Spotify follows too
-  cmds[#cmds + 1] = { kind = "host.volume", percent = device.effective_volume(doc, audiocfg_of(doc).volume) }
+  cmds[#cmds + 1] = device.volume_command(doc, device.effective_volume(doc, audiocfg_of(doc).volume))
   cmds[#cmds + 1] = { kind = "log", level = "info", key = "device.headphones", fields = { on = headphones } }
 end
 
@@ -197,10 +248,25 @@ function device.on_knobs(doc, ev)
     local d = copy(doc.device or {}); d.esp32_up = true
     r.state.device = d
   end
-  if ev.volume ~= nil and clamp(ev.volume) ~= a.volume then
-    local s = set_volume(doc, ev.volume)
-    r.state.audiocfg = s.state.audiocfg
-    for _, c in ipairs(s.commands) do r.commands[#r.commands + 1] = c end
+  -- The original controller omits the capability; a valid legacy reading must
+  -- also revoke a previously advertised global policy after a controller restart.
+  local api = ev.volume_api
+  if api == nil and ev.volume ~= nil then api = 0 end
+  local changed = api ~= nil and (doc.device or {}).volume_api ~= api
+  if changed then
+    local d = r.state.device or copy(doc.device or {}); d.volume_api = api
+    r.state.device = d
+  end
+  -- Reassert on every capable answer too: an ESP32 restart can leave the Linux
+  -- broker connected while the chip has forgotten its host volume and ceiling.
+  if api == 2 or changed then
+    r.commands[#r.commands + 1] = emit("volume.apply", { force = changed })
+  end
+  local observed = copy(doc); observed.device = r.state.device or doc.device
+  local s = device.on_gpio_volume(observed, { percent = ev.volume })
+  if s then
+    for k, v in pairs(s.state) do r.state[k] = v end
+    for _, c in ipairs(s.commands or {}) do r.commands[#r.commands + 1] = c end
   end
   if has_jack(doc) and ev.headphones ~= nil then
     local switch, hp = headphones_reading(doc, a, ev.headphones, r.commands)
@@ -209,7 +275,8 @@ function device.on_knobs(doc, ev)
       local a2 = r.state.audiocfg or a
       a2.headphones_en = switch
       r.state.audiocfg = a2
-      switch_output({ config = doc.config, limits = doc.limits, audiocfg = a2 }, switch, r.commands)
+      local after = copy(doc); after.audiocfg = a2; after.device = r.state.device or doc.device
+      switch_output(after, switch, r.commands)
     end
   end
   if not next(r.state) and #r.commands == 0 then return nil end
@@ -280,9 +347,11 @@ end
 on_bus_up = function(doc)
   local d = copy(doc.device or {})
   d.esp32_up = false
+  d.volume_api = nil
   local cmds = esp32_init()
+  cmds[#cmds + 1] = emit("volume.apply", { force = true })
   for i, s in ipairs({ 2, 5, 9 }) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
-  return { state = { device = d }, commands = cmds }
+  return { state = { device = d, volume_int = {} }, commands = cmds }
 end
 device.on_bus_up = function(doc) return on_bus_up(doc) end
 
@@ -292,7 +361,21 @@ device.on_bus_up = function(doc) return on_bus_up(doc) end
 --- Wi-Fi chase lights'; the long-press tick, device.tick, starts with the first button held.)
 function device.on_boot(doc, ev)
   local a = audiocfg_of({ audiocfg = ev.audiocfg })
-  local cmds = { { kind = "host.volume", percent = device.effective_volume(doc, a.volume) } }
+  local migrated = not (ev.audiocfg or {}).toy_safe_maxvol_global
+  if migrated then
+    -- Earlier trial builds expressed this extra ceiling inside the fixed kids
+    -- attenuation. Convert its peak down to the common curve, never above it.
+    local old = (ev.audiocfg or {}).toy_safe_maxvol
+    if type(old) ~= "number" or old < 0 or old > 100 or old % 1 ~= 0 then old = 100 end
+    local gain = old == 0 and 0 or (old == 1 and 0.005 or 10 ^ ((old - 100) / 50))
+    gain = gain * (0.2 / 1.5)
+    a.toy_safe_maxvol = gain < 0.005 and 0 or math.max(1, math.floor(100 + 50 * math.log10(gain)))
+    a.toy_safe_maxvol_global = true
+  end
+  local after = copy(doc); after.audiocfg = a; after.device = copy(doc.device or {})
+  after.device.toy_safe = not (ev.flags or {}).TOY_SAFE_OFF
+  local cmds = { device.volume_command(after, device.effective_volume(after, a.volume)) }
+  if migrated then cmds[#cmds + 1] = { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } end
   -- route the sound and turn the amplifier on at boot; without this the speaker stays silent until a
   -- headphones toggle (see output_commands). Always the speaker first, as 1.x did: headphones still
   -- plugged in are found again by the knobs within seconds, a stale "headphones on" never mutes it.
@@ -310,7 +393,7 @@ function device.on_boot(doc, ev)
   else
     cmds[#cmds + 1] = emit("system.event", { name = "Evt.Jooki.Ready" })
   end
-  return { state = { audiocfg = a, limits = { maxvol = 100, fade = 1, dim = false } }, commands = cmds }
+  return { state = { audiocfg = a, volume_int = {}, limits = { maxvol = 100, fade = 1, dim = false } }, commands = cmds }
 end
 
 --- The Jooki's name on the network (name.local). web_ctrl, closed, serves only the system's own
@@ -375,7 +458,7 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
-                                              upnp = { type = "boolean" }, lights_off = { type = "boolean" } }, additionalProperties = false }
+                                              upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

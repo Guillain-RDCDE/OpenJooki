@@ -3,7 +3,7 @@ local radio = require("services.device.radio")
 
 local function doc_with(o)
   o = o or {}
-  return { config = { data_dir = "/d" }, audiocfg = o.audiocfg or { volume = 40, shuffle_mode = false, repeat_mode = 1 },
+  return { config = { data_dir = "/d" }, audiocfg = o.audiocfg or { toy_safe_maxvol = 100, volume = 40, shuffle_mode = false, repeat_mode = 1 },
            activity = o.activity, flags = o.flags or {}, device = { toy_safe = true } }
 end
 local function kinds(r)
@@ -45,7 +45,7 @@ describe("services.device.buttons — presses and long presses", function()
   end)
 
   it("volume buttons step by 10 within 0-100", function()
-    local doc = doc_with({ audiocfg = { volume = 95 } })
+    local doc = doc_with({ audiocfg = { volume = 95 } }); doc.device.toy_safe = false
     doc.activity = { buttons = { vol_inc = 1 } }
     local r = buttons.on_button(doc, { button = "vol_inc", down = false, now = 1.2 })
     assert_eq(r.state.audiocfg.volume, 100)

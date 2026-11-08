@@ -193,7 +193,7 @@ No payload.
 
 ### `device.set_config`
 
-Shuffle and repeat (0 none, 1 all, 2 one).
+Audio and device settings, including toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.
 
 Payload schema:
 
@@ -226,6 +226,11 @@ Payload schema:
     "shuffle_mode": {
       "type": "boolean"
     },
+    "toy_safe_maxvol": {
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
     "upnp": {
       "type": "boolean"
     }
@@ -256,7 +261,7 @@ Payload schema:
 
 ### `device.set_volume`
 
-Sets the volume (0–100); night limits and fades apply on top.
+Saves the requested volume (0–100); kids and night ceilings, mute and fades determine the effective output. Speaker/Bluetooth control requires ESP32 volume_api=2; wired headphones use ALSA.
 
 Payload schema:
 

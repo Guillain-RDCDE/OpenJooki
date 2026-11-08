@@ -1,0 +1,206 @@
+diff --git a/esp32-code/jooki_v2/main/sdio_if.c b/esp32-code/jooki_v2/main/sdio_if.c
+index 2632263..c44e574 100644
+--- a/esp32-code/jooki_v2/main/sdio_if.c
++++ b/esp32-code/jooki_v2/main/sdio_if.c
+@@ -23,6 +23,7 @@
+ #include <freertos/atomic.h>
+ 
+ #include "sdio_if.h"
++#include "sdio_tx.h"
+ #include "interface.h"
+ 
+ #include <stdlib.h>
+@@ -54,6 +55,7 @@ static esp_err_t sdio_reset();
+ 
+ static uint8_t *sdio_slave_rx_buffer[SDIO_SLAVE_FROMHOST_BUFFER_NUM];
+ static uint8_t *sdio_slave_tx_buffer;
++static oj_sdio_tx_t sdio_tx;
+ 
+ #if CONFIG_ESP_WLAN_DEBUG
+ static const char TAG_RX[] = "H -> S";
+@@ -266,9 +268,9 @@ void recv_task(void *pvParameters) {
+             // receive data from transport layer
+             ret = sdio_slave_recv(&(buf_handle->sdio_buf_handle),
+                                   &(buf_handle->payload),
+-                                  &(buf_handle->payload_len), portMAX_DELAY);
++                                  &(buf_handle->payload_len), pdMS_TO_TICKS(50));
+             if (ret != ESP_OK) {
+-                ESP_LOGE(TAG, "sdio_slave_recv failed");
++                if (ret != ESP_ERR_TIMEOUT) ESP_LOGE(TAG, "sdio_slave_recv failed");
+                 xSemaphoreGive(atomic_sdio_rx);
+                 continue;
+             }
+@@ -449,6 +451,7 @@ void sdio_init() {
+         return;
+     }
+ 
++    sdio_tx.buffer = sdio_slave_tx_buffer;
+     sdio_slave_buf_handle_t handle;
+ 
+     ret = sdio_slave_initialize(&config);
+@@ -509,121 +512,53 @@ void sdio_init() {
+ }
+ 
+ static void sdio_write(interface_buffer_handle_t *buf_handle) {
+-    esp_err_t ret = ESP_OK;
+-    int32_t total_len = 0;
+-    uint16_t offset = 0;
+-    struct esp_payload_header *header = NULL;
+-
+-    if(buf_handle->payload_len == 0)
++    if (!buf_handle || !buf_handle->payload || !buf_handle->payload_len) return;
++    if (buf_handle->payload_len > SDIO_SLAVE_TOHOST_BUFFER_LEN - sizeof(struct esp_payload_header)) {
++        ESP_LOGW(TAG, "SDIO payload too large: %u", (unsigned)buf_handle->payload_len);
+         return;
+-    assert(buf_handle->payload);
+-
+-    total_len = buf_handle->payload_len + sizeof(struct esp_payload_header);
+-    if(total_len > SDIO_SLAVE_TOHOST_BUFFER_LEN) {
+-        ESP_LOGW(TAG, "truncating to SDIO buffer lenght: %d => %d",
+-                 total_len, SDIO_SLAVE_TOHOST_BUFFER_LEN);
+-        total_len = SDIO_SLAVE_TOHOST_BUFFER_LEN;
+     }
+-
+-    /* lock needed to implement proper async reset
+-     * and to protect sdio_slave_tx_buffer */
+-    if (xSemaphoreTake(atomic_sdio_tx, portMAX_DELAY) == pdFALSE) {
++    oj_sdio_budget_t budget;
++    oj_sdio_budget_start(&budget, pdMS_TO_TICKS(500));
++    if (xSemaphoreTake(atomic_sdio_tx, oj_sdio_remaining(&budget)) != pdTRUE) {
+         ESP_LOGE(TAG, "failed to take atomic_sdio_tx");
++        return;
+     }
+-
+-    /* Initialize header */
+-    header = (struct esp_payload_header *)sdio_slave_tx_buffer;
+-    memset(header, 0, sizeof(struct esp_payload_header));
+-
+-    header->if_type = buf_handle->if_type;
+-    header->if_num = buf_handle->if_num;
+-    header->len = htole16(buf_handle->payload_len);
+-    offset = sizeof(struct esp_payload_header);
+-    header->offset = htole16(offset);
+-
+-    //         ESP_LOGI(TAG, "WILL SDIO TX HEADER "
+-    //                  "if_type:%d "
+-    //                  "if_num:%d "
+-    //                  "reserved1:%d "
+-    //                  "len:%d=0x%0x "
+-    //                  "offset:%d=0x%0x "
+-    //                  "reserved2:%d",
+-    //                  header->if_type,
+-    //                  header->if_num,
+-    //                  header->reserved1,
+-    //                  header->len, htole16(buf_handle->payload_len),
+-    //                  offset, header->offset,
+-    //                  header->reserved2);
+-
+-    memcpy(sdio_slave_tx_buffer + offset, buf_handle->payload,
+-           buf_handle->payload_len);
+-
+-    /* checksum is calculated over entire packet with checksum field zero'd out
+-     */
+-    header->checksum = htole16(compute_checksum(
+-        sdio_slave_tx_buffer, buf_handle->payload_len + offset));
+-
+-    //         ESP_LOGI(TAG, "WILL SDIO TX: sending payload len %d",total_len);
+-    //         ESP_LOG_BUFFER_HEXDUMP("WILL SDIO TX",sendbuf, total_len,
+-    //         ESP_LOG_INFO);
+-    ret = sdio_slave_transmit_timeout(sdio_slave_tx_buffer, total_len,
+-                                      pdMS_TO_TICKS(500));
+-    xSemaphoreGive(atomic_sdio_tx);
+-
+-    if (ret != ESP_OK) {
+-        ESP_LOGE(TAG, "sdio slave transmit error, ret : 0x%x", ret);
++    esp_err_t ret = oj_sdio_tx_prepare(&sdio_tx, &budget);
++    if (ret == ESP_OK) {
++        struct esp_payload_header *header = (struct esp_payload_header *)sdio_slave_tx_buffer;
++        const size_t offset = sizeof(*header);
++        const size_t total_len = offset + buf_handle->payload_len;
++        memset(header, 0, sizeof(*header));
++        header->if_type = buf_handle->if_type;
++        header->if_num = buf_handle->if_num;
++        header->len = htole16(buf_handle->payload_len);
++        header->offset = htole16(offset);
++        memcpy(sdio_slave_tx_buffer + offset, buf_handle->payload, buf_handle->payload_len);
++        header->checksum = htole16(compute_checksum(sdio_slave_tx_buffer, total_len));
++        ret = oj_sdio_tx_submit(&sdio_tx, total_len, &budget);
+     }
++    xSemaphoreGive(atomic_sdio_tx);
++    if (ret != ESP_OK) ESP_LOGE(TAG, "sdio slave transmit error, ret: 0x%x", ret);
+ }
+ 
+ static esp_err_t sdio_reset() {
+     esp_err_t ret;
+-
+-    /* obtain locks to avoid messing up other threads */
+-    if (xSemaphoreTake(atomic_sdio_write, portMAX_DELAY) == pdFALSE) {
+-        ESP_LOGE(TAG, "failed to take atomic_sdio_write");
+-        return ESP_ERR_TIMEOUT;
+-    }
+-    if (xSemaphoreTake(atomic_sdio_tx, portMAX_DELAY) == pdFALSE) {
+-        ESP_LOGE(TAG, "failed to take atomic_sdio_tx");
++    /* Lock order is write -> TX -> RX; RX polling yields its lock every 50 ms. */
++    if (xSemaphoreTake(atomic_sdio_write, pdMS_TO_TICKS(500)) != pdTRUE) return ESP_ERR_TIMEOUT;
++    if (xSemaphoreTake(atomic_sdio_tx, pdMS_TO_TICKS(500)) != pdTRUE) {
+         xSemaphoreGive(atomic_sdio_write);
+         return ESP_ERR_TIMEOUT;
+     }
+-    if (xSemaphoreTake(atomic_sdio_rx, portMAX_DELAY) == pdFALSE) {
+-        ESP_LOGE(TAG, "failed to take atomic_sdio_rx");
++    if (xSemaphoreTake(atomic_sdio_rx, pdMS_TO_TICKS(500)) != pdTRUE) {
+         xSemaphoreGive(atomic_sdio_tx);
+         xSemaphoreGive(atomic_sdio_write);
+         return ESP_ERR_TIMEOUT;
+     }
+-
+-
+-    /* stop the slave in order to reset it properly */
+     sdio_slave_stop();
+-
+     ret = sdio_slave_reset();
+-    if (ret != ESP_OK)
+-        goto out;
+-
+-    ret = sdio_slave_start();
+-    if (ret != ESP_OK)
+-        goto out;
+-
+-    while (1) {
+-        sdio_slave_buf_handle_t handle = NULL;
+-
+-        /* Return buffers to driver */
+-        ret = sdio_slave_send_get_finished(&handle, 0);
+-        if (ret != ESP_OK)
+-            break;
+-
+-        if (handle) {
+-            ret = sdio_slave_recv_load_buf(handle);
+-            ESP_ERROR_CHECK(ret);
+-        }
+-    }
+-
+-    ret = ESP_OK;
+-
+-out:
++    if (ret == ESP_OK) ret = oj_sdio_tx_reclaim(&sdio_tx);
++    if (ret == ESP_OK) ret = sdio_slave_start();
++    if (ret != ESP_OK) sdio_tx.fault = true;
+     xSemaphoreGive(atomic_sdio_rx);
+     xSemaphoreGive(atomic_sdio_tx);
+     xSemaphoreGive(atomic_sdio_write);
+diff --git a/esp32-code/jooki_v2/sdkconfig.defaults.v4.4 b/esp32-code/jooki_v2/sdkconfig.defaults.v4.4
+index 40d1e5f..cfa90d6 100644
+--- a/esp32-code/jooki_v2/sdkconfig.defaults.v4.4
++++ b/esp32-code/jooki_v2/sdkconfig.defaults.v4.4
+@@ -85,6 +85,10 @@ CONFIG_BT_BLUEDROID_PINNED_TO_CORE_0=y
+ CONFIG_BTDM_CTRL_LPCLK_SEL_EXT_32K_XTAL=y
+ CONFIG_BTDM_CTRL_MODEM_SLEEP=n
+ 
++# Preserve the published SDK BLE behaviour across the public SDK migration.
++CONFIG_BTDM_SCAN_DUPL_CACHE_SIZE=200
++CONFIG_WIFI_PROV_BLE_BONDING=n
++
+ # fatfs config
+ CONFIG_FATFS_LFN_HEAP=y
+ CONFIG_FATFS_MAX_LFN=255

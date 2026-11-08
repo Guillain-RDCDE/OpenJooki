@@ -1,0 +1,522 @@
+diff --git a/esp32-code/components/knobs_ctrl/knobs_ctrl.c b/esp32-code/components/knobs_ctrl/knobs_ctrl.c
+index b85992d..10f6d87 100644
+--- a/esp32-code/components/knobs_ctrl/knobs_ctrl.c
++++ b/esp32-code/components/knobs_ctrl/knobs_ctrl.c
+@@ -106,7 +106,10 @@ knobs_handle_t knobs_init(knobs_config_t *cfg)
+  * Returns the current state of the knobs
+  */
+ knobs_state_t knobs_get_state() {
+-    return current_state;
++    knobs_state_t state = current_state;
++    if (state.volume < 3) state.volume = 0;
++    if (state.volume > 97) state.volume = 100;
++    return state;
+ }
+ 
+ /* SEEK functionality
+@@ -293,13 +296,15 @@ static void update_volume(uint32_t reading, knobs_process_callback_t emit_event,
+     uint32_t volume;
+     static bool startup = true;
+ 
++    if (startup) for (int i = 0; i < VOL_FILT_NTAPS; ++i) vol_filt_data[i] = reading;
++
+     /* filter the readings using a 4-tap average */
+     vol_filt_data[idx++] = reading;
+     idx &= (VOL_FILT_NTAPS-1);
+ 
+     reading = 0;
+     for(int i=0; i<VOL_FILT_NTAPS; i++) {
+-        reading += vol_filt_data[idx];
++        reading += vol_filt_data[i];
+     }
+     reading /= VOL_FILT_NTAPS;
+ 
+@@ -308,7 +313,10 @@ static void update_volume(uint32_t reading, knobs_process_callback_t emit_event,
+     if (startup) {
+         startup = false;
+         ESP_LOGI(TAG, "Send initial volume position");
+-        emit_event(KNOBS_EVENT_VOLUME, volume, h->cfg->userdata);
++        current_state.volume = volume;
++        int initial = volume < VOL_MIN_REPORTED_DIFF ? 0 : volume > 100 - VOL_MIN_REPORTED_DIFF ? 100 : volume;
++        emit_event(KNOBS_EVENT_VOLUME, initial, h->cfg->userdata);
++        return;
+     }
+ 
+     if(current_state.volume == volume) return;
+diff --git a/esp32-code/jooki_v2/api/esp_hosted_config.proto b/esp32-code/jooki_v2/api/esp_hosted_config.proto
+index cbbd91c..22029f1 100644
+--- a/esp32-code/jooki_v2/api/esp_hosted_config.proto
++++ b/esp32-code/jooki_v2/api/esp_hosted_config.proto
+@@ -124,7 +124,19 @@ message EspHostedRespRtcInfo {
+     float clk_freq = 3;
+ }
+ 
++message EspHostedCmdSetVolume {
++    int32 percent = 1;
++    // Zero means omitted; 1..101 encode maximum 0..100 (proto3 scalar presence).
++    uint32 maximum_plus_one = 2;
++}
++
++message EspHostedRespSetVolume {
++    int32 result = 1;
++}
++
+ message EspHostedRespKnobsState {
++    uint32 volume_api = 4; // 2: SetVolume uses the global curve and ceiling
++
+     int32 volume = 1;
+     int32 control = 2;
+     int32 hp_state = 3;
+@@ -411,6 +423,8 @@ enum EspHostedConfigMsgType {
+     TypeRespSetBtmSecFlags = 83;
+     TypeCmdGetBtmSecFlags = 84;
+     TypeRespGetBtmSecFlags = 85;
++    TypeCmdSetVolume = 86;
++    TypeRespSetVolume = 87;
+ }
+ 
+ message EspHostedConfigPayload {
+@@ -492,5 +506,7 @@ message EspHostedConfigPayload {
+         EspHostedRespSetBtmSecFlags resp_set_btm_sec_flags = 89;
+         EspHostedCmdGetBtmSecFlags cmd_get_btm_sec_flags = 90;
+         EspHostedRespGetBtmSecFlags resp_get_btm_sec_flags = 91;
++        EspHostedCmdSetVolume cmd_set_volume = 92;
++        EspHostedRespSetVolume resp_set_volume = 93;
+     }
+ }
+\ No newline at end of file
+diff --git a/esp32-code/jooki_v2/main/app_main.c b/esp32-code/jooki_v2/main/app_main.c
+index c868566..57b1ffc 100644
+--- a/esp32-code/jooki_v2/main/app_main.c
++++ b/esp32-code/jooki_v2/main/app_main.c
+@@ -144,7 +144,7 @@ static void process_knobs_event(enum knobs_event_type type, int value,
+ 
+     switch (type) {
+     case KNOBS_EVENT_VOLUME:
+-        audio_set_volume(value);
++        audio_set_knob_volume(value);
+         break;
+     case KNOBS_EVENT_PREV:
+     case KNOBS_EVENT_NEXT:
+@@ -414,9 +414,8 @@ void app_main() {
+ 
+ #ifdef AUDIO_SYSTEM_ENABLED
+         if(uxBits & RUN_LOW_PRIO_AUDIO_WORK_EVENT) {
+-            /* sync volume to the current knob state */
+-            knobs_state_t state = knobs_get_state();
+-            audio_set_volume(state.volume);
++            /* Reapply the authoritative volume (and hardware mute), never the dial. */
++            audio_refresh_volume();
+             audio_do_low_priority_tasks();
+         }
+ #endif
+diff --git a/esp32-code/jooki_v2/main/audio.c b/esp32-code/jooki_v2/main/audio.c
+index 18513dc..74833c4 100644
+--- a/esp32-code/jooki_v2/main/audio.c
++++ b/esp32-code/jooki_v2/main/audio.c
+@@ -15,6 +15,7 @@
+ 
+ #include "board.h"
+ #include "audio.h"
++#include "volume_control.h"
+ #include "bluetooth_classic.h"
+ #include "audio_sources.h"
+ #include "audio_sinks.h"
+@@ -39,7 +40,7 @@ esp_periph_set_handle_t periph_set;
+ 
+ float volume = MUTED;
+ uint8_t toysafe = TOY_SAFE_MODE;
+-int volume_saved_value;
++static oj_volume_t volume_control = OJ_VOLUME_INITIAL;
+ 
+ SemaphoreHandle_t atomic_volume = NULL;
+ esp_timer_handle_t audio_bt_connect_timer = NULL;
+@@ -48,37 +49,35 @@ bool audio_pipeline_is_running() {
+     return audio_started == YES;
+ }
+ 
+-void audio_set_volume(int value) {
+-    if (value >= VOLUME_TABLE_SIZE) {
+-        value = VOLUME_TABLE_SIZE - 1;
+-    } else if (value < 0) {
+-        value = 0;
+-    }
+-
+-    volume_saved_value = value;
+-
+-    if(mute == YES) {
+-        value = MUTED;
+-    }
+-
+-    if (atomic_volume == NULL) {
+-        ESP_LOGW(TAG_AUDIO, "Audio subsystem not ready");
+-        return;
+-    }
+-    if (xSemaphoreTake(atomic_volume, portMAX_DELAY) == pdFALSE) {
+-        ESP_LOGE(TAG_AUDIO, "failed to take atomic_volume");
+-        return;
+-    }
+-
+-    /* apply volume table for log-scaling and limiting */
+-    volume = VOLUME_TABLE[value];
+-    volume *=
+-        toysafe ? VOLUME_TABLE_SCALING_TOYSAFE : VOLUME_TABLE_SCALING_NORMAL;
++// With the lock held: use one global curve for host control. Legacy hosts retain factory kids scaling.
++static void audio_apply_volume_locked(void) {
++    int value = oj_volume_output(&volume_control, mute == YES);
++    volume = oj_volume_gain(&volume_control, VOLUME_TABLE[value], toysafe,
++                            VOLUME_TABLE_SCALING_NORMAL, VOLUME_TABLE_SCALING_TOYSAFE);
+     audio_sink_set_volume(volume);
++}
+ 
++void audio_refresh_volume(void) {
++    if (!atomic_volume) return;
++    if (xSemaphoreTake(atomic_volume, portMAX_DELAY) == pdFALSE) return;
++    audio_apply_volume_locked();
+     xSemaphoreGive(atomic_volume);
+ }
+ 
++int audio_set_host_volume(int percent, unsigned maximum_plus_one) {
++    if (percent < 0 || percent > 100 || maximum_plus_one > 101) return ESP_ERR_INVALID_ARG;
++    if (atomic_volume && xSemaphoreTake(atomic_volume, portMAX_DELAY) == pdFALSE) return ESP_FAIL;
++    oj_volume_host(&volume_control, percent, maximum_plus_one);
++    if (atomic_volume) { audio_apply_volume_locked(); xSemaphoreGive(atomic_volume); }
++    return ESP_OK;
++}
++
++void audio_set_knob_volume(int percent) {
++    if (atomic_volume && xSemaphoreTake(atomic_volume, portMAX_DELAY) == pdFALSE) return;
++    oj_volume_knob(&volume_control, percent);
++    if (atomic_volume) { audio_apply_volume_locked(); xSemaphoreGive(atomic_volume); }
++}
++
+ static void status_print() {
+     ESP_LOGI(TAG_AUDIO, "==== STATUS ===");
+     ESP_LOGI(TAG_AUDIO,
+@@ -509,9 +508,11 @@ void audio_task(void *pvParameters) {
+         if ((audio_ctrl_reg & MUTE) && !mute) {
+             ESP_LOGI(TAG_AUDIO, "Audio mute ON");
+             mute = YES;
++            audio_refresh_volume();
+         } else if (!(audio_ctrl_reg & MUTE) && mute) {
+             ESP_LOGI(TAG_AUDIO, "Audio mute OFF");
+             mute = NO;
++            audio_refresh_volume();
+         }
+ 
+         audio_sources_update_buffering_decoder_level_reg();
+@@ -627,7 +628,7 @@ esp_err_t audio_start(void) {
+     if (read_setting_from_nvs("toysafe", &toysafe, TOY_SAFE_MODE, true) != ESP_OK)
+         toysafe = TOY_SAFE_MODE;
+ 
+-    ESP_LOGI(TAG_AUDIO, "Volume set to %d%%", volume_saved_value);
++    ESP_LOGI(TAG_AUDIO, "Volume set to %d%%", volume_control.requested);
+ 
+     ESP_LOGI(TAG_AUDIO, "Toysafe is %s", toysafe ? "enable" : "disabled");
+ 
+@@ -645,13 +646,16 @@ esp_err_t audio_start(void) {
+ }
+ 
+ int audio_set_toysafe(bool state) {
+-    if (toysafe != state) {
+-        toysafe = state;
+-        audio_set_volume(volume_saved_value);
+-        store_setting_to_nvs("toysafe", toysafe);
+-    }
++    if (atomic_volume && xSemaphoreTake(atomic_volume, portMAX_DELAY) == pdFALSE) return ESP_FAIL;
++    bool changed = toysafe != state;
++    toysafe = state;
++    // Existing SetToysafe users keep the factory curve. A subsequent SetVolume
++    // explicitly opts the companion controller back into the shared global scale.
++    oj_volume_legacy(&volume_control);
++    if (atomic_volume) { audio_apply_volume_locked(); xSemaphoreGive(atomic_volume); }
++    if (changed) store_setting_to_nvs("toysafe", toysafe);
+     ESP_LOGI(TAG_AUDIO, "%s toysafe mode", toysafe ? "enabled" : "disabled");
+-    return 0;
++    return ESP_OK;
+ }
+ 
+ bool audio_get_toysafe(void) { return toysafe; }
+diff --git a/esp32-code/jooki_v2/main/audio.h b/esp32-code/jooki_v2/main/audio.h
+index 92134ec..9bdacf3 100644
+--- a/esp32-code/jooki_v2/main/audio.h
++++ b/esp32-code/jooki_v2/main/audio.h
+@@ -62,7 +62,9 @@ void audio_write_samples(char *buffer, int buf_size, uint16_t stream_id,
+                          uint8_t decoder_type);
+ esp_err_t audio_init(void);
+ esp_err_t audio_start(void);
+-void audio_set_volume(int value);
++void audio_set_knob_volume(int percent);
++int audio_set_host_volume(int percent, unsigned maximum_plus_one);
++void audio_refresh_volume(void);
+ void audio_sdio_init(void);
+ void audio_do_low_priority_tasks();
+ int audio_set_toysafe(bool is_enabled);
+diff --git a/esp32-code/jooki_v2/main/slave_commands.c b/esp32-code/jooki_v2/main/slave_commands.c
+index dd6f54a..aad76eb 100644
+--- a/esp32-code/jooki_v2/main/slave_commands.c
++++ b/esp32-code/jooki_v2/main/slave_commands.c
+@@ -397,6 +397,7 @@ static esp_err_t cmd_get_knobs_state_handler(EspHostedConfigPayload *req,
+     resp->resp_get_knobs_state = resp_payload;
+ 
+     resp_payload->volume = state.volume;
++    resp_payload->volume_api = 2;
+     resp_payload->control = state.seek;
+     resp_payload->hp_state = state.headphones;
+ 
+@@ -1600,6 +1601,17 @@ cmd_set_remote_command_execution_result(EspHostedConfigPayload *req,
+     return ESP_OK;
+ }
+ 
++static esp_err_t cmd_set_volume(EspHostedConfigPayload *req, EspHostedConfigPayload *resp, void *priv_data) {
++    if (!req || !req->cmd_set_volume || !resp) return ESP_ERR_INVALID_ARG;
++    EspHostedRespSetVolume *p = calloc(1, sizeof(*p));
++    if (!p) return ESP_ERR_NO_MEM;
++    esp_hosted_resp_set_volume__init(p);
++    p->result = audio_set_host_volume(req->cmd_set_volume->percent, req->cmd_set_volume->maximum_plus_one);
++    resp->payload_case = ESP_HOSTED_CONFIG_PAYLOAD__PAYLOAD_RESP_SET_VOLUME;
++    resp->resp_set_volume = p;
++    return ESP_OK;
++}
++
+ static esp_err_t cmd_set_toysafe(EspHostedConfigPayload *req,
+                                  EspHostedConfigPayload *resp,
+                                  void *priv_data) {
+@@ -1950,6 +1962,8 @@ static esp_hosted_config_cmd_t cmd_table[] = {
+     {.cmd_num =
+          ESP_HOSTED_CONFIG_MSG_TYPE__TypeCmdSetRemoteCommandExecutionResult,
+      .command_handler = cmd_set_remote_command_execution_result},
++    {.cmd_num = ESP_HOSTED_CONFIG_MSG_TYPE__TypeCmdSetVolume,
++     .command_handler = cmd_set_volume},
+     {.cmd_num = ESP_HOSTED_CONFIG_MSG_TYPE__TypeCmdSetToysafe,
+      .command_handler = cmd_set_toysafe},
+     {.cmd_num = ESP_HOSTED_CONFIG_MSG_TYPE__TypeCmdSendAllNotifications,
+@@ -2162,6 +2176,9 @@ static void esp_hosted_config_cleanup(EspHostedConfigPayload *resp) {
+     case ESP_HOSTED_CONFIG_MSG_TYPE__TypeRespSetRemoteCommandExecutionResult:
+         mem_free(resp->resp_set_remote_command_execution_result);
+         break;
++    case ESP_HOSTED_CONFIG_MSG_TYPE__TypeRespSetVolume:
++        mem_free(resp->resp_set_volume);
++        break;
+     case ESP_HOSTED_CONFIG_MSG_TYPE__TypeRespSetToysafe:
+         mem_free(resp->resp_set_toysafe);
+         break;
+diff --git a/esp32-code/jooki_v2/main/volume_control.h b/esp32-code/jooki_v2/main/volume_control.h
+new file mode 100644
+index 0000000..d85ae98
+--- /dev/null
++++ b/esp32-code/jooki_v2/main/volume_control.h
+@@ -0,0 +1,29 @@
++// OpenJooki volume arbitration. Caller serializes access with atomic_volume.
++#ifndef OJ_VOLUME_CONTROL_H
++#define OJ_VOLUME_CONTROL_H
++#include <stdbool.h>
++typedef struct { int requested, maximum, knob; bool host_set, global_scale; } oj_volume_t;
++#define OJ_VOLUME_INITIAL { 0, 100, -1, false, false }
++static inline int oj_volume_clamp(int v) { return v < 0 ? 0 : v > 100 ? 100 : v; }
++static inline bool oj_volume_host(oj_volume_t *s, int percent, unsigned maximum_plus_one) {
++    if (percent < 0 || percent > 100 || maximum_plus_one > 101) return false;
++    s->requested = percent;
++    if (maximum_plus_one) s->maximum = maximum_plus_one - 1;
++    s->host_set = true;
++    s->global_scale = true;
++    return true;
++}
++static inline void oj_volume_knob(oj_volume_t *s, int percent) {
++    percent = oj_volume_clamp(percent);
++    if (s->knob == percent) return;
++    if (s->knob >= 0 || !s->host_set) s->requested = percent;
++    s->knob = percent;
++}
++static inline int oj_volume_output(const oj_volume_t *s, bool muted) {
++    return muted ? 0 : (s->requested < s->maximum ? s->requested : s->maximum);
++}
++static inline void oj_volume_legacy(oj_volume_t *s) { s->global_scale = false; }
++static inline float oj_volume_gain(const oj_volume_t *s, float curve, bool toysafe, float normal, float kids) {
++    return curve * ((s->global_scale || !toysafe) ? normal : kids);
++}
++#endif
+diff --git a/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.c b/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.c
+index ce8089b..f7711e1 100644
+--- a/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.c
++++ b/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.c
+@@ -504,7 +504,10 @@ int get_knobs_state(knobs_state_t* state) {
+   }
+ 
+   resp = esp_hosted_config_payload__unpack(NULL, rx_len, rx_data);
+-  if (!resp || !resp->resp_get_knobs_state) {
++  if (!resp || resp->msg != ESP_HOSTED_CONFIG_MSG_TYPE__TypeRespGetKnobsState ||
++      resp->payload_case != ESP_HOSTED_CONFIG_PAYLOAD__PAYLOAD_RESP_GET_KNOBS_STATE ||
++      !resp->resp_get_knobs_state) {
++    if (resp) esp_hosted_config_payload__free_unpacked(resp, NULL);
+     esp_hosted_free(tx_data);
+     tx_data = NULL;
+     esp_hosted_free(rx_data);
+@@ -515,6 +518,8 @@ int get_knobs_state(knobs_state_t* state) {
+   state->volume = resp->resp_get_knobs_state->volume;
+   state->control = resp->resp_get_knobs_state->control;
+   state->hp_state = resp->resp_get_knobs_state->hp_state;
++  state->volume_api = resp->resp_get_knobs_state->volume_api;
++  esp_hosted_config_payload__free_unpacked(resp, NULL);
+   esp_hosted_free(tx_data);
+   tx_data = NULL;
+   esp_hosted_free(rx_data);
+@@ -2563,4 +2568,30 @@ int nfc_write_tag(char *tagId, uint8_t *tagData, size_t tagData_len)
+   mem_free(req_payload);
+   return -1;
+ 
+-}
+\ No newline at end of file
++}
++// Additive command. Only call after volume_api=2 was returned by GetKnobsState.
++int set_volume(int percent, unsigned maximum_plus_one) {
++  if (percent < 0 || percent > 100 || maximum_plus_one > 101) return FAILURE;
++  EspHostedConfigPayload req = ESP_HOSTED_CONFIG_PAYLOAD__INIT;
++  EspHostedCmdSetVolume payload = ESP_HOSTED_CMD_SET_VOLUME__INIT;
++  payload.percent = percent;
++  payload.maximum_plus_one = maximum_plus_one;
++  req.msg = ESP_HOSTED_CONFIG_MSG_TYPE__TypeCmdSetVolume;
++  req.payload_case = ESP_HOSTED_CONFIG_PAYLOAD__PAYLOAD_CMD_SET_VOLUME;
++  req.cmd_set_volume = &payload;
++  size_t len = esp_hosted_config_payload__get_packed_size(&req);
++  uint8_t *tx = esp_hosted_calloc(1, len);
++  if (!tx) return FAILURE;
++  esp_hosted_config_payload__pack(&req, tx);
++  uint32_t rx_len = 0;
++  uint8_t *rx = transport_pserial_data_handler(tx, len, TIMEOUT_PSERIAL_RESP, &rx_len);
++  esp_hosted_free(tx);
++  if (!rx) return FAILURE;
++  EspHostedConfigPayload *resp = esp_hosted_config_payload__unpack(NULL, rx_len, rx);
++  int result = resp && resp->msg == ESP_HOSTED_CONFIG_MSG_TYPE__TypeRespSetVolume &&
++      resp->payload_case == ESP_HOSTED_CONFIG_PAYLOAD__PAYLOAD_RESP_SET_VOLUME &&
++      resp->resp_set_volume && resp->resp_set_volume->result == 0 ? SUCCESS : FAILURE;
++  if (resp) esp_hosted_config_payload__free_unpacked(resp, NULL);
++  esp_hosted_free(rx);
++  return result;
++}
+diff --git a/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.h b/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.h
+index bee7c75..ee7017b 100644
+--- a/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.h
++++ b/ml-yocto-jooki/sw/controllers/esp32_ctrl/commands.h
+@@ -83,6 +83,7 @@ typedef struct {
+   int32_t volume;
+   int32_t control;
+   int32_t hp_state;
++  unsigned volume_api;
+ } knobs_state_t;
+ 
+ typedef struct {
+@@ -345,6 +346,7 @@ int set_versions(void);
+ int set_remote_command_execution_result(char* pointerStringResult);
+ 
+ int set_toysafe(bool isEnabled);
++int set_volume(int percent, unsigned maximum_plus_one);
+ 
+ int get_toysafe(bool* pointerIsEnabled);
+ 
+diff --git a/ml-yocto-jooki/sw/controllers/esp32_ctrl/esp32_ctrl.c b/ml-yocto-jooki/sw/controllers/esp32_ctrl/esp32_ctrl.c
+index 904319a..6514066 100644
+--- a/ml-yocto-jooki/sw/controllers/esp32_ctrl/esp32_ctrl.c
++++ b/ml-yocto-jooki/sw/controllers/esp32_ctrl/esp32_ctrl.c
+@@ -2,7 +2,6 @@
+ #define _GNU_SOURCE
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <linux/input.h>
+ #include <pthread.h>
+ #include <signal.h>
+ #include <stdbool.h>
+@@ -61,6 +60,8 @@ static void on_cmd_bt_connect(char* msg, size_t len);
+ static void on_cmd_bt_forget_device(char* msg, size_t len);
+ static void on_cmd_bt_get_all_states(char* msg, size_t len);
+ static void on_cmd_audio_set_toysafe(char* msg, size_t len);
++static void on_cmd_audio_set_volume(char* msg, size_t len);
++static unsigned volume_api;
+ static void on_cmd_audio_get_toysafe(char* msg, size_t len);
+ 
+ mqtt_client client = {
+@@ -93,6 +94,7 @@ mqtt_client client = {
+         {"/j/esp32/output/bt/get_state", on_cmd_bt_get_all_states},
+         //
+         {"/j/esp32/output/audio/set_toysafe", on_cmd_audio_set_toysafe},
++        {"/j/esp32/output/audio/set_volume", on_cmd_audio_set_volume},
+         {"/j/esp32/output/audio/get_toysafe", on_cmd_audio_get_toysafe},
+     }};
+ 
+@@ -100,10 +102,11 @@ static void on_cmd_get_knobs_state(char* msg, size_t len) {
+   knobs_state_t info;
+   int ret = get_knobs_state(&info);
+   if (ret == SUCCESS) {
++    volume_api = info.volume_api;
+     char msg[128];
+     snprintf(msg, array_size(msg),
+-             "{\"volume\":%d,\"control\":%d,\"hp_state\":%d}", info.volume,
+-             info.control, info.hp_state);
++             "{\"volume\":%d,\"control\":%d,\"hp_state\":%d,\"volume_api\":%u}", info.volume,
++             info.control, info.hp_state, info.volume_api);
+     mqtt_publish(&client, "/j/esp32/input/knobs/state", msg);
+   } else {
+     ERROR("Failed to get knobs state\n");
+@@ -701,6 +704,15 @@ static void on_cmd_bt_get_all_states(char __attribute__((unused)) * msg,
+   }
+ }
+ 
++#include "volume_request.h"
++static void on_cmd_audio_set_volume(char* msg, size_t len) {
++  int percent, maximum;
++  int result = -1;
++  if (volume_api == 2 && oj_volume_request(msg, len, &percent, &maximum))
++    result = set_volume(percent, maximum < 0 ? 0 : (unsigned)maximum + 1);
++  mqtt_publish(&client, "/j/esp32/input/audio/volume", result == SUCCESS ? "0" : "-1");
++}
++
+ static void publish_toysafe_state() {
+   int ret;
+   bool enable;
+diff --git a/ml-yocto-jooki/sw/controllers/esp32_ctrl/volume_request.h b/ml-yocto-jooki/sw/controllers/esp32_ctrl/volume_request.h
+new file mode 100644
+index 0000000..258b97b
+--- /dev/null
++++ b/ml-yocto-jooki/sw/controllers/esp32_ctrl/volume_request.h
+@@ -0,0 +1,41 @@
++// Strict bounded parser for {"percent":0..100,"maximum":0..100?}.
++#ifndef OJ_VOLUME_REQUEST_H
++#define OJ_VOLUME_REQUEST_H
++#include <stdbool.h>
++#include <stddef.h>
++#include <string.h>
++static bool oj_volume_request(const char *s, size_t n, int *percent, int *maximum) {
++    if (!s || n > 96) return false;
++    size_t i = 0; bool have_percent = false, have_max = false;
++    *maximum = -1;
++#define OJ_SPACE() while (i < n && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r')) ++i
++    OJ_SPACE(); if (i == n || s[i++] != '{') return false;
++    for (;;) {
++        OJ_SPACE(); if (i == n || s[i++] != '"') return false;
++        size_t key = i;
++        while (i < n && s[i] != '"') ++i;
++        if (i == n) return false;
++        size_t len = i++ - key;
++        bool is_percent = len == 7 && !memcmp(s + key, "percent", 7);
++        bool is_max = len == 7 && !memcmp(s + key, "maximum", 7);
++        if ((!is_percent && !is_max) || (is_percent && have_percent) || (is_max && have_max)) return false;
++        OJ_SPACE(); if (i == n || s[i++] != ':') return false;
++        OJ_SPACE(); if (i == n || s[i] < '0' || s[i] > '9') return false;
++        int value = s[i++] - '0';
++        if (value == 0 && i < n && s[i] >= '0' && s[i] <= '9') return false;
++        while (i < n && s[i] >= '0' && s[i] <= '9') {
++            value = value * 10 + s[i++] - '0';
++            if (value > 100) return false;
++        }
++        if (is_percent) { *percent = value; have_percent = true; }
++        else { *maximum = value; have_max = true; }
++        OJ_SPACE(); if (i == n) return false;
++        char delimiter = s[i++];
++        if (delimiter == '}') break;
++        if (delimiter != ',') return false;
++    }
++    OJ_SPACE();
++#undef OJ_SPACE
++    return i == n && have_percent;
++}
++#endif

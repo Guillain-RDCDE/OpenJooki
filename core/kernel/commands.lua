@@ -28,6 +28,14 @@ local commands = {}
 
 local function check(cond, what) if not cond then error(what, 0) end end
 
+local function set_volume_mode(a, bypass, key)
+  local _, rc = a.shell.run("volume_mode", { bypass = bypass })
+  if rc == 0 then a.host._volume_policy = key; return true end
+  a.host._volume_policy = nil
+  log.warn("commands.volume_mode_failed", { rc = tostring(rc) })
+  return false
+end
+
 local executors = {
   ["bus.publish"] = function(a, c)
     check(type(c.topic) == "string" and c.topic ~= "", "bus.publish needs a topic")
@@ -48,7 +56,27 @@ local executors = {
   end,
   ["host.volume"] = function(a, c)
     check(type(c.percent) == "number", "host.volume needs a percent")
+    local bypass, key, change
+    if type(c.global_volume) == "boolean" then
+      bypass = c.global_volume or c.toy_safe == false
+      key = tostring(c.global_volume) .. ":" .. tostring(c.toy_safe)
+      change = c.force_mode or a.host._volume_policy ~= key
+    end
+    -- Restore factory attenuation before raising a legacy request. If it fails,
+    -- keep the wired output silent and retry rather than applying an unbounded level.
+    if change and not bypass and not set_volume_mode(a, bypass, key) then
+      a.host.set_volume(0)
+      return
+    end
     a.host.set_volume(c.percent)
+    -- Bound ALSA before lifting its fixed attenuation. Cache through fade ticks.
+    if change and bypass then set_volume_mode(a, bypass, key) end
+    -- Jooki 2 speaker / Bluetooth live in the ESP32; wired headphones still use ALSA.
+    -- Only a controller + firmware pair advertising the shared global scale receives it.
+    if c.esp32 then
+      local ok, err = a.bus:publish("/j/esp32/output/audio/set_volume", json.encode({ percent = c.percent, maximum = c.maximum or 100 }))
+      if not ok then log.warn("commands.volume_failed", { err = tostring(err) }) end
+    end
   end,
   ["shell"] = function(a, c, ctx)
     check(type(c.action) == "string", "shell needs an action")

@@ -569,14 +569,16 @@ function upnp.on_action(doc, ev)
   elseif ev.act == "volume" then
     u.muted = nil
     res.state.upnp = u
-    merge(res, device.set_volume(doc, ev.percent))
+    local after = copy(doc); after.upnp = u
+    merge(res, device.set_volume(after, ev.percent))
   elseif ev.act == "mute" then
     -- silence without forgetting the volume (the page and the knob still show it); any new volume
     -- (here, the page, the knob) brings the sound back
     if ev.on == (u.muted == true) then return nil end
     u.muted = ev.on or nil
     res.state.upnp = u
-    res.commands[#res.commands + 1] = { kind = "host.volume", percent = ev.on and 0 or device.effective_volume(doc, volume(doc)) }
+    local after = copy(doc); after.upnp = u
+    res.commands[#res.commands + 1] = device.volume_command(after, device.effective_volume(after, volume(doc)))
   end
   if next(res.state) == nil and #res.commands == 0 then return nil end
   return res

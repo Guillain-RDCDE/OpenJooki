@@ -33,7 +33,7 @@ describe("services.device.radio — toy safe and the radios", function()
     local doc = doc_with()
     local r = radio.on_toy_safe(doc, { enable = false })
     assert_false(r.state.device.toy_safe); assert_true(r.state.flags.TOY_SAFE_OFF)
-    same(kinds(r), { "files.flag", "shell hp_gain", "shell toysafe_update", "esp32/output/audio/set_toysafe 0", "emit lights.event Evt.ToySafe.Off" })
+    same(kinds(r), { "files.flag", "shell hp_gain", "shell toysafe_update", "esp32/output/audio/set_toysafe 0", "emit volume.apply", "emit lights.event Evt.ToySafe.Off" })
   end)
 
   it("louder headphones follow kids mode: +6 dB only with it off and the setting on, said before the script stores it", function()

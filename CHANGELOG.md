@@ -1,5 +1,14 @@
 # OpenJooki — Changelog
 
+## Next release
+Thank you to Dirk Drutschmann, who wrote everything below in one weekend.
+- **Deutsch.** The Jooki's page now speaks German, the names and searches of all 659 pictures included (#30).
+- **All lights off.** *Settings → Turn off all lights permanently*, or *Settings → Night mode → Turn off all lights at night* for the scheduled hours only: the ring, the side lights and the heart go dark, and come back when the time is over (#31). Off by default.
+- **Start with a random song.** In *Settings*, or playlist by playlist: the first song is drawn at random, then the playlist goes on in its order, Spotify playlists included. Audiobooks keep their place. Off by default (#32). Shuffle is also properly random now, even before the Jooki knows the time.
+- **Saved Spotify playlists start faster** after a restart: about a second, without the five-second wait (#32).
+- **The sleep timer stops at the end of the song.** It now says **End of song** for music and **End of chapter** for audiobooks, and Spotify and Deezer really stop there (#35).
+- For the tinkerers: the global LED driver is `/j/ht/output/raw_write` register 34, checked by read-back (docs/29). Shuffle uses Park-Miller seeded from `/dev/urandom`: the old generator lost bits in Lua's doubles. #34 adds an optional ESP32 `SetVolume` command (`volume_api` 2), a parent ceiling on one global scale, and reproducible ESP32 / MIPS build scripts in `tools/firmware` (docs/30, docs/31). **No firmware is shipped**: without `volume_api` 2 the saved volume keeps following the dial, the kids limit stays the factory one, and the new slider stays disabled.
+
 ## OpenJooki 2.4.21 (6 November 2026) — Play from other apps
 - **Play from other apps (UPnP / DLNA)** (#29). The Jooki can now play music sent from an app on
   your phone or from a music server at home, over your Wi-Fi: BubbleUPnP (Android), mconnect

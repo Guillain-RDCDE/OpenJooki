@@ -73,6 +73,7 @@
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Puis suivre l’ordre de lecture. Pour les playlists musicales sur la Jooki.',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',
@@ -274,6 +275,7 @@
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    random_start: 'Start with a random song', random_start_help: 'Then follow the playback order. For music playlists on the Jooki.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',
@@ -475,6 +477,7 @@
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
     knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
+    random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Daarna de afspeelvolgorde volgen. Voor muziekafspeellijsten op de Jooki.',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
     air_title: 'Vliegtuigmodus',
@@ -2050,7 +2053,7 @@
     var more = h('div', { class: 'card', style: 'margin-top:16px' },
       h('label', { class: 'switch' }, h('div', null, h('div', null, t('audiobook')), h('div', { class: 'small muted' }, t('audiobook_help'))),
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
-      // its own shuffle and repeat (#22); nothing for an audiobook or a streaming service, which do not use them
+      // its own playback modes; nothing for an audiobook or a streaming service, which do not use them
       p.audiobook || p.spotify || p.deezer ? null : modeRows(p, id),
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
@@ -2075,6 +2078,9 @@
       row(t('shuffle'), 'plshuffle', typeof p.shuffle_mode === 'boolean' ? (p.shuffle_mode ? 'on' : 'off') : 'settings',
         [['settings', t('pl_settings', c.shuffle_mode ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, shuffle_mode: v === 'settings' ? 'settings' : v === 'on' } }); }),
+      row(t('random_start'), 'plrandomstart', typeof p.random_start === 'boolean' ? (p.random_start ? 'on' : 'off') : 'settings',
+        [['settings', t('pl_settings', c.random_start ? t('s_on') : t('s_off'))], ['on', t('s_on')], ['off', t('s_off')]],
+        function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, random_start: v === 'settings' ? 'settings' : v === 'on' } }); }),
       row(t('repeat'), 'plrepeat', typeof p.repeat_mode === 'number' ? String(p.repeat_mode) : 'settings',
         [['settings', t('pl_settings', repName(Number(c.repeat_mode) || 0))], ['0', t('s_off')], ['1', t('rep_all')], ['2', t('rep_one')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, repeat_mode: v === 'settings' ? 'settings' : Number(v) } }); })];
@@ -2906,6 +2912,7 @@
       sGroup(t('s_listen'), [
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
+        sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', color: 'teal', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
         // the heart's short press on the Jooki (held 2 s it still switches off)

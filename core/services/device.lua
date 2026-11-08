@@ -7,7 +7,7 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp }   (audiocfg.json, 1.x shape + the heart, the knob, louder headphones, play from other apps)
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp }   (audiocfg.json)
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
 --   state.device.esp32_up, state.device.diskUsage, state.device.hostname, state.device.ip, ...
@@ -43,6 +43,7 @@ local function audiocfg_of(doc)
   a.volume = a.volume or 40
   a.headphones_en = a.headphones_en == true
   a.shuffle_mode = a.shuffle_mode == true
+  a.random_start = a.random_start == true
   a.continue_on_token_removal = a.continue_on_token_removal == true
   a.hp_boost = a.hp_boost == true
   a.upnp = a.upnp == true
@@ -77,8 +78,12 @@ local KNOB_MODE = { song = true, both = true, wind = true }
 -- straight back to it. (v1 used to copy audiocfg without audiocfg_of's defaults; since boot always
 -- stores a normalised audiocfg, the written file is the same.)
 function device.update_config(doc, changes, opts)
+  if changes.random_start ~= nil and type(changes.random_start) ~= "boolean" then
+    return nil, err("invalid_argument", "random_start", "expected a boolean")
+  end
   local a = audiocfg_of(doc)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
+  if changes.random_start ~= nil then a.random_start = changes.random_start end
   if type(changes.continue_on_token_removal) == "boolean" then a.continue_on_token_removal = changes.continue_on_token_removal end
   if changes.repeat_mode ~= nil then
     local m = changes.repeat_mode
@@ -363,7 +368,7 @@ device.on_button, device.on_tick = buttons.on_button, buttons.on_tick
 
 local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
-S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
+S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, random_start = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },

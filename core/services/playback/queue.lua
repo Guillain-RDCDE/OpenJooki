@@ -17,14 +17,15 @@ local function shuffled(n, seed)
   return order
 end
 
---- Shuffle (true / false) and repeat (0 none, 1 all, 2 this one) for a playlist: its own when it
---- has one (playlists[id].shuffle_mode / repeat_mode, #22), else the Settings' (audiocfg).
+--- Shuffle (true / false), repeat (0 none, 1 all, 2 this one), random start (true / false):
+--- the playlist's own choices when present, else the Settings' (audiocfg).
 function queue.modes(doc, p)
   local cfg = doc.audiocfg or {}
-  local shuffle, rep = p.shuffle_mode, p.repeat_mode
+  local shuffle, rep, random_start = p.shuffle_mode, p.repeat_mode, p.random_start
   if shuffle == nil then shuffle = cfg.shuffle_mode == true end
   if rep == nil then rep = tonumber(cfg.repeat_mode) or 0 end
-  return shuffle, rep
+  if random_start == nil then random_start = cfg.random_start == true end
+  return shuffle, rep, random_start
 end
 
 --- The order in which a playlist's tracks are played (identity or a memoised shuffle).

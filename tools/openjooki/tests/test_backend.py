@@ -229,12 +229,23 @@ R.expect("T22 'wind': the knob all the way winds the song", lambda: (j.get("audi
 check("T22 'wind': and the song does not change", j.np.get("trackIndex") == 2 and j.np.get("playlistId") == hp, j.np)
 j.send("SET_CFG", {"knob_mode": "song"}); j.wait(lambda: j.get("audio.config.knob_mode") == "song")
 j.send("SET_CFG", {"heart_press": "none"}); j.wait(lambda: j.get("audio.config.heart_press") == "none")
+j.send("SET_CFG", {"random_start": True}); j.wait(lambda: j.get("audio.config.random_start") is True)
+j.send("PLAYLIST_UPDATE", {"playlist": {"id": q, "random_start": False}}); j.wait(lambda: j.pls[q].get("random_start") is False)
+R.expect("T20 random start saved to audiocfg.json", lambda: audiocfg().get("random_start") is True, 5, audiocfg)
 j.close()
 
 # ---------- persistence across restart
 snap = {k: json.load(open("%s/%s.json" % (DB, k))) for k in ("playlists", "tracks", "tokens")}
 j = B.restart()
 check("T20 state survives a restart", set(j.pls) == set(k for k in snap["playlists"] if k != "_") and set(j.tracks) == set(k for k in snap["tracks"] if k != "_"))
+check("T20 random start and a playlist's explicit off survive a restart",
+      j.get("audio.config.random_start") is True and j.pls[q].get("random_start") is False, (j.get("audio.config"), j.pls[q]))
+reply = j.v2("device.set_config", {"random_start": False}); j.wait(lambda: j.get("audio.config.random_start") is False)
+check("T20 v2 can disable random start", reply.get("ok") is True, reply)
+reply = j.v2("playlist.update", {"id": q, "random_start": "settings"}); j.wait(lambda: "random_start" not in j.pls[q])
+check("T20 v2 can restore inherited random start", reply.get("ok") is True, reply)
+reply = j.v2("device.set_config", {"random_start": "true"})
+check("T20 v2 refuses a non-boolean random start", reply.get("ok") is False and reply.get("error", {}).get("field") == "payload.random_start", reply)
 j.close()
 B.check_clean_log(R, "T21 no handler exception in the whole run")
 R.finish()

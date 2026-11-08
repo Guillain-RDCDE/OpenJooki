@@ -61,6 +61,7 @@
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    random_start: 'Start with a random song', random_start_help: 'Then follow the playback order. For music playlists on the Jooki.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',

@@ -79,6 +79,27 @@ describe("library.ops — playlists", function()
     assert_true(schema.validate({ id = p, shuffle_mode = "settings", repeat_mode = 1 }, require("services.library").schemas.playlist_update))
   end)
 
+  it("update: random start overrides Settings, including off, or inherits again", function()
+    local l = lib_with({ "t1" })
+    local p = ops.playlist_new(l, { title = "P" }, 1)
+    assert_true(ops.playlist_update(l, { id = p, random_start = true }))
+    assert_true(l.playlists[p].random_start)
+    assert_true(ops.playlist_update(l, { id = p, random_start = false }))
+    assert_eq(l.playlists[p].random_start, false)
+    assert_true(ops.playlist_update(l, { id = p, random_start = "settings" }))
+    assert_nil(l.playlists[p].random_start)
+    local schema = require("api.schema")
+    local s = require("services.library").schemas.playlist_update
+    for _, v in ipairs({ true, false, "settings" }) do
+      assert_true(schema.validate({ id = p, random_start = v }, s))
+    end
+    for _, v in ipairs({ "yes", 1 }) do
+      assert_false(schema.validate({ id = p, random_start = v }, s))
+      local ok, e = ops.playlist_update(l, { id = p, random_start = v })
+      assert_nil(ok); assert_eq(e.field, "random_start")
+    end
+  end)
+
   it("TRASH is read-only except for deleting really unused files", function()
     local l = lib_with({ "t1", "t2" })
     local p = ops.playlist_new(l, { title = "P" }, 1)

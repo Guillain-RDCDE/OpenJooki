@@ -115,6 +115,7 @@ local function start(doc, pb, playlist_id, opts)
     return { commands = cmds }
   end
   local q = queue_for(doc, pb, playlist_id, p)
+  local shuffle, _, random_start = modes(doc, p)
   local index, queue_pos, seek_ms = nil, nil, nil
   if opts.index and p.tracks[opts.index] then
     index = opts.index; queue_pos = index_of(q, index) or 1
@@ -125,13 +126,26 @@ local function start(doc, pb, playlist_id, opts)
       -- an audiobook follows its saved position only; without one it starts at chapter 1 (1.3 rule)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
-    elseif (modes(doc, p)) and n > 1 and not (pb.now and pb.now.playlist == playlist_id) then
-      -- shuffle, and another playlist than the one on: a new order, from its first song (#22; 1.x
-      -- restarted the last song played, shuffle or not). Put back on, the same token goes on.
+    elseif n > 1 and (shuffle or random_start) and
+        (not (pb.now and pb.now.playlist == playlist_id) or
+         (random_start and (opts.restart or pb.state == "idle" or pb.state == "ended"))) then
+      -- A fresh playlist start: shuffle draws a new order; random start alone picks a position
+      -- in the original order. A paused or still playing token continues its current song.
       pb.seed = ((pb.seed or 0) * 1103515245 + 12345 + math.floor(tonumber(opts.now_s) or 0)) % 2147483648
-      pb.shuffle[playlist_id] = nil
-      q = queue_for(doc, pb, playlist_id, p)
-      queue_pos, index = 1, q[1]
+      -- Use the high bits: the generator's low bits are biased for even playlist lengths.
+      local first = random_start and (math.floor(pb.seed / 2147483648 * n) + 1)
+      if shuffle then
+        pb.shuffle[playlist_id] = nil
+        q = queue_for(doc, pb, playlist_id, p)
+        if first then
+          local pos = index_of(q, first)
+          q[1], q[pos] = q[pos], q[1] -- keep every song in the shuffled queue
+        end
+        queue_pos = 1
+      else
+        queue_pos = first
+      end
+      index = q[queue_pos]
     end
     index = index or pb.last[playlist_id] or 1
     if not p.tracks[index] then index = 1 end

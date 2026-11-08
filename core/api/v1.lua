@@ -157,7 +157,7 @@ H.PLAYLIST_UPDATE = function(doc, p)
   if pl.title ~= nil and type(pl.title) ~= "string" then return nil, { code = "invalid_argument", field = "title", message = "invalid title type" } end
   local star = pl.star
   local r, err = lib(doc, { playlists = true, tracks = true }, function(l)
-    local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, resume = pl.resume, tracks = pl.tracks, shuffle_mode = pl.shuffle_mode, repeat_mode = pl.repeat_mode }
+    local args = { id = pl.id, title = pl.title, star = star, audiobook = pl.audiobook, resume = pl.resume, tracks = pl.tracks, shuffle_mode = pl.shuffle_mode, random_start = pl.random_start, repeat_mode = pl.repeat_mode }
     if pl.tagId and star == nil and pl.star == nil then
       local tok = l.tokens[pl.tagId]
       if not tok then return nil, { code = "invalid_argument", field = "star", message = "invalid token type" } end
@@ -205,7 +205,10 @@ H.SET_VOL = function(doc, p)
   return device.set_volume(doc, v), nil, { "audio" }
 end
 -- the page's booleans (repeat_mode true/false too) are read by device.update_config
-H.SET_CFG = function(doc, p) return device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp }), nil, { "audio" } end
+H.SET_CFG = function(doc, p)
+  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, random_start = p.random_start, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp })
+  return r, e, { "audio" }
+end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
 -- refused without echoing the payload: it holds a Wi-Fi password, and the error topic reaches every page
 H.SET_WIFI = function() return { commands = { err_cmd(device.WIFI_OVER_BLUETOOTH.message) } } end

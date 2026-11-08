@@ -51,11 +51,7 @@
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
     var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
-    var allLights = typeof cfg.lights_off === 'boolean' ? sGroup(null, [
-      sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
-        onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } })
-    ]) : [];
-    if (!c.enabled) return out.concat(allLights);
+    if (!c.enabled) return out;
     out.push(sGroup(t('s_night_hours'), [
       sRow({ k: 'nightstatus', label: S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start))) }),
       h('div', { class: 'timepair' },
@@ -78,5 +74,5 @@
       sRow({ label: t('night_dim'), sub: t('night_dim_help'), sw: true, on: c.dim, k: 'nightdim',
         disabled: c.lights_off || cfg.lights_off, onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
-    return out.concat(allLights);
+    return out;
   }

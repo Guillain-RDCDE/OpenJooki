@@ -36,7 +36,7 @@ the time left.
 - the lights are dimmed (about 5 % of their normal brightness), or all lights can
   be switched off for the scheduled hours, including the heart.
 
-The same page has a separate permanent lights-off switch. It overrides the
+The main Settings page has a separate permanent lights-off switch. It overrides the
 schedule and remains available when night mode is disabled. Both switches and
 the saved dimming preference survive a restart; see [all device lights](29-device-lights-off.md).
 

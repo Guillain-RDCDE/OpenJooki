@@ -157,7 +157,8 @@ for good.
 
 ## While it plays
 
-The bar at the bottom shows what is playing. Tap it for the volume, shuffle and repeat,
+The bar at the bottom shows what is playing. Tap it for the volume (on the speaker, the page can
+go below the knob's level, not above it; turning the knob takes over), shuffle and repeat,
 and the **sleep timer**: 10, 20, 30, 45 or 60 minutes, or **End of song** (**End of chapter**
 for an audiobook). The music fades out at the end.
 
@@ -169,7 +170,7 @@ can also wind the song forward or back, and the heart can skip a song on a short
 
 *Settings → Night mode*: choose the hours (**From**, **To**). During those hours every
 listen stops by itself after the **Automatic timer**, the volume stays under the
-**Maximum volume**, and the lights are dim (**Dimmed lights**). **Turn off all lights at night**
+**Maximum volume** (on the speaker too), and the lights are dim (**Dimmed lights**). **Turn off all lights at night**
 switches off the ring, the side lights and the heart during those hours; they come back on
 afterwards.
 

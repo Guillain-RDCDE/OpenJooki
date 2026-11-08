@@ -33,6 +33,7 @@ local function clamp(v) v = math.floor(tonumber(v) or 0) if v < 0 then return 0 
 
 --- Requested volume through the kids/night ceilings, mute and the fade.
 function device.effective_volume(doc, requested)
+  if (doc.poweroff_int or {}).step then return 0 end
   local v = clamp(requested)
   local find = (doc.streaming_int or {}).find
   if (doc.upnp or {}).muted or (find and (find.skips or 0) > 0) then return 0 end
@@ -48,10 +49,22 @@ function device.effective_volume(doc, requested)
   return v
 end
 
+-- The Linux mixer's level for this volume (docs/30). Wired headphones have no other control: the
+-- level is the volume. The speaker's real level is set by the ESP32: from the dial on today's firmware,
+-- so the mixer only takes off what is asked below the dial; from the volume itself with API 2.
+-- One step of the mixer and of the dial is the same 0.4 dB.
+local function mixer_level(doc, percent)
+  if percent == 0 or (doc.audiocfg or {}).headphones_en == true then return percent end
+  if (doc.device or {}).volume_api == 2 then return 100 end
+  local knob = (doc.volume_int or {}).knob or 100    -- not read yet: the lower level, for that first second
+  if percent >= knob then return 100 end
+  return 100 - (knob - percent)
+end
+
 -- One route for every volume write, including temporary silence and output switches.
 function device.volume_command(doc, percent)
   local global = (doc.device or {}).volume_api == 2
-  return { kind = "host.volume", percent = percent, esp32 = global, global_volume = global,
+  return { kind = "host.volume", percent = percent, mixer = mixer_level(doc, percent), esp32 = global, global_volume = global,
            toy_safe = (doc.device or {}).toy_safe ~= false,
            maximum = percent == 0 and 0 or device.effective_volume(doc, 100) }
 end
@@ -76,9 +89,17 @@ device.audiocfg_of = audiocfg_of   -- power (the cable, the power-off save) and 
 local function audiocfg_path(doc) return util.data_dir(doc) .. "/audiocfg.json" end
 device.audiocfg_path = audiocfg_path
 
+-- Today's firmware cannot raise the speaker above its dial: the highest volume true to what is heard.
+local function speaker_ceiling(doc)
+  if (doc.device or {}).volume_api == 2 or (doc.audiocfg or {}).headphones_en == true then return nil end
+  return (doc.volume_int or {}).knob
+end
+
 local function set_volume(doc, requested, persist)
   local a = audiocfg_of(doc)
   a.volume = clamp(requested)
+  local ceiling = speaker_ceiling(doc)
+  if ceiling and a.volume > ceiling then a.volume = ceiling end
   local state, after = { audiocfg = a }, doc
   -- A new volume from the page / a moved dial unmutes, as before. Limit and
   -- fade reapplications use on_apply_volume instead and preserve mute.
@@ -200,16 +221,20 @@ function device.on_gpio_volume(doc, ev)
   if ev.percent == nil then return nil end
   local position = clamp(ev.percent)
   local previous = (doc.volume_int or {}).knob
-  -- Without volume API 2 the dial alone sets the speaker: a request kept against it would show
-  -- a level the Jooki is not playing at. So the saved volume follows the dial, as it always did.
-  if (doc.device or {}).volume_api ~= 2 and position ~= audiocfg_of(doc).volume then
-    local r = set_volume(doc, position)
-    r.state.volume_int = copy(doc.volume_int or {}); r.state.volume_int.knob = position
-    return r
+  local seen = copy(doc); seen.volume_int = copy(doc.volume_int or {}); seen.volume_int.knob = position
+  local volume = audiocfg_of(doc).volume
+  local ceiling = speaker_ceiling(seen)
+  if previous == position then
+    -- unchanged: a saved request stands, unless it shows more than the speaker can play
+    if ceiling and volume > ceiling then return set_volume(seen, position) end
+    return nil
   end
-  if previous == position then return nil end
-  local r = previous ~= nil and set_volume(doc, position) or { state = {} }
-  r.state.volume_int = copy(doc.volume_int or {}); r.state.volume_int.knob = position
+  local r
+  if previous ~= nil then r = set_volume(seen, position)                     -- the dial moved: it takes over
+  elseif ceiling and volume > ceiling then r = set_volume(seen, position)    -- first reading, below the saved volume
+  elseif ceiling then r = { state = {}, commands = { device.volume_command(seen, device.effective_volume(seen, volume)) } }
+  else r = { state = {} } end
+  r.state.volume_int = seen.volume_int
   return r
 end
 

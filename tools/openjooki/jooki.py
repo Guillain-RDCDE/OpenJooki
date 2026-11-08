@@ -331,6 +331,8 @@ SYSTEM_FILES = {"/etc/syslog-ng/syslog-ng.conf": "syslog-ng.conf",   # logs stay
 CORE_SYSTEM_FILES = {"/jooki/bin/ml-start-app.sh": "ml-start-app.sh",
                      "/jooki/bin/ml-jooki-hostname.sh": "ml-jooki-hostname.sh",
                      "/etc/inittab": "inittab",
+                     # the speaker through the same "Softmaster" control as the headphones (docs/30)
+                     "/etc/asound.conf": "asound.conf",
                      # the broker: page's WebSocket needs a per-Jooki password (docs/adr/0007)
                      "/etc/mosquitto/mosquitto.conf": "mosquitto.conf",
                      # generates that password before the broker starts (S58) and serves it to the page

@@ -1,5 +1,6 @@
 """Permanent and scheduled darkness on the real core/browser, with an answering Holtek peer."""
 import datetime
+import json
 import paho.mqtt.client as mqtt
 from playwright.sync_api import sync_playwright
 import bench as B
@@ -48,6 +49,7 @@ R.check("events and party cannot light the LEDs", only_black(mark))
 R.expect("charger events retain darkness", lambda: last() == "34 0")
 restart_mark = spy.mark()
 j = B.restart(j)
+j.c.publish('/j/esp32/input/net/sta/config', json.dumps({'stat':'success','ip':'10.0.0.2'}))
 R.check("saved switch restored", j.get("audio.config.lights_off") is True)
 R.expect("boot cue finishes with driver off", lambda: last() == "34 0" and len([p for p in spy.payloads("/j/led/output/set_raw", restart_mark) if p.startswith("ALL,") and p != "ALL,0,0,0"]) == 3, 13)
 R.check("startup gives three flashes before darkness", len([p for p in spy.payloads("/j/led/output/set_raw", restart_mark) if p.startswith("ALL,") and p != "ALL,0,0,0"]) == 3)
@@ -82,6 +84,7 @@ j.send("OJ_PARTY", {}); j.c.publish("/j/event", "Evt.Character.Write"); j.barrie
 R.check("night darkness suppresses animations and events", only_black(mark))
 restart_mark = spy.mark()
 j = B.restart(j)
+j.c.publish('/j/esp32/input/net/sta/config', json.dumps({'stat':'success','ip':'10.0.0.2'}))
 R.expect("night darkness restored after its startup cue", lambda: last() == "34 0" and j.get("bedtime.cfg.lights_off") is True and len([p for p in spy.payloads("/j/led/output/set_raw", restart_mark) if p.startswith("ALL,") and p != "ALL,0,0,0"]) == 3, 13)
 R.check("night restart flashes exactly three times", len([p for p in spy.payloads("/j/led/output/set_raw", restart_mark) if p.startswith("ALL,") and p != "ALL,0,0,0"]) == 3)
 j.send("OJ_BEDTIME_SET", window(False))

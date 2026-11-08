@@ -5,9 +5,19 @@ requested volume. The first reading establishes a baseline; repeated readings
 leave a saved web request alone. An actual movement takes over again. A web
 request above a low dial position therefore remains effective until the dial moves.
 
-This needs `volume_api == 2`. On firmware without it the dial alone sets the speaker,
-so the saved volume keeps following every dial report: the page must not show a level
-the Jooki is not playing at.
+## On today's firmware, without flashing anything
+
+Without `volume_api == 2` the ESP32 sets the speaker from its dial, and no command can raise it.
+Since this change the speaker's audio also goes through a software control (`softvol_spk` in
+`tools/openjooki/system/asound.conf`, the same `Softmaster` control as the headphones, 0.4 dB a
+step like the dial). So the page, night mode, the sleep fade and mute can **lower** the speaker,
+never raise it above the dial: mixer level = `100 - (dial - volume)`, 0 for silence.
+
+- A request above the dial is saved as the dial's value: the page never shows a level the Jooki
+  is not playing at. Wired headphones have no such ceiling: their level is the volume.
+- An unchanged dial report leaves a saved request alone; moving the dial takes over.
+- With `volume_api == 2` the ESP32 applies the volume and the mixer stays at 100.
+- The kids slider below only shows with `volume_api == 2`.
 
 ## One global scale
 

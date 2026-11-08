@@ -47,6 +47,7 @@ local function audiocfg_of(doc)
   a.continue_on_token_removal = a.continue_on_token_removal == true
   a.hp_boost = a.hp_boost == true
   a.upnp = a.upnp == true
+  a.lights_off = a.lights_off == true
   a.repeat_mode = a.repeat_mode or 1
   return a
 end
@@ -81,6 +82,9 @@ function device.update_config(doc, changes, opts)
   if changes.random_start ~= nil and type(changes.random_start) ~= "boolean" then
     return nil, err("invalid_argument", "random_start", "expected a boolean")
   end
+  if changes.lights_off ~= nil and type(changes.lights_off) ~= "boolean" then
+    return nil, err("invalid_argument", "lights_off", "expected a boolean")
+  end
   local a = audiocfg_of(doc)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
   if changes.random_start ~= nil then a.random_start = changes.random_start end
@@ -102,6 +106,10 @@ function device.update_config(doc, changes, opts)
   end
   -- play from other apps (services.upnp, adapters.upnp): only a real boolean
   if type(changes.upnp) == "boolean" then a.upnp = changes.upnp end
+  if changes.lights_off ~= nil and changes.lights_off ~= a.lights_off then
+    a.lights_off = changes.lights_off
+    cmds[#cmds + 1] = emit("lights.apply", {})
+  end
   if not (opts and opts.silent) then
     cmds[#cmds + 1] = emit("audiocfg.changed", { shuffle_mode = changes.shuffle_mode, repeat_mode = changes.repeat_mode })
   end
@@ -372,7 +380,7 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
-                                              upnp = { type = "boolean" } }, additionalProperties = false }
+                                              upnp = { type = "boolean" }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

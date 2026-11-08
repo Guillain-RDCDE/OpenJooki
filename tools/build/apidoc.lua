@@ -57,7 +57,7 @@ local DESC = {
   ["device.airplane"] = "Switches Wi-Fi and Bluetooth off for `minutes` (1–1440) or, without minutes, until the next start; either way the next start switches them back on. `cancel` switches them back on now. The page loses the Jooki meanwhile.",
   ["upload.add"] = "Imports a file the Jooki's web server received on /upload (uploadId = the multipart field name).",
   ["bedtime.sleep"] = "Starts (seconds or minutes, or mode = track) or cancels the sleep timer.",
-  ["bedtime.set"] = "Night mode settings: enabled, start/stop (\"HH:MM\" or minutes), timer (min), maxvol, dim, tzbase (minutes), tzdst (EU|none).",
+  ["bedtime.set"] = "Night mode settings: enabled, start/stop (\"HH:MM\" or minutes), timer (min), maxvol, dim, lights_off (all lights off only during the night window), tzbase (minutes), tzdst (EU|none).",
   ["update.check"] = "Asks the Jooki to fetch the latest version.json from GitHub (result in /oj-latest.json).",
   ["update.start"] = "Starts the A/B update (progress in /oj-status.txt).",
   ["spotify.new_playlist"] = "Saves what Spotify is playing as a playlist (preset), optionally linked to a character.",

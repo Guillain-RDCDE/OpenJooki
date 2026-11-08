@@ -741,6 +741,7 @@
   }
 
   Object.assign(T.en, {
+    of_other: 'Another playlist is downloading: ', of_pause_sync: 'Pause offline playback to start a download.', of_processed: 'Audio checked',
     of_backend_error: 'The offline player is unavailable. Try again or select the online player.',
     of_title: 'Spotify offline · test', of_premium: 'Offline downloads require Premium. The original online player remains available.',
     of_login: 'For this test version, the separate Premium sign-in is configured by the installer.',
@@ -753,6 +754,7 @@
     of_remove_help: 'This removes the downloaded copy. The playlist and its figure assignment are kept.'
   });
   Object.assign(T.de, {
+    of_other: 'Eine andere Playlist wird gerade heruntergeladen: ', of_pause_sync: 'Offline-Wiedergabe pausieren, um einen Download zu starten.', of_processed: 'Geprüfte Audiodaten',
     of_backend_error: 'Der Offline-Player ist nicht verfügbar. Erneut versuchen oder den Online-Player wählen.',
     of_title: 'Spotify offline · Test', of_premium: 'Offline-Downloads benötigen Premium. Der bisherige Online-Player bleibt verfügbar.',
     of_login: 'Für diese Testversion richtet der Installer die separate Premium-Anmeldung ein.',
@@ -765,6 +767,7 @@
     of_remove_help: 'Der Download wird gelöscht. Playlist und Zuordnung zur Figur bleiben erhalten.'
   });
   Object.assign(T.fr, {
+    of_other: 'Une autre playlist est en cours de téléchargement : ', of_pause_sync: 'Mettez la lecture hors ligne en pause pour télécharger.', of_processed: 'Audio vérifié',
     of_backend_error: 'Le lecteur hors ligne est indisponible. Réessayez ou choisissez le lecteur en ligne.',
     of_title: 'Spotify hors ligne · test', of_premium: 'Les téléchargements nécessitent Premium. Le lecteur en ligne actuel reste disponible.',
     of_login: 'Pour cette version de test, la connexion Premium séparée est configurée par l’installateur.',
@@ -777,6 +780,7 @@
     of_remove_help: 'Seule la copie téléchargée est supprimée. La playlist et sa figurine sont conservées.'
   });
   Object.assign(T.nl, {
+    of_other: 'Een andere afspeellijst wordt gedownload: ', of_pause_sync: 'Pauzeer offline afspelen om een download te starten.', of_processed: 'Gecontroleerde audio',
     of_backend_error: 'De offline speler is niet beschikbaar. Probeer opnieuw of kies de online speler.',
     of_title: 'Spotify offline · test', of_premium: 'Offline downloaden vereist Premium. De bestaande online speler blijft beschikbaar.',
     of_login: 'Voor deze testversie stelt het installatieprogramma de aparte Premium-aanmelding in.',
@@ -2250,10 +2254,11 @@
     if (!o.available) return null;
     var snap = obj(obj(o.playlists)[p.spotify.uri]);
     var job = obj(o.download), mine = job.uri === p.spotify.uri, busy = offlineBusy();
+    var downloading = userPlaylists().filter(function (item) { return item.spotify && item.spotify.uri === job.uri; })[0];
     var tracks = arr(snap.tracks), ready = !!snap.ready;
     if (!tracks.length && mine) tracks = arr(job.tracks);
     var mode = obj(o.modes)[id] || 'online';
-    var np = obj(S.audio.nowPlaying), inUse = np.service === 'SPOTIFY_OFFLINE' && np.playlistId === id && !/^(STOPPED|ENDED)$/.test(S.audio.playback.state || ''), playing = inUse && (S.audio.playback.state !== 'PAUSED' || obj(o.player).state !== 'paused');
+    var np = obj(S.audio.nowPlaying), offlineActive = np.service === 'SPOTIFY_OFFLINE' && !/^(STOPPED|ENDED)$/.test(S.audio.playback.state || ''), inUse = offlineActive && np.playlistId === id, playing = offlineActive && (S.audio.playback.state !== 'PAUSED' || obj(o.player).state !== 'paused');
     var storage = obj(o.storage);
     function button(label, kind, disabled) {
       return h('button', { class: 'btn', disabled: disabled, onclick: function () { send(kind, { playlistId: id }); } }, label);
@@ -2276,9 +2281,12 @@
             if (yes) send('OJ_OFFLINE_REMOVE', { playlistId: id });
           });
         } }, t('of_remove')) : null),
-      mine && busy ? h('div', { role: 'status', 'data-k': 'offline-progress' },
+      playing && !busy ? h('p', { class: 'banner', role: 'status' }, t('of_pause_sync')) : null,
+      busy ? h('div', { role: 'status', 'data-k': 'offline-progress' },
+        !mine ? h('p', null, t('of_other'), downloading ? h('a', { href: '#/p/' + encodeURIComponent(downloading.id) }, downloading.title || 'Spotify') : 'Spotify') : null,
         h('p', null, t('of_busy') + ' · ' + (job.completed || 0) + '/' + (job.total || '…')),
-        h('progress', { max: Math.max(1, Number(job.total) || 1), value: Number(job.completed) || 0, 'aria-label': t('of_busy') })) : null,
+        h('progress', { max: Math.max(1, Number(job.total) || 1), value: Number(job.completed) || 0, 'aria-label': t('of_busy') }),
+        h('p', { class: 'small muted' }, t('of_processed') + ': ' + offlineBytes(job.bytes))) : null,
       mine && /^(error|interrupted)$/.test(job.phase || '') ? h('p', { class: 'banner', role: 'alert' },
         t(job.error === 'storage_full' ? 'of_space' : 'of_error')) : null,
       ready ? h('p', { class: 'small', 'data-k': 'offline-ready' }, t('of_ready') + ' · ' + tracks.length + ' · ' + offlineBytes(snap.bytes)) : null,

@@ -89,6 +89,15 @@ def main():
         expect(card.locator('[data-k=offline-tracks] button')).to_have_count(0)
         expect(card.get_by_role('button', name='Offline herunterladen', exact=True)).to_be_disabled()
         results.append('incomplete download shows ordered metadata and progress without play controls')
+        offline['download']['uri'] = 'spotify:playlist:' + '2' * 22
+        state['db']['playlists']['user_2'] = {'title': 'Another playlist', 'tracks': [], 'spotify': {'uri': offline['download']['uri']}}
+        publish(offline)
+        expect(card.locator('[data-k=offline-progress]')).to_contain_text('Eine andere Playlist')
+        expect(card.locator('[data-k=offline-progress] a')).to_have_attribute('href', '#/p/user_2')
+        expect(card.get_by_role('button', name='Offline herunterladen', exact=True)).to_be_disabled()
+        offline['download']['uri'] = URI
+        results.append('another active download explains the disabled button and links to its progress')
+
         tracks = offline['download']['tracks']
         offline['playlists'][URI] = {'ready': True, 'bytes': 3145728, 'tracks': tracks}
         offline['download']['phase'] = 'complete'

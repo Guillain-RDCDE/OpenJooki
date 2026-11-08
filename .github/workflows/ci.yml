@@ -58,6 +58,8 @@ jobs:
       - uses: actions/checkout@v7
       - name: Native protocol tools
         run: sudo apt-get update -qq && sudo apt-get install -y -qq gcc protobuf-c-compiler libprotobuf-c-dev
+      - name: Source download identification and checksum failures
+        run: python3 tools/firmware/tests/download.py
       - name: Prepare the checksum-pinned Jooki sources
         run: python3 tools/firmware/prepare.py --port
       - name: Volume arbitration, wire compatibility and controller failure paths

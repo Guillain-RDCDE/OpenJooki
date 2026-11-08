@@ -27,7 +27,8 @@ def checked_download(url, digest, dest):
     if not dest.exists():
         dest.parent.mkdir(parents=True, exist_ok=True)
         part = dest.with_suffix(dest.suffix + ".part")
-        with urllib.request.urlopen(url, timeout=60) as src, part.open("wb") as out:
+        request = urllib.request.Request(url, headers={"User-Agent": "OpenJooki-source-builder/1.0"})
+        with urllib.request.urlopen(request, timeout=60) as src, part.open("wb") as out:
             while True:
                 chunk = src.read(1024 * 1024)
                 if not chunk: break

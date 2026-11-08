@@ -17,6 +17,7 @@ KEYS, HOME_KEYS = "/data/openjooki/authorized_keys", "/home/root/.ssh/authorized
 ETC_CONF = "/etc/mosquitto/mosquitto.conf"      # what the core's broker watch starts (the device's file)
 
 B.setup()                                      # also: no key, no parent code left on /data
+B.stop_core()
 B.kill_brokers(); B.start_bench_broker()        # the bench broker (with its WebSocket), whatever ran before
 B.run("./deploy_ui.sh")                         # before the core: it links the page's files at boot
 # the broker watch is on on the device; on the bench only when asked: 3 s instead of 20
@@ -101,6 +102,8 @@ try:
     check("R5 ... and never the originals kept next to them", "RAN-ORIGINAL" not in ran, ran)
 finally:
     # back to the bench broker and a plain core for whatever runs next; our own files gone
+    # Stop the recovery watch first, so it cannot race up.sh for port 1883.
+    B.stop_core()
     B.kill_brokers()
     B.start_bench_broker()
     B.start_core()

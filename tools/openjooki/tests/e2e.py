@@ -1,6 +1,6 @@
 """End-to-end tests of the new web UI against the bench (real Lua app + mosquitto)."""
 import time, json, os, re, tempfile, urllib.request, urllib.parse, base64
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 import bench as B
 from jk import PAGE
 URL = PAGE
@@ -406,8 +406,17 @@ with sync_playwright() as p:
     pg.click("[data-k=nighton]"); J.wait(lambda: cfg()["enabled"] is True)
     # E17 a topic page fades in once, not again at each message of the Jooki (2.2.0-2.2.4: it blinked)
     pg.wait_for_selector("[data-k=nightdim]")
-    pg.evaluate("""window.__fades = 0; document.addEventListener('animationstart', function (e) {
-      if (e.target.classList && e.target.classList.contains('settings')) window.__fades++; }, true)""")
+    # A rebuild can detach the panel before its queued animationstart reaches the document.
+    # Inspect the real CSS animation when the panel is attached, before the next state update.
+    pg.evaluate("""window.__fades = 0;
+      window.__fadeObserver = new MutationObserver(function (records) {
+        records.forEach(function (record) { record.addedNodes.forEach(function (node) {
+          if (node.nodeType !== 1 || !node.isConnected) return;
+          var panel = node.matches('.settings.sub.enter') ? node : node.querySelector('.settings.sub.enter');
+          if (panel && panel.getAnimations().some(function (a) { return a.animationName === 'fade'; })) window.__fades++;
+        }); });
+      });
+      window.__fadeObserver.observe(document.getElementById('app'), { childList: true, subtree: true });""")
     dim0 = cfg().get("dim")
     pg.click("[data-k=nightdim]"); J.wait(lambda: cfg().get("dim") != dim0)
     pg.click("[data-k=nightdim]"); J.wait(lambda: cfg().get("dim") == dim0)
@@ -420,6 +429,7 @@ with sync_playwright() as p:
     B.quiet(0.3, "a second fade, the bug of 2.2.0-2.2.4, would follow the first one at once")
     check("E17 the night mode page stays still while the Jooki answers, and fades in once when opened",
           still == 0 and pg.evaluate("window.__fades") == 1, (still, pg.evaluate("window.__fades")))
+    pg.evaluate("window.__fadeObserver.disconnect()")
     # E18 sleep timer from the player
     comp = pl_by_title("Comptines 2")
     J.send("PLAYLIST_PLAY", {"playlistId": comp}); J.wait_state("audio.playback.state", "PLAYING")
@@ -453,8 +463,10 @@ with sync_playwright() as p:
     pg.click("[data-k=sortbtn]"); pg.wait_for_selector("[data-k=sortby-title]")
     pg.click("[data-k=sortby-title]"); pg.click("[data-k=sortok]")
     J.wait(lambda: titles_of(pierre) == sorted(titles, key=str.lower))
-    J.send("PLAYLIST_PLAY", {"playlistId": pierre, "trackIndex": 3}); J.wait(lambda: J.np.get("trackIndex") == 3)
+    J.send("PLAYLIST_PLAY", {"playlistId": pierre, "trackIndex": 3})
+    J.wait(lambda: J.np.get("playlistId") == pierre and J.np.get("trackIndex") == 3 and J.pb == "PLAYING")
     pg.click(".player .info"); pg.wait_for_selector("[data-sleep-min='track']")
+    expect(pg.locator("[data-sleep-min='track']")).to_have_text("Fin du chapitre")
     check("E19 audiobook offers an end-of-chapter timer", pg.locator("[data-sleep-min='track']").inner_text() == "Fin du chapitre")
     pg.keyboard.press("Escape")
     J.send("SEEK", {"position_ms": 65000}); J.wait(lambda: J.get("audio.playback.position_ms", 0) >= 65000); J.send("DO_PAUSE", {})

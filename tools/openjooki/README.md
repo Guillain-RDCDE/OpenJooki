@@ -51,6 +51,20 @@ Music and playlists are managed from the Jooki's own page, not from here.
 Backups go to `~/.openjooki/backups/`. A dedicated SSH key is created in
 `~/.openjooki/` (it is only used for this Jooki, on your local network).
 
+### Spotify offline source audit (read-only)
+
+From the repository root, inspect a local copy of the official source archive:
+
+```sh
+python3 tools/openjooki/spotify_offline_audit.py /path/to/jooki-archive-20261026.tgz
+```
+
+This verifies the archive's SHA-256 and prints a JSON inventory of the SDK
+version declared in the sources, interfaces, commands and missing library.
+It does not contact the Jooki or establish offline support. The current result,
+rebuild prerequisite and pending device tests are in the
+[Spotify offline audit](../../docs/32-spotify-offline-audit.md).
+
 ## Technical details (for the curious)
 - The Jooki is an embedded Linux (Ingenic X1000 SoC, MIPS) + an ESP32 co-processor
   (Wi-Fi/BT/NFC). Everything is driven by an internal MQTT bus.

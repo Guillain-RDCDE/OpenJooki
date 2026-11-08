@@ -103,6 +103,8 @@ a token does, how playback works, what the lights mean, when it turns itself off
   headphones, and the ESP32's own protocol for them, measured on a live Jooki.
 - [09-internals-deep-dive.md](09-internals-deep-dive.md): ESP32 protocol, boot, partitions.
 - [12-firmware-audit.md](12-firmware-audit.md): the security audit and its fixes.
+- [32-spotify-offline-audit.md](32-spotify-offline-audit.md): Spotify offline feasibility,
+  the missing SDK dependency, and the device checks required before implementation.
 - [06-root-access.md](06-root-access.md): getting root over SSH.
 - [17-jooki-v1-uart-recovery.md](17-jooki-v1-uart-recovery.md): a Jooki v1 brought
   back through its serial console.

@@ -91,7 +91,9 @@ describe("services.device.buttons — presses and long presses", function()
   it("the heart's short press does what Settings say: nothing by default, the next track, or pause / play", function()
     local function short(choice)
       local doc = doc_with({ audiocfg = { volume = 40, heart_press = choice }, activity = { buttons = { circle = 5 } } })
-      return buttons.on_button(doc, { button = "circle", down = false, now = 5.4 })
+      local r = buttons.on_button(doc, { button = "circle", down = false, now = 5.4 })
+      doc.activity = r.state.activity
+      return buttons.on_heart_clicks(doc, { now = 6.1 })
     end
     same(kinds(short(nil)), { "timer.cancel" })
     same(kinds(short("none")), { "timer.cancel" })
@@ -100,7 +102,7 @@ describe("services.device.buttons — presses and long presses", function()
     same(kinds(r), { "emit playback.toggle_request", "timer.cancel" })
     local ev
     for _, c in ipairs(r.commands) do if c.kind == "emit" then ev = c.event end end
-    assert_eq(ev.source, "button"); assert_eq(ev.now, 5.4)
+    assert_eq(ev.source, "button"); assert_eq(ev.now, 6.1)
     -- with a job, the heart switches off only held 5 s, not 2 (#20), and the release that follows does nothing more
     local doc = doc_with({ audiocfg = { volume = 40, heart_press = "next" }, activity = { buttons = { circle = 10 } } })
     assert_nil(buttons.on_tick(doc, { now = 12.1 }))

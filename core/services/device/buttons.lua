@@ -1,6 +1,6 @@
 -- services.device.buttons: the buttons (1.x keys module). Presses on release, the long presses
--- detected by a tick that runs only while a button is held, and the four-button combo.
--- Writes state.activity.last and state.activity.buttons = { [name] = down_at } (state.activity is
+-- detected by a tick that runs only while a button is held, the five-click light gesture and the four-button combo.
+-- Writes state.activity.last, activity.buttons = { [name] = down_at } and activity.heart_clicks (state.activity is
 -- services.device.power's). The volume chain stays the facade's, services.device: asked for at call
 -- time, never at load time, since the facade requires this module. Installed by services.device,
 -- which re-exports its handlers.
@@ -60,6 +60,27 @@ local function tick_change(cmds, held_before, held)
   elseif held_before and not is_held then cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.tick" } end
 end
 
+-- Buffer short heart clicks until the multi-click window closes. This keeps
+-- the five-click light gesture from also skipping five songs or toggling pause.
+local HEART_GAP_S, HEART_SHORT_S = 0.6, 0.6
+local function flush_heart(doc, act, cmds, now)
+  local h = act.heart_clicks
+  act.heart_clicks = nil
+  cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.heart_clicks" }
+  local fn = HEART[(doc.audiocfg or {}).heart_press]
+  if h and fn then for _ = 1, h.count do cmds[#cmds + 1] = fn(now) end end
+end
+function buttons.on_heart_clicks(doc, ev)
+  local act = activity_of(doc)
+  if not act.heart_clicks or act.buttons.circle then return nil end
+  local remaining = act.heart_clicks.last + HEART_GAP_S - ev.now
+  if remaining > 0.001 then
+    return { commands = { { kind = "timer.once", name = "device.heart_clicks", seconds = remaining } } }
+  end
+  local cmds = {}; flush_heart(doc, act, cmds, ev.now)
+  return { state = { activity = act }, commands = cmds }
+end
+
 function buttons.on_button(doc, ev)
   -- headphones plugged in or out: not a button (services.device reads the knobs again); held, it
   -- would keep the long-press tick running for as long as the headphones stay in
@@ -70,6 +91,11 @@ function buttons.on_button(doc, ev)
   local name = ev.button
   local held_before = next(act.buttons) ~= nil
   if ev.down then
+    if act.buttons[name] then return nil end -- duplicate down must not restart a hold
+    if act.heart_clicks then
+      if name == "circle" then cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.heart_clicks" }
+      else flush_heart(doc, act, cmds, ev.now) end
+    end
     act.buttons[name] = ev.now
     if all_down(act.buttons) then
       cmds[#cmds + 1] = { kind = "shell", action = "speak_info" }
@@ -96,8 +122,26 @@ function buttons.on_button(doc, ev)
   elseif name == "prev" then cmds[#cmds + 1] = emit("playback.prev", {})
   elseif name == "circle" then
     -- a long press was taken by the tick (power off) and is no longer held here: this one is short
-    local act_fn = HEART[(doc.audiocfg or {}).heart_press]
-    if act_fn then cmds[#cmds + 1] = act_fn(ev.now) end
+    local duration = ev.now - down_at
+    if duration >= HEART_SHORT_S then
+      if act.heart_clicks then flush_heart(doc, act, cmds, ev.now) end
+      local fn = HEART[(doc.audiocfg or {}).heart_press]
+      if fn then cmds[#cmds + 1] = fn(ev.now) end
+    -- Several valid edges may arrive in one MQTT read with the same timestamp.
+    -- Reject duplicate/orphan edges, rather than rejecting a zero-length measured hold.
+    elseif duration >= 0 then
+      local h = act.heart_clicks
+      if h and ev.now - h.last > HEART_GAP_S then flush_heart(doc, act, cmds, ev.now); h = nil end
+      h = { count = (h and h.count or 0) + 1, last = ev.now }
+      if h.count == 5 then
+        act.heart_clicks = nil
+        cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.heart_clicks" }
+        cmds[#cmds + 1] = emit("lights.toggle", { physical = true })
+      else
+        act.heart_clicks = h
+        cmds[#cmds + 1] = { kind = "timer.once", name = "device.heart_clicks", seconds = HEART_GAP_S }
+      end
+    end
   elseif name == "vol_inc" or name == "vol_dec" then
     local a = volume().audiocfg_of(doc)
     local s = volume().set_volume(doc, a.volume + (name == "vol_inc" and 10 or -10))
@@ -117,6 +161,10 @@ function buttons.on_tick(doc, ev)
   local a2 = activity_of(doc)
   if act.buttons.circle and now - act.buttons.circle >= long_circle_s(doc) then
     a2.buttons.circle = nil; changed = true
+    if a2.heart_clicks then
+      a2.heart_clicks = nil
+      cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.heart_clicks" }
+    end
     cmds[#cmds + 1] = emit("power.off_request", { reason = "button" })
   end
   for n, sign in pairs(WINDERS[knob_mode(doc)]) do
@@ -151,6 +199,7 @@ end
 -- the buttons' timer (started by the first button held, see on_button), on its own name (kernel.dispatch on_timer)
 local TIMERS = {
   ["device.tick"] = buttons.on_tick,
+  ["device.heart_clicks"] = buttons.on_heart_clicks,
 }
 buttons.TIMERS = TIMERS
 

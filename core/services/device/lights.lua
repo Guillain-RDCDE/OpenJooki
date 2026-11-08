@@ -1,8 +1,9 @@
 -- services.device.lights: the Jooki's lights (1.x language, 1.3 dimming).
 -- The ring and the two side dots: idle / playing ring, Wi-Fi dots, the start-up "waiting for
 -- Wi-Fi" chase, the event pulses (lights.event) and the Christmas tree. Pure: it reacts to events
--- and owns no state but the flag state.device.party; the colours sent are not kept (the simulator
--- reads them off the bus). Installed by services.device (the facade), which re-exports its handlers.
+-- owns state.device.party and private driver verification, startup-cue and manual-override state.
+-- Colours sent are not kept (the simulator reads them off the bus). Installed by services.device
+-- (the facade), which re-exports its handlers.
 local util = require("services.util")
 local bedtime = require("services.bedtime")
 local lights = {}
@@ -13,8 +14,15 @@ local COLOURS = { WHITE = { 200, 200, 200 }, BLACK = { 0, 0, 0 }, RED = { 200, 0
                   LIGHTBLUE = { 0, 10, 200 } }
 
 local copy = util.copy
-function lights.off(doc)
+local function requested_off(doc)
   return (doc.audiocfg or {}).lights_off == true or (doc.limits or {}).lights_off == true
+end
+function lights.off(doc)
+  local boot = doc.lights_boot_int or {}
+  if boot.phase == "waiting" then return false end
+  if boot.phase == "blinking" then return true end -- only the startup frames may paint
+  if (doc.lights_override_int or {}).on then return false end
+  return requested_off(doc)
 end
 local function cfg(doc, key, default)
   local c = doc.config or {}
@@ -190,13 +198,16 @@ local function verify_timer() return { kind = "timer.once", name = "device.light
 
 function lights.on_apply(doc)
   local off = lights.off(doc)
+  local boot = doc.lights_boot_int or {}
+  local flashing = boot.phase == "blinking"
+  local enabled = flashing and boot.step % 2 == 1 or not off
   local d = copy(doc.device or {}); d.party = nil
   local cmds = {
     { kind = "timer.cancel", name = "device.party" }, { kind = "timer.cancel", name = "device.party_end" },
     { kind = "timer.cancel", name = "device.wifi_anim" },
     -- A set cancels the controller's ongoing pulses too. The global gate remains authoritative.
-    { kind = "bus.publish", topic = LED .. "set_raw", payload = "ALL,0,0,0" },
-    driver_write(off and 0 or 8), verify_timer(),
+    { kind = "bus.publish", topic = LED .. "set_raw", payload = flashing and enabled and ("ALL," .. table.concat(dimmed(doc, COLOURS.WHITE), ",")) or "ALL,0,0,0" },
+    driver_write(enabled and 8 or 0), verify_timer(),
   }
   -- bus.up also changes state.device in the facade. Clear party in the next turn so
   -- a stale copy here cannot replace its esp32_up / capability reset.
@@ -208,7 +219,7 @@ function lights.on_apply(doc)
       cmds[#cmds + 1] = { kind = "timer.every", name = "device.wifi_anim", seconds = anim_s(doc) }
     end
   end
-  return { state = { lights_int = { desired = off and 0 or 8, pending = true, attempts = 1 } }, commands = cmds }
+  return { state = { lights_int = { desired = enabled and 8 or 0, pending = true, attempts = 1 } }, commands = cmds }
 end
 
 function lights.on_register(doc, ev)
@@ -237,16 +248,70 @@ function lights.on_power(doc, ev)
   return nil
 end
 
+-- A configuration change ends a temporary physical override and any boot cue.
+-- Reconnects / charging reapply the current phase without restarting the countdown.
+function lights.on_preference(doc)
+  local after = copy(doc); after.lights_boot_int = {}; after.lights_override_int = {}
+  local r = lights.on_apply(after)
+  r.state.lights_boot_int = {}; r.state.lights_override_int = {}
+  r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.lights_boot" }
+  return r
+end
+
 function lights.on_limits(doc)
+  local override = doc.lights_override_int or {}
+  if override.on and override.night ~= ((doc.limits or {}).lights_off == true) then return lights.on_preference(doc) end
+  if (doc.lights_boot_int or {}).phase and not requested_off(doc) then return lights.on_preference(doc) end
+  if (doc.lights_boot_int or {}).phase == "blinking" then return nil end
   local desired = lights.off(doc) and 0 or 8
   if (doc.lights_int or {}).desired ~= desired then return lights.on_apply(doc) end
   return lights.on_lights_refresh(doc)
 end
 
+local BOOT_WAIT_S, BLINK_S = 10, 0.15
 function lights.on_boot(doc, ev)
   local after = copy(doc); after.audiocfg = (ev or {}).audiocfg or doc.audiocfg or {}
   after.limits = bedtime.boot_limits(ev or {})
-  return lights.on_apply(after)
+  after.lights_boot_int = requested_off(after) and { phase = "waiting" } or {}
+  after.lights_override_int = {}
+  local r = lights.on_apply(after)
+  r.state.lights_boot_int = after.lights_boot_int; r.state.lights_override_int = {}
+  if after.lights_boot_int.phase then
+    r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.lights_boot", seconds = BOOT_WAIT_S }
+  end
+  return r
+end
+
+function lights.on_boot_frame(doc)
+  local b = copy(doc.lights_boot_int or {})
+  if not b.phase then return nil end
+  if b.phase == "waiting" then b = { phase = "blinking", step = 1 }
+  elseif b.step < 6 then b.step = b.step + 1
+  else b = {} end
+  local after = copy(doc); after.lights_boot_int = b
+  local r = lights.on_apply(after); r.state.lights_boot_int = b
+  if b.phase then r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.lights_boot", seconds = BLINK_S } end
+  return r
+end
+
+-- A physical five-click gesture persists the all-day preference. At night,
+-- enabling also overrides scheduled darkness until its next transition or reboot.
+function lights.on_toggle(doc, ev)
+  if not ev.physical then return nil end
+  local off = not lights.off(doc)
+  local r = require("services.device").update_config(doc, { lights_off = off })
+  local after = copy(doc); after.audiocfg = r.state.audiocfg; after.lights_boot_int = {}
+  after.lights_override_int = not off and (doc.limits or {}).lights_off and { on = true, night = true } or {}
+  local cmds = {}
+  for _, c in ipairs(r.commands or {}) do
+    if not (c.kind == "emit" and c.event.type == "lights.apply") then cmds[#cmds + 1] = c end
+  end
+  local applied = lights.on_apply(after)
+  for _, c in ipairs(applied.commands) do cmds[#cmds + 1] = c end
+  cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.lights_boot" }
+  r.state.lights_int = applied.state.lights_int
+  r.state.lights_boot_int = {}; r.state.lights_override_int = after.lights_override_int; r.commands = cmds
+  return r
 end
 
 -- the lights' timers, each handler on its own name (kernel.dispatch on_timer)
@@ -255,6 +320,7 @@ local TIMERS = {
   ["device.party"] = lights.on_party_frame,
   ["device.party_end"] = lights.on_party_end,
   ["device.lights_verify"] = lights.on_verify,
+  ["device.lights_boot"] = lights.on_boot_frame,
 }
 lights.TIMERS = TIMERS
 
@@ -268,7 +334,8 @@ end
 function lights.install(api, dispatch)
   dispatch.on("boot", "device.lights", lights.on_boot)
   dispatch.on("bus.up", "device.lights", lights.on_apply)
-  dispatch.on("lights.apply", "device.lights", lights.on_apply)
+  dispatch.on("lights.apply", "device.lights", lights.on_preference)
+  dispatch.on("lights.toggle", "device.lights", lights.on_toggle)
   dispatch.on("lights.cancel_party", "device.lights", lights.on_party_end)
   dispatch.on("lights.register", "device.lights", lights.on_register)
   dispatch.on("power.plugged", "device.lights", lights.on_power)

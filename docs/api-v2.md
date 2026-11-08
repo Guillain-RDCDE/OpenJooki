@@ -193,7 +193,7 @@ No payload.
 
 ### `device.set_config`
 
-Shuffle, repeat (0 none, 1 all, 2 one), and `random_start` (boolean, default false). Random start chooses the starting song independently of shuffle; subsequent songs follow the playback order, with repeat deciding whether the end wraps. Saved in audiocfg.json. Audiobooks and Spotify/Deezer presets keep their own start behavior. Also toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.
+Shuffle, repeat (0 none, 1 all, 2 one), and `random_start` (boolean, default false). Random start chooses the starting song independently of shuffle; subsequent songs follow the playback order, with repeat deciding whether the end wraps. Saved in audiocfg.json. Local music and Spotify music playlists support random starts; audiobooks, saved Spotify positions, albums, podcasts and Deezer retain their own start behavior. Also toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.
 
 Payload schema:
 
@@ -347,7 +347,7 @@ No payload.
 
 ### `playback.play`
 
-Plays a playlist (optional 1-based track index, which takes priority over random start). A fresh start with `random_start` picks a random song, then follows the playback order; paused or playing playlists continue their current song. Audiobooks resume where they stopped. Spotify/Deezer presets use their service's start behavior.
+Plays a playlist (optional 1-based track index, which takes priority over random start). A fresh start with `random_start` picks a random song, then follows the playback order. Set `restart: true` to draw again for an already loaded playlist (as the playlist Play buttons do); otherwise paused or playing playlists continue their current song. Audiobooks and saved Spotify playlists resume where they stopped. Spotify music playlists support random starts; albums, podcasts and Deezer keep their provider start behavior.
 
 Payload schema:
 
@@ -362,6 +362,9 @@ Payload schema:
     "playlist": {
       "minLength": 1,
       "type": "string"
+    },
+    "restart": {
+      "type": "boolean"
     }
   },
   "required": ["playlist"],

@@ -136,7 +136,7 @@ H.GET_STATE = function(doc) return { commands = { { kind = "bus.publish", topic 
 H.CONNECT = function() return { commands = { util.emit("system.event", { name = "Evt.Mobile.connect", no_pause = true }) } } end
 H.PLAYLIST_PLAY = function(doc, p, ev)
   if type(p.playlistId) ~= "string" then return nil, { code = "not_found", field = "playlist", message = "nil playlistId" } end
-  return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.trackIndex ~= nil })
+  return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.restart == true or p.trackIndex ~= nil })
 end
 H.PLAYLIST_NEW = function(doc, p, ev)
   return lib(doc, { playlists = true }, function(l) return library.ops.playlist_new(l, { title = p.title, audiobook = p.audiobook == true, star = type(p.star) == "string" and p.star or nil }, ev.wall or ev.now or 0) end)

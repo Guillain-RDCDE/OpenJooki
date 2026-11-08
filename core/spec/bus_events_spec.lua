@@ -2,6 +2,12 @@ local be = require("api.bus_events")
 local T = be.translate
 
 describe("api.bus_events", function()
+  it("reads the controller's actual active-device flag from status replies", function()
+    assert_eq(T("/j/spotify/input/status", '{"active":1,"logged_in":1,"state":"ready"}'), { type="spotify.status", active=true })
+    assert_eq(T("/j/spotify/input/status", '{"active":0}'), { type="spotify.status", active=false })
+    assert_eq(T("/j/spotify/input/status", '{}'), { type="spotify.status" })
+  end)
+
   it("audio engine events carry the stream id and position", function()
     assert_eq(T("/j/audio/input/playing", '{"id":7}'), { type = "audio.playing", id = 7 })
     assert_eq(T("/j/audio/input/ended", '{"id":3}'), { type = "audio.ended", id = 3 })

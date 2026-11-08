@@ -54,7 +54,7 @@ local executors = {
     check(type(c.path) == "string", "files.remove needs a path")
     a.files.remove(c.path)
   end,
-  ["host.volume"] = function(a, c)
+  ["host.volume"] = function(a, c, ctx)
     check(type(c.percent) == "number", "host.volume needs a percent")
     local bypass, key, change
     if type(c.global_volume) == "boolean" then
@@ -75,7 +75,8 @@ local executors = {
     -- Only a controller + firmware pair advertising the shared global scale receives it.
     if c.esp32 then
       local ok, err = a.bus:publish("/j/esp32/output/audio/set_volume", json.encode({ percent = c.percent, maximum = c.maximum or 100 }))
-      if not ok then log.warn("commands.volume_failed", { err = tostring(err) }) end
+      if ok then ctx.emitted[#ctx.emitted + 1] = { type = "volume.sent", percent = c.percent }
+      else log.warn("commands.volume_failed", { err = tostring(err) }) end
     end
   end,
   ["shell"] = function(a, c, ctx)

@@ -88,7 +88,7 @@ local function start(doc, pb, playlist_id, opts)
     -- playing when it still plays (the token taken off with continue_on_token_removal): the preset
     -- would start it again from the top
     local was = pb.now
-    if p.resume and not opts.restart and was and was.playlist == playlist_id and was.service == svc then
+    if (p.resume or streaming.wants_random(doc, p)) and not opts.restart and was and was.playlist == playlist_id and was.service == svc then
       -- paused: continued only while the Jooki is still the account's device on that playlist; the
       -- phone may have moved on since, and streaming.start checks what `cont` brings back
       local sp = doc.spotify or {}
@@ -475,7 +475,7 @@ playback.on_system_event, playback.on_sound_audio = sounds.on_system_event, soun
 playback.on_save, playback.on_resume_reset, playback.on_shutdown = resume_rules.on_save, resume_rules.on_resume_reset, resume_rules.on_shutdown
 
 local S = {}
-S.play = { type = "object", required = { "playlist" }, properties = { playlist = { type = "string", minLength = 1 }, index = { type = "integer", minimum = 1 } }, additionalProperties = false }
+S.play = { type = "object", required = { "playlist" }, properties = { playlist = { type = "string", minLength = 1 }, index = { type = "integer", minimum = 1 }, restart = { type = "boolean" } }, additionalProperties = false }
 S.seek = { type = "object", required = { "ms" }, properties = { ms = { type = "integer", minimum = 0 } }, additionalProperties = false }
 S.skip = { type = "object", required = { "seconds" }, properties = { seconds = { type = "integer", minimum = -3600, maximum = 3600 } }, additionalProperties = false }
 S.playlist = resume_rules.schemas.playlist
@@ -495,7 +495,7 @@ function playback.install(api, dispatch)
   end
   api.command("playback.play", S.play, function(doc, p, ev)
     local pb = pb_of(doc)
-    local r, err = start(doc, pb, p.playlist, { index = p.index, now_s = ev.now, restart = p.index ~= nil })
+    local r, err = start(doc, pb, p.playlist, { index = p.index, now_s = ev.now, restart = p.restart == true or p.index ~= nil })
     return r, err
   end)
   api.command("playback.pause", nil, function(doc, _, ev) return playback.on_pause(doc, { source = "page", now = ev.now }) or {} end)

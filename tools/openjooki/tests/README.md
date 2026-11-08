@@ -32,6 +32,8 @@ python3 test_german.py                        # German browser, narrow layout, p
 python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py
 python3 test_security_backend.py && python3 e2e.py && python3 test_security.py
 python3 test_mqtt_lan.py                      # S57_oj-security.sh, real mosquitto: no core needed (gcc)
+python3 test_random_playlist_ui.py             # repeated playlist Play, inherited overrides and audiobook positions
+python3 test_random_spotify_bus.py             # confirmed mute, delayed metadata/shuffle, fresh starts and fast resume
 python3 test_spotify.py && python3 test_robustness.py && python3 test_loader.py
 python3 test_httpd.py && python3 test_clock.py && python3 test_wifi_page.py
 python3 test_tokens_page.py                   # docs/tokens.html: no core needed

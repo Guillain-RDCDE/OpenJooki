@@ -2,12 +2,12 @@
 -- from the 1.3 module as pure handlers.
 -- Owns state.bedtime = { cfg, night, sleep }  (published; the page reads it)
 --      state.bedtime_int = { fade, ends, restore, stop_at_end, ... } (internal)
--- Drives state.limits = { maxvol, fade, dim } that the device applies to the
+-- Drives state.limits = { maxvol, fade, dim, lights_off } that the device applies to the
 -- speaker and the lights (event limits.changed).
 local util = require("services.util")
 local bedtime = {}
 
-local DEF = { enabled = true, start = 1200, stop = 420, timer = 20, maxvol = 30, dim = true, tzbase = 60, tzdst = "EU" }
+local DEF = { enabled = true, start = 1200, stop = 420, timer = 20, maxvol = 30, dim = true, lights_off = false, tzbase = 60, tzdst = "EU" }
 local FADE_S, TRACK_FADE_MS = 60, 20000
 bedtime.DEFAULTS = DEF
 
@@ -59,14 +59,26 @@ local function int_of(doc)
 end
 
 local function limits_for(b, i)
-  return { maxvol = (b.night and b.cfg.maxvol < 100) and b.cfg.maxvol or 100, fade = i.fade, dim = b.night and b.cfg.dim == true }
+  return { maxvol = (b.night and b.cfg.maxvol < 100) and b.cfg.maxvol or 100, fade = i.fade,
+           dim = b.night and b.cfg.dim == true, lights_off = b.night and b.cfg.lights_off == true }
 end
 
 local function limits_changed(doc, b, i)
   local new = limits_for(b, i)
   local old = doc.limits or {}
-  return old.maxvol ~= new.maxvol or old.fade ~= new.fade or old.dim ~= new.dim, new
+  return old.maxvol ~= new.maxvol or old.fade ~= new.fade or old.dim ~= new.dim or old.lights_off ~= new.lights_off, new
 end
+
+local function boot_state(ev)
+  local b = { cfg = copy(DEF), night = false, sleep = false }
+  for k, v in pairs(ev.bedtime or {}) do if DEF[k] ~= nil and type(v) == type(DEF[k]) then b.cfg[k] = v end end
+  b.night = bedtime.is_night(b.cfg, ev.wall)
+  return b
+end
+
+-- Boot handlers share the pre-boot document. The lights must use the saved schedule
+-- immediately, before the bedtime handler's state has been merged by the dispatcher.
+function bedtime.boot_limits(ev) return limits_for(boot_state(ev), { fade = 1 }) end
 
 --- Build the result: state (bedtime, bedtime_int, limits when changed) + limits.changed.
 local function result(doc, b, i, cmds)
@@ -108,10 +120,8 @@ end
 
 -- ------------------------------------------------------------------ handlers
 function bedtime.on_boot(doc, ev)
-  local b = { cfg = copy(DEF), night = false, sleep = false }
-  for k, v in pairs(ev.bedtime or {}) do if DEF[k] ~= nil and type(v) == type(DEF[k]) then b.cfg[k] = v end end
+  local b = boot_state(ev)
   local i = { fade = 1 }
-  b.night = bedtime.is_night(b.cfg, ev.wall)
   local r = result(doc, b, i, { { kind = "timer.every", name = "bedtime.clock", seconds = 15 } })
   r.state.limits = limits_for(b, i)
   return r
@@ -237,12 +247,12 @@ local function hm(v)
   return nil
 end
 
---- bedtime.set { enabled?, start?, stop?, timer?, maxvol?, dim?, tzbase?, tzdst? }
+--- bedtime.set { enabled?, start?, stop?, timer?, maxvol?, dim?, lights_off?, tzbase?, tzdst? }
 function bedtime.on_set(doc, p, wall)
   if type(p) ~= "table" then return nil, err("invalid_argument", "", "invalid payload") end
   local b, i = bt_of(doc), int_of(doc)
   local n = copy(b.cfg)
-  for _, k in ipairs({ "enabled", "dim" }) do
+  for _, k in ipairs({ "enabled", "dim", "lights_off" }) do
     if p[k] ~= nil then
       if type(p[k]) ~= "boolean" then return nil, err("invalid_argument", k, "invalid " .. k) end
       n[k] = p[k]
@@ -274,7 +284,7 @@ end
 
 local S = {}
 S.sleep = { type = "object", additionalProperties = false, properties = { seconds = { type = "integer" }, minutes = { type = "integer" }, mode = { type = "string", enum = { "track" } }, cancel = { type = "boolean" } } }
-S.set = { type = "object", additionalProperties = false, properties = { enabled = { type = "boolean" }, dim = { type = "boolean" }, start = { type = { "string", "integer" } }, stop = { type = { "string", "integer" } },
+S.set = { type = "object", additionalProperties = false, properties = { enabled = { type = "boolean" }, dim = { type = "boolean" }, lights_off = { type = "boolean" }, start = { type = { "string", "integer" } }, stop = { type = { "string", "integer" } },
           timer = { type = "integer" }, maxvol = { type = "integer" }, tzbase = { type = "integer" }, tzdst = { type = "string" } } }
 bedtime.schemas = S
 

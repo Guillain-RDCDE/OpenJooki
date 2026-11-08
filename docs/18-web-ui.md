@@ -83,7 +83,7 @@ Plain HTML/CSS/JS served by the Jooki, no framework, no bundler and no minifier
 (`webui/build.py` only puts the files of `webui/src/` end to end into `app.js`, and CI
 checks that `app.js` is what `src/` gives), **no external
 request at all** (no Google Fonts, no analytics, no tracking pixel, no link to the
-dead `jooki.rocks` domain). English by default; French or Dutch when the browser is set to that language (switchable in Settings).
+dead `jooki.rocks` domain). English by default; French, Dutch or German when the browser is set to that language (switchable in Settings).
 
 - **Playlists**: create, rename (Enter/Escape), delete (with confirmation),
   play, choose the character (with a warning when it moves from another

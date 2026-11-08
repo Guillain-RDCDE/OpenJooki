@@ -31,12 +31,17 @@ stop without advancing to the next track. Spotify Connect uses the track duratio
 and its playback clock; if the duration is missing, it pauses when Spotify reports
 the next track instead.
 
-**Night mode** (Settings → Bedtime). During a time window (default 20:00–07:00):
+**Night mode** (Settings → Night mode). During a time window (default 20:00–07:00):
 
 - every playback started with a token gets the sleep timer on its own
   (default 20 minutes, *None* to disable);
 - the volume is limited (default 30 %), **whatever the position of the knob**;
-- the lights are dimmed (about 5 % of their normal brightness).
+- the lights are dimmed (about 5 % of their normal brightness), or all lights can
+  be switched off for the scheduled hours, including the heart.
+
+The main Settings page has a separate permanent lights-off switch. It overrides the
+schedule and remains available when night mode is disabled. Both switches and
+the saved dimming preference survive a restart; see [all device lights](29-device-lights-off.md).
 
 The Jooki keeps UTC time from the Internet (ntpd). The page tells it the
 family's time zone the first time it is opened; for Europe the summer-time rule
@@ -76,7 +81,7 @@ Messages from the page (`/j/web/input/...`), all answered in the state under
 | Message | Payload |
 |---|---|
 | `OJ_SLEEP` | `{"minutes": 20}` · `{"mode": "track"}` · `{"cancel": true}` |
-| `OJ_BEDTIME_SET` | any of `enabled`, `start`/`stop` (`"20:00"`), `timer` (0–180 min), `maxvol` (5–100), `dim`, `tzbase` (minutes), `tzdst` (`"EU"`/`"none"`) |
+| `OJ_BEDTIME_SET` | any of `enabled`, `start`/`stop` (`"20:00"`), `timer` (0–180 min), `maxvol` (5–100), `dim`, `lights_off` (boolean, during the night window), `tzbase` (minutes), `tzdst` (`"EU"`/`"none"`) |
 | `OJ_RESUME_RESET` | `{"playlistId": "..."}` |
 
 Invalid values are refused with a message on `/j/web/output/error`; nothing is

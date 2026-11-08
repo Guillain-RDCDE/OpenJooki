@@ -272,6 +272,11 @@ ignore; else stop current, `/j/audio/out/play "7\t<uri>"`. `ended` on stream 7
 stop). `prev` restarts the track when > 5 s in. `fwd`/`rev` are not implemented.
 Token removed → pause (Spotify/Deezer variants dropped).
 
+The current core seeds local-playlist shuffle from OS entropy at boot, including
+before the clock is set. A fresh shuffled start after the playlist has ended draws
+a new order and a random first song. Explicit track choices, audiobook resume and
+putting back a paused token keep their existing behaviour.
+
 ### 4.5 Tokens
 `tokens.json`: `UID → {starId, seen, name?, image?, write?}`. A tag event
 increments `seen`, learns the character (`updateTokens`), and if a `write`

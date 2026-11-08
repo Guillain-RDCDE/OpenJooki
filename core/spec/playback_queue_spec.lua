@@ -228,3 +228,41 @@ describe("services.playback.queue — the order of a playlist", function()
     assert_nil(queue.index_of({ 3, 1, 2 }, 4))
   end)
 end)
+
+describe("random first song", function()
+  it("uses OS entropy even before the wall clock is set", function()
+    local clock = require("adapters.clock")
+    assert_eq(clock.seed(function() return "\1\2\3\4" end), 16909060)
+    assert_eq(clock.seed(function() return "\0\0\0\0" end), 0)
+    local a = playback.on_boot({}, { wall = 0, seed = 123 })
+    local b = playback.on_boot({}, { wall = 0, seed = 456 })
+    assert_eq(a.state.playback_int.seed, 123); assert_eq(b.state.playback_int.seed, 456)
+  end)
+
+  it("redraws on a fresh start of an ended playlist, retaining a valid permutation", function()
+    local d = doc_with({ shuffle = true }); d.playback_int = { seed = 1001 }
+    local seen = {}
+    for i = 1, 30 do
+      local r = playback.on_request(d, { playlist = "music", now = i })
+      local p, order = r.state.playback, r.state.playback_int.shuffle.music
+      assert_eq(p.now.index, order[1]); assert_eq(p.now.queue_pos, 1)
+      local present = {}; for _, n in ipairs(order) do present[n] = true end
+      assert_eq(present, { true, true, true }); seen[p.now.index] = true
+      apply(d, r); d.playback.state = "ended"
+    end
+    assert_true(seen[1] and seen[2] and seen[3])
+  end)
+
+  it("honours explicit track choices, ordered playlists, audiobook resume and pause/resume", function()
+    local d = doc_with({ shuffle = true }); d.playback_int = { seed = 9876 }
+    local r = playback.on_request(d, { playlist = "music", index = 2, restart = true })
+    assert_eq(r.state.playback.now.index, 2); apply(d, r)
+    d.playback.state = "paused"; d.playback.position_ms = 18000
+    r = playback.on_request(d, { playlist = "music" })
+    assert_eq(r.state.playback.now.index, 2)
+    d.library.playlists.music.shuffle_mode = false; d.playback = { state = "idle" }; d.playback_int.last = {}
+    assert_eq(playback.on_request(d, { playlist = "music" }).state.playback.now.index, 1)
+    d.resume.book = { id = "b", pos = 30000 }
+    assert_eq(playback.on_request(d, { playlist = "book" }).state.playback.now.index, 2)
+  end)
+end)

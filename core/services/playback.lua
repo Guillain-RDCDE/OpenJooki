@@ -127,19 +127,17 @@ local function start(doc, pb, playlist_id, opts)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
     elseif n > 1 and (shuffle or random_start) and
-        (not (pb.now and pb.now.playlist == playlist_id) or
-         (random_start and (opts.restart or pb.state == "idle" or pb.state == "ended"))) then
-      -- A fresh playlist start: shuffle draws a new order; random start alone picks a position
-      -- in the original order. A paused or still playing token continues its current song.
-      pb.seed = ((pb.seed or 0) * 1103515245 + 12345 + math.floor(tonumber(opts.now_s) or 0)) % 2147483648
-      -- Use the high bits: the generator's low bits are biased for even playlist lengths.
-      local first = random_start and (math.floor(pb.seed / 2147483648 * n) + 1)
+        (not (pb.now and pb.now.playlist == playlist_id) or opts.restart or pb.state == "idle" or pb.state == "ended") then
+      -- A fresh start draws again; a paused or still playing token keeps its song.
+      pb.seed = queue.next_seed(pb.seed, math.floor((tonumber(opts.now_s) or 0) * 1000))
+      local first
+      if random_start then first, pb.seed = queue.draw(pb.seed, n) end
       if shuffle then
         pb.shuffle[playlist_id] = nil
         q = queue_for(doc, pb, playlist_id, p)
         if first then
           local pos = index_of(q, first)
-          q[1], q[pos] = q[pos], q[1] -- keep every song in the shuffled queue
+          q[1], q[pos] = q[pos], q[1] -- retain every song in the shuffled queue
         end
         queue_pos = 1
       else
@@ -463,9 +461,9 @@ end
 --- Boot: an idle machine and the shuffle seed. (resume.json and the save timer are
 --- services.playback.resume's boot, the sound catalogue services.playback.sounds'.)
 function playback.on_boot(_, ev)
-  -- the shuffle seed: the clock at boot, so that two starts (or two playlists of the same length)
-  -- do not play in the same "random" order
-  local seed = math.floor(tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483648
+  -- OS entropy supplied by main.lua works before the network sets the clock;
+  -- clock values remain a fallback for callers without an entropy source.
+  local seed = math.floor(tonumber(ev.seed) or tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483647
   return { state = { playback = { state = "idle" }, playback_int = { last = {}, shuffle = {}, seed = seed } } }
 end
 

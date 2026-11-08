@@ -1,8 +1,24 @@
 -- services.playback.queue: the order in which a playlist's tracks are played. The identity, or a
 -- shuffle memoised per playlist in playback_int.shuffle (never for an audiobook), drawn from the seed
--- the facade sets at boot from the clock (playback_int.seed), so that two starts, or two playlists of
+-- the facade sets from boot entropy (playback_int.seed), so that two starts, or two playlists of
 -- the same length, do not play in the same "random" order. Pure: works on the facade's working table.
 local queue = {}
+
+-- Park–Miller stays exact with Lua 5.1 doubles; the previous multiplier lost
+-- low bits once its product exceeded 2^53, biasing the first shuffled song.
+function queue.next_seed(seed, salt)
+  local s = math.floor((tonumber(seed) or 0) + (tonumber(salt) or 0)) % 2147483647
+  if s < 1 then s = 1 end
+  return (s * 48271) % 2147483647
+end
+
+-- Uniform bounded draw from all nonzero Park–Miller states.
+function queue.draw(seed, n)
+  local limit = math.floor(2147483646 / n) * n
+  local s = seed
+  repeat s = queue.next_seed(s) until s <= limit
+  return ((s - 1) % n) + 1, s
+end
 
 -- ------------------------------------------------------------------ queue
 local function shuffled(n, seed)
@@ -10,8 +26,8 @@ local function shuffled(n, seed)
   for i = 1, n do order[i] = i end
   local s = seed or 0
   for i = n, 2, -1 do
-    s = (s * 1103515245 + 12345) % 2147483648
-    local j = (s % i) + 1
+    local j
+    j, s = queue.draw(s, i)
     order[i], order[j] = order[j], order[i]
   end
   return order

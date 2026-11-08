@@ -73,7 +73,7 @@
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
-    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Puis suivre l’ordre de lecture. Pour les playlists musicales sur la Jooki.',
+    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Puis suivre l’ordre de lecture. Pour les playlists musicales sur le Jooki.',
     lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur éteints jour et nuit, même après un redémarrage ou sans mode nuit.',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Anneau, voyants et cœur s’éteignent pendant les heures définies et se rallument ensuite.',
     night_dim_help: 'Le réglage est conservé et reprend quand les lumières s’allument.',
@@ -466,7 +466,12 @@
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
     toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
+    random_start: 'Mit einem zufälligen Titel starten',
+    random_start_help: 'Danach der Wiedergabereihenfolge folgen. Für Musiklisten auf dem Jooki.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
+    lights_off: 'Alle Lichter dauerhaft ausschalten', lights_off_help: 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.',
+    night_lights_off: 'Alle Lichter während der Nacht ausschalten', night_lights_off_help: 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.',
+    night_dim_help: 'Die Dimm-Einstellung bleibt gespeichert und gilt, sobald die Lichter an sind.',
     language: 'Sprache', power_off: 'Jooki ausschalten', power_off_q: 'Jooki ausschalten?', power_off_text: 'Zum Einschalten musst du seine Taste drücken.', power_off_done: 'Der Jooki schaltet sich aus…',
     air_title: 'Flugmodus', air_help: 'Schaltet WLAN und Bluetooth des Jooki vorübergehend aus. Figuren und Musik funktionieren weiter. Diese Seite kann den Jooki währenddessen nicht erreichen.', air_h: function (n) { return n + ' Std.'; },
     air_morning: function (h) { return 'Bis morgen früh (' + h + ')'; }, air_boot: 'Bis zum Aus- und Wiedereinschalten', air_btn: 'WLAN und Bluetooth ausschalten', air_q: 'Flugmodus einschalten?',
@@ -490,7 +495,7 @@
     web_page: 'Webseite', upd_check: 'Nach Updates suchen', upd_checking: 'Wird geprüft…', upd_uptodate: 'Dein Jooki ist auf dem neuesten Stand.', upd_offline: 'GitHub ist nicht erreichbar (ist der Jooki online?).', upd_available: function (v) { return 'Neue Version ' + v + ' verfügbar'; }, upd_now: 'Jetzt aktualisieren', upd_q: function (v) { return 'Auf OpenJooki ' + v + ' aktualisieren?'; },
     upd_text: 'Der Jooki lädt die neue Version und startet automatisch neu. Das dauert etwa 10 bis 20 Minuten. Lass ihn am Ladegerät. Musik und Figuren bleiben erhalten. Falls etwas schiefgeht, wechselt er automatisch zur vorherigen Version zurück.', upd_running: 'Update läuft…', upd_keep: 'Lass den Jooki am Ladegerät. Diese Seite verbindet sich automatisch wieder.', upd_stuck: 'Seit einiger Zeit keine Änderung? Während des Updates trennt und verbindet sich der Jooki mehrmals. Das Handy kann dabei den Anschluss verlieren. Du kannst die Seite neu laden. Das unterbricht nichts.', upd_reload: 'Seite neu laden', upd_wait: 'Der Jooki startet noch. Versuche es in einer Minute erneut.', upd_rebooting: 'Der Jooki startet mit der neuen Version…', upd_done: function (v) { return 'Jooki aktualisiert: OpenJooki ' + v; }, upd_failed: 'Das Update ist fehlgeschlagen. Dein Jooki wurde nicht verändert.', upd_banner: function (v) { return 'Update ' + v + ' verfügbar'; }, upd_see: 'Anzeigen',
     upd_steps: ['Neue Version suchen', 'Herunterladen', 'Download prüfen', 'Installieren (am Ladegerät lassen)', 'Installation prüfen', 'Mit der neuen Version neu starten'],
-    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_song: 'Am Songende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
+    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_song: 'Am Titelende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
     night_mode: 'Nachtmodus', night_help: 'In diesen Zeiten endet jede Wiedergabe automatisch. Die Lautstärke wird begrenzt und die Lichter werden gedimmt.', night_from: 'Von', night_to: 'Bis', night_timer: 'Automatischer Timer', night_timer_none: 'Keiner', night_maxvol: 'Maximale Lautstärke', night_nolimit: 'unbegrenzt', night_dim: 'Gedimmte Lichter', night_now: 'Nachtmodus ist gerade aktiv', night_next: function (h) { return 'Beginnt um ' + h; }, night_clock: 'Der Jooki erhält die Uhrzeit aus dem Internet (einschließlich Sommerzeit).',
     resume_at: function (c, s) { return 'Weiter ab Kapitel ' + c + (s ? ' · ' + s : ''); }, resume_restart: 'Von vorn beginnen', resume_done: 'Beginnt wieder bei Kapitel 1',
     sort: 'Sortieren', sort_title: 'Wiedergabeliste sortieren', sorted: 'Titel wurden neu geordnet', sort_by_name: 'Dateiname (1, 2, 3…)', sort_by_title: 'Titel', sort_by_artist: 'Interpret', sort_by_album: 'Album', sort_by_duration: 'Dauer', sort_again: 'Tippe erneut auf dasselbe Kriterium, um die Reihenfolge umzukehren.', sort_preview: 'Vorschau der neuen Reihenfolge', sort_apply: 'Reihenfolge übernehmen', sort_same: 'Die Wiedergabeliste ist bereits so sortiert',
@@ -723,16 +728,6 @@
   if (THEMES.indexOf(theme) < 0) theme = 'auto';
   function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
   applyTheme();
-  // Keep the song label available when the optional German table is installed.
-  if (T.de) T.de.sleep_song = 'Am Songende';
-  // Also translate the light switch when the optional German table is present.
-  if (T.de) {
-    T.de.lights_off = 'Alle Lichter dauerhaft ausschalten';
-    T.de.lights_off_help = 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.';
-    T.de.night_lights_off = 'Alle Lichter während der Nacht ausschalten';
-    T.de.night_lights_off_help = 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.';
-    T.de.night_dim_help = 'Die Dimm-Einstellung bleibt gespeichert und gilt, sobald die Lichter an sind.';
-  }
   function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {
     var v = T[lang][k];
@@ -741,11 +736,6 @@
     return v === undefined ? k : v;
   }
 
-  // Translate the option when the optional German interface is present.
-  if (T.de) {
-    T.de.random_start = 'Mit einem zufälligen Titel starten';
-    T.de.random_start_help = 'Danach der Wiedergabereihenfolge folgen. Für Musiklisten auf dem Jooki.';
-  }
   /* ------------------------------------------------------------------ characters */
   var MEDIA = '/static/media/';
   // id, name in fr / en / nl / de (every page language: a missing column showed French to Dutch families), picture or colour

@@ -10,6 +10,10 @@ The requested behaviour is the exact Spotify playlist assigned to a character,
 fully synchronized in advance, playable without Internet, including after a
 cold restart. Replacing it with uploaded audio files is outside this work.
 
+The decision below concerns the stock Spotify integration. An independent
+librespot-based implementation is now being evaluated separately in the
+[offline player trial](33-spotify-offline-trial.md).
+
 ## Decision
 
 | Question | Result | Evidence / limit |

@@ -2,7 +2,8 @@
 
 `app.js`, the file the Jooki serves, is these files put end to end by `../build.py`, in name
 order, inside one closure. Nothing is transformed: no bundler, no minifier, no module system.
-Edit here, then:
+The shared bundle stays a single file for the device. CI allows 288 KiB for four languages
+(previously 256 KiB for three); the CSS cap stays at 64 KiB. Edit here, then:
 
 ```sh
 python3 tools/openjooki/webui/build.py          # writes ../app.js
@@ -16,7 +17,7 @@ when it was one file of 3 000 lines. The order matters only for what runs while 
 | File | What is in it |
 |---|---|
 | `00-config.js` | `CFG`, `VERSION` (written by `scripts/bump-version.sh`) |
-| `01a`…`01e-i18n` | the texts: one table per language (same keys in each), then `t()`, language and theme |
+| `01a`…`01e-i18n` (fr, en, nl, de) | the texts: one table per language (same keys in each), then `t()`, language and theme |
 | `02-characters.js` | the characters and tokens' names and pictures |
 | `03-helpers.js` | `h()` the DOM builder, icons, formats, the collator |
 | `04-state.js` | the Jooki's state as the page keeps it, and its per-state index |

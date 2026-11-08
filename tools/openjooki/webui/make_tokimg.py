@@ -5,8 +5,8 @@
 Fluent Emoji 3D (github.com/microsoft/fluentui-emoji, MIT, tokimg/LICENSE.txt), the pictures
 chosen below for children (no weapons, alcohol, tobacco, flags, religious or office symbols),
 reduced to 128 px WebP. tokimg/index.json gives each picture its family, its names in French,
-English and Dutch (Unicode CLDR; the French ones shortened by hand below) and its search words
-(CLDR keywords of the three languages, accents removed, plus children's words). Needs Internet
+English, Dutch and German (Unicode CLDR; the French ones shortened by hand below) and its search words
+(CLDR keywords of the four languages, accents removed, plus children's words). Needs Internet
 and Pillow; the downloads are kept in a cache folder next to this script (not in git).
 """
 import concurrent.futures as cf
@@ -45,6 +45,14 @@ FAMILIES = [
     ("games", "Jeux et sports", "Games and sports", "Spelletjes en sport", "teddy_bear", "Balloon|Kite|Puzzle piece|Yo-yo|Game die|Chess pawn|Joystick|Video game|Teddy bear|Soccer ball|Basketball|American football|Rugby football|Tennis|Volleyball|Baseball|Softball|Ping pong|Badminton|Bowling|Ice hockey|Ice skate|Skis|Sled|Flying disc|Goal net|Bullseye|Trophy|Sports medal|1st place medal|Fishing pole|Diving mask|Artist palette|Crayon|Paintbrush|Framed picture|Yarn|Thread|Ribbon|Wrapped gift|Party popper|Confetti ball|Fireworks|Sparkler|Christmas tree|Jack-o-lantern|Joker"),
     ("home", "École et maison", "School and home", "School en thuis", "books", "Books|Open book|Closed book|Green book|Blue book|Orange book|Notebook with decorative cover|Pencil|Memo|Straight ruler|Triangular ruler|Abacus|Graduation cap|Light bulb|Magnifying glass tilted left|Microscope|Test tube|Magnet|Alarm clock|Hourglass not done|Calendar|Camera|Television|Telephone|Mobile phone|Laptop|Envelope|Package|Key|Bed|Couch and lamp|Chair|Bathtub|Toothbrush|Soap|Bubbles|Basket|Umbrella|Glasses|Sunglasses|T-shirt|Running shoe|Billed cap|Top hat|Scarf|Gloves|Socks|Coat|Dress|Candle|Flashlight|Toolbox|Hammer|Wrench|Gear"),
 ]
+
+DE_FAMILIES = {
+    "animals": "Tiere", "sea": "Meer und Fluss", "birds": "Vögel", "bugs": "Kleine Tiere",
+    "tales": "Märchen und Magie", "people": "Familie und Berufe", "faces": "Gesichter und Gefühle",
+    "hearts": "Herzen, Farben und Zahlen", "nature": "Natur und Wetter", "space": "Weltraum",
+    "vehicles": "Fahrzeuge", "places": "Orte und Reisen", "food": "Essen und Trinken",
+    "music": "Musik", "games": "Spiele und Sport", "home": "Schule und Zuhause",
+}
 
 # CLDR's French names are often long ("visage très souriant aux yeux rieurs"): the shorter ones
 FR = {
@@ -89,12 +97,12 @@ FR = {
 }
 # children's words that CLDR does not have
 WORDS = {
-    "cat": "minou chaton", "cat_face": "minou chaton", "black_cat": "minou", "dog": "toutou chiot", "dog_face": "toutou chiot",
-    "rabbit": "lapinou", "horse": "dada poney", "teddy_bear": "doudou nounours", "sleeping_face": "dormir sieste",
-    "bed": "dodo dormir sieste", "crescent_moon": "dodo nuit", "automobile": "auto", "old_woman": "grand-mere mamie granny oma",
-    "old_man": "grand-pere papy grandpa opa", "older_person": "grand-parent grandparent", "pile_of_poo": "caca",
-    "musical_notes": "chanson comptine song", "books": "histoire conte story verhaal", "open_book": "histoire conte story verhaal",
-    "baby_bottle": "bebe", "sauropod": "dinosaure dinosaur", "t_rex": "dinosaure dinosaur",
+    "cat": "minou chaton katze katzen miez kätzchen", "cat_face": "minou chaton", "black_cat": "minou", "dog": "toutou chiot hund hunde wauwau welpe", "dog_face": "toutou chiot",
+    "rabbit": "lapinou", "horse": "dada poney", "teddy_bear": "doudou nounours kuscheltier teddy teddybär", "sleeping_face": "dormir sieste schlaf schlafen müde einschlafen",
+    "bed": "dodo dormir sieste schlaf schlafen bett einschlafen", "crescent_moon": "dodo nuit", "automobile": "auto", "old_woman": "grand-mere mamie granny oma großmutter",
+    "old_man": "grand-pere papy grandpa opa großvater", "older_person": "grand-parent grandparent", "pile_of_poo": "caca",
+    "musical_notes": "chanson comptine song", "books": "histoire conte story verhaal geschichte geschichten märchen buch bücher lesen", "open_book": "histoire conte story verhaal geschichte geschichten märchen buch bücher lesen",
+    "baby_bottle": "bebe", "sauropod": "dinosaure dinosaur dino dinosaurier", "t_rex": "dinosaure dinosaur dino dinosaurier",
 }
 
 
@@ -129,7 +137,7 @@ def main():
         p = x["path"]
         if p.endswith("_3d.png") or p.endswith("_3d_default.png"):
             pic.setdefault(p.split("/")[1].lower(), (p.split("/")[1], p))
-    names = {lang: cldr(lang) for lang in ("fr", "en", "nl")}
+    names = {lang: cldr(lang) for lang in ("fr", "en", "nl", "de")}
     rows = []
     for fam, _fr, _en, _nl, _icon, folders in FAMILIES:
         for f in folders.split("|"):
@@ -140,8 +148,8 @@ def main():
         meta = json.loads(fetch(FLUENT + "assets/" + urllib.parse.quote(r["folder"]) + "/metadata.json", "meta-%s.json" % r["id"]))
         code = meta.get("unicode") or (meta.get("unicodeSkintones") or [""])[0]
         chars = "".join(chr(int(c, 16)) for c in code.split())
-        words = set(WORDS.get(r["id"], "").split())
-        for lang in ("fr", "en", "nl"):
+        words = set(plain(WORDS.get(r["id"], "")).split())
+        for lang in ("fr", "en", "nl", "de"):
             e = names[lang].get(chars) or names[lang].get(chars.replace("️", "")) or {}
             name = r["folder"].split(" ")[1] if r["folder"].startswith("Keycap ") else (e.get("tts") or [r["folder"]])[0]
             r[lang] = name[:1].upper() + name[1:]
@@ -164,8 +172,8 @@ def main():
     with cf.ThreadPoolExecutor(16) as ex:
         rows = list(ex.map(one, rows))
     index = {"v": 1, "source": "Fluent Emoji 3D, Microsoft (MIT)",
-             "cats": [[fam, {"fr": fr, "en": en, "nl": nl}, icon] for fam, fr, en, nl, icon, _ in FAMILIES],
-             "img": [[r["id"], r["family"], r["fr"], r["en"], r["nl"], r["words"]] for r in rows]}
+             "cats": [[fam, {"fr": fr, "en": en, "nl": nl, "de": DE_FAMILIES[fam]}, icon] for fam, fr, en, nl, icon, _ in FAMILIES],
+             "img": [[r["id"], r["family"], r["fr"], r["en"], r["nl"], r["words"], r["de"]] for r in rows]}
     with open(os.path.join(OUT, "index.json"), "w", encoding="utf-8") as fh:
         json.dump(index, fh, ensure_ascii=False, separators=(",", ":"))
     size = sum(os.path.getsize(os.path.join(OUT, r["id"] + ".webp")) for r in rows)

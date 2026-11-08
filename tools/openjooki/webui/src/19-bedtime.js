@@ -44,7 +44,7 @@
   }
   var nightVolDrag = null;
   function nightPage() {
-    var c = S.bedtime.cfg;
+    var c = S.bedtime.cfg, cfg = S.audio.config;
     if (c.start === undefined) return null; // firmware without bedtime
     var mv = nightVolDrag !== null ? nightVolDrag : Number(c.maxvol) || 100;
     var timers = [0, 10, 15, 20, 30, 45, 60];
@@ -70,7 +70,10 @@
         h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol', 'aria-label': t('night_maxvol'),
           oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
           onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
-      sRow({ label: t('night_dim'), sw: true, on: c.dim, k: 'nightdim', onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
+      typeof c.lights_off === 'boolean' ? sRow({ label: t('night_lights_off'), sub: t('night_lights_off_help'), sw: true,
+        on: c.lights_off, k: 'nightlightsoff', onchange: function (e) { setBedtime({ lights_off: e.target.checked }); } }) : null,
+      sRow({ label: t('night_dim'), sub: t('night_dim_help'), sw: true, on: c.dim, k: 'nightdim',
+        disabled: c.lights_off || cfg.lights_off, onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
     return out;
   }

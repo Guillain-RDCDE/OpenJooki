@@ -26,6 +26,8 @@ def on_msg(topic, payload, cl):
     elif topic == "/j/web/v2/event": got["events"].append(d)
     # the device's esp32_ctrl answers the knobs question (headphones out: nothing changes)
     elif topic == "/j/esp32/output/knobs/state": cl.publish("/j/esp32/input/knobs/state", '{"hp_state":0}')
+    # ht_ctrl acknowledges the global LED driver write by reading its register back.
+    elif topic == "/j/ht/output/raw_write": cl.publish("/j/ht/input/raw_read_response", payload)
 spy = B.Spy("/j/#", name="smoke", on=on_msg)
 c = spy.c
 env = dict(os.environ, OPENJOOKI_LOG="info", id="jooki-bench", hostname="jooki-bench.local", machine="bench")

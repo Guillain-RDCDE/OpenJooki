@@ -47,7 +47,7 @@ describe("services.device — volume chain", function()
   it("knob reports change the volume only when it differs", function()
     local doc = doc_with({ jack = false }); doc.device.esp32_up = true   -- the first answer only marks esp32_ctrl up (see boot spec)
     local initial = device.on_knobs(doc, { volume = 40, headphones = false })
-    assert_nil(initial.state.audiocfg); doc.volume_int = initial.state.volume_int
+    assert_nil(initial.state.audiocfg); doc.volume_int = initial.state.volume_int; doc.device = initial.state.device
     assert_nil(device.on_knobs(doc, { volume = 40, headphones = false }))
     local r = device.on_knobs(doc, { volume = 55, headphones = true })
     assert_eq(r.state.audiocfg.volume, 55); assert_false(r.state.audiocfg.headphones_en == true)

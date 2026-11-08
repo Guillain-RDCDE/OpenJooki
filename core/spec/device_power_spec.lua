@@ -61,7 +61,7 @@ describe("services.device.power — battery, cable, inactivity", function()
   it("overheat: toy safe, volume 80, script", function()
     local doc = doc_with()
     local r = power.on_battery(doc, { mc = 85000, tenths = 900, now = 1 })
-    same(kinds(r), { "log", "emit device.toy_safe_request", "shell power_overheat", "vol 56", "write /d/audiocfg.json" })
+    same(kinds(r), { "log", "emit device.toy_safe_request", "shell power_overheat", "vol 80", "write /d/audiocfg.json" })
   end)
 
   it("plug and charge events set state and lights only after the first report", function()

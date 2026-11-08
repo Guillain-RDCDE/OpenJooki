@@ -193,7 +193,7 @@ No payload.
 
 ### `device.set_config`
 
-Audio and device settings, including toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode; same global scale as the night maximum). Protected by the parent code when set.
+Audio and device settings, including toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.
 
 Payload schema:
 

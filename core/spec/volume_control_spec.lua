@@ -15,6 +15,71 @@ local function has(r, kind, key, value)
 end
 local function apply(d, r) for k, v in pairs((r or {}).state or {}) do d[k] = v end end
 
+describe("volume firmware compatibility", function()
+  it("leaves the factory kids attenuation in charge without global volume support", function()
+    for _, api in ipairs({ false, 0, 1, 3 }) do
+      local d = doc(); d.device.volume_api = api or nil
+      for _, maximum in ipairs({ 0, 35, 56, 100 }) do
+        d.audiocfg.toy_safe_maxvol = maximum
+        for _, requested in ipairs({ 80, 100 }) do
+          assert_eq(device.effective_volume(d, requested), requested)
+          local c = device.set_volume(d, requested).commands[1]
+          assert_eq(c.percent, requested); assert_false(c.esp32); assert_false(c.global_volume)
+          assert_true(c.toy_safe)
+        end
+      end
+      local boot = device.on_boot(d, { audiocfg = { volume = 80 }, flags = {} })
+      assert_eq(has(boot, "host.volume").percent, 80)
+      d.limits = { maxvol = 70, fade = 0.5 }
+      assert_eq(device.effective_volume(d, 100), 35)
+      d.upnp = { muted = true }
+      assert_eq(device.effective_volume(d, 100), 0)
+      d.upnp = nil; d.streaming_int = { find = { skips = 1 } }
+      assert_eq(device.effective_volume(d, 100), 0)
+    end
+  end)
+
+  it("reapplies the legacy headphone policy when support disappears without dial movement", function()
+    for _, api in ipairs({ false, 0, 1 }) do
+      local d = doc(); d.volume_int = { knob = 8 }
+      local r = device.on_knobs(d, { volume = 8, volume_api = api or nil })
+      apply(d, r)
+      assert_eq(has(r, "emit").event.type, "volume.apply")
+      assert_true(has(r, "emit").event.force)
+      assert_nil(r.state.audiocfg)
+      local c = device.on_apply_volume(d).commands[1]
+      assert_eq(c.percent, 80); assert_false(c.esp32); assert_false(c.global_volume)
+    end
+    local d = doc()
+    local r = device.on_bus_up(d); apply(d, r)
+    assert_eq(has(r, "emit").event.type, "volume.apply")
+    assert_true(has(r, "emit").event.force)
+    assert_eq(device.on_apply_volume(d).commands[1].percent, 80)
+  end)
+
+  it("silences wired output switches and restores the saved level under the negotiated policy", function()
+    for _, api in ipairs({ 0, 1, 2 }) do
+      local d = doc(); d.device.volume_api = api; d.power = { connected = true }
+      d.hp_int = { mux = "1" }; d.volume_int = { knob = 8 }
+      for _, plugged in ipairs({ true, false }) do
+        apply(d, device.on_knobs(d, { volume = 8, headphones = plugged, volume_api = api }))
+        local r = device.on_knobs(d, { volume = 8, headphones = plugged, volume_api = api })
+        apply(d, r)
+        assert_eq(d.audiocfg.headphones_en, plugged)
+        local levels = {}
+        for _, c in ipairs(r.commands) do
+          if c.kind == "host.volume" then
+            levels[#levels + 1] = c.percent
+            assert_eq(c.esp32, api == 2)
+          end
+        end
+        assert_eq(levels, { 0, api == 2 and 35 or 80 })
+        assert_eq(d.audiocfg.volume, 80)
+      end
+    end
+  end)
+end)
+
 describe("parent maximum", function()
   it("caps before fading, combines with night, and never changes requested volume", function()
     local d = doc()

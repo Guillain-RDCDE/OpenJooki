@@ -163,7 +163,27 @@ describe("global volume output policy", function()
     commands.execute(A, { { kind = "host.volume", percent = 10, global_volume = true, toy_safe = true, force_mode = true } })
     assert_eq(order[#order], "global")
     commands.execute(A, { { kind = "host.volume", percent = 10, global_volume = false, toy_safe = true } })
-    assert_eq(order[#order], "factory")
+    assert_eq(order[#order - 1], "factory"); assert_eq(order[#order], "level 10")
+  end)
+
+  it("restores factory headphone attenuation before raising a legacy request, and mutes on failure", function()
+    local A = fresh(); local order = {}
+    local level, run = A.host.set_volume, A.shell.run
+    A.host.set_volume = function(v) order[#order + 1] = "level " .. v; return level(v) end
+    A.shell.run = function(name, args)
+      if name == "volume_mode" then order[#order + 1] = args.bypass and "global" or "factory" end
+      return run(name, args)
+    end
+    commands.execute(A, { { kind = "host.volume", percent = 35, global_volume = true, toy_safe = true } })
+    local c = { kind = "host.volume", percent = 80, global_volume = false, toy_safe = true }
+    A.shell.results.volume_mode = { "unavailable", 1 }
+    commands.execute(A, { c })
+    assert_eq(order, { "level 35", "global", "factory", "level 0" })
+    assert_nil(A.host._volume_policy)
+    A.shell.results.volume_mode = { "ok", 0 }
+    commands.execute(A, { c })
+    assert_eq(order[#order - 1], "factory"); assert_eq(order[#order], "level 80")
+    assert_eq(A.host.last_volume(), 80)
   end)
 
   it("retries a failed mixer application instead of caching a failure", function()
@@ -173,5 +193,10 @@ describe("global volume output policy", function()
     A.shell.results.volume_mode = { "ok", 0 }
     commands.execute(A, { c }); assert_true(A.host._volume_policy ~= nil)
     assert_eq(#A.shell.calls, 2)
+    A.shell.results.volume_mode = { "unavailable", 1 }; c.force_mode = true
+    commands.execute(A, { c }); assert_nil(A.host._volume_policy)
+    A.shell.results.volume_mode = { "ok", 0 }; c.force_mode = nil
+    commands.execute(A, { c }); assert_true(A.host._volume_policy ~= nil)
+    assert_eq(#A.shell.calls, 4)
   end)
 end)

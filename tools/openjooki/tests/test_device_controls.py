@@ -3,6 +3,7 @@ This verifies the bus and browser paths; audible / visible hardware behaviour ne
 """
 import datetime
 import json
+from pathlib import Path
 import threading
 import paho.mqtt.client as mqtt
 from playwright.sync_api import sync_playwright
@@ -14,10 +15,16 @@ lock = threading.Lock()
 seen = []
 knob = 8
 volume_api = 2
+headphones = 0
 ctrl = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "device-controls-hardware")
+def knobs_payload():
+    payload = {"volume": knob, "hp_state": headphones}
+    if volume_api is not None:
+        payload["volume_api"] = volume_api
+    return json.dumps(payload)
 def hardware(cl, _u, m):
     if m.topic == "/j/esp32/output/knobs/state":
-        cl.publish("/j/esp32/input/knobs/state", json.dumps({"volume": knob, "hp_state": 0, "volume_api": volume_api}))
+        cl.publish("/j/esp32/input/knobs/state", knobs_payload())
     elif m.topic == "/j/ht/output/raw_write":
         with lock: seen.append((m.topic, m.payload.decode()))
         cl.publish("/j/ht/input/raw_read_response", m.payload)
@@ -32,6 +39,15 @@ ctrl.loop_start()
 def last(topic):
     with lock:
         return next((p for t, p in reversed(seen) if t == topic), None)
+def last_alsa():
+    values = Path(B.VOL_LOG).read_text().split()
+    return int(values[-1]) if values else None
+def last_mixer(control):
+    return next((line for line in reversed(Path(B.SERVICES_LOG).read_text().splitlines())
+                 if line.startswith("AMIXER ") and control in line), "")
+def volume_count():
+    with lock:
+        return sum(t == VOL for t, _ in seen)
 VOL = "/j/esp32/output/audio/set_volume"
 LED = "/j/ht/output/raw_write"
 
@@ -90,6 +106,44 @@ j.nfc("04000000F00001", "101")
 j.nfc_off()
 j.nfc("04A1B2C3D49C41", "200")
 j.nfc_off()
+
+# Old and intermediate firmware keep the factory attenuation, including after
+# a live downgrade with an unchanged dial. The answering peer also covers the
+# original controller, which omits volume_api altogether.
+j.c.publish("/j/power/input/plugged_in", "1")
+j.wait_state("power.connected", True)
+for volume_api in (0, 1, None):
+    for headphones in (1, 0):
+        for _ in range(2):
+            j.c.publish("/j/esp32/input/knobs/state", knobs_payload())
+        j.wait_state("device.volume_api", volume_api or 0)
+        j.wait_state("audio.config.headphones_en", bool(headphones))
+        j.barrier()
+        before = volume_count()
+        for requested in (80, 100):
+            j.send("SET_VOL", {"vol": requested})
+            R.expect("legacy API %r, headphones %d: request %d reaches ALSA" % (volume_api, headphones, requested),
+                     lambda: last_alsa() == requested)
+        j.barrier()
+        R.check("legacy API %r, headphones %d: no new ESP32 volume command" % (volume_api, headphones), volume_count() == before)
+        R.check("legacy API %r, headphones %d: factory kids attenuation retained" % (volume_api, headphones),
+                last_mixer("Toysafe override").endswith(" off"))
+
+j.send("OJ_BEDTIME_SET", {"enabled": True, "tzbase": 0, "tzdst": "none", "start": hm(minutes - 60), "stop": hm(minutes + 60), "maxvol": 20})
+R.expect("legacy headphones retain the night ceiling", lambda: last_alsa() == 20)
+j.send("OJ_BEDTIME_SET", {"enabled": False})
+R.expect("legacy night ceiling restores the requested level", lambda: last_alsa() == 100)
+j.send("SET_CFG", {"hp_boost": True})
+R.expect("headphone boost stays at factory gain in kids mode", lambda: last_mixer("MERCURY Playback Volume").endswith(" 31"))
+j.send("SET_TOY_SAFE", {"enable": False})
+R.expect("headphone boost is available with kids mode off", lambda: last_mixer("MERCURY Playback Volume").endswith(" 37"))
+j.send("SET_TOY_SAFE", {"enable": True})
+R.expect("kids mode restores the factory headphone gain", lambda: last_mixer("MERCURY Playback Volume").endswith(" 31"))
+volume_api = 2
+j.c.publish("/j/esp32/input/knobs/state", knobs_payload())
+j.send("SET_VOL", {"vol": 90})
+R.expect("API 2 restores the shared ceiling after a legacy controller", lambda: last(VOL) == {"percent": 35, "maximum": 35})
+R.expect("API 2 bypasses only the fixed attenuation", lambda: last_mixer("Toysafe override").endswith(" on"))
 
 with sync_playwright() as pw:
     browser = pw.chromium.launch(args=["--no-sandbox"])

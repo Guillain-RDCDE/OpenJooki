@@ -37,7 +37,9 @@ function device.effective_volume(doc, requested)
   local find = (doc.streaming_int or {}).find
   if (doc.upnp or {}).muted or (find and (find.skips or 0) > 0) then return 0 end
   local lim = doc.limits or {}
-  if (doc.device or {}).toy_safe ~= false then
+  -- Older firmware still applies its fixed kids attenuation in the sound chip.
+  -- Its percentages cannot also be capped on the new global scale.
+  if (doc.device or {}).volume_api == 2 and (doc.device or {}).toy_safe ~= false then
     v = math.min(v, (doc.audiocfg or {}).toy_safe_maxvol or DEFAULT_KIDS_MAX)
   end
   if lim.maxvol and lim.maxvol < 100 and v > lim.maxvol then v = lim.maxvol end
@@ -239,14 +241,19 @@ function device.on_knobs(doc, ev)
     local d = copy(doc.device or {}); d.esp32_up = true
     r.state.device = d
   end
-  if ev.volume_api ~= nil and (doc.device or {}).volume_api ~= ev.volume_api then
-    local d = r.state.device or copy(doc.device or {}); d.volume_api = ev.volume_api
+  -- The original controller omits the capability; a valid legacy reading must
+  -- also revoke a previously advertised global policy after a controller restart.
+  local api = ev.volume_api
+  if api == nil and ev.volume ~= nil then api = 0 end
+  local changed = api ~= nil and (doc.device or {}).volume_api ~= api
+  if changed then
+    local d = r.state.device or copy(doc.device or {}); d.volume_api = api
     r.state.device = d
   end
   -- Reassert on every capable answer too: an ESP32 restart can leave the Linux
   -- broker connected while the chip has forgotten its host volume and ceiling.
-  if ev.volume_api == 2 then
-    r.commands[#r.commands + 1] = emit("volume.apply", {})
+  if api == 2 or changed then
+    r.commands[#r.commands + 1] = emit("volume.apply", { force = changed })
   end
   local observed = copy(doc); observed.device = r.state.device or doc.device
   local s = device.on_gpio_volume(observed, { percent = ev.volume })
@@ -335,6 +342,7 @@ on_bus_up = function(doc)
   d.esp32_up = false
   d.volume_api = nil
   local cmds = esp32_init()
+  cmds[#cmds + 1] = emit("volume.apply", { force = true })
   for i, s in ipairs({ 2, 5, 9 }) do cmds[#cmds + 1] = { kind = "timer.once", name = "device.esp32_init." .. i, seconds = s } end
   return { state = { device = d, volume_int = {} }, commands = cmds }
 end

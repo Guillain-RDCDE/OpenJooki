@@ -22,10 +22,17 @@ parent limits migrate conservatively to this scale once; an internal migration
 marker prevents repeated conversion. Explicitly selecting 100 allows the full
 global range. Changing a ceiling never overwrites the saved requested volume.
 
-Effective output is `min(requested, kids maximum if enabled, night maximum)`
+Effective output is `min(requested, kids maximum if enabled and API 2, night maximum)`
 followed by the sleep fade. Mute and temporary streaming silence force zero.
 `SET_CFG` and `device.set_config` validate integer limits before writing and keep
 the existing parent-code protection. Limit and kids-mode changes apply immediately.
+
+The configurable kids maximum applies only after `volume_api == 2` is advertised.
+With an unknown capability, legacy firmware or API 1, the core leaves the fixed
+factory kids attenuation in charge instead of adding a second ceiling. For
+example, requests of 80 and 100 remain 80 and 100 on the legacy ALSA path;
+the sound chip still attenuates them in kids mode. Night limits, fades and mute
+continue to apply on that path.
 
 ## Firmware and output paths
 
@@ -47,14 +54,19 @@ scripts. Failure to change the mixer mode is logged and retried on a later apply
 Startup, mute/unmute, fades, temporary silence and output switches use the same
 volume-command path.
 
+Capability changes and broker reconnection also reapply the policy without
+requiring dial movement. When returning to legacy mode, factory headphone
+attenuation is restored before a higher requested level is set. If that mixer
+operation fails, wired output stays silent until a later apply succeeds.
+
 ## Verification on 2026-11-08
 
 | Check | Result |
 |---|---|
-| Isolated volume-branch Lua specs | 341 passed |
-| Isolated real-core/MQTT/Chromium volume checks | 29 passed |
-| Isolated backend / bedtime / UPnP regressions | 63 / 24 / 78 passed |
-| Boot/API and resource budgets | 11 passed; idle 0.50 messages/s, RSS 4872 KiB |
+| Current branch Lua specs, including legacy headphone policy and mixer failures | 365 passed |
+| Real-core/MQTT/Chromium volume checks, including legacy headphones and capability changes | 60 passed |
+| Backend / bedtime / UPnP regressions | 63 / 31 / 78 passed |
+| Boot/API and resource budgets | 11 passed; idle 0.30 messages/s, RSS 4920 KiB |
 | Native firmware | All 101 values and ceilings, startup ordering, repeated ADC samples, actual movement, mute and invalid requests pass |
 | Actual ESP32 gain functions | All 101 global levels identical with kids mode on/off; factory default, legacy fallback, ceiling, mute and lock failures pass under sanitizers |
 | Actual Linux protocol codec | Legacy/API 1/API 2, omitted/zero limits, malformed replies, errors and missing responses pass under sanitizers |

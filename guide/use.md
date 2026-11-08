@@ -245,7 +245,7 @@ version.
 - **Wi-Fi**: the network, the signal and the page's address. Moved house or changed the
   box? See [Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html).
 - **Update**: see [Update it](update.md).
-- **Language**: English, Français or Nederlands. The page picks your phone's language by
+- **Language**: English, Français, Nederlands or Deutsch. The page picks your phone's language by
   itself.
 - **Appearance**: Automatic (like the phone), Light or Dark.
 - **Christmas tree**: just for fun, all the colours of the lights for 5 seconds.

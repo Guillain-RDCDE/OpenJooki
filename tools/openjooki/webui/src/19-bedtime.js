@@ -51,8 +51,6 @@
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
     var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
-    // Darkness is persistent and independent of the schedule, so keep its switch reachable
-    // here even with night mode off. The timed dimming option above it keeps its own setting.
     var allLights = typeof cfg.lights_off === 'boolean' ? sGroup(null, [
       sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
         onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } })
@@ -75,7 +73,10 @@
         h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol', 'aria-label': t('night_maxvol'),
           oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
           onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
-      sRow({ label: t('night_dim'), sw: true, on: c.dim, k: 'nightdim', onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
+      typeof c.lights_off === 'boolean' ? sRow({ label: t('night_lights_off'), sub: t('night_lights_off_help'), sw: true,
+        on: c.lights_off, k: 'nightlightsoff', onchange: function (e) { setBedtime({ lights_off: e.target.checked }); } }) : null,
+      sRow({ label: t('night_dim'), sub: t('night_dim_help'), sw: true, on: c.dim, k: 'nightdim',
+        disabled: c.lights_off || cfg.lights_off, onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
     return out.concat(allLights);
   }

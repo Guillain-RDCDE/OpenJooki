@@ -220,7 +220,7 @@ for _, name in ipairs({ "STAY_ON", "TOY_SAFE_OFF", "WIFI_OFF", "BT_OFF", "FACTOR
   if files.exists(files.FLAG_DIR .. "/" .. name) then flags[name] = true end
 end
 local boot_event = {
-  type = "boot", now = clock.now(), wall = clock.wall(),
+  type = "boot", now = clock.now(), wall = clock.wall(), seed = clock.seed(),
   library = { playlists = read_or_empty(data_dir .. "/playlists.json"), tracks = read_or_empty(data_dir .. "/tracks.json"),
               tokens = read_or_empty(data_dir .. "/tokens.json") },
   audiocfg = read_or_empty(data_dir .. "/audiocfg.json"),

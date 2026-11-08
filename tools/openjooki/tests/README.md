@@ -25,6 +25,7 @@ the 1.x patched program and its `web_ctrl` emulator left with ADR-0012.
 (cd ../../.. && python3 tools/build/bundle.py)   # the core, into build/ at the repository root
 export PLAYER_LUA=core CORE_BUILD=$(cd ../../.. && pwd)/build
 ./make_media.sh && ./up.sh                    # test audio, broker, fake audio
+python3 test_device_controls.py               # web/dial arbitration and kids/night ceilings
 python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py
 python3 test_security_backend.py && python3 e2e.py && python3 test_security.py
 python3 test_mqtt_lan.py                      # S57_oj-security.sh, real mosquitto: no core needed (gcc)

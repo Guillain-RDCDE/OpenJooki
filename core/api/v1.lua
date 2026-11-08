@@ -54,7 +54,7 @@ function PARTS.device(doc)
   return { flags = flags_list(doc.flags), toy_safe = d.toy_safe, id = d.id, hostname = d.hostname, ip = (doc.net or {}).ip or d.ip,
            wifi_mac = d.wifi_mac, machine = d.machine, firmware = d.firmware, openjooki = d.openjooki or d.core,
            diskUsage = d.diskUsage, usage = d.usage, core = d.core, rss_kb = h.rss_kb, boot = h.boot, esp32_up = d.esp32_up,
-           airplane = d.airplane }
+           airplane = d.airplane, volume_api = d.volume_api }
 end
 function PARTS.nfc(doc) return doc.nfc or {} end
 function PARTS.power(doc) return doc.power or {} end
@@ -205,7 +205,10 @@ H.SET_VOL = function(doc, p)
   return device.set_volume(doc, v), nil, { "audio" }
 end
 -- the page's booleans (repeat_mode true/false too) are read by device.update_config
-H.SET_CFG = function(doc, p) return device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp }), nil, { "audio" } end
+H.SET_CFG = function(doc, p)
+  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, toy_safe_maxvol = p.toy_safe_maxvol })
+  return r, e, { "audio" }
+end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
 -- refused without echoing the payload: it holds a Wi-Fi password, and the error topic reaches every page
 H.SET_WIFI = function() return { commands = { err_cmd(device.WIFI_OVER_BLUETOOTH.message) } } end

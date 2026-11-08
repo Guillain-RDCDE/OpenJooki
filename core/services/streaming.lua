@@ -286,7 +286,7 @@ local function find_step(doc, r, d)
     cmds[#cmds + 1] = pub(SP .. "play_preset", direct_request(p.spotify.uri, f.index, f.pos or 0))
     cmds[#cmds + 1] = { kind = "log", level = "warn", key = "streaming.place_lost", fields = { playlist = f.playlist, skips = f.skips } }
   else
-    if f.skips == 0 then cmds[#cmds + 1] = { kind = "host.volume", percent = 0 } end
+    if f.skips == 0 then cmds[#cmds + 1] = require("services.device").volume_command(doc, 0) end
     int.find = copy(f); int.find.skips = f.skips + 1
     for _, x in ipairs(streaming.transport("SPOTIFY", "next")) do cmds[#cmds + 1] = x end
   end

@@ -26,6 +26,10 @@ shell.ACTIONS = {
                              return { "/jooki/app/services/ml-audio-probe-wrapper.sh", a.file, a.image, a.out } end },
   set_lang       = { argv = function(a) if not is_lang(a.lang) then return nil, "bad lang" end return { "/jooki/app/services/lang_set.sh", a.lang } end },
   toysafe_update = { argv = function() return { "/jooki/app/services/toy_safe_update.sh" } end },
+  volume_mode    = { argv = function(a)
+    if type(a.bypass) ~= "boolean" then return nil, "invalid volume mode" end
+    return { "/usr/bin/amixer", "-q", "set", "Toysafe override", a.bypass and "on" or "off" }
+  end },
   -- louder headphones (services.util.hp_gain, #10): the sound chip's playback gain on card 0, only
   -- the factory 0 dB (31) or +6 dB (37)
   hp_gain        = { argv = function(a) if a.db ~= 0 and a.db ~= 6 then return nil, "bad gain" end

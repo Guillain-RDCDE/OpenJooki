@@ -49,6 +49,22 @@ local executors = {
   ["host.volume"] = function(a, c)
     check(type(c.percent) == "number", "host.volume needs a percent")
     a.host.set_volume(c.percent)
+    -- Set the bounded ALSA volume before removing its fixed kids attenuation.
+    -- Keep the policy across commands so fades do not spawn a mixer process per tick.
+    if type(c.global_volume) == "boolean" then
+      local key = tostring(c.global_volume) .. ":" .. tostring(c.toy_safe)
+      if c.force_mode or a.host._volume_policy ~= key then
+        local _, rc = a.shell.run("volume_mode", { bypass = c.global_volume or c.toy_safe == false })
+        if rc == 0 then a.host._volume_policy = key
+        else log.warn("commands.volume_mode_failed", { rc = tostring(rc) }) end
+      end
+    end
+    -- Jooki 2 speaker / Bluetooth live in the ESP32; wired headphones still use ALSA.
+    -- Only a controller + firmware pair advertising the shared global scale receives it.
+    if c.esp32 then
+      local ok, err = a.bus:publish("/j/esp32/output/audio/set_volume", json.encode({ percent = c.percent, maximum = c.maximum or 100 }))
+      if not ok then log.warn("commands.volume_failed", { err = tostring(err) }) end
+    end
   end,
   ["shell"] = function(a, c, ctx)
     check(type(c.action) == "string", "shell needs an action")

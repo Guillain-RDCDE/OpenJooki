@@ -20,6 +20,7 @@ function radio.on_toy_safe(doc, ev)
     util.hp_gain((doc.audiocfg or {}).hp_boost, d.toy_safe),
     { kind = "shell", action = "toysafe_update" },
     { kind = "bus.publish", topic = "/j/esp32/output/audio/set_toysafe", payload = d.toy_safe and "1" or "0" },
+    emit("volume.apply", { force = true }),
     emit("lights.event", { name = d.toy_safe and "Evt.ToySafe.On" or "Evt.ToySafe.Off" }) } }
 end
 

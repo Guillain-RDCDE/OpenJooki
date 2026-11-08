@@ -322,7 +322,7 @@ describe("services.upnp — volume", function()
     local d = doc_with({ volume = 40 })
     assert_eq(out_of(upnp.request(d, "rc", "GetVolume", { InstanceID = "0", Channel = "Master" })).CurrentVolume, "40")
     local r = act(d, "rc", "SetVolume", { InstanceID = "0", Channel = "Master", DesiredVolume = "65" })
-    assert_eq(topics(r.handled), { "volume 65", "write /d/audiocfg.json" })
+    assert_eq(topics(r.handled), { "volume 56", "write /d/audiocfg.json" })
     assert_eq(d.audiocfg.volume, 65)
     d.limits = { maxvol = 50 }
     r = act(d, "rc", "SetVolume", { InstanceID = "0", Channel = "Master", DesiredVolume = "90" })

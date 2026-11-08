@@ -135,3 +135,43 @@ describe("kernel.loop", function()
     assert_nil(loop.stopped())
   end)
 end)
+
+describe("ESP32 volume output", function()
+  it("writes headphones and speaker with the same effective percent and ceiling", function()
+    local f = fresh()
+    local r = commands.execute(f, { { kind = "host.volume", percent = 20, esp32 = true, maximum = 30 } })
+    assert_eq(r.failed, 0)
+    assert_eq(f.host.last_volume(), 20)
+    local pubs = f.bus.published
+    assert_eq(pubs[#pubs].topic, "/j/esp32/output/audio/set_volume")
+    assert_eq(json.decode(pubs[#pubs].payload), { percent = 20, maximum = 30 })
+  end)
+end)
+
+describe("global volume output policy", function()
+  it("sets a bounded level before lifting the fixed headphone attenuation and caches it through a fade", function()
+    local A = fresh(); local order = {}
+    local level, run = A.host.set_volume, A.shell.run
+    A.host.set_volume = function(v) order[#order + 1] = "level " .. v; return level(v) end
+    A.shell.run = function(name, args)
+      if name == "volume_mode" then order[#order + 1] = args.bypass and "global" or "factory" end
+      return run(name, args)
+    end
+    commands.execute(A, { { kind = "host.volume", percent = 20, global_volume = true, toy_safe = true } })
+    commands.execute(A, { { kind = "host.volume", percent = 10, global_volume = true, toy_safe = true } })
+    assert_eq(order, { "level 20", "global", "level 10" })
+    commands.execute(A, { { kind = "host.volume", percent = 10, global_volume = true, toy_safe = true, force_mode = true } })
+    assert_eq(order[#order], "global")
+    commands.execute(A, { { kind = "host.volume", percent = 10, global_volume = false, toy_safe = true } })
+    assert_eq(order[#order], "factory")
+  end)
+
+  it("retries a failed mixer application instead of caching a failure", function()
+    local A = fresh(); A.shell.results.volume_mode = { "unavailable", 1 }
+    local c = { kind = "host.volume", percent = 10, global_volume = true, toy_safe = true }
+    commands.execute(A, { c }); assert_nil(A.host._volume_policy)
+    A.shell.results.volume_mode = { "ok", 0 }
+    commands.execute(A, { c }); assert_true(A.host._volume_policy ~= nil)
+    assert_eq(#A.shell.calls, 2)
+  end)
+end)

@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 REPOSITORY = "https://github.com/CormAlan/spotify-player-offline-mode.git"
@@ -13,9 +14,8 @@ REVISION = "cd47e7594b2f564c52a07751c6c4b0f27b26af06"
 FEATURES = "rodio-backend,rustls-tls"
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_WORK = ROOT / "build/spotify-offline/trial"
-AUTH_PATCH = Path(__file__).with_name("auth-redirect.patch")
-BOUNDED_PATCH = Path(__file__).with_name("bounded-audio.patch")
-PATCHES = (AUTH_PATCH, BOUNDED_PATCH)
+PLAYER_PATCH = Path(__file__).with_name("player.patch")
+PATCHES = (PLAYER_PATCH,)
 
 
 def run(command, cwd=None, capture=False, extra_env=None):
@@ -47,7 +47,6 @@ def prepare(work, source_name="source", patch_files=PATCHES):
         raise ValueError("Checkout has another revision; choose a fresh --work-dir")
     status = run(["git", "status", "--porcelain", "--untracked-files=all"],
                  cwd=source, capture=True).stdout
-    patches = [patch.read_text() for patch in patch_files]
     actual = run(["git", "diff", "--no-color", "--no-ext-diff", "--binary",
                   "--abbrev=7", "--unified=0", "HEAD"],
                  cwd=source, capture=True).stdout
@@ -55,13 +54,26 @@ def prepare(work, source_name="source", patch_files=PATCHES):
                  cwd=source, capture=True).stdout
     if staged or any(line.startswith("??") for line in status.splitlines()):
         raise ValueError("Checkout has local changes; choose a fresh --work-dir")
-    applied = next((count for count in range(len(patches) + 1)
-                    if diff_chunks(actual) == diff_chunks("".join(patches[:count]))), None)
+    # Compose patches through Git: later patches may modify the same Cargo files.
+    applied = None
+    with tempfile.TemporaryDirectory(prefix="openjooki-profile-") as temp:
+        index_env = {"GIT_INDEX_FILE": str(Path(temp) / "index")}
+        run(["git", "read-tree", "HEAD"], cwd=source, extra_env=index_env)
+        for count in range(len(patch_files) + 1):
+            expected = run(["git", "diff", "--cached", "--no-color", "--no-ext-diff",
+                            "--binary", "--abbrev=7", "--unified=0", "HEAD"],
+                           cwd=source, capture=True, extra_env=index_env).stdout
+            if diff_chunks(actual) == diff_chunks(expected):
+                applied = count
+                break
+            if count < len(patch_files):
+                run(["git", "apply", "--cached", "--unidiff-zero", str(patch_files[count])],
+                    cwd=source, extra_env=index_env)
     if applied is None:
         raise ValueError("Checkout differs from the reviewed trial patches; choose a fresh --work-dir")
     for patch in patch_files[applied:]:
         run(["git", "apply", "--check", "--unidiff-zero", str(patch)], cwd=source)
-        run(["git", "apply", "--unidiff-zero", str(patch)], cwd=source)
+        run(["git", "apply", "--intent-to-add", "--unidiff-zero", str(patch)], cwd=source)
     return source
 
 

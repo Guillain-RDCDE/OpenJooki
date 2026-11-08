@@ -48,6 +48,10 @@ end
 -- functions too, so they do not tell. The two watchdogs act on the machine: never off a Jooki,
 -- unless a test sets them on purpose.
 local ON_JOOKI = (function() local f = io.open("/sys/kernel/htdrv/mac", "r") if f then f:close() return true end return false end)()
+if ON_JOOKI then
+  local flag = io.open("/data/openjooki/spotify-offline-enabled", "r")
+  if flag then flag:close(); overrides.spotify_offline_enabled = true end
+end
 if not ON_JOOKI then
   if overrides.wifi_watchdog_s == nil then overrides.wifi_watchdog_s = 0 end
   if overrides.broker_watch_s == nil then overrides.broker_watch_s = 0 end
@@ -76,6 +80,7 @@ local mdns = require("adapters.mdns").new()
 local broker_watch = config.get("broker_watch_s") > 0
   and require("adapters.broker_watch").new({ shell = shell, after_s = config.get("broker_watch_s") }) or nil
 local adapters = { bus = bus, files = files, clock = clock, host = host, shell = shell, mdns = mdns }
+if config.get("spotify_offline_enabled") then require("adapters.spotify_offline").install(shell, config) end
 mark("adapters")
 
 log.configure({
@@ -116,6 +121,7 @@ api.set_guard(function(ctype, code) return security.gate(security.PROTECTED_V2, 
 if config.get("streaming_enabled") and package.preload["services.streaming"] then
   require("services.streaming").install(api, dispatch)
 end
+if package.preload["services.spotify_offline"] then require("services.spotify_offline").install(api, dispatch) end
 v1.install(dispatch)
 
 require("services.network").install(api, dispatch)

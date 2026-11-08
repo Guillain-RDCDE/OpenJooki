@@ -49,6 +49,11 @@ config.defaults = {
   battery_off_percent = 10,
   battery_off_mv = 3500,   -- shut down cleanly before the Holtek's hard cut at ~3.40 V (services.device.power)
   overheat_mc = 80000,
+  -- Experimental backend, enabled by the test installer; the original controller remains selectable.
+  spotify_offline_enabled = false,
+  spotify_offline_root = "/jooki/external/openjooki-offline",
+  spotify_offline_binary = "/jooki/external/openjooki-offline/current/spotify_player",
+  spotify_offline_quota_bytes = 512 * 1024 * 1024,
   -- streaming module (ADR-0009)
   streaming_enabled = true,
   -- the Spotify account the daemon logs back into at every start: spotify_ctrl writes it only for the

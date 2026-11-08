@@ -740,6 +740,54 @@
     return v === undefined ? k : v;
   }
 
+  Object.assign(T.en, {
+    of_backend_error: 'The offline player is unavailable. Try again or select the online player.',
+    of_title: 'Spotify offline · test', of_premium: 'Offline downloads require Premium. The original online player remains available.',
+    of_login: 'For this test version, the separate Premium sign-in is configured by the installer.',
+    of_download: 'Download for offline use', of_update: 'Update download', of_remove: 'Remove download',
+    of_online: 'Online · original player', of_auto: 'Automatic', of_only: 'Offline copy only',
+    of_hint: 'Automatic plays the last complete download when available; otherwise it uses the original online player.',
+    of_busy: 'Downloading', of_ready: 'Available offline', of_error: 'Download failed. The previous complete copy remains available.',
+    of_space: 'Not enough free storage.', of_storage: 'Offline storage', of_songs: 'Downloaded songs',
+    of_empty: 'Songs appear here during synchronization.', of_play: 'Play offline', of_remove_q: 'Remove the offline copy?',
+    of_remove_help: 'This removes the downloaded copy. The playlist and its figure assignment are kept.'
+  });
+  Object.assign(T.de, {
+    of_backend_error: 'Der Offline-Player ist nicht verfügbar. Erneut versuchen oder den Online-Player wählen.',
+    of_title: 'Spotify offline · Test', of_premium: 'Offline-Downloads benötigen Premium. Der bisherige Online-Player bleibt verfügbar.',
+    of_login: 'Für diese Testversion richtet der Installer die separate Premium-Anmeldung ein.',
+    of_download: 'Offline herunterladen', of_update: 'Download aktualisieren', of_remove: 'Download entfernen',
+    of_online: 'Online · bisheriger Player', of_auto: 'Automatisch', of_only: 'Nur Offline-Kopie',
+    of_hint: 'Automatisch spielt den letzten vollständigen Download ab. Ohne Offline-Kopie wird der bisherige Online-Player verwendet.',
+    of_busy: 'Wird heruntergeladen', of_ready: 'Offline verfügbar', of_error: 'Download fehlgeschlagen. Die vorherige vollständige Kopie bleibt verfügbar.',
+    of_space: 'Nicht genug freier Speicher.', of_storage: 'Offline-Speicher', of_songs: 'Gespeicherte Titel',
+    of_empty: 'Die Titel erscheinen hier während der Synchronisierung.', of_play: 'Offline abspielen', of_remove_q: 'Offline-Kopie entfernen?',
+    of_remove_help: 'Der Download wird gelöscht. Playlist und Zuordnung zur Figur bleiben erhalten.'
+  });
+  Object.assign(T.fr, {
+    of_backend_error: 'Le lecteur hors ligne est indisponible. Réessayez ou choisissez le lecteur en ligne.',
+    of_title: 'Spotify hors ligne · test', of_premium: 'Les téléchargements nécessitent Premium. Le lecteur en ligne actuel reste disponible.',
+    of_login: 'Pour cette version de test, la connexion Premium séparée est configurée par l’installateur.',
+    of_download: 'Télécharger hors ligne', of_update: 'Actualiser', of_remove: 'Supprimer le téléchargement',
+    of_online: 'En ligne · lecteur actuel', of_auto: 'Automatique', of_only: 'Copie hors ligne uniquement',
+    of_hint: 'Automatique lit le dernier téléchargement complet, sinon le lecteur en ligne actuel est utilisé.',
+    of_busy: 'Téléchargement', of_ready: 'Disponible hors ligne', of_error: 'Échec du téléchargement. La copie complète précédente reste disponible.',
+    of_space: 'Espace libre insuffisant.', of_storage: 'Stockage hors ligne', of_songs: 'Titres enregistrés',
+    of_empty: 'Les titres apparaissent pendant la synchronisation.', of_play: 'Lire hors ligne', of_remove_q: 'Supprimer la copie hors ligne ?',
+    of_remove_help: 'Seule la copie téléchargée est supprimée. La playlist et sa figurine sont conservées.'
+  });
+  Object.assign(T.nl, {
+    of_backend_error: 'De offline speler is niet beschikbaar. Probeer opnieuw of kies de online speler.',
+    of_title: 'Spotify offline · test', of_premium: 'Offline downloaden vereist Premium. De bestaande online speler blijft beschikbaar.',
+    of_login: 'Voor deze testversie stelt het installatieprogramma de aparte Premium-aanmelding in.',
+    of_download: 'Offline downloaden', of_update: 'Download bijwerken', of_remove: 'Download verwijderen',
+    of_online: 'Online · bestaande speler', of_auto: 'Automatisch', of_only: 'Alleen offline kopie',
+    of_hint: 'Automatisch speelt de laatste volledige download af; anders wordt de bestaande online speler gebruikt.',
+    of_busy: 'Downloaden', of_ready: 'Offline beschikbaar', of_error: 'Download mislukt. De vorige volledige kopie blijft beschikbaar.',
+    of_space: 'Onvoldoende vrije opslagruimte.', of_storage: 'Offline opslag', of_songs: 'Opgeslagen nummers',
+    of_empty: 'Nummers verschijnen tijdens het synchroniseren.', of_play: 'Offline afspelen', of_remove_q: 'Offline kopie verwijderen?',
+    of_remove_help: 'Alleen de gedownloade kopie wordt verwijderd. De afspeellijst en het figuurtje blijven behouden.'
+  });
   /* ------------------------------------------------------------------ characters */
   var MEDIA = '/static/media/';
   // id, name in fr / en / nl / de (every page language: a missing column showed French to Dutch families), picture or colour
@@ -916,6 +964,7 @@
     S.db.tracks = obj(S.db.tracks);
     S.db.tokens = obj(S.db.tokens);
     delete S.db.tokens._;
+    S.spotifyOffline = obj(S.spotifyOffline);
     S.audio = obj(S.audio);
     S.audio.config = obj(S.audio.config);
     S.audio.playback = obj(S.audio.playback);
@@ -2122,6 +2171,7 @@
       return [head, h('div', { class: 'actions' },
           h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
+        spotifyOfflineCard(p, id),
         resumeSwitch(p, id),
         deletePlaylistBtn(p, id)];
     }
@@ -2191,6 +2241,59 @@
   }
   function optimisticTracks(id, tracks) { if (pls()[id]) { pls()[id].tracks = tracks; IDX = null; render(); } }
 
+  function offlineBusy() {
+    return /^(resolving|downloading|verifying)$/.test(obj(obj(S.spotifyOffline).download).phase || '');
+  }
+  function offlineBytes(n) { return (Math.max(0, Number(n) || 0) / 1048576).toFixed(1) + ' MiB'; }
+  function spotifyOfflineCard(p, id) {
+    var o = obj(S.spotifyOffline);
+    if (!o.available) return null;
+    var snap = obj(obj(o.playlists)[p.spotify.uri]);
+    var job = obj(o.download), mine = job.uri === p.spotify.uri, busy = offlineBusy();
+    var tracks = arr(snap.tracks), ready = !!snap.ready;
+    if (!tracks.length && mine) tracks = arr(job.tracks);
+    var mode = obj(o.modes)[id] || 'online';
+    var np = obj(S.audio.nowPlaying), inUse = np.service === 'SPOTIFY_OFFLINE' && np.playlistId === id && !/^(STOPPED|ENDED)$/.test(S.audio.playback.state || ''), playing = inUse && (S.audio.playback.state !== 'PAUSED' || obj(o.player).state !== 'paused');
+    var storage = obj(o.storage);
+    function button(label, kind, disabled) {
+      return h('button', { class: 'btn', disabled: disabled, onclick: function () { send(kind, { playlistId: id }); } }, label);
+    }
+    return h('div', { class: 'card', style: 'margin-top:16px;padding:16px', 'data-k': 'spotify-offline' },
+      h('h3', null, t('of_title')),
+      h('p', { class: 'small muted' }, t('of_premium')),
+      o.error || (obj(o.player).playlist === id && obj(o.player).error) ? h('p', { class: 'banner', role: 'alert' }, t('of_backend_error')) : null,
+      !o.account_ready ? h('p', { class: 'banner' }, t('of_login')) : null,
+      h('select', { class: 'input', 'aria-label': t('of_title'), 'data-k': 'offline-mode', onchange: function (e) {
+        send('OJ_OFFLINE_MODE', { playlistId: id, mode: e.target.value });
+      } }, ['online', 'auto', 'offline'].map(function (value, i) {
+        return h('option', { value: value, selected: mode === value, disabled: value === 'offline' && !ready }, t(['of_online', 'of_auto', 'of_only'][i]));
+      })),
+      h('p', { class: 'small muted' }, t('of_hint')),
+      h('div', { class: 'actions' },
+        button(t(ready ? 'of_update' : 'of_download'), 'OJ_OFFLINE_SYNC', !o.account_ready || busy || playing),
+        ready ? h('button', { class: 'btn danger', disabled: busy || inUse, onclick: function () {
+          confirmBox(t('of_remove_q'), t('of_remove_help'), t('of_remove'), true).then(function (yes) {
+            if (yes) send('OJ_OFFLINE_REMOVE', { playlistId: id });
+          });
+        } }, t('of_remove')) : null),
+      mine && busy ? h('div', { role: 'status', 'data-k': 'offline-progress' },
+        h('p', null, t('of_busy') + ' · ' + (job.completed || 0) + '/' + (job.total || '…')),
+        h('progress', { max: Math.max(1, Number(job.total) || 1), value: Number(job.completed) || 0, 'aria-label': t('of_busy') })) : null,
+      mine && /^(error|interrupted)$/.test(job.phase || '') ? h('p', { class: 'banner', role: 'alert' },
+        t(job.error === 'storage_full' ? 'of_space' : 'of_error')) : null,
+      ready ? h('p', { class: 'small', 'data-k': 'offline-ready' }, t('of_ready') + ' · ' + tracks.length + ' · ' + offlineBytes(snap.bytes)) : null,
+      h('p', { class: 'small muted' }, t('of_storage') + ': ' + offlineBytes(storage.used_bytes) + ' / ' + offlineBytes(storage.quota_bytes)),
+      h('h3', null, t('of_songs')),
+      tracks.length ? h('ol', { class: 'tracks', 'data-k': 'offline-tracks' }, tracks.map(function (track, index) {
+        return h('li', { class: 'row', style: 'padding:8px 0' },
+          h('span', { class: 'grow' }, h('span', null, track.name || '—'),
+            h('span', { class: 'small muted', style: 'display:block' }, arr(track.artists).join(', '))),
+          h('span', { class: 'small muted' }, fmtTime((track.duration_ms || 0) / 1000)),
+          ready ? h('button', { class: 'icon-btn', disabled: busy, 'aria-label': t('of_play') + ': ' + (track.name || ''), onclick: function () {
+            send('OJ_OFFLINE_PLAY', { playlistId: id, trackIndex: index + 1 });
+          } }, icon('play')) : null);
+      })) : h('p', { class: 'small muted' }, t('of_empty')));
+  }
   /* drag & drop reorder (mouse + touch through pointer events) */
   var drag = null;
   function startDrag(e, playlistId) {

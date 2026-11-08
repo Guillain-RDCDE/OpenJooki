@@ -27,20 +27,23 @@ Other tracked, staged or untracked source changes cause an error. Use another
 `--work-dir` rather than overwriting a modified checkout. All generated files
 are under ignored `build/spotify-offline/trial/` by default.
 
-The native profile applies:
+The native profile applies `player.patch`, combining:
 
-- `auth-redirect.patch`: the registered ncspot callback is now
-  `http://127.0.0.1:8989/ncspot_login`. It is selected for both the default Web
-  API client and the fallback, while the streaming client keeps `/login`.
-  This incorporates [upstream's callback correction](https://github.com/aome510/spotify-player/pull/1108)
-  and also fixes the default-client branch.
-- `bounded-audio.patch`: spool downloads to private temporary files, hash in
-  8 KiB chunks, and decode through seekable file regions instead of several
-  complete in-memory copies. AES positions are relative to the encrypted
-  payload; the decoder sees the Vorbis stream after its 167-byte prefix.
-  `downloads probe URI` checks checksums, initial decoding, seek to the middle
-  and return to the start without opening an audio device. The patch also adds
-  timed headless playback and updates the fork's own documentation.
+- The registered ncspot callback correction to `/ncspot_login` in both Web API
+  branches; the streaming callback remains `/login`.
+- Bounded audio I/O: SD spooling, 8 KiB checksum buffers and seekable encrypted
+  file regions, plus decoding/seek probes and timed headless playback.
+- The Unix `downloads managed` interface: exact ordered playlists, private
+  account namespaces, immutable verified generations, quota checks, atomic
+  progress/catalog files, resumable sync and acknowledged playback controls.
+- The fork's own documentation and seven transaction tests. Synchronization
+  refreshes cached authentication without opening a browser. Missing or
+  unsupported playlist entries fail the sync rather than silently disappearing.
+
+The MIPS build applies the TLS overlay **after** this patch. Profile checks compose
+patches through a temporary Git index, including overlapping Cargo edits and new
+files. `python3 tools/spotify-offline/test_profiles.py` verifies the guards without
+network or an account. Source changes outside the reviewed profiles are refused.
 
 ## Download and verify a playlist
 
@@ -143,3 +146,44 @@ generations, account separation/invalidation, storage limits and UI/status
 integration. The fork downloads Ogg Vorbis music tracks, without a podcast or
 lossless offline path. The original proprietary-SDK findings remain in the
 [Spotify offline audit](../../docs/32-spotify-offline-audit.md).
+
+
+## Application test package
+
+The integrated candidate adds an opt-in web card with **Download for offline use**,
+track progress, SD usage, ordered song lists and per-song playback. Modes are
+**Online** (the original controller), **Automatic** (the last complete snapshot,
+otherwise original online playback), and **Offline copy only**. Figure starts and
+normal playback controls route to the optional backend. The original mode keeps
+its existing account/Free behavior; this new backend requires Premium.
+
+```sh
+python3 tools/spotify-offline/mips.py
+python3 tools/spotify-offline/package.py
+python3 tools/spotify-offline/install.py \
+  build/spotify-offline/test-version/openjooki-2.4.21-offline.1.tar.gz \
+  --host DEVICE_IP --known-hosts /path/to/known_hosts
+```
+
+The last command is read-only: it checks every package checksum and the installed
+OpenJooki 2.4.21/partition layout. Explicit `--apply` installs through the existing
+A/B path and reboots. `--auth-cache /private/sdk/cache` optionally provisions the
+separate already-authenticated SDK account; no browser pairing flow is included
+in this test candidate. No credentials, music, keys or device backups are in the
+archive. Keep any locally generated `private-backups/` private.
+
+The SDK lives on the SD card at `/jooki/external/openjooki-offline`; an opt-in flag
+`/data/openjooki/spotify-offline-enabled` enables it at startup. Installation keeps
+the vendor daemon/binary and original presets. The saved install state contains
+the previous A/B partition and SDK selection. Review or apply rollback with:
+
+```sh
+python3 tools/spotify-offline/install.py --host DEVICE_IP \
+  --known-hosts /path/to/known_hosts --rollback --state /private/install-state.json
+# Add --apply to perform that rollback and reboot.
+```
+
+The package is an **experimental application candidate**, not a replacement
+kernel/bootloader image or a finished release. Cold offline reboot and physical
+figure acceptance still need to pass. The implementation and exact validation
+boundary are in [docs/34](../../docs/34-spotify-offline-test.md).

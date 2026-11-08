@@ -231,7 +231,7 @@ def ab_clone(host):
     if szs.get("mmcblk0p2")!=szs.get("mmcblk0p3"): log("Safety: p2/p3 sizes !=, aborting."); return 1
     cur=ssh(host,"cat /etc/mender/artifact_info").stdout.strip()
     log("Clone %s -> %s (dd on the card, ~1-2 min)..."%(act,spa))
-    out=ssh(host,"sync; dd if=%s of=%s bs=4M 2>&1; sync; echo RC=$?"%(act,spa),timeout=300).stdout
+    out=ssh(host,"sync; if dd if=%s of=%s bs=4M 2>&1; then sync; echo RC=0; else echo RC=1; exit 1; fi"%(act,spa),timeout=300).stdout
     if "RC=0" not in out: log("dd failed (boot unchanged): %s"%out[-200:]); return 1
     chk=ssh(host,"mkdir -p /mnt/spchk; mount -o ro %s /mnt/spchk 2>&1 && { echo MOUNT_OK; ls /mnt/spchk/boot/uImage; echo ART=$(cat /mnt/spchk/etc/mender/artifact_info); }; umount /mnt/spchk 2>&1"%spa).stdout
     ok=("MOUNT_OK" in chk) and ("uImage" in chk) and (cur.split("=")[-1] in chk)
@@ -443,7 +443,8 @@ def load_core(path):
        original program (XOR + zlib), checked here before anything is written. Since ADR-0011
        this is the LOADER; the real core is delivered separately (see core_side_files)."""
     import playerlib as L
-    lib = open(path, "rb").read()
+    with open(path, "rb") as source:
+        lib = source.read()
     try: src = L.decode(lib)
     except Exception as e: raise RuntimeError("not a player.lib: %s" % e)
     if "_OPENJOOKI_CORE=" not in src[:300]: raise RuntimeError("%s is not an OpenJooki 2.0 core" % path)
@@ -456,13 +457,15 @@ def core_side_files(path):
        loader carries that file's exact byte length, so a stale build is caught here before install.
        A legacy single-file player.lib returns {} (nothing extra)."""
     import playerlib as L
-    src = L.decode(open(path, "rb").read())
+    with open(path, "rb") as source:
+        src = L.decode(source.read())
     if "_OPENJOOKI_LOADER" not in src[:400]:
         return {}
     core_path = os.path.join(os.path.dirname(os.path.abspath(path)), "core.min.lua")
     if not os.path.exists(core_path):
         raise RuntimeError("loader player.lib but no core.min.lua next to it (%s)" % core_path)
-    data = open(core_path, "rb").read()
+    with open(core_path, "rb") as source:
+        data = source.read()
     m = re.search(r"local EXPECT=(\d+)", src)
     if m and int(m.group(1)) != len(data):
         raise RuntimeError("core.min.lua is %d B but the loader expects %d B (stale build?)"

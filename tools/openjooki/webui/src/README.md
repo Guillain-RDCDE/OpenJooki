@@ -2,7 +2,7 @@
 
 `app.js`, the file the Jooki serves, is these files put end to end by `../build.py`, in name
 order, inside one closure. Nothing is transformed: no bundler, no minifier, no module system.
-The shared bundle stays a single file for the device. CI allows 288 KiB for four languages
+The shared bundle stays a single file for the device. CI allows 296 KiB for four languages
 (previously 256 KiB for three); the CSS cap stays at 64 KiB. Edit here, then:
 
 ```sh

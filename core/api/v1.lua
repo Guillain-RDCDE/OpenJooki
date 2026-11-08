@@ -20,6 +20,8 @@ if not has_streaming then
   local off = function() return nil, { code = "unavailable", field = "", message = "streaming not built in" } end
   streaming = { on_new_spotify_playlist = off, on_deezer_get_playlists = off, on_deezer_set_cfg = off, on_forget_account = off }
 end
+local has_offline, offline = pcall(require, "services.spotify_offline")
+if not has_offline then offline = {} end
 local v1 = {}
 
 v1.TOPIC_STATE, v1.TOPIC_ERROR = "/j/web/output/state", "/j/web/output/error"
@@ -74,18 +76,19 @@ function PARTS.bluetooth(doc) return doc.bluetooth or {} end
 function PARTS.maintenance(doc) return doc.maintenance or {} end
 -- the Jooki's Spotify account and what it plays (services.streaming): the page's Spotify settings follow it
 function PARTS.spotify(doc) return doc.spotify or { active = false } end
+function PARTS.spotifyOffline(doc) return doc.spotify_offline or {} end
 
 function v1.state(doc)
   return { userMessages = PARTS.userMessages(doc), nfc = PARTS.nfc(doc), audio = PARTS.audio(doc), wifi = PARTS.wifi(doc),
            bt = (doc.bluetooth and doc.bluetooth.connected_mac) or "", bluetooth = PARTS.bluetooth(doc), power = PARTS.power(doc),
-           mender = {}, spotify = PARTS.spotify(doc), deezer = doc.deezer or {}, device = PARTS.device(doc),
+           mender = {}, spotifyOffline = PARTS.spotifyOffline(doc), spotify = PARTS.spotify(doc), deezer = doc.deezer or {}, device = PARTS.device(doc),
            jplay = {}, db = PARTS.db(doc), bedtime = PARTS.bedtime(doc), net = doc.net, maintenance = PARTS.maintenance(doc) }
 end
 
 -- which 1.x sub-trees change when one of our keys changes
 local MAP = { library = { "db" }, playback = { "audio" }, resume = { "bedtime" }, audiocfg = { "audio" }, device = { "device" }, flags = { "device" },
               health = { "device" }, nfc = { "nfc" }, power = { "power" }, net = { "wifi", "net", "device" }, userMessages = { "userMessages" },
-              bedtime = { "bedtime" }, bluetooth = { "bluetooth" }, maintenance = { "maintenance" }, spotify = { "spotify" } }
+              bedtime = { "bedtime" }, bluetooth = { "bluetooth" }, maintenance = { "maintenance" }, spotify = { "spotify" }, spotify_offline = { "spotifyOffline" } }
 
 --- Partial publish for the keys that changed (nil when none of them is visible in v1).
 --- Contract kept from 1.x: a message carrying BOTH `db` and `device` means "an
@@ -248,6 +251,12 @@ H.OJ_PARTY = function(doc) return device.on_party(doc) end
 H.OJ_BT_SCAN = function(doc) return bluetooth.on_scan(doc) end
 H.OJ_BT_CONNECT = function(doc, p) return bluetooth.on_connect(doc, p) end
 H.OJ_BT_FORGET = function(doc, p) return bluetooth.on_forget(doc, p) end
+H.OJ_OFFLINE_PLAY = function(doc, p, ev) return offline.on_play(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now }) end
+H.OJ_OFFLINE_SYNC = function(doc, p, ev) return offline.on_sync(doc, { playlist = p.playlistId, now = ev.now }) end
+H.OJ_OFFLINE_REMOVE = function(doc, p) return offline.on_remove(doc, { playlist = p.playlistId }) end
+H.OJ_OFFLINE_MODE = function(doc, p) return offline.on_mode(doc, { playlist = p.playlistId, mode = p.mode }) end
+H.OJ_OFFLINE_FORGET = function(doc) return offline.on_forget(doc) end
+
 -- security switches (docs/adr/0007)
 H.OJ_SSH_ON = function(doc, _, ev) return security.on_ssh(doc, { on = true, wall = ev.wall }) end
 H.OJ_SSH_OFF = function(doc) return security.on_ssh(doc, { on = false }) end
@@ -269,6 +278,7 @@ local PROTECTED = {
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,
   OJ_BT_CONNECT = true, OJ_BT_FORGET = true, OJ_SPOTIFY_FORGET = true,
+  OJ_OFFLINE_SYNC = true, OJ_OFFLINE_REMOVE = true, OJ_OFFLINE_MODE = true, OJ_OFFLINE_FORGET = true,
 }
 v1.PROTECTED = PROTECTED
 

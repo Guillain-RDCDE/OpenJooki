@@ -7,6 +7,7 @@
     S.db.tracks = obj(S.db.tracks);
     S.db.tokens = obj(S.db.tokens);
     delete S.db.tokens._;
+    S.spotifyOffline = obj(S.spotifyOffline);
     S.audio = obj(S.audio);
     S.audio.config = obj(S.audio.config);
     S.audio.playback = obj(S.audio.playback);

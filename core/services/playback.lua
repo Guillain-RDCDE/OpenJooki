@@ -20,6 +20,7 @@ local util = require("services.util")
 local sounds = require("services.playback.sounds")
 local resume_rules = require("services.playback.resume")
 local queue = require("services.playback.queue")
+local has_offline, offline = pcall(require, "services.spotify_offline")
 local playback = {}
 
 local MUSIC, SOUND = 7, 3
@@ -81,6 +82,23 @@ local function start(doc, pb, playlist_id, opts)
   local lib = doc.library or { playlists = {}, tracks = {} }
   local p = lib.playlists[playlist_id]
   if not p then return nil, { code = "not_found", field = "playlist", message = "unknown playlist" } end
+  if has_offline and offline.wants(doc, playlist_id) then
+    local r, e = offline.start(doc, playlist_id, p, opts)
+    if not r then return nil, e end
+    local cmds = {}
+    if pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER") then
+      for _, c in ipairs(require("services.streaming").transport(pb.now.service, "stop")) do cmds[#cmds + 1] = c end
+    elseif pb.now and pb.now.service ~= offline.SERVICE and (pb.state == "playing" or pb.state == "starting" or pb.state == "paused") then
+      cmds[#cmds + 1] = cmd_audio("stop", MUSIC)
+    end
+    for _, c in ipairs(r.commands) do cmds[#cmds + 1] = c end
+    pb.now, pb.state, pb.position_ms, pb.resume_ms = r.now, "starting", 0, nil
+    pb.paused_by, pb.paused_at = nil, nil
+    for k, v in pairs(st(pb)) do r.state[k] = v end
+    cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
+    r.now, r.commands = nil, cmds
+    return r
+  end
   local has_streaming, streaming = pcall(require, "services.streaming")
   local svc = has_streaming and streaming.service_of(p)
   if svc then
@@ -203,6 +221,7 @@ function playback.on_request(doc, ev)
   return r
 end
 
+local function is_offline(pb) return has_offline and pb.now and pb.now.service == offline.SERVICE end
 local function is_streaming(pb) return pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER") end
 local function stream_cmds(pb, action, arg) return { commands = require("services.streaming").transport(pb.now.service, action, arg) } end
 
@@ -234,6 +253,13 @@ end
 function playback.on_pause(doc, ev)
   local pb = pb_of(doc)
   if not is_playing(doc) then return nil end
+  if is_offline(pb) then
+    local r, e = offline.transport(doc, "pause")
+    if not r then return nil, e end
+    pb.paused_by, pb.paused_at = ev.source, ev.now
+    for k, v in pairs(st(pb)) do r.state[k] = v end
+    return r
+  end
   if is_streaming(pb) then
     -- taking a token off pauses what a token started, not Spotify started from the phone
     if ev.source == "token" and not pb.now.playlist then return nil end
@@ -253,6 +279,7 @@ end
 
 function playback.on_resume(doc, ev)
   local pb = pb_of(doc)
+  if pb.state == "paused" and is_offline(pb) then return offline.transport(doc, "resume") end
   if pb.state == "paused" and is_streaming(pb) then return stream_cmds(pb, "resume") end
   -- Spotify started from the phone has no playlist of ours: "play" asks the daemon to continue
   if is_streaming(pb) and not pb.now.playlist and pb.state ~= "playing" then return stream_cmds(pb, "resume") end
@@ -290,12 +317,14 @@ end
 
 function playback.on_next(doc, ev)
   local pb = pb_of(doc)
+  if is_offline(pb) then return offline.transport(doc, "next") end
   if is_streaming(pb) then return stream_cmds(pb, "next") end
   return step(doc, pb, 1, ev)
 end
 
 function playback.on_prev(doc, ev)
   local pb = pb_of(doc)
+  if is_offline(pb) then return offline.transport(doc, "prev") end
   if not pb.now then return nil end
   if is_streaming(pb) then return stream_cmds(pb, "prev") end
   if not ev.forced and not is_playing(doc) then return nil end
@@ -310,6 +339,7 @@ function playback.on_seek(doc, ev)
   local pb = pb_of(doc)
   if not pb.now or pb.now.service == "STREAM" then return nil end
   local ms = math.max(1, math.floor(tonumber(ev.ms) or 1))
+  if is_offline(pb) then return offline.transport(doc, "seek", ms) end
   if is_streaming(pb) then return stream_cmds(pb, "seek", ms) end
   pb.position_ms = ms
   return { state = st(pb), commands = { cmd_audio("seek", MUSIC, ms) } }
@@ -318,6 +348,7 @@ end
 function playback.on_skip(doc, ev)
   local pb = pb_of(doc)
   if not pb.now or pb.now.service == "STREAM" then return nil end
+  if is_offline(pb) then return offline.transport(doc, "skip", math.floor(tonumber(ev.seconds) or 0)) end
   if is_streaming(pb) then return stream_cmds(pb, "skip", math.floor(tonumber(ev.seconds) or 0)) end
   return { commands = { cmd_audio("skip_sec", MUSIC, math.floor(tonumber(ev.seconds) or 0)) } }
 end
@@ -325,6 +356,12 @@ end
 function playback.on_stop(doc)
   local pb = pb_of(doc)
   if pb.state == "idle" then return nil end
+  if is_offline(pb) then
+    local r, e = offline.transport(doc, "stop")
+    if not r then return nil, e end
+    for k, v in pairs(st(pb)) do r.state[k] = v end
+    return r
+  end
   if is_streaming(pb) then return stream_cmds(pb, "stop") end
   return { state = st(pb), commands = { cmd_audio("stop", MUSIC) } }
 end

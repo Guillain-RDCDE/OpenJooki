@@ -1,5 +1,5 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 37ed57a..26c1625 100644
+index e719bf6..54e8f22 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -2285 +2285 @@ dependencies = [
@@ -217,17 +217,18 @@ index 37ed57a..26c1625 100644
 + "security-framework-sys",
 +]
 +
-@@ -5754 +5924 @@ dependencies = [
+@@ -5754 +5923,0 @@ dependencies = [
 - "rustls",
+@@ -5755,0 +5925 @@ dependencies = [
 + "rustls 0.23.44",
-@@ -6297,0 +6468,6 @@ dependencies = [
+@@ -6298,0 +6469,6 @@ dependencies = [
 +[[package]]
 +name = "tinyvec"
 +version = "1.13.3"
 +source = "registry+https://github.com/rust-lang/crates.io-index"
 +checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
 +
-@@ -6333,0 +6510,11 @@ dependencies = [
+@@ -6334,0 +6511,11 @@ dependencies = [
 +[[package]]
 +name = "tokio-rustls"
 +version = "0.25.0"
@@ -239,24 +240,24 @@ index 37ed57a..26c1625 100644
 + "tokio",
 +]
 +
-@@ -6340 +6527 @@ dependencies = [
+@@ -6341 +6528 @@ dependencies = [
 - "rustls",
 + "rustls 0.23.44",
-@@ -6363 +6550,2 @@ dependencies = [
+@@ -6364 +6551,2 @@ dependencies = [
 - "native-tls",
 + "rustls 0.23.44",
 + "rustls-pki-types",
-@@ -6365 +6553 @@ dependencies = [
+@@ -6366 +6554 @@ dependencies = [
 - "tokio-native-tls",
 + "tokio-rustls 0.26.5",
-@@ -6366,0 +6555 @@ dependencies = [
+@@ -6367,0 +6556 @@ dependencies = [
 + "webpki-roots 0.26.11",
-@@ -6582 +6770,0 @@ dependencies = [
+@@ -6583 +6771,0 @@ dependencies = [
 - "native-tls",
-@@ -6583,0 +6772,2 @@ dependencies = [
+@@ -6584,0 +6773,2 @@ dependencies = [
 + "rustls 0.23.44",
 + "rustls-pki-types",
-@@ -7012,0 +7203,28 @@ dependencies = [
+@@ -7013,0 +7204,28 @@ dependencies = [
 +[[package]]
 +name = "webpki"
 +version = "0.22.4"
@@ -286,10 +287,10 @@ index 37ed57a..26c1625 100644
 +]
 +
 diff --git a/spotify_player/Cargo.toml b/spotify_player/Cargo.toml
-index e3ebeae..190dcf6 100644
+index 342f3b1..c2e4a0c 100644
 --- a/spotify_player/Cargo.toml
 +++ b/spotify_player/Cargo.toml
-@@ -18,5 +18,5 @@ dirs-next = "2.0.0"
+@@ -19,5 +19,5 @@ dirs-next = "2.0.0"
 -librespot-connect = { version = "0.8.0", optional = true }
 -librespot-core = { version = "0.8.0" }
 -librespot-playback = {version = "0.8.0", optional = true, default-features = false, features = ["native-tls"]}
@@ -300,9 +301,9 @@ index e3ebeae..190dcf6 100644
 +librespot-playback = {version = "0.8.0", optional = true, default-features = false, features = ["rustls-tls-webpki-roots"]}
 +librespot-metadata = { version = "0.8.0", default-features = false, features = ["rustls-tls-webpki-roots"] }
 +librespot-audio = { version = "0.8.0", optional = true, default-features = false, features = ["rustls-tls-webpki-roots"] }
-@@ -30 +30 @@ reqwest-middleware = "0.4.2"
+@@ -31 +31 @@ reqwest-middleware = "0.4.2"
 -rspotify = {version = "0.16.1", features = ["cli", "reqwest-middleware"] }
 +rspotify = {version = "0.16.1", default-features = false, features = ["cli", "reqwest-middleware", "client-reqwest", "reqwest-rustls-tls"] }
-@@ -118 +118 @@ fzf = ["fuzzy-matcher"]
+@@ -119 +119 @@ fzf = ["fuzzy-matcher"]
 -rustls-tls = ["reqwest/default-tls"]
 +rustls-tls = ["reqwest/rustls-tls-webpki-roots"]

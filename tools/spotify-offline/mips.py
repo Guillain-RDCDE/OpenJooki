@@ -12,7 +12,7 @@ from pathlib import Path
 import trial
 
 HERE = Path(__file__).resolve().parent
-PATCHES = (HERE / "mips-tls.patch",) + trial.PATCHES
+PATCHES = trial.PATCHES + (HERE / "mips-tls.patch",)
 TARGET = "mipsel-jooki-linux-musl"
 
 

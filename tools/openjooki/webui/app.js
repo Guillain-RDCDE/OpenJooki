@@ -3029,8 +3029,10 @@
         d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
-      c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
+      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sGroup(t('s_night_trip'), [
         c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
+        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+          onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
         d.airplane !== undefined ? sRow({ icon: 'plane', color: 'orange', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
       sGroup(t('s_general'), [
@@ -3347,11 +3349,7 @@
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
     var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
-    var allLights = typeof cfg.lights_off === 'boolean' ? sGroup(null, [
-      sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
-        onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } })
-    ]) : [];
-    if (!c.enabled) return out.concat(allLights);
+    if (!c.enabled) return out;
     out.push(sGroup(t('s_night_hours'), [
       sRow({ k: 'nightstatus', label: S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start))) }),
       h('div', { class: 'timepair' },
@@ -3374,7 +3372,7 @@
       sRow({ label: t('night_dim'), sub: t('night_dim_help'), sw: true, on: c.dim, k: 'nightdim',
         disabled: c.lights_off || cfg.lights_off, onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
-    return out.concat(allLights);
+    return out;
   }
   /* sort a playlist by one criterion; web radios keep their relative order at the end */
   var SORT_KEYS = ['name', 'title', 'artist', 'album', 'duration'];

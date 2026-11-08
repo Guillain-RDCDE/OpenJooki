@@ -1,20 +1,19 @@
 # Turn off every device light
 
-Settings → Night mode has two independent switches for the ring, side lights and
-heart:
+Settings offers two independent switches for the ring, side lights and heart:
 
-- **Turn off all lights at night** applies only while night mode is enabled and
+- **Settings → Night mode → Turn off all lights at night** applies only while night mode is enabled and
   the current time is within its scheduled hours. The lights return to their
   current status at the end of the window, or immediately if night mode is
   disabled. This boolean `lights_off` is stored in `bedtime.json` and exposed as
   `bedtime.cfg.lights_off`, false by default. Use `OJ_BEDTIME_SET` or `bedtime.set`.
-- **Turn off all lights permanently** applies all day, even with night mode
+- **Settings → Turn off all lights permanently** applies all day, even with night mode
   disabled. It takes precedence over the schedule. This boolean `lights_off` is
   stored in `audiocfg.json`, false by default. Use `SET_CFG` or `device.set_config`.
 
 Both preferences survive a restart and retain the existing parent-code protection.
-Invalid types are rejected before any write. The permanent switch remains visible
-when night mode is disabled; the timed switch belongs to the enabled night
+Invalid types are rejected before any write. The permanent switch is in the main
+settings, including when night mode is disabled; the timed switch belongs to the enabled night
 settings. Dimming is disabled while either darkness preference is selected, but
 its saved value is retained for when the lights are on again. The night-volume
 slider and sleep timer remain independent.
@@ -45,7 +44,7 @@ colours, both night-window boundaries, boot-time darkness, disabled schedules an
 the permanent override. `tools/openjooki/tests/test_lights_off.py` runs the real core and browser
 with an answering controller, including confirmation without retries, persistence
 after a core restart, separate scheduled and permanent switches, saved dimming,
-and switching from the night settings with the schedule disabled. Controller simulation does not establish visible behaviour;
+and switching from the main settings with the schedule disabled. Controller simulation does not establish visible behaviour;
 verify the result on a physical Jooki.
 
 On a Jooki 2 running OpenJooki 2.4.21, controller read-back confirmed scheduled

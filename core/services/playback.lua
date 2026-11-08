@@ -125,10 +125,11 @@ local function start(doc, pb, playlist_id, opts)
       -- an audiobook follows its saved position only; without one it starts at chapter 1 (1.3 rule)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
-    elseif (modes(doc, p)) and n > 1 and not (pb.now and pb.now.playlist == playlist_id) then
-      -- shuffle, and another playlist than the one on: a new order, from its first song (#22; 1.x
-      -- restarted the last song played, shuffle or not). Put back on, the same token goes on.
-      pb.seed = ((pb.seed or 0) * 1103515245 + 12345 + math.floor(tonumber(opts.now_s) or 0)) % 2147483648
+    elseif (modes(doc, p)) and n > 1 and
+           (not (pb.now and pb.now.playlist == playlist_id) or opts.restart or pb.state == "idle" or pb.state == "ended") then
+      -- A fresh shuffled start draws a new order and starts with its first song.
+      -- Putting back a paused token continues its existing song and order.
+      pb.seed = queue.next_seed(pb.seed, math.floor((tonumber(opts.now_s) or 0) * 1000))
       pb.shuffle[playlist_id] = nil
       q = queue_for(doc, pb, playlist_id, p)
       queue_pos, index = 1, q[1]
@@ -449,9 +450,9 @@ end
 --- Boot: an idle machine and the shuffle seed. (resume.json and the save timer are
 --- services.playback.resume's boot, the sound catalogue services.playback.sounds'.)
 function playback.on_boot(_, ev)
-  -- the shuffle seed: the clock at boot, so that two starts (or two playlists of the same length)
-  -- do not play in the same "random" order
-  local seed = math.floor(tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483648
+  -- OS entropy supplied by main.lua works before the network sets the clock;
+  -- clock values remain a fallback for callers without an entropy source.
+  local seed = math.floor(tonumber(ev.seed) or tonumber(ev.wall) or tonumber(ev.now) or 0) % 2147483647
   return { state = { playback = { state = "idle" }, playback_int = { last = {}, shuffle = {}, seed = seed } } }
 end
 

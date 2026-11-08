@@ -1,0 +1,380 @@
+diff --git a/.gitmodules b/.gitmodules
+index 49edc68..80cf303 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -5,7 +5,7 @@
+ 
+ [submodule "components/esptool_py/esptool"]
+ 	path = components/esptool_py/esptool
+-	url = ../../espressif/esptool.git
++	url = https://github.com/espressif/esptool.git
+ 
+ [submodule "components/bt/controller/lib_esp32"]
+ 	path = components/bt/controller/lib_esp32
+@@ -110,3 +110,7 @@
+ [submodule "components/ieee802154/lib"]
+ 	path = components/ieee802154/lib
+ 	url = ../../espressif/esp-ieee802154-lib.git
++
++[submodule "components/esp-dsp"]
++	path = components/esp-dsp
++	url = https://github.com/espressif/esp-dsp.git
+diff --git a/components/bt/common/btc/core/btc_task.c b/components/bt/common/btc/core/btc_task.c
+index 9e2de57..f0fdcee 100644
+--- a/components/bt/common/btc/core/btc_task.c
++++ b/components/bt/common/btc/core/btc_task.c
+@@ -77,7 +77,7 @@
+ #include "btc_ble_mesh_time_scene_model.h"
+ #endif /* #if CONFIG_BLE_MESH */
+ 
+-#define BTC_TASK_PINNED_TO_CORE         (TASK_PINNED_TO_CORE)
++#define BTC_TASK_PINNED_TO_CORE         (1-TASK_PINNED_TO_CORE)
+ #define BTC_TASK_STACK_SIZE             (BT_BTC_TASK_STACK_SIZE + BT_TASK_EXTRA_STACK_SIZE)	//by menuconfig
+ #define BTC_TASK_NAME                   "BTC_TASK"
+ #define BTC_TASK_PRIO                   (BT_TASK_MAX_PRIORITIES - 6)
+diff --git a/components/bt/host/bluedroid/api/include/api/esp_a2dp_api.h b/components/bt/host/bluedroid/api/include/api/esp_a2dp_api.h
+index e45af93..c2920f4 100644
+--- a/components/bt/host/bluedroid/api/include/api/esp_a2dp_api.h
++++ b/components/bt/host/bluedroid/api/include/api/esp_a2dp_api.h
+@@ -52,7 +52,8 @@ typedef enum {
+     ESP_A2D_CONNECTION_STATE_DISCONNECTED = 0, /*!< connection released  */
+     ESP_A2D_CONNECTION_STATE_CONNECTING,       /*!< connecting remote device */
+     ESP_A2D_CONNECTION_STATE_CONNECTED,        /*!< connection established */
+-    ESP_A2D_CONNECTION_STATE_DISCONNECTING     /*!< disconnecting remote device */
++    ESP_A2D_CONNECTION_STATE_DISCONNECTING,     /*!< disconnecting remote device */
++    ESP_A2D_CONNECTION_STATE_REQUEST          /*!< an audio peer tried to connect */
+ } esp_a2d_connection_state_t;
+ 
+ /// Bluetooth A2DP disconnection reason
+diff --git a/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_control.c b/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_control.c
+index 814b408..24f3027 100644
+--- a/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_control.c
++++ b/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_control.c
+@@ -64,6 +64,7 @@ void btc_a2dp_control_command_ack(int status)
+     a2dp_cmd_acknowledge(cmd, status);
+ }
+ 
++extern void ___btc_a2dp_source_aa_start_tx(void);
+ static void btc_a2dp_datapath_open(void)
+ {
+ #if BTC_AV_SRC_INCLUDED
+@@ -73,6 +74,8 @@ static void btc_a2dp_datapath_open(void)
+ 
+         /* make sure we update any changed sbc encoder params */
+         btc_a2dp_source_encoder_update();
++
++        ___btc_a2dp_source_aa_start_tx();
+     }
+ #endif
+ #if (BTC_AV_SINK_INCLUDED == TRUE)
+diff --git a/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_source.c b/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_source.c
+index 7c24426..e71eadb 100644
+--- a/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_source.c
++++ b/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_a2dp_source.c
+@@ -67,11 +67,11 @@ enum {
+ 
+ /* Media task tick in milliseconds, must be set to multiple of
+    (1000/TICKS_PER_SEC) */
+-#define BTC_MEDIA_TIME_TICK_MS                 (30)
++#define BTC_MEDIA_TIME_TICK_MS                 (20)
+ #define A2DP_DATA_READ_POLL_MS                 (BTC_MEDIA_TIME_TICK_MS / 2)
+ 
+ #ifndef MAX_PCM_FRAME_NUM_PER_TICK
+-#define MAX_PCM_FRAME_NUM_PER_TICK             21 // 14 for 20ms
++#define MAX_PCM_FRAME_NUM_PER_TICK             14 // 14 for 20ms
+ #endif
+ 
+ #define BTC_MEDIA_AA_BUF_SIZE                  (4096+16)
+@@ -153,7 +153,11 @@ typedef struct {
+     tBTC_AV_MEDIA_FEEDINGS_STATE media_feeding_state;
+     tBTC_AV_MEDIA_FEEDINGS media_feeding;
+     SBC_ENC_PARAMS encoder;
++#ifdef OSI_ALARM
+     osi_alarm_t *media_alarm;
++#else
++    esp_timer_handle_t media_alarm;
++#endif
+     struct osi_event *poll_data;
+ } tBTC_A2DP_SOURCE_CB;
+ 
+@@ -1469,8 +1473,20 @@ static void btc_a2dp_source_aa_stop_tx(void)
+ 
+     /* Stop the timer first */
+     if (a2dp_source_local_param.btc_aa_src_cb.media_alarm) {
++#ifdef OSI_ALARM
+         osi_alarm_cancel(a2dp_source_local_param.btc_aa_src_cb.media_alarm);
+         osi_alarm_free(a2dp_source_local_param.btc_aa_src_cb.media_alarm);
++#else
++        esp_err_t stat = esp_timer_stop(a2dp_source_local_param.btc_aa_src_cb.media_alarm);
++        if (stat != ESP_OK) {
++            APPL_TRACE_ERROR("%s failed to stop timer, err 0x%x\n", __func__, stat);
++        }
++        stat = esp_timer_delete(a2dp_source_local_param.btc_aa_src_cb.media_alarm);
++        if (stat != ESP_OK) {
++            APPL_TRACE_ERROR("%s failed to delete timer, err 0x%x\n", __func__, stat);
++        }
++
++#endif
+     }
+     a2dp_source_local_param.btc_aa_src_cb.media_alarm = NULL;
+     a2dp_source_local_param.btc_aa_src_cb.is_tx_timer = FALSE;
+@@ -1527,11 +1543,13 @@ static void btc_a2dp_source_aa_start_tx(void)
+ 
+     /* Reset the media feeding state */
+     btc_a2dp_source_feeding_state_reset();
++}
+ 
+-    APPL_TRACE_EVENT("starting timer %dms", BTC_MEDIA_TIME_TICK_MS);
+-
++void ___btc_a2dp_source_aa_start_tx(void)
++{
++    APPL_TRACE_ERROR("starting timer %dms", BTC_MEDIA_TIME_TICK_MS);
+     assert(a2dp_source_local_param.btc_aa_src_cb.media_alarm == NULL);
+-
++#ifdef OSI_ALARM
+     a2dp_source_local_param.btc_aa_src_cb.media_alarm = osi_alarm_new("aaTx", btc_a2dp_source_alarm_cb, NULL, BTC_MEDIA_TIME_TICK_MS);
+ 
+     if (!a2dp_source_local_param.btc_aa_src_cb.media_alarm) {
+@@ -1540,6 +1558,24 @@ static void btc_a2dp_source_aa_start_tx(void)
+     }
+ 
+     osi_alarm_set_periodic(a2dp_source_local_param.btc_aa_src_cb.media_alarm, BTC_MEDIA_TIME_TICK_MS);
++#else
++    esp_timer_create_args_t tca = {0};
++    tca.callback = (esp_timer_cb_t)btc_a2dp_source_alarm_cb;
++    tca.arg = NULL;
++    tca.dispatch_method = ESP_TIMER_TASK;
++    tca.name = "aaTx";
++
++    esp_err_t stat = esp_timer_create(&tca, &a2dp_source_local_param.btc_aa_src_cb.media_alarm);
++    if (stat != ESP_OK) {
++        APPL_TRACE_ERROR("%s failed to create timer, err 0x%x\n", __func__, stat);
++        a2dp_source_local_param.btc_aa_src_cb.media_alarm = NULL;
++    } else {
++        stat = esp_timer_start_periodic(a2dp_source_local_param.btc_aa_src_cb.media_alarm, BTC_MEDIA_TIME_TICK_MS*1000ll);
++        if (stat != ESP_OK) {
++            APPL_TRACE_ERROR("%s failed to start timer, err 0x%x\n", __func__, stat);
++        }
++    }
++#endif
+ }
+ 
+ /*******************************************************************************
+diff --git a/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_av.c b/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_av.c
+index f198294..a27b898 100644
+--- a/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_av.c
++++ b/components/bt/host/bluedroid/btc/profile/std/a2dp/btc_av.c
+@@ -257,7 +257,7 @@ static void btc_initiate_av_open_tmr_hdlr(void *arg)
+ /*****************************************************************************
+ **  Static functions
+ ******************************************************************************/
+-static void btc_report_connection_state(esp_a2d_connection_state_t state, bt_bdaddr_t *bd_addr, int disc_rsn)
++void btc_report_connection_state(esp_a2d_connection_state_t state, bt_bdaddr_t *bd_addr, int disc_rsn)
+ {
+     // todo: add callback for SRC
+     esp_a2d_cb_param_t param;
+diff --git a/components/bt/host/bluedroid/stack/btm/btm_sec.c b/components/bt/host/bluedroid/stack/btm/btm_sec.c
+index c52d65a..e5ddae3 100644
+--- a/components/bt/host/bluedroid/stack/btm/btm_sec.c
++++ b/components/bt/host/bluedroid/stack/btm/btm_sec.c
+@@ -52,6 +52,14 @@
+ BOOLEAN (APPL_AUTH_WRITE_EXCEPTION)(BD_ADDR bd_addr);
+ #endif
+ 
++/* FIXME(xxx): g_btm_sec_flags is a horrendous hack using
++ * a global to control certain btm_sec behavior.
++ * This to avoid propagating this through the whole thread-safe API
++ * complication in bluedroid is.
++ * see bt/host/bluedroid/stack/btm/btm_sec.c:2684
++*/
++#define BTM_SEC_ALLOW_REMOTE_CONNECT_REQUEST_FLAG 1u
++uint32_t g_btm_sec_flags = 0;
+ 
+ /********************************************************************************
+ **              L O C A L    F U N C T I O N     P R O T O T Y P E S            *
+@@ -2617,6 +2625,7 @@ tBTM_STATUS btm_sec_mx_access_request (BD_ADDR bd_addr, UINT16 psm, BOOLEAN is_o
+ #endif  ///SMP_INCLUDED == TRUE
+ }
+ 
++#include "btc/btc_util.h"
+ /*******************************************************************************
+ **
+ ** Function         btm_sec_conn_req
+@@ -2628,9 +2637,15 @@ tBTM_STATUS btm_sec_mx_access_request (BD_ADDR bd_addr, UINT16 psm, BOOLEAN is_o
+ **
+ *******************************************************************************/
+ #if (SMP_INCLUDED == TRUE)
++#include "../../api/include/api/esp_a2dp_api.h"
++void btc_report_connection_state(esp_a2d_connection_state_t state, bt_bdaddr_t *bd_addr, int disc_rsn);
+ void btm_sec_conn_req (UINT8 *bda, UINT8 *dc)
+ {
+     tBTM_SEC_DEV_REC  *p_dev_rec = btm_find_dev (bda);
++    APPL_TRACE_ERROR ("btm_sec_conn_req from [%02x%02x%02x%02x%02x%02x], dc=%02X%02X%02X",
++                   bda[0], bda[1], bda[2],
++                   bda[3], bda[4], bda[5], dc[0], dc[1], dc[2]);
++
+     /* Some device may request a connection before we are done with the HCI_Reset sequence */
+     if (!controller_get_interface()->get_is_ready()) {
+         BTM_TRACE_ERROR ("Security Manager: connect request when device not ready\n");
+@@ -2671,11 +2686,42 @@ void btm_sec_conn_req (UINT8 *bda, UINT8 *dc)
+         return;
+     }
+ 
++    /* FIXME(xxx): g_btm_sec_flags is a horrendous hack using
++     * a global to control this behavior. This to avoid propagating this
++     * through the whole API mess that bluedroid is.
++    */
++    if((g_btm_sec_flags & BTM_SEC_ALLOW_REMOTE_CONNECT_REQUEST_FLAG) == 0) {
++        /* HACK(xxx)
++        *
++        * Prevent the connection in all cases.
++        *
++        * For audio devices, post an event to the upper layer to initiate
++        * allow it to set up a connection with the esp32 as master.
++        * This appears to fix compatibility issues with certain
++        * headsets / speakers.
++        */
++        if((dc[0] & 0x20) && dc[1] == 0x04 ) { /* audio device */
++            BTM_TRACE_ERROR ("reject connection request from audio device\n");
++            btsnd_hcic_reject_conn (bda, HCI_ERR_HOST_REJECT_DEVICE);
++            /* TODO(xxx): post event */
++            bt_bdaddr_t requested_addr;
++            memcpy(requested_addr.address, bda, sizeof(requested_addr.address));
++            btc_report_connection_state(ESP_A2D_CONNECTION_STATE_REQUEST, &requested_addr, 0);
++            return;
++        } else {
++            BTM_TRACE_ERROR ("reject connection request from non-audio device\n");
++            btsnd_hcic_reject_conn (bda, HCI_ERR_HOST_REJECT_DEVICE);
++            return;
++        }
++    }
++
++
+     /* Host is not interested or approved connection.  Save BDA and DC and */
+     /* pass request to L2CAP */
+     memcpy (btm_cb.connecting_bda, bda, BD_ADDR_LEN);
+     memcpy (btm_cb.connecting_dc,  dc,  DEV_CLASS_LEN);
+ 
++
+     if (l2c_link_hci_conn_req (bda)) {
+         if (!p_dev_rec) {
+             /* accept the connection -> allocate a device record */
+diff --git a/components/driver/sdio_slave.c b/components/driver/sdio_slave.c
+index d1d63f5..82ed42f 100644
+--- a/components/driver/sdio_slave.c
++++ b/components/driver/sdio_slave.c
+@@ -703,13 +703,13 @@ static void sdio_intr_recv(void *arg)
+     portBASE_TYPE yield = 0;
+     bool triggered = sdio_slave_hal_recv_done(context.hal);
+     while (triggered) {
++        int itm_cnt = 0;
+         portENTER_CRITICAL_ISR(&context.recv_spinlock);
+-        bool has_next_item = sdio_slave_hal_recv_has_next_item(context.hal);
++        while(sdio_slave_hal_recv_has_next_item(context.hal)) itm_cnt++;
+         portEXIT_CRITICAL_ISR(&context.recv_spinlock);
+-        if (has_next_item) {
++        while(itm_cnt--) {
+             ESP_EARLY_LOGV(TAG, "intr_recv: Give");
+             xSemaphoreGiveFromISR(context.recv_event, &yield);
+-            continue;   //check the linked list again skip the interrupt checking
+         }
+         // if no more items on the list, check the interrupt again,
+         // will loop until the interrupt bit is kept cleared.
+diff --git a/components/esp-dsp b/components/esp-dsp
+new file mode 160000
+index 0000000..6b25cbb
+--- /dev/null
++++ b/components/esp-dsp
+@@ -0,0 +1 @@
++Subproject commit 6b25cbb587d267607137fcfdf28ece9d4e15b980
+diff --git a/components/log/include/esp_log.h b/components/log/include/esp_log.h
+index 0e3148f..78407d3 100644
+--- a/components/log/include/esp_log.h
++++ b/components/log/include/esp_log.h
+@@ -290,7 +290,13 @@ void esp_log_writev(esp_log_level_t level, const char* tag, const char* format,
+ #define LOG_RESET_COLOR
+ #endif //CONFIG_LOG_COLORS
+ 
++#include "../../hal/esp32/include/hal/cpu_ll.h"
++#define portNUM_PROCESSORS 2
++typedef struct tskTaskControlBlock TCB_t;
++extern TCB_t * volatile pxCurrentTCB[portNUM_PROCESSORS];
++
+ #define LOG_FORMAT(letter, format)  LOG_COLOR_ ## letter #letter " (%u) %s: " format LOG_RESET_COLOR "\n"
++#define LOG_FORMAT_THREAD(letter, format)  LOG_COLOR_ ## letter #letter " (%u) [%u:%p] %s: " format LOG_RESET_COLOR "\n"
+ #define LOG_SYSTEM_TIME_FORMAT(letter, format)  LOG_COLOR_ ## letter #letter " (%s) %s: " format LOG_RESET_COLOR "\n"
+ 
+ /** @endcond */
+@@ -418,11 +424,11 @@ void esp_log_writev(esp_log_level_t level, const char* tag, const char* format,
+ #else // !(defined(__cplusplus) && (__cplusplus >  201703L))
+ #if CONFIG_LOG_TIMESTAMP_SOURCE_RTOS
+ #define ESP_LOG_LEVEL(level, tag, format, ...) do {                     \
+-        if (level==ESP_LOG_ERROR )          { esp_log_write(ESP_LOG_ERROR,      tag, LOG_FORMAT(E, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+-        else if (level==ESP_LOG_WARN )      { esp_log_write(ESP_LOG_WARN,       tag, LOG_FORMAT(W, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+-        else if (level==ESP_LOG_DEBUG )     { esp_log_write(ESP_LOG_DEBUG,      tag, LOG_FORMAT(D, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+-        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(ESP_LOG_VERBOSE,    tag, LOG_FORMAT(V, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
+-        else                                { esp_log_write(ESP_LOG_INFO,       tag, LOG_FORMAT(I, format), esp_log_timestamp(), tag, ##__VA_ARGS__); } \
++        if (level==ESP_LOG_ERROR )          { esp_log_write(ESP_LOG_ERROR,      tag, LOG_FORMAT_THREAD(E, format), esp_log_timestamp(), cpu_ll_get_core_id(), pxCurrentTCB[cpu_ll_get_core_id()], tag, ##__VA_ARGS__); } \
++        else if (level==ESP_LOG_WARN )      { esp_log_write(ESP_LOG_WARN,       tag, LOG_FORMAT_THREAD(W, format), esp_log_timestamp(), cpu_ll_get_core_id(), pxCurrentTCB[cpu_ll_get_core_id()], tag, ##__VA_ARGS__); } \
++        else if (level==ESP_LOG_DEBUG )     { esp_log_write(ESP_LOG_DEBUG,      tag, LOG_FORMAT_THREAD(D, format), esp_log_timestamp(), cpu_ll_get_core_id(), pxCurrentTCB[cpu_ll_get_core_id()], tag, ##__VA_ARGS__); } \
++        else if (level==ESP_LOG_VERBOSE )   { esp_log_write(ESP_LOG_VERBOSE,    tag, LOG_FORMAT_THREAD(V, format), esp_log_timestamp(), cpu_ll_get_core_id(), pxCurrentTCB[cpu_ll_get_core_id()], tag, ##__VA_ARGS__); } \
++        else                                { esp_log_write(ESP_LOG_INFO,       tag, LOG_FORMAT_THREAD(I, format), esp_log_timestamp(), cpu_ll_get_core_id(), pxCurrentTCB[cpu_ll_get_core_id()], tag, ##__VA_ARGS__); } \
+     } while(0)
+ #elif CONFIG_LOG_TIMESTAMP_SOURCE_SYSTEM
+ #define ESP_LOG_LEVEL(level, tag, format, ...) do {                     \
+diff --git a/components/wifi_provisioning/include/wifi_provisioning/wifi_config.h b/components/wifi_provisioning/include/wifi_provisioning/wifi_config.h
+index 95cb2d8..906e554 100644
+--- a/components/wifi_provisioning/include/wifi_provisioning/wifi_config.h
++++ b/components/wifi_provisioning/include/wifi_provisioning/wifi_config.h
+@@ -68,7 +68,7 @@ typedef struct {
+  */
+ typedef struct {
+     char    ssid[33];       /*!< SSID of the AP to which the slave is to be connected */
+-    char    password[64];   /*!< Password of the AP */
++    char    password[65];   /*!< Password of the AP */
+     char    bssid[6];       /*!< BSSID of the AP */
+     uint8_t channel;        /*!< Channel of the AP */
+ } wifi_prov_config_set_data_t;
+diff --git a/components/wifi_provisioning/src/handlers.c b/components/wifi_provisioning/src/handlers.c
+index a1b6dee..9c9883c 100644
+--- a/components/wifi_provisioning/src/handlers.c
++++ b/components/wifi_provisioning/src/handlers.c
+@@ -115,9 +115,16 @@ static esp_err_t set_config_handler(const wifi_prov_config_set_data_t *req_data,
+     memset(wifi_cfg->sta.ssid, 0, sizeof(wifi_cfg->sta.ssid));
+     memcpy(wifi_cfg->sta.ssid, req_data->ssid, ssid_len);
+ 
++    // If several access points advertise the same SSID, connect to the one having the
++    // best signal
++    wifi_cfg->sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
++    wifi_cfg->sta.sort_method = WIFI_CONNECT_AP_BY_SIGNAL;
++
+     /* Using strlcpy allows both max passphrase length (63 bytes) and ensures null termination
+-     * because size of wifi_cfg->sta.password is 64 bytes (1 extra byte for null character) */
+-    strlcpy((char *) wifi_cfg->sta.password, req_data->password, sizeof(wifi_cfg->sta.password));
++     * because size of wifi_cfg->sta.password is 64 bytes (1 extra byte for null character)
++     * UPDATE(pp): a 64-byte PSK should also be supported, so strncpy is the right thing to use here.
++     *             wifi_cfg->sta.password doesn't have to be null terminated AFAICT */
++    strncpy((char *) wifi_cfg->sta.password, req_data->password, sizeof(wifi_cfg->sta.password));
+     return ESP_OK;
+ }
+ 
+diff --git a/tools/idf_monitor.py b/tools/idf_monitor.py
+index c823513..05327bd 100755
+--- a/tools/idf_monitor.py
++++ b/tools/idf_monitor.py
+@@ -30,7 +30,7 @@ import threading
+ import time
+ from builtins import bytes
+ from typing import Any, List, Optional, Type, Union
+-
++import pyftdi.serialext
+ import serial
+ import serial.tools.list_ports
+ # Windows console stuff
+diff --git a/version.txt b/version.txt
+new file mode 100644
+index 0000000..a7021c5
+--- /dev/null
++++ b/version.txt
+@@ -0,0 +1 @@
++v4.4

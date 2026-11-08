@@ -53,6 +53,24 @@ jobs:
             case "$(head -c 20 "$f")" in *bash*) bash -n "$f";; *) dash -n "$f";; esac || { echo "syntax: $f"; exit 1; }
           done
 
+  volume-protocol:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Native protocol tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq gcc protobuf-c-compiler libprotobuf-c-dev
+      - name: Source download identification and checksum failures
+        run: python3 tools/firmware/tests/download.py
+      - name: Prepare the checksum-pinned Jooki sources
+        run: python3 tools/firmware/prepare.py --port
+      - name: Volume arbitration, wire compatibility and controller failure paths
+        run: python3 tools/firmware/test.py build/firmware/source/jooki-archive-20261026 --archive build/firmware/jooki-archive-20261026.tgz
+      - name: Global scale, factory fallback and actual audio functions
+        run: python3 tools/firmware/test_gain.py build/firmware/source/jooki-archive-20261026
+      - name: Public SDK SDIO port (real transmit/reset bodies, DMA ownership and timeouts)
+        run: python3 tools/firmware/test_sdk.py build/firmware/source/jooki-archive-20261026
+
   core:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -104,6 +122,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/bench
+      - name: Web volume and configurable kids ceiling
+        run: sudo -E python3 test_device_controls.py
       - name: Scheduled and permanent device darkness
         run: sudo -E python3 test_lights_off.py
       - name: German device UI

@@ -13,6 +13,17 @@ cat > $S/ml-audio-probe-wrapper.sh <<P
 exec python3 $HERE/probe.py "\$@"
 P
 chmod 755 $S/*
+# The ALSA mixer is hardware too: accept the device's two controls and log them.
+cat > /usr/bin/amixer <<'M'
+#!/bin/sh
+printf 'AMIXER %s\n' "$*" >> /tmp/bench_services.log
+case "$*" in
+  '-q set Toysafe override on'|'-q set Toysafe override off'|\
+  '-q -c 0 cset name=MERCURY Playback Volume 31'|'-q -c 0 cset name=MERCURY Playback Volume 37') exit 0;;
+  *) exit 1;;
+esac
+M
+chmod 755 /usr/bin/amixer
 # system catalog (read-only) : empty db
 for f in playlists tracks tokens; do echo '{"_":{"version":1}}' > /jooki/app/system/$f.json; done
 echo '{"_":{"version":1}}' > /jooki/app/system/playlists.json

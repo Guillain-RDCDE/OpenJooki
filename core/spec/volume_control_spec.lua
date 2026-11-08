@@ -41,8 +41,8 @@ describe("volume firmware compatibility", function()
 
   it("reapplies the legacy headphone policy when support disappears without dial movement", function()
     for _, api in ipairs({ false, 0, 1 }) do
-      local d = doc(); d.volume_int = { knob = 8 }
-      local r = device.on_knobs(d, { volume = 8, volume_api = api or nil })
+      local d = doc(); d.volume_int = { knob = 80 }
+      local r = device.on_knobs(d, { volume = 80, volume_api = api or nil })
       apply(d, r)
       assert_eq(has(r, "emit").event.type, "volume.apply")
       assert_true(has(r, "emit").event.force)
@@ -60,10 +60,11 @@ describe("volume firmware compatibility", function()
   it("silences wired output switches and restores the saved level under the negotiated policy", function()
     for _, api in ipairs({ 0, 1, 2 }) do
       local d = doc(); d.device.volume_api = api; d.power = { connected = true }
-      d.hp_int = { mux = "1" }; d.volume_int = { knob = 8 }
+      local dial = api == 2 and 8 or 80   -- without API 2 the saved volume is the dial's
+      d.hp_int = { mux = "1" }; d.volume_int = { knob = dial }
       for _, plugged in ipairs({ true, false }) do
-        apply(d, device.on_knobs(d, { volume = 8, headphones = plugged, volume_api = api }))
-        local r = device.on_knobs(d, { volume = 8, headphones = plugged, volume_api = api })
+        apply(d, device.on_knobs(d, { volume = dial, headphones = plugged, volume_api = api }))
+        local r = device.on_knobs(d, { volume = dial, headphones = plugged, volume_api = api })
         apply(d, r)
         assert_eq(d.audiocfg.headphones_en, plugged)
         local levels = {}

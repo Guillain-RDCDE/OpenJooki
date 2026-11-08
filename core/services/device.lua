@@ -178,6 +178,13 @@ function device.on_gpio_volume(doc, ev)
   if ev.percent == nil then return nil end
   local position = clamp(ev.percent)
   local previous = (doc.volume_int or {}).knob
+  -- Without volume API 2 the dial alone sets the speaker: a request kept against it would show
+  -- a level the Jooki is not playing at. So the saved volume follows the dial, as it always did.
+  if (doc.device or {}).volume_api ~= 2 and position ~= audiocfg_of(doc).volume then
+    local r = set_volume(doc, position)
+    r.state.volume_int = { knob = position }
+    return r
+  end
   if previous == position then return nil end
   local r = previous ~= nil and set_volume(doc, position) or { state = {} }
   r.state.volume_int = { knob = position }

@@ -54,24 +54,46 @@ describe("services.device — volume chain", function()
     assert_true(has(r, "host.volume", "percent", 55))
   end)
 
-  it("first and unchanged reports preserve web volume, real movement takes over, restart preserves it", function()
+  it("with volume API 2, first and unchanged reports preserve web volume, real movement takes over, restart preserves it", function()
     local doc = doc_with({ jack = false, audiocfg = { volume = 75 } })
     doc.device.esp32_up = true
+    doc.device.volume_api = 2
     local function step(ev)
+      ev.volume_api = 2
       local r = device.on_knobs(doc, ev)
       for k, v in pairs((r or {}).state or {}) do doc[k] = v end
       return r
     end
-    assert_nil(step({ volume = 9 }).state.audiocfg)
+    local function saved(r) return ((r or {}).state or {}).audiocfg end
+    assert_nil(saved(step({ volume = 9 })))
     assert_eq(doc.audiocfg.volume, 75)
-    for _ = 1, 10 do assert_nil(step({ volume = 9 })) end
+    for _ = 1, 10 do assert_nil(saved(step({ volume = 9 }))) end
     local web = device.set_volume(doc, 90); doc.audiocfg = web.state.audiocfg
-    assert_nil(step({ volume = 9 })); assert_eq(doc.audiocfg.volume, 90)
+    assert_nil(saved(step({ volume = 9 }))); assert_eq(doc.audiocfg.volume, 90)
     step({ volume = 15 }); assert_eq(doc.audiocfg.volume, 15)
     assert_nil(device.on_gpio_volume(doc, { percent = 15 }))
     local boot = device.on_boot(doc, { audiocfg = doc.audiocfg })
     for k, v in pairs(boot.state) do doc[k] = v end
+    doc.device.volume_api = 2
     step({ volume = 3 }); assert_eq(doc.audiocfg.volume, 15)
+  end)
+
+  it("without volume API 2, the saved volume follows the dial, which alone sets the speaker", function()
+    for _, api in ipairs({ false, 0, 1 }) do
+      local doc = doc_with({ jack = false, audiocfg = { volume = 75 } })
+      doc.device.esp32_up = true
+      local function step(ev)
+        ev.volume_api = api or nil
+        local r = device.on_knobs(doc, ev)
+        for k, v in pairs((r or {}).state or {}) do doc[k] = v end
+        return r
+      end
+      step({ volume = 9 }); assert_eq(doc.audiocfg.volume, 9)         -- at start, not the old saved level
+      local web = device.set_volume(doc, 90); doc.audiocfg = web.state.audiocfg
+      step({ volume = 9 }); assert_eq(doc.audiocfg.volume, 9)         -- the page does not keep a level not played
+      step({ volume = 15 }); assert_eq(doc.audiocfg.volume, 15)
+      assert_nil(((step({ volume = 15 }) or {}).state or {}).audiocfg) -- an unchanged dial writes nothing
+    end
   end)
 
   it("discovers volume support, reapplies after reconnect, and gates old firmware", function()

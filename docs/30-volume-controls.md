@@ -5,6 +5,10 @@ requested volume. The first reading establishes a baseline; repeated readings
 leave a saved web request alone. An actual movement takes over again. A web
 request above a low dial position therefore remains effective until the dial moves.
 
+This needs `volume_api == 2`. On firmware without it the dial alone sets the speaker,
+so the saved volume keeps following every dial report: the page must not show a level
+the Jooki is not playing at.
+
 ## One global scale
 
 `toy_safe_maxvol` is an integer from 0 to 100 in `audiocfg.json`. Its slider sits

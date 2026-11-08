@@ -72,6 +72,7 @@ with sync_playwright() as p:
     except Exception: pass
     sheet = pg.locator(".np").inner_text() if pg.locator(".np").count() else ""
     check("SP3 the now-playing sheet shows title, artist and album", "Nuvole Bianche" in sheet and "Ludovico Einaudi / Una Mattina" in sheet, sheet)
+    check("SP3 Spotify offers an end-of-song timer", pg.locator("[data-sleep-min='track']").inner_text() == "Fin du morceau")
     pg.keyboard.press("Escape"); pg.wait_for_selector(".np", state="detached", timeout=3000)
 
     # SP4 a token put on while Spotify plays: Spotify pauses, the token plays alone

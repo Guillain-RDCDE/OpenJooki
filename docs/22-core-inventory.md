@@ -274,8 +274,14 @@ Token removed → pause (Spotify/Deezer variants dropped).
 
 The current core seeds local-playlist shuffle from OS entropy at boot, including
 before the clock is set. A fresh shuffled start after the playlist has ended draws
-a new order and a random first song. Explicit track choices, audiobook resume and
-putting back a paused token keep their existing behaviour.
+a new order and a random first song. The independent `random_start` setting applies
+to local music and Spotify music playlists. The playlist Play buttons request a
+fresh draw on every click; pausing and resuming through the player or replacing a
+paused token keeps the current song. Explicit track choices, audiobooks and saved
+Spotify positions take priority. Spotify startup waits for the hardware mute,
+confirmed shuffle and new-track position before restoring the bounded volume.
+The controller's actual active-device status avoids a needless five-second
+continuation wait when switching to another saved Spotify playlist.
 
 ### 4.5 Tokens
 `tokens.json`: `UID → {starId, seen, name?, image?, write?}`. A tag event
@@ -339,3 +345,5 @@ separate hardware-side limit handled by the ESP32.
 | library | 8 playlists, 156 tracks, 17 tokens (this family) |
 | bus traffic idle | ~4 messages/s (knobs, ip, position when playing) |
 | token → sound | < 1 s (measured by ear; to instrument in 2.0) |
+
+Optional experimental Spotify offline snapshots and transport: `services.spotify_offline` and `adapters.spotify_offline` (see [docs/34](34-spotify-offline-test.md)).

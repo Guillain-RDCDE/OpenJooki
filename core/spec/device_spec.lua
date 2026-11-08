@@ -34,7 +34,8 @@ local function same(actual, expected, msg) assert_eq(sorted(actual), sorted(expe
 
 describe("services.device — volume chain", function()
   it("applies the knob through the night limit and the fade, keeps the requested value", function()
-    local doc = doc_with({ limits = { maxvol = 30, fade = 1 } })
+    local doc = doc_with({ limits = { maxvol = 30, fade = 1 } }); doc.device.toy_safe = false
+    doc.volume_int = { knob = 40 }
     local r = device.on_gpio_volume(doc, { percent = 97 })
     assert_eq(r.state.audiocfg.volume, 97)
     same(kinds(r), { "vol 30", "write /d/audiocfg.json" })
@@ -45,10 +46,95 @@ describe("services.device — volume chain", function()
 
   it("knob reports change the volume only when it differs", function()
     local doc = doc_with({ jack = false }); doc.device.esp32_up = true   -- the first answer only marks esp32_ctrl up (see boot spec)
+    local initial = device.on_knobs(doc, { volume = 40, headphones = false })
+    assert_nil(initial.state.audiocfg); doc.volume_int = initial.state.volume_int; doc.device = initial.state.device
     assert_nil(device.on_knobs(doc, { volume = 40, headphones = false }))
     local r = device.on_knobs(doc, { volume = 55, headphones = true })
     assert_eq(r.state.audiocfg.volume, 55); assert_false(r.state.audiocfg.headphones_en == true)
     assert_true(has(r, "host.volume", "percent", 55))
+  end)
+
+  it("with volume API 2, first and unchanged reports preserve web volume, real movement takes over, restart preserves it", function()
+    local doc = doc_with({ jack = false, audiocfg = { volume = 75 } })
+    doc.device.esp32_up = true
+    doc.device.volume_api = 2
+    local function step(ev)
+      ev.volume_api = 2
+      local r = device.on_knobs(doc, ev)
+      for k, v in pairs((r or {}).state or {}) do doc[k] = v end
+      return r
+    end
+    local function saved(r) return ((r or {}).state or {}).audiocfg end
+    assert_nil(saved(step({ volume = 9 })))
+    assert_eq(doc.audiocfg.volume, 75)
+    for _ = 1, 10 do assert_nil(saved(step({ volume = 9 }))) end
+    local web = device.set_volume(doc, 90); doc.audiocfg = web.state.audiocfg
+    assert_nil(saved(step({ volume = 9 }))); assert_eq(doc.audiocfg.volume, 90)
+    step({ volume = 15 }); assert_eq(doc.audiocfg.volume, 15)
+    assert_nil(device.on_gpio_volume(doc, { percent = 15 }))
+    local boot = device.on_boot(doc, { audiocfg = doc.audiocfg })
+    for k, v in pairs(boot.state) do doc[k] = v end
+    doc.device.volume_api = 2
+    step({ volume = 3 }); assert_eq(doc.audiocfg.volume, 15)
+  end)
+
+  it("without volume API 2, the page lowers the speaker below the dial, never above, and the dial takes over", function()
+    for _, api in ipairs({ false, 0, 1 }) do
+      local doc = doc_with({ jack = false, audiocfg = { volume = 75 } })
+      doc.device.esp32_up = true
+      local function step(ev)
+        ev.volume_api = api or nil
+        local r = device.on_knobs(doc, ev)
+        for k, v in pairs((r or {}).state or {}) do doc[k] = v end
+        return r
+      end
+      step({ volume = 60 }); assert_eq(doc.audiocfg.volume, 60)        -- at start, not above the dial
+      local up = device.set_volume(doc, 90); assert_eq(up.state.audiocfg.volume, 60)
+      assert_eq(up.commands[1].mixer, 100)
+      local web = device.set_volume(doc, 30); doc.audiocfg = web.state.audiocfg
+      assert_eq(web.commands[1].mixer, 70)                             -- 30 points below the dial
+      assert_nil(((step({ volume = 60 }) or {}).state or {}).audiocfg) -- an unchanged dial keeps it
+      assert_eq(doc.audiocfg.volume, 30)
+      local moved = step({ volume = 15 })
+      assert_eq(doc.audiocfg.volume, 15); assert_eq(moved.commands[1].mixer, 100)
+      local below = step({ volume = 15 })
+      assert_nil(((below or {}).state or {}).audiocfg)
+      assert_eq(device.volume_command(doc, 0).mixer, 0)                -- silence is silence
+      doc.limits = { maxvol = 5 }
+      assert_eq(device.on_apply_volume(doc).commands[1].mixer, 90)     -- night limit on the speaker
+      doc.limits = {}
+      doc.audiocfg.headphones_en = true
+      local hp = device.set_volume(doc, 90)
+      assert_eq(hp.state.audiocfg.volume, 90); assert_eq(hp.commands[1].mixer, 90) -- headphones: the volume itself
+    end
+  end)
+
+  it("discovers volume support, reapplies after reconnect, and gates old firmware", function()
+    local doc = doc_with({ jack = false })
+    local r = device.on_knobs(doc, { volume = 8, volume_api = 2 })
+    assert_eq(r.state.device.volume_api, 2)
+    assert_eq(find(r, "emit").event.type, "volume.apply")
+    doc.device = r.state.device; doc.volume_int = r.state.volume_int
+    local c = device.on_apply_volume(doc).commands[1]
+    assert_true(c.esp32); assert_eq(c.percent, 40); assert_eq(c.maximum, 56)
+    local reconnect = device.on_bus_up(doc)
+    assert_nil(reconnect.state.device.volume_api)
+    assert_nil(reconnect.state.volume_int.knob)
+    doc.device = reconnect.state.device
+    assert_false(device.on_apply_volume(doc).commands[1].esp32)
+    doc.device.volume_api = 0
+    assert_false(device.set_volume(doc, 80).commands[1].esp32)
+  end)
+
+  it("reasserts the saved value after a silent chip restart and stops using a lost capability", function()
+    local doc = doc_with({ jack = false, audiocfg = { volume = 90 } })
+    doc.device.esp32_up = true; doc.device.volume_api = 2; doc.volume_int = { knob = 8 }
+    local r = device.on_knobs(doc, { volume = 8, volume_api = 2 })
+    assert_nil(r.state.audiocfg); assert_nil(find(r, "files.write"))
+    assert_eq(find(r, "emit").event.type, "volume.apply")
+    r = device.on_knobs(doc, { volume = 20, volume_api = 0 })
+    assert_eq(r.state.device.volume_api, 0)
+    assert_false(find(r, "host.volume").esp32)
   end)
 
   it("shuffle / repeat: one updater for the page (v1 booleans), the v2 command and the Spotify daemon", function()
@@ -317,7 +403,7 @@ describe("services.device — boot, the ESP32 and the name", function()
     doc.audiocfg.volume = 40
     local kr = device.on_knobs(doc, { volume = 40 })
     assert_true(kr.state.device.esp32_up); assert_true(kr.state.device.toy_safe)
-    doc.device = kr.state.device
+    doc.device = kr.state.device; doc.volume_int = kr.state.volume_int
     assert_nil(device.on_timer(doc, { name = "device.esp32_init.2", now = 8 }))
     assert_nil(device.on_knobs(doc, { volume = 40 }))
   end)

@@ -13,6 +13,7 @@
 local util = require("services.util")
 local playback = require("services.playback")
 local resume_rules = require("services.playback.resume")
+local queue = require("services.playback.queue")
 local streaming = {}
 
 local SP, DZ = "/j/spotify/output/", "/j/deezer/output/"
@@ -109,6 +110,143 @@ local function place_commands(doc, playlist_id, p)
   return { pub(SP .. "play_preset", preset) }, seek_ms
 end
 
+-- Music playlists only: saved positions and all book/podcast contexts take priority.
+function streaming.wants_random(doc, p)
+  local _, _, enabled = queue.modes(doc, p)
+  local uri = p.spotify and p.spotify.uri
+  return enabled and not p.audiobook and not p.resume and type(uri) == "string" and uri:find(":playlist:", 1, true) ~= nil
+end
+
+local RANDOM_WAIT_S = 12
+local function random_done(doc, r, reason)
+  local int = copy((r.state or {}).streaming_int or doc.streaming_int or {})
+  local f = int.random_start
+  if not f then return r end
+  int.random_start = nil
+  r.state = r.state or {}; r.state.streaming_int = int
+  r.commands = r.commands or {}
+  local sp = (r.state or {}).spotify or doc.spotify or {}
+  if f.phase ~= "loading" and (sp.track or {}).source_uri == f.uri then
+    local p = ((doc.library or {}).playlists or {})[f.playlist] or {}
+    local shuffle = queue.modes(doc, p)
+    r.commands[#r.commands + 1] = pub(SP .. "set_shuffle", shuffle and 1 or 0)
+  end
+  r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "streaming.random" }
+  r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "streaming.random_probe" }
+  r.commands[#r.commands + 1] = emit("volume.apply", {})
+  r.commands[#r.commands + 1] = { kind = "log", level = reason == "ready" and "info" or "warn", key = "streaming.random_" .. reason }
+  if f.phase == "muting" and reason == "timeout" then
+    local p = ((doc.library or {}).playlists or {})[f.playlist]
+    if p then for _, c in ipairs(place_commands(doc, f.playlist, p)) do r.commands[#r.commands + 1] = c end end
+  end
+  return r
+end
+
+-- Wait for the new context to play before changing shuffle: the Spotify SDK
+-- explicitly says a shuffle command sent during context loading can be lost.
+function streaming.on_random_start(doc, ev)
+  local p = ((doc.library or {}).playlists or {})[ev.playlist]
+  if not p then return nil end
+  if not streaming.wants_random(doc, p) then return { commands = place_commands(doc, ev.playlist, p) } end
+  local int = copy(doc.streaming_int or {})
+  int.random_start = { playlist = ev.playlist, uri = p.spotify.uri, phase = (doc.device or {}).volume_api == 2 and "muting" or "loading" }
+  int.find = nil
+  local device = require("services.device")
+  local silence = device.volume_command and device.volume_command(doc, 0) or { kind = "host.volume", percent = 0 }
+  local cmds = { silence, { kind = "timer.cancel", name = "streaming.find" },
+                 { kind = "timer.once", name = "streaming.random", seconds = RANDOM_WAIT_S } }
+  if int.random_start.phase == "loading" then
+    local start = place_commands(doc, ev.playlist, p)
+    for _, c in ipairs(start) do cmds[#cmds + 1] = c end
+  end
+  return { state = { streaming_int = int }, commands = cmds }
+end
+
+function streaming.on_volume_confirmed(doc, ev)
+  local int = copy(doc.streaming_int or {})
+  local f = int.random_start
+  if not f or f.phase ~= "muting" or ev.percent ~= 0 or not ev.ok then return nil end
+  local p = ((doc.library or {}).playlists or {})[f.playlist]
+  if not p then return random_done(doc, {}, "cancelled") end
+  f.phase = "loading"
+  return { state = { streaming_int = int }, commands = place_commands(doc, f.playlist, p) }
+end
+
+local function random_step(doc, r, ev)
+  local pending = (doc.streaming_int or {}).random_start
+  if not pending then return r end
+  r = r or {}; r.state = r.state or {}; r.commands = r.commands or {}
+  local pb = r.state.playback or doc.playback or {}
+  local sp = r.state.spotify or doc.spotify or {}
+  local track = sp.track or {}
+  if ev.type == "spotify.logout" or ev.type == "spotify.play_error" or ev.type == "spotify.login_required" then return random_done(doc, r, "failed") end
+  if not (pb.now and pb.now.service == "SPOTIFY" and pb.now.playlist == pending.playlist) then return random_done(doc, r, "cancelled") end
+  local int = copy(r.state.streaming_int or doc.streaming_int or {})
+  local f = copy(pending)
+  int.random_start = f; r.state.streaming_int = int
+  if f.phase == "loading" then
+    if ev.type == "spotify.now_playing" and track.source_uri == f.uri then
+      -- Chapter metadata also protects saved Spotify books without a resume flag.
+      local title = (track.track or ""):lower()
+      if title:match("^kapitel%s+%d") or title:match("^chapter%s+%d") then return random_done(doc, r, "book") end
+      f.metadata = track.restricted ~= true
+    end
+    -- The daemon sends position only while actually playing. A context switch
+    -- while already playing need not produce another playing notification.
+    if f.metadata and ev.type == "spotify.position" and track.source_uri == f.uri and pb.state ~= "playing" then
+      local playing = playback.on_external(doc, { service = "SPOTIFY", state = "playing", position_ms = ev.ms })
+      for k, v in pairs(playing.state or {}) do r.state[k] = v end
+      for _, c in ipairs(playing.commands or {}) do r.commands[#r.commands + 1] = c end
+      pb = r.state.playback or pb
+    end
+    if f.metadata and pb.state == "playing" and track.source_uri == f.uri then
+      f.phase = "shuffle"
+      f.first = (track.track or "") .. "\t" .. (track.album or "") .. "\t" .. (track.artist or "")
+      r.commands[#r.commands + 1] = pub(SP .. "set_shuffle", 1)
+      r.commands[#r.commands + 1] = { kind = "timer.once", name = "streaming.random_probe", seconds = 1 }
+    end
+  elseif f.phase == "reset_shuffle" and ev.type == "spotify.set_cfg" and ev.shuffle_mode == false then
+    f.phase = "shuffle_retry"
+    r.commands[#r.commands + 1] = pub(SP .. "set_shuffle", 1)
+    r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "streaming.random_probe" }
+  elseif (f.phase == "shuffle" or f.phase == "shuffle_retry") and ev.type == "spotify.set_cfg" and ev.shuffle_mode == true then
+    f.phase = "skipping"
+    r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "streaming.random_probe" }
+    r.commands[#r.commands + 1] = pub(SP .. "next")
+  elseif f.phase == "skipping" and ev.type == "spotify.now_playing" and track.source_uri == f.uri then
+    local key = (track.track or "") .. "\t" .. (track.album or "") .. "\t" .. (track.artist or "")
+    if key ~= f.first then f.phase = "settling"; f.candidate = key end
+  elseif f.phase == "settling" and ev.type == "spotify.position" and track.source_uri == f.uri and track.restricted ~= true then
+    local key = (track.track or "") .. "\t" .. (track.album or "") .. "\t" .. (track.artist or "")
+    if key == f.candidate and tonumber(ev.ms) and ev.ms >= 0 and ev.ms <= 5000 then return random_done(doc, r, "ready") end
+  end
+  return r
+end
+
+-- Some SDK versions omit a callback when shuffle already has the requested
+-- value. Make a bounded off/on transition, still waiting for the final on ACK.
+function streaming.on_random_probe(doc)
+  local int = copy(doc.streaming_int or {})
+  local f = int.random_start
+  if not f or (f.phase ~= "shuffle" and f.phase ~= "reset_shuffle") then return nil end
+  local enable = f.phase == "reset_shuffle"
+  f.phase = enable and "shuffle_retry" or "reset_shuffle"
+  local cmds = { pub(SP .. "set_shuffle", enable and 1 or 0) }
+  if not enable then cmds[#cmds + 1] = { kind = "timer.once", name = "streaming.random_probe", seconds = 1 } end
+  return { state = { streaming_int = int }, commands = cmds }
+end
+function streaming.on_random_config(doc)
+  local f = (doc.streaming_int or {}).random_start
+  local p = f and ((doc.library or {}).playlists or {})[f.playlist]
+  if f and not (p and streaming.wants_random(doc, p)) then return random_done(doc, {}, "cancelled") end
+end
+
+function streaming.on_random_timer(doc) return random_done(doc, {}, "timeout") end
+function streaming.on_random_changed(doc)
+  local f, pb = (doc.streaming_int or {}).random_start, doc.playback or {}
+  if f and not (pb.now and pb.now.service == "SPOTIFY" and pb.now.playlist == f.playlist) then return random_done(doc, {}, "cancelled") end
+end
+
 local CONT_WAIT_S = 5   -- Spotify asked to continue and silent: the character's own place after this long
 
 --- The now-playing record, the commands that start a streaming playlist and, for Spotify, where
@@ -124,6 +262,9 @@ function streaming.start(doc, playlist_id, p)
     if p.resume and not other then
       return now, { pub(SP .. "cont"), emit("streaming.cont", { playlist = playlist_id }),
                     { kind = "timer.once", name = "streaming.cont", seconds = CONT_WAIT_S } }, nil
+    end
+    if streaming.wants_random(doc, p) then
+      return now, { emit("streaming.random_start", { playlist = playlist_id }) }, nil
     end
     local cmds, seek_ms = place_commands(doc, playlist_id, p)
     return now, cmds, seek_ms
@@ -286,7 +427,7 @@ local function find_step(doc, r, d)
     cmds[#cmds + 1] = pub(SP .. "play_preset", direct_request(p.spotify.uri, f.index, f.pos or 0))
     cmds[#cmds + 1] = { kind = "log", level = "warn", key = "streaming.place_lost", fields = { playlist = f.playlist, skips = f.skips } }
   else
-    if f.skips == 0 then cmds[#cmds + 1] = { kind = "host.volume", percent = 0 } end
+    if f.skips == 0 then cmds[#cmds + 1] = require("services.device").volume_command(doc, 0) end
     int.find = copy(f); int.find.skips = f.skips + 1
     for _, x in ipairs(streaming.transport("SPOTIFY", "next")) do cmds[#cmds + 1] = x end
   end
@@ -337,7 +478,11 @@ end
 
 local on_spotify
 function streaming.on_spotify(doc, ev)
-  local r = on_spotify(doc, ev)
+  local f = (doc.streaming_int or {}).random_start
+  -- Spotify can still report the previous context during preset loading.
+  -- It must not detach the requested playlist or cancel its pending start.
+  if f and (f.phase == "loading" or f.phase == "muting") and ev.type == "spotify.now_playing" and (ev.data or {}).source_uri ~= f.uri then return nil end
+  local r = random_step(doc, on_spotify(doc, ev), ev)
   local kind = ev.type:sub(9)
   if not (r and ev.now and (kind == "position" or kind == "playing" or kind == "paused" or kind == "now_playing")) then return r end
   local pb = (r.state and r.state.playback) or doc.playback or {}
@@ -374,8 +519,14 @@ function on_spotify(doc, ev)
     return { commands = { emit("system.event", { name = "Evt.Spotify.PlayError" }) } }
   elseif kind == "status" then
     local n = doc.net or {}
-    return { commands = { pub(SP .. "connection_state", (n.connected and n.ip and n.ip ~= "") and 2 or 0) } }
+    local r = { commands = { pub(SP .. "connection_state", (n.connected and n.ip and n.ip ~= "") and 2 or 0) } }
+    if ev.active ~= nil then sp.active = ev.active; r.state = { spotify = sp } end
+    return r
   elseif kind == "now_playing" then
+    local pb = doc.playback or {}
+    local target = pb.now or {}
+    if not (doc.streaming_int or {}).cont and pb.state == "starting" and target.service == "SPOTIFY" and target.playlist and not target.title and
+       (ev.data or {}).source_uri ~= target.uri then return nil end
     sp.track = copy(ev.data or {})
     local c, cp = cont_waiting(doc)
     local cont_here = c and sp.track.source_uri == cp.spotify.uri
@@ -423,7 +574,12 @@ function on_spotify(doc, ev)
     end
     return external(doc, { service = "SPOTIFY", state = kind }, { spotify = sp })
   elseif kind == "position" then
-    if not active(doc, "SPOTIFY") or (doc.playback or {}).state ~= "playing" then return nil end
+    if not active(doc, "SPOTIFY") then return nil end
+    local pb, track = doc.playback or {}, sp.track or {}
+    if pb.state == "starting" and track.source_uri == (pb.now or {}).uri and track.restricted ~= true then
+      return external(doc, { service = "SPOTIFY", state = "playing", position_ms = tonumber(ev.ms) or 0 })
+    end
+    if pb.state ~= "playing" then return nil end
     return external(doc, { service = "SPOTIFY", position_ms = tonumber(ev.ms) or 0 })
   elseif kind == "volume" then
     return nil   -- 1.x ignored the app's volume and re-applied its own
@@ -479,10 +635,11 @@ function streaming.on_deezer(doc, ev)
     if not active(doc, "DEEZER") then return nil end
     local state
     if kind == "paused" then state = ev.flag == "1" and "paused" or "playing"
+    elseif kind == "ended" and (doc.bedtime_int or {}).stop_at_end then state = "ended"
     elseif kind == "ended" or kind == "stopped" then state = "idle"
     else state = kind end
     local r = external(doc, { service = "DEEZER", state = state, position_ms = kind == "starting" and 0 or nil })
-    if kind == "ended" then table.insert(r.commands, 1, pub(DZ .. "next")) end   -- the daemon is asked for the next track first
+    if kind == "ended" and state ~= "ended" then table.insert(r.commands, 1, pub(DZ .. "next")) end   -- the daemon is asked for the next track first
     return r
   elseif kind == "position" then
     if not active(doc, "DEEZER") or (doc.playback or {}).state ~= "playing" then return nil end
@@ -631,6 +788,12 @@ function streaming.install(api, dispatch)
   dispatch.on("audiocfg.changed", "streaming", streaming.on_config)
   dispatch.on("streaming.save_resume", "streaming", streaming.on_save_resume)
   dispatch.on_timer("streaming.resume", "streaming", streaming.on_resume_tick)
+  dispatch.on("volume.confirmed", "streaming.random", streaming.on_volume_confirmed)
+  dispatch.on("streaming.random_start", "streaming.random", streaming.on_random_start)
+  dispatch.on_timer("streaming.random", "streaming.random", streaming.on_random_timer)
+  dispatch.on_timer("streaming.random_probe", "streaming.random", streaming.on_random_probe)
+  dispatch.on("audiocfg.changed", "streaming.random", streaming.on_random_config)
+  dispatch.on("playback.changed", "streaming.random", streaming.on_random_changed)
   dispatch.on("streaming.cont", "streaming", streaming.on_cont)
   dispatch.on_timer("streaming.cont", "streaming", streaming.on_cont_timer)
   dispatch.on("streaming.find", "streaming", streaming.on_find)

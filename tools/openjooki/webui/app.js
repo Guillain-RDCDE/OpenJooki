@@ -73,10 +73,11 @@
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
+    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
     lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur éteints jour et nuit, même après un redémarrage ou sans mode nuit.',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Anneau, voyants et cœur s’éteignent pendant les heures définies et se rallument ensuite.',
     night_dim_help: 'Le réglage est conservé et reprend quand les lumières s’allument.',
-    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Puis suivre l’ordre de lecture. Pour les playlists musicales sur la Jooki.',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',
@@ -150,7 +151,7 @@
     upd_see: 'Voir',
     upd_steps: ['Recherche de la nouvelle version', 'Téléchargement', 'Vérification du téléchargement', 'Installation (ne débranche pas le Jooki)', 'Vérification de l\'installation', 'Redémarrage sur la nouvelle version'],
     sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre', sleep_song: 'Fin du morceau',
     sleep_left: function (s) { return 'Arrêt dans ' + s; }, sleep_at_end: 'Arrêt à la fin de ce morceau',
     sleep_auto: 'automatique (mode nuit)', sleep_cancel: 'Annuler la minuterie',
     night_mode: 'Mode nuit', night_help: 'Pendant ces heures, chaque écoute s\'arrête toute seule, le volume est limité et les lumières sont tamisées.',
@@ -278,10 +279,11 @@
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
+    random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off all day, even after restarting or with night mode off.',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Ring, side lights and heart turn off during the scheduled hours and come back on afterwards.',
     night_dim_help: 'Dimming is saved and resumes when the lights are on.',
-    random_start: 'Start with a random song', random_start_help: 'Then follow the playback order. For music playlists on the Jooki.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',
@@ -355,7 +357,7 @@
     upd_see: 'Show',
     upd_steps: ['Looking for the new version', 'Downloading', 'Checking the download', 'Installing (keep the Jooki plugged in)', 'Checking the installation', 'Restarting on the new version'],
     sleep_timer: 'Sleep timer', sleep_off: 'Off',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter', sleep_song: 'End of song',
     sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
     sleep_auto: 'automatic (night mode)', sleep_cancel: 'Cancel the timer',
     night_mode: 'Night mode', night_help: 'During these hours, every listen stops by itself, the volume is limited and the lights are dimmed.',
@@ -466,8 +468,14 @@
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
     toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
+    toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
+    toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
+    random_start: 'Mit einem zufälligen Titel starten',
+    random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
-    random_start: 'Mit einem zufälligen Titel starten', random_start_help: 'Danach der Wiedergabereihenfolge folgen. Für Musiklisten auf dem Jooki.',
+    lights_off: 'Alle Lichter dauerhaft ausschalten', lights_off_help: 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.',
+    night_lights_off: 'Alle Lichter während der Nacht ausschalten', night_lights_off_help: 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.',
+    night_dim_help: 'Die Dimm-Einstellung bleibt gespeichert und gilt, sobald die Lichter an sind.',
     language: 'Sprache', power_off: 'Jooki ausschalten', power_off_q: 'Jooki ausschalten?', power_off_text: 'Zum Einschalten musst du seine Taste drücken.', power_off_done: 'Der Jooki schaltet sich aus…',
     air_title: 'Flugmodus', air_help: 'Schaltet WLAN und Bluetooth des Jooki vorübergehend aus. Figuren und Musik funktionieren weiter. Diese Seite kann den Jooki währenddessen nicht erreichen.', air_h: function (n) { return n + ' Std.'; },
     air_morning: function (h) { return 'Bis morgen früh (' + h + ')'; }, air_boot: 'Bis zum Aus- und Wiedereinschalten', air_btn: 'WLAN und Bluetooth ausschalten', air_q: 'Flugmodus einschalten?',
@@ -491,7 +499,7 @@
     web_page: 'Webseite', upd_check: 'Nach Updates suchen', upd_checking: 'Wird geprüft…', upd_uptodate: 'Dein Jooki ist auf dem neuesten Stand.', upd_offline: 'GitHub ist nicht erreichbar (ist der Jooki online?).', upd_available: function (v) { return 'Neue Version ' + v + ' verfügbar'; }, upd_now: 'Jetzt aktualisieren', upd_q: function (v) { return 'Auf OpenJooki ' + v + ' aktualisieren?'; },
     upd_text: 'Der Jooki lädt die neue Version und startet automatisch neu. Das dauert etwa 10 bis 20 Minuten. Lass ihn am Ladegerät. Musik und Figuren bleiben erhalten. Falls etwas schiefgeht, wechselt er automatisch zur vorherigen Version zurück.', upd_running: 'Update läuft…', upd_keep: 'Lass den Jooki am Ladegerät. Diese Seite verbindet sich automatisch wieder.', upd_stuck: 'Seit einiger Zeit keine Änderung? Während des Updates trennt und verbindet sich der Jooki mehrmals. Das Handy kann dabei den Anschluss verlieren. Du kannst die Seite neu laden. Das unterbricht nichts.', upd_reload: 'Seite neu laden', upd_wait: 'Der Jooki startet noch. Versuche es in einer Minute erneut.', upd_rebooting: 'Der Jooki startet mit der neuen Version…', upd_done: function (v) { return 'Jooki aktualisiert: OpenJooki ' + v; }, upd_failed: 'Das Update ist fehlgeschlagen. Dein Jooki wurde nicht verändert.', upd_banner: function (v) { return 'Update ' + v + ' verfügbar'; }, upd_see: 'Anzeigen',
     upd_steps: ['Neue Version suchen', 'Herunterladen', 'Download prüfen', 'Installieren (am Ladegerät lassen)', 'Installation prüfen', 'Mit der neuen Version neu starten'],
-    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
+    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_song: 'Am Titelende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
     night_mode: 'Nachtmodus', night_help: 'In diesen Zeiten endet jede Wiedergabe automatisch. Die Lautstärke wird begrenzt und die Lichter werden gedimmt.', night_from: 'Von', night_to: 'Bis', night_timer: 'Automatischer Timer', night_timer_none: 'Keiner', night_maxvol: 'Maximale Lautstärke', night_nolimit: 'unbegrenzt', night_dim: 'Gedimmte Lichter', night_now: 'Nachtmodus ist gerade aktiv', night_next: function (h) { return 'Beginnt um ' + h; }, night_clock: 'Der Jooki erhält die Uhrzeit aus dem Internet (einschließlich Sommerzeit).',
     resume_at: function (c, s) { return 'Weiter ab Kapitel ' + c + (s ? ' · ' + s : ''); }, resume_restart: 'Von vorn beginnen', resume_done: 'Beginnt wieder bei Kapitel 1',
     sort: 'Sortieren', sort_title: 'Wiedergabeliste sortieren', sorted: 'Titel wurden neu geordnet', sort_by_name: 'Dateiname (1, 2, 3…)', sort_by_title: 'Titel', sort_by_artist: 'Interpret', sort_by_album: 'Album', sort_by_duration: 'Dauer', sort_again: 'Tippe erneut auf dasselbe Kriterium, um die Reihenfolge umzukehren.', sort_preview: 'Vorschau der neuen Reihenfolge', sort_apply: 'Reihenfolge übernehmen', sort_same: 'Die Wiedergabeliste ist bereits so sortiert',
@@ -570,10 +578,11 @@
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
     knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
+    toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
+    random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven de hele dag uit, ook na opnieuw opstarten of zonder nachtmodus.',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Ring, zijlampjes en hart gaan tijdens de ingestelde uren uit en daarna weer aan.',
     night_dim_help: 'De diminstelling blijft bewaard en geldt als de lampjes aan zijn.',
-    random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Daarna de afspeelvolgorde volgen. Voor muziekafspeellijsten op de Jooki.',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
     air_title: 'Vliegtuigmodus',
@@ -647,7 +656,7 @@
     upd_see: 'Bekijken',
     upd_steps: ['Nieuwe versie zoeken', 'Downloaden', 'Download controleren', 'Installeren (laat de Jooki aangesloten)', 'Installatie controleren', 'Opnieuw opstarten met de nieuwe versie'],
     sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk', sleep_song: 'Einde van het nummer',
     sleep_left: function (s) { return 'Stopt over ' + s; }, sleep_at_end: 'Stopt aan het einde van dit nummer',
     sleep_auto: 'automatisch (nachtmodus)', sleep_cancel: 'Timer annuleren',
     night_mode: 'Nachtmodus', night_help: 'In deze uren stopt elke luisterbeurt vanzelf, is het volume begrensd en zijn de lampjes gedimd.',
@@ -1977,6 +1986,12 @@
   var ui = { search: '', sel: {}, editTitle: null, dragging: false };
 
   /* ------------------------------------------------------------------ views */
+  function playPlaylist(p) {
+    var random = typeof p.random_start === 'boolean' ? p.random_start : !!S.audio.config.random_start;
+    var args = { playlistId: p.id };
+    if (p.spotify || (random && !p.audiobook)) args.restart = true;
+    send('PLAYLIST_PLAY', args);
+  }
   function viewPlaylists() {
     var list = userPlaylists();
     var np = S.audio.nowPlaying;
@@ -1991,7 +2006,7 @@
         h('div', { class: 'name' }, p.title || '—'),
         h('div', { class: 'meta' }, p.spotify ? t('sp_playlist') : t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
         n || p.spotify ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
-          e.stopPropagation(); send('PLAYLIST_PLAY', { playlistId: p.id }); } }, icon('play')) : null);
+          e.stopPropagation(); playPlaylist(p); } }, icon('play')) : null);
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
@@ -2173,14 +2188,14 @@
     if (p.spotify) {
       // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
       return [head, h('div', { class: 'actions' },
-          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
+          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { playPlaylist(p); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
         spotifyOfflineCard(p, id),
-        resumeSwitch(p, id),
+        resumeSwitch(p, id), p.resume || p.audiobook ? null : h('div', { class: 'card', style: 'margin-top:16px' }, modeRows(p, id)),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },
-      tracks.length ? h('button', { class: 'btn primary', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play')) : null,
+      tracks.length ? h('button', { class: 'btn primary', onclick: function () { playPlaylist(p); } }, icon('play'), t('play')) : null,
       fileButton(t('add_files'), id, !tracks.length),
       h('button', { class: 'btn', onclick: function () { libraryPickerModal(p); } }, icon('lib'), t('from_library')),
       h('button', { class: 'btn', onclick: function () { radioModal(p); } }, icon('radio'), t('web_radio')),
@@ -3126,6 +3141,11 @@
       avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
       sGroup(t('s_listen'), [
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ tag: 'label', col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
+          right: h('div', { class: 'row', style: 'width:100%' },
+            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
+              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
+              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')) }) : null,
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
@@ -3417,6 +3437,7 @@
 
   /* ------------------------------------------------------------------ bedtime */
   function sleepInfo() { var s = S.bedtime.sleep; return s && typeof s === 'object' && s.mode ? s : null; }
+  function sleepTrackLabel() { return t(S.audio.nowPlaying.audiobook ? 'sleep_track' : 'sleep_song'); }
   function sleepLeft() {
     var s = sleepInfo();
     if (!s || s.remaining === undefined || s.remaining === null) return null;
@@ -3427,7 +3448,7 @@
     if (!s) return t('sleep_timer');
     return (s.mode === 'track' ? t('sleep_at_end') : t('sleep_left', fmtTime(sleepLeft()))) + (s.auto ? ' · ' + t('sleep_auto') : '');
   }
-  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? t('sleep_track') : fmtTime(sleepLeft()); }
+  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? sleepTrackLabel() : fmtTime(sleepLeft()); }
   function hm(m) { m = Number(m) || 0; var hh = Math.floor(m / 60) % 24, mm = m % 60; return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; }
   // the Jooki keeps UTC: tell it the family's time zone (Europe: summer time rule handled on the Jooki)
   function browserClock() {
@@ -3455,7 +3476,7 @@
         [10, 20, 30, 45, 60].map(function (m) {
           return h('button', { class: 'toggle', 'data-sleep-min': String(m), onclick: function () { send('OJ_SLEEP', { minutes: m }); } }, t('sleep_min', m));
         }),
-        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, t('sleep_track')),
+        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, sleepTrackLabel()),
         s ? h('button', { class: 'toggle', 'data-k': 'sleepoff', 'aria-label': t('sleep_cancel'), onclick: function () { send('OJ_SLEEP', { cancel: true }); } }, icon('x'), t('sleep_off')) : null));
   }
   var nightVolDrag = null;
@@ -3616,7 +3637,7 @@
       sig: function () {
         var np = S.audio.nowPlaying, c = S.audio.config, pl0 = pls()[np.playlistId];
         var sl = sleepInfo() || {};
-        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
+        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, np.audiobook, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];

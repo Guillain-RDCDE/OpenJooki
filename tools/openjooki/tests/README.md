@@ -25,12 +25,15 @@ the 1.x patched program and its `web_ctrl` emulator left with ADR-0012.
 (cd ../../.. && python3 tools/build/bundle.py)   # the core, into build/ at the repository root
 export PLAYER_LUA=core CORE_BUILD=$(cd ../../.. && pwd)/build
 ./make_media.sh && ./up.sh                    # test audio, broker, fake audio
+python3 test_device_controls.py               # web/dial arbitration, kids/night ceilings, legacy headphones and live capability changes
+python3 test_lights_off.py                    # scheduled/permanent darkness, global driver, persistence, parent code and browser
 node test_i18n.js
 python3 test_german.py                        # German browser, narrow layout, picture search
-python3 test_lights_off.py                    # scheduled/permanent darkness, global driver, persistence, parent code and browser
 python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py
 python3 test_security_backend.py && python3 e2e.py && python3 test_security.py
 python3 test_mqtt_lan.py                      # S57_oj-security.sh, real mosquitto: no core needed (gcc)
+python3 test_random_playlist_ui.py             # repeated playlist Play, inherited overrides and audiobook positions
+python3 test_random_spotify_bus.py             # confirmed mute, delayed metadata/shuffle, fresh starts and fast resume
 python3 test_spotify.py && python3 test_robustness.py && python3 test_loader.py
 python3 test_httpd.py && python3 test_clock.py && python3 test_wifi_page.py
 python3 test_tokens_page.py                   # docs/tokens.html: no core needed
@@ -51,6 +54,11 @@ own, so no bench core may be running (`pkill -f harness.lua`), and a fake audio 
 suite counts against its idle-traffic budget (`pkill -f fake_audio.py`, then `./up.sh` again).
 
 The unit specs run without any of this: `lua5.1 core/spec/run.lua` from the repository root.
+
+`setup.sh` also supplies a fake `/usr/bin/amixer` for the headphone gain and
+kids-mode override controls; calls are recorded in `/tmp/bench_services.log`.
+These checks establish the requested mixer settings and routing, not audible
+headphone or Bluetooth gain. Those still need a physical Jooki and headphones.
 
 ## Writing a test
 

@@ -54,7 +54,7 @@ CI (`.github/workflows/ci.yml`) runs on a push to `main` and on pull requests
 that touch `core/`, `tools/`, `scripts/`, the workflows and a few other paths.
 Three jobs: *checks* (one version number everywhere with
 `scripts/check_versions.py`, `ruff`, `webui/build.py --check`, the page's size
-caps: `app.js` ≤ 296 KiB (four interface languages, one shared bundle) and `app.css` ≤ 64 KiB, shell syntax), *core* (all of
+caps: `app.js` ≤ 320 KiB (four interface languages, one shared bundle) and `app.css` ≤ 64 KiB, shell syntax), *core* (all of
 the above, with `bundle.py --max-kib 400`, and `apidoc.lua` compared with
 `docs/api-v2.md`) and *oracle* (the bench suites, set up by
 `.github/actions/bench`). `nightly.yml` (every night, every release tag, or by

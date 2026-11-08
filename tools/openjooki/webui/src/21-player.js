@@ -62,7 +62,7 @@
       sig: function () {
         var np = S.audio.nowPlaying, c = S.audio.config, pl0 = pls()[np.playlistId];
         var sl = sleepInfo() || {};
-        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
+        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, np.audiobook, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];

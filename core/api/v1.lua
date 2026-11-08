@@ -56,7 +56,7 @@ function PARTS.device(doc)
   return { flags = flags_list(doc.flags), toy_safe = d.toy_safe, id = d.id, hostname = d.hostname, ip = (doc.net or {}).ip or d.ip,
            wifi_mac = d.wifi_mac, machine = d.machine, firmware = d.firmware, openjooki = d.openjooki or d.core,
            diskUsage = d.diskUsage, usage = d.usage, core = d.core, rss_kb = h.rss_kb, boot = h.boot, esp32_up = d.esp32_up,
-           airplane = d.airplane }
+           airplane = d.airplane, volume_api = d.volume_api }
 end
 function PARTS.nfc(doc) return doc.nfc or {} end
 function PARTS.power(doc) return doc.power or {} end
@@ -139,7 +139,7 @@ H.GET_STATE = function(doc) return { commands = { { kind = "bus.publish", topic 
 H.CONNECT = function() return { commands = { util.emit("system.event", { name = "Evt.Mobile.connect", no_pause = true }) } } end
 H.PLAYLIST_PLAY = function(doc, p, ev)
   if type(p.playlistId) ~= "string" then return nil, { code = "not_found", field = "playlist", message = "nil playlistId" } end
-  return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.trackIndex ~= nil })
+  return playback.on_request(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now, restart = p.restart == true or p.trackIndex ~= nil })
 end
 H.PLAYLIST_NEW = function(doc, p, ev)
   return lib(doc, { playlists = true }, function(l) return library.ops.playlist_new(l, { title = p.title, audiobook = p.audiobook == true, star = type(p.star) == "string" and p.star or nil }, ev.wall or ev.now or 0) end)
@@ -209,7 +209,7 @@ H.SET_VOL = function(doc, p)
 end
 -- the page's booleans (repeat_mode true/false too) are read by device.update_config
 H.SET_CFG = function(doc, p)
-  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, random_start = p.random_start, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, lights_off = p.lights_off })
+  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, random_start = p.random_start, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, continue_on_token_removal = p.continue_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, toy_safe_maxvol = p.toy_safe_maxvol, lights_off = p.lights_off })
   return r, e, { "audio" }
 end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
@@ -251,13 +251,13 @@ H.OJ_PARTY = function(doc) return device.on_party(doc) end
 H.OJ_BT_SCAN = function(doc) return bluetooth.on_scan(doc) end
 H.OJ_BT_CONNECT = function(doc, p) return bluetooth.on_connect(doc, p) end
 H.OJ_BT_FORGET = function(doc, p) return bluetooth.on_forget(doc, p) end
+-- security switches (docs/adr/0007)
 H.OJ_OFFLINE_PLAY = function(doc, p, ev) return offline.on_play(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now }) end
 H.OJ_OFFLINE_SYNC = function(doc, p, ev) return offline.on_sync(doc, { playlist = p.playlistId, now = ev.now }) end
 H.OJ_OFFLINE_REMOVE = function(doc, p) return offline.on_remove(doc, { playlist = p.playlistId }) end
 H.OJ_OFFLINE_MODE = function(doc, p) return offline.on_mode(doc, { playlist = p.playlistId, mode = p.mode }) end
 H.OJ_OFFLINE_FORGET = function(doc) return offline.on_forget(doc) end
 
--- security switches (docs/adr/0007)
 H.OJ_SSH_ON = function(doc, _, ev) return security.on_ssh(doc, { on = true, wall = ev.wall }) end
 H.OJ_SSH_OFF = function(doc) return security.on_ssh(doc, { on = false }) end
 H.OJ_SSH_KEY = function(doc, p) return security.on_ssh_key(doc, { key = p.key, clear = p.clear == true }) end
@@ -277,8 +277,8 @@ local PROTECTED = {
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,
-  OJ_BT_CONNECT = true, OJ_BT_FORGET = true, OJ_SPOTIFY_FORGET = true,
   OJ_OFFLINE_SYNC = true, OJ_OFFLINE_REMOVE = true, OJ_OFFLINE_MODE = true, OJ_OFFLINE_FORGET = true,
+  OJ_BT_CONNECT = true, OJ_BT_FORGET = true, OJ_SPOTIFY_FORGET = true,
 }
 v1.PROTECTED = PROTECTED
 

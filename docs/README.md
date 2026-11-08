@@ -97,6 +97,9 @@ a token does, how playback works, what the lights mean, when it turns itself off
 - [24-hardware-and-lights.md](24-hardware-and-lights.md): what every light means,
   the battery (the cell, its thermal sensor, replacing it), the USB-C port and
   Muuselabs' charging notice, and a Jooki that no longer lights up.
+- [29-device-lights-off.md](29-device-lights-off.md): turning off every light of the Jooki.
+- [30-volume-controls.md](30-volume-controls.md) and [31-public-sdk-port.md](31-public-sdk-port.md):
+  web volume, the parent ceiling and the optional ESP32 firmware (not shipped).
 - [27-original-card.md](27-original-card.md): the original Jooki card, back to
   the program it was sold with, rebuilt file by file and checked.
 - [26-bluetooth-speaker.md](26-bluetooth-speaker.md): Bluetooth speakers and

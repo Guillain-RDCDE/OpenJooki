@@ -48,6 +48,10 @@ In a playlist, **Shuffle** and **Repeat** can be its own: **On** or **Off** for 
 The shuffle and repeat buttons of the player change the playlist that is playing. With shuffle,
 a token starts its playlist on a random song; put the same token back and the song goes on.
 
+**Start with a random song** is separate: the first song is drawn at random, then the playlist
+goes on in its order. Choose **On**, **Off** or **As in Settings** in the playlist. It works for
+Spotify playlists too. Audiobooks keep their place.
+
 ### Audiobooks
 
 Switch **Audiobook** on in a playlist: it always resumes where it stopped, and is never
@@ -153,9 +157,10 @@ for good.
 
 ## While it plays
 
-The bar at the bottom shows what is playing. Tap it for the volume, shuffle and repeat,
-and the **sleep timer**: 10, 20, 30, 45 or 60 minutes, or **End of chapter**. The music
-fades out at the end.
+The bar at the bottom shows what is playing. Tap it for the volume (on the speaker, the page can
+go below the knob's level, not above it; turning the knob takes over), shuffle and repeat,
+and the **sleep timer**: 10, 20, 30, 45 or 60 minutes, or **End of song** (**End of chapter**
+for an audiobook). The music fades out at the end.
 
 On the Jooki itself: turn the track knob all the way for the next or the previous song. It
 can also wind the song forward or back, and the heart can skip a song on a short press: see
@@ -165,7 +170,9 @@ can also wind the song forward or back, and the heart can skip a song on a short
 
 *Settings → Night mode*: choose the hours (**From**, **To**). During those hours every
 listen stops by itself after the **Automatic timer**, the volume stays under the
-**Maximum volume**, and the lights are dim (**Dimmed lights**).
+**Maximum volume** (on the speaker too), and the lights are dim (**Dimmed lights**). **Turn off all lights at night**
+switches off the ring, the side lights and the heart during those hours; they come back on
+afterwards.
 
 ## Spotify
 
@@ -214,8 +221,9 @@ version.
 <img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version up to date, then Limited volume, Shuffle, Repeat, MP3 quality, Speaker or headphones">
 
 **Listening**
-- **Limited volume (kids mode)**, **Shuffle**, **Repeat**. Shuffle and repeat here are for the
-  playlists that have no choice of their own ([playlist by playlist](#shuffle-and-repeat-playlist-by-playlist)).
+- **Limited volume (kids mode)**, **Shuffle**, **Start with a random song**, **Repeat**. These
+  are for the playlists that have no choice of their own
+  ([playlist by playlist](#shuffle-and-repeat-playlist-by-playlist)).
 - **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
   Held two seconds, the heart still switches the Jooki off; five seconds when its short press
   does something, so a small child pressing a bit too long does not switch it off.
@@ -236,6 +244,8 @@ version.
 
 **Bedtime and travel**
 - **Night mode**: see *Bedtime* above.
+- **Turn off all lights permanently**: the ring, the side lights and the heart stay off day and
+  night, even after a restart. A brief light can still show while the Jooki starts.
 - **Airplane mode**: Wi-Fi and Bluetooth off for the time you choose (1, 2, 4 or 8 hours,
   until the morning, or until it is switched off and on again). The Jooki brings them back
   by itself; tokens and music work the whole time. Meanwhile, this page cannot reach it:
@@ -245,7 +255,7 @@ version.
 - **Wi-Fi**: the network, the signal and the page's address. Moved house or changed the
   box? See [Give it its Wi-Fi back](https://guillain-rdcde.github.io/OpenJooki/wifi.html).
 - **Update**: see [Update it](update.md).
-- **Language**: English, Français or Nederlands. The page picks your phone's language by
+- **Language**: English, Français, Nederlands or Deutsch. The page picks your phone's language by
   itself.
 - **Appearance**: Automatic (like the phone), Light or Dark.
 - **Christmas tree**: just for fun, all the colours of the lights for 5 seconds.

@@ -1,4 +1,10 @@
   /* ------------------------------------------------------------------ views */
+  function playPlaylist(p) {
+    var random = typeof p.random_start === 'boolean' ? p.random_start : !!S.audio.config.random_start;
+    var args = { playlistId: p.id };
+    if (p.spotify || (random && !p.audiobook)) args.restart = true;
+    send('PLAYLIST_PLAY', args);
+  }
   function viewPlaylists() {
     var list = userPlaylists();
     var np = S.audio.nowPlaying;
@@ -13,7 +19,7 @@
         h('div', { class: 'name' }, p.title || '—'),
         h('div', { class: 'meta' }, p.spotify ? t('sp_playlist') : t('n_tracks', n) + (total ? ' · ' + fmtTotal(total) : '') + (p.audiobook ? ' · ' + t('audiobook') : '')),
         n || p.spotify ? h('button', { class: 'icon-btn accent play', 'aria-label': t('play') + ' ' + (p.title || ''), onclick: function (e) {
-          e.stopPropagation(); send('PLAYLIST_PLAY', { playlistId: p.id }); } }, icon('play')) : null);
+          e.stopPropagation(); playPlaylist(p); } }, icon('play')) : null);
       return card;
     });
     cards.push(h('button', { class: 'card pl newpl', onclick: newPlaylistModal, 'data-k': 'newpl' }, icon('plus'), t('new_playlist')));
@@ -195,14 +201,14 @@
     if (p.spotify) {
       // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
       return [head, h('div', { class: 'actions' },
-          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play'))),
+          h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { playPlaylist(p); } }, icon('play'), t('play'))),
         h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
         spotifyOfflineCard(p, id),
-        resumeSwitch(p, id),
+        resumeSwitch(p, id), p.resume || p.audiobook ? null : h('div', { class: 'card', style: 'margin-top:16px' }, modeRows(p, id)),
         deletePlaylistBtn(p, id)];
     }
     var actions = h('div', { class: 'actions' },
-      tracks.length ? h('button', { class: 'btn primary', onclick: function () { send('PLAYLIST_PLAY', { playlistId: id }); } }, icon('play'), t('play')) : null,
+      tracks.length ? h('button', { class: 'btn primary', onclick: function () { playPlaylist(p); } }, icon('play'), t('play')) : null,
       fileButton(t('add_files'), id, !tracks.length),
       h('button', { class: 'btn', onclick: function () { libraryPickerModal(p); } }, icon('lib'), t('from_library')),
       h('button', { class: 'btn', onclick: function () { radioModal(p); } }, icon('radio'), t('web_radio')),

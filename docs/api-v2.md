@@ -212,6 +212,9 @@ Payload schema:
       "enum": ["song", "both", "wind"],
       "type": "string"
     },
+    "lights_off": {
+      "type": "boolean"
+    },
     "repeat_mode": {
       "maximum": 2,
       "minimum": 0,

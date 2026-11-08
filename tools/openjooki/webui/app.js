@@ -73,6 +73,7 @@
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    lights_off: 'Éteindre toutes les lumières', lights_off_help: 'Anneau, voyants et cœur, toute la journée. Reste éteint après un redémarrage, même sans mode nuit.',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',
@@ -274,6 +275,7 @@
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    lights_off: 'Turn off all device lights', lights_off_help: 'Ring, side lights and heart, all day. Stays off after restarting, even with night mode off.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',
@@ -561,6 +563,7 @@
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
     knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
+    lights_off: 'Alle lampjes uit', lights_off_help: 'Ring, zijlampjes en hart, de hele dag. Blijft uit na opnieuw opstarten, ook als de nachtmodus uit staat.',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
     air_title: 'Vliegtuigmodus',
@@ -711,6 +714,11 @@
   if (THEMES.indexOf(theme) < 0) theme = 'auto';
   function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
   applyTheme();
+  // Also translate the light switch when the optional German table is present.
+  if (T.de) {
+    T.de.lights_off = 'Alle Gerätelichter ausschalten';
+    T.de.lights_off_help = 'Ring, Seitenlichter und Herz, rund um die Uhr. Bleibt nach einem Neustart und bei ausgeschaltetem Nachtmodus aus.';
+  }
   function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {
     var v = T[lang][k];
@@ -3322,7 +3330,7 @@
   }
   var nightVolDrag = null;
   function nightPage() {
-    var c = S.bedtime.cfg;
+    var c = S.bedtime.cfg, cfg = S.audio.config;
     if (c.start === undefined) return null; // firmware without bedtime
     var mv = nightVolDrag !== null ? nightVolDrag : Number(c.maxvol) || 100;
     var timers = [0, 10, 15, 20, 30, 45, 60];
@@ -3330,7 +3338,13 @@
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
     var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
-    if (!c.enabled) return out;
+    // Darkness is persistent and independent of the schedule, so keep its switch reachable
+    // here even with night mode off. The timed dimming option above it keeps its own setting.
+    var allLights = typeof cfg.lights_off === 'boolean' ? sGroup(null, [
+      sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+        onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } })
+    ]) : [];
+    if (!c.enabled) return out.concat(allLights);
     out.push(sGroup(t('s_night_hours'), [
       sRow({ k: 'nightstatus', label: S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start))) }),
       h('div', { class: 'timepair' },
@@ -3350,7 +3364,7 @@
           onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
       sRow({ label: t('night_dim'), sw: true, on: c.dim, k: 'nightdim', onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
-    return out;
+    return out.concat(allLights);
   }
   /* sort a playlist by one criterion; web radios keep their relative order at the end */
   var SORT_KEYS = ['name', 'title', 'artist', 'album', 'duration'];

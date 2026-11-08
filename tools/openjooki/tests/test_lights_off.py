@@ -1,0 +1,82 @@
+"""Persistent lights switch on the real core and browser, with an answering Holtek peer."""
+import paho.mqtt.client as mqtt
+from playwright.sync_api import sync_playwright
+import bench as B
+from jk import PAGE
+
+R = B.Results()
+ctrl = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "lights-controller")
+def hardware(cl, _u, m):
+    cl.publish("/j/ht/input/raw_read_response", m.payload)
+ctrl.on_message = hardware
+ctrl.connect("127.0.0.1", 1883); ctrl.subscribe("/j/ht/output/raw_write"); ctrl.loop_start()
+spy = B.Spy("/j/ht/output/raw_write", "/j/led/output/#", "/j/esp32/output/audio/set_volume")
+LED = "/j/ht/output/raw_write"
+def last():
+    p = spy.payloads(LED)
+    return p[-1] if p else None
+def only_black(mark):
+    paints = spy.payloads("/j/led/output/set_raw", mark)
+    pulses = spy.payloads("/j/led/output/pulse_raw", mark)
+    return not pulses and all(p.endswith(",0,0,0") for p in paints)
+j = B.boot(ui=True)
+R.check("off by default", j.get("audio.config.lights_off") is False)
+R.check("no deferred volume configuration", "toy_safe_maxvol" not in j.get("audio.config"))
+applied = spy.mark()
+j.send("SET_CFG", {"lights_off": True})
+R.expect("global driver disabled", lambda: last() == "34 0")
+B.quiet(3, "an acknowledged driver write must not be retried")
+R.check("controller acknowledgment prevents retries", spy.payloads(LED, applied) == ["34 0"], spy.payloads(LED, applied))
+mark = spy.mark()
+j.send("OJ_PARTY", {})
+j.c.publish("/j/event", "Evt.Character.Write")
+j.c.publish("/j/event", "Evt.Character.Detect.Empty")
+j.c.publish("/j/power/input/plugged_in", "1")
+j.c.publish("/j/power/input/charging", "1")
+j.barrier()
+R.check("events and party cannot light the LEDs", only_black(mark))
+R.expect("charger events retain darkness", lambda: last() == "34 0")
+j = B.restart(j)
+R.check("saved switch restored", j.get("audio.config.lights_off") is True)
+R.expect("boot reasserts driver off", lambda: last() == "34 0")
+R.check("restart has no coloured shutdown indicator", only_black(mark))
+for value in ("false", 0, 1, {}):
+    reply = j.v2("device.set_config", {"lights_off": value})
+    R.check("invalid switch rejected " + repr(value), reply.get("ok") is False, reply)
+j.send("OJ_PARENT_SET", {"code": "9876"}); j.wait_state("maintenance.parent", True)
+reply = j.v2("device.set_config", {"lights_off": False})
+R.check("v2 requires parent code", reply.get("ok") is False and reply.get("error", {}).get("code") == "forbidden", reply)
+j.errors.clear(); j.send("SET_CFG", {"lights_off": False}); j.barrier()
+R.check("v1 requires parent code", j.get("audio.config.lights_off") is True and j.errors)
+reply = j.v2("device.set_config", {"lights_off": False}, code="9876")
+R.check("correct parent code accepted", reply.get("ok"), reply)
+R.expect("driver enabled again", lambda: last() == "34 8")
+j.send("OJ_PARENT_CLEAR", {"current": "9876"}); j.wait_state("maintenance.parent", False); j.errors.clear()
+with sync_playwright() as pw:
+    browser = pw.chromium.launch(args=["--no-sandbox"])
+    ctx = browser.new_context(locale="en-GB", viewport={"width": 375, "height": 812})
+    pg = ctx.new_page(); errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)))
+    pg.goto(PAGE + "/#/settings"); pg.wait_for_selector("[data-k=nightrow]")
+    R.check("no lights switch in main settings", pg.locator("[data-k=lightsoff]").count() == 0)
+    pg.click("[data-k=nightrow]"); pg.wait_for_selector("[data-k=lightsoff]")
+    R.check("accessible switch", pg.get_attribute("[data-k=lightsoff]", "aria-label") == "Turn off all device lights")
+    R.check("night volume has its own slider", pg.locator("[data-k=nightvol]").count() == 1)
+    pg.locator("[data-k=nightvol]").evaluate("el => { el.value = '40'; el.dispatchEvent(new Event('change', {bubbles:true})); }")
+    R.expect("night volume remains independent of lights", lambda: j.get("bedtime.cfg.maxvol") == 40 and j.get("audio.config.lights_off") is False)
+    pg.uncheck("[data-k=nighton]"); pg.wait_for_selector("[data-k=nightvol]", state="hidden")
+    R.check("lights switch reachable with night mode off", pg.locator("[data-k=lightsoff]").is_visible())
+    pg.check("[data-k=lightsoff]")
+    R.expect("browser turns driver off", lambda: last() == "34 0" and j.get("audio.config.lights_off") is True)
+    pg.reload(); pg.wait_for_selector("[data-k=lightsoff]")
+    R.check("browser reload retains switch", pg.is_checked("[data-k=lightsoff]"))
+    pg.uncheck("[data-k=lightsoff]")
+    R.expect("browser turns driver on", lambda: last() == "34 8" and j.get("audio.config.lights_off") is False)
+    pg.check("[data-k=nighton]"); pg.wait_for_selector("[data-k=nightvol]")
+    R.check("night volume preserved after switching lights", pg.input_value("[data-k=nightvol]") == "40")
+    R.check("narrow screen fits", pg.evaluate("() => document.documentElement.scrollWidth <= innerWidth"))
+    R.check("no browser errors", not errors, errors)
+    browser.close()
+R.check("no new ESP32 volume commands", not spy.payloads("/j/esp32/output/audio/set_volume"))
+B.check_clean_log(R, "lights switch")
+j.close(); ctrl.loop_stop(); ctrl.disconnect(); R.finish()

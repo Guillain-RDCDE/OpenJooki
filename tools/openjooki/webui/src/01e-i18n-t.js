@@ -10,6 +10,11 @@
   if (THEMES.indexOf(theme) < 0) theme = 'auto';
   function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
   applyTheme();
+  // Also translate the light switch when the optional German table is present.
+  if (T.de) {
+    T.de.lights_off = 'Alle Gerätelichter ausschalten';
+    T.de.lights_off_help = 'Ring, Seitenlichter und Herz, rund um die Uhr. Bleibt nach einem Neustart und bei ausgeschaltetem Nachtmodus aus.';
+  }
   function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {
     var v = T[lang][k];

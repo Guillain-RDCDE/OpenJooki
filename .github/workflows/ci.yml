@@ -106,6 +106,8 @@ jobs:
       - uses: ./.github/actions/bench
       - name: German device UI
         run: sudo -E python3 test_german.py
+      - name: Persistent device lights switch
+        run: sudo -E python3 test_lights_off.py
       - name: backend
         run: sudo -E python3 test_backend.py
       - name: bedtime

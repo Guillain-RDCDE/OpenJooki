@@ -12,28 +12,36 @@ function queue.next_seed(seed, salt)
   return (s * 48271) % 2147483647
 end
 
+-- Uniform bounded draw from all nonzero Park–Miller states.
+function queue.draw(seed, n)
+  local limit = math.floor(2147483646 / n) * n
+  local s = seed
+  repeat s = queue.next_seed(s) until s <= limit
+  return ((s - 1) % n) + 1, s
+end
+
 -- ------------------------------------------------------------------ queue
 local function shuffled(n, seed)
   local order = {}
   for i = 1, n do order[i] = i end
   local s = seed or 0
   for i = n, 2, -1 do
-    local limit = math.floor(2147483646 / i) * i
-    repeat s = queue.next_seed(s) until s <= limit
-    local j = ((s - 1) % i) + 1
+    local j
+    j, s = queue.draw(s, i)
     order[i], order[j] = order[j], order[i]
   end
   return order
 end
 
---- Shuffle (true / false) and repeat (0 none, 1 all, 2 this one) for a playlist: its own when it
---- has one (playlists[id].shuffle_mode / repeat_mode, #22), else the Settings' (audiocfg).
+--- Shuffle (true / false), repeat (0 none, 1 all, 2 this one), random start (true / false):
+--- the playlist's own choices when present, else the Settings' (audiocfg).
 function queue.modes(doc, p)
   local cfg = doc.audiocfg or {}
-  local shuffle, rep = p.shuffle_mode, p.repeat_mode
+  local shuffle, rep, random_start = p.shuffle_mode, p.repeat_mode, p.random_start
   if shuffle == nil then shuffle = cfg.shuffle_mode == true end
   if rep == nil then rep = tonumber(cfg.repeat_mode) or 0 end
-  return shuffle, rep
+  if random_start == nil then random_start = cfg.random_start == true end
+  return shuffle, rep, random_start
 end
 
 --- The order in which a playlist's tracks are played (identity or a memoised shuffle).

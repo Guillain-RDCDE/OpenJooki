@@ -193,7 +193,7 @@ No payload.
 
 ### `device.set_config`
 
-Shuffle and repeat (0 none, 1 all, 2 one).
+Shuffle, repeat (0 none, 1 all, 2 one), and `random_start` (boolean, default false). Random start chooses the starting song independently of shuffle; subsequent songs follow the playback order, with repeat deciding whether the end wraps. Saved in audiocfg.json. Audiobooks and Spotify/Deezer presets keep their own start behavior.
 
 Payload schema:
 
@@ -216,6 +216,9 @@ Payload schema:
       "type": "string"
     },
     "lights_off": {
+      "type": "boolean"
+    },
+    "random_start": {
       "type": "boolean"
     },
     "repeat_mode": {
@@ -339,7 +342,7 @@ No payload.
 
 ### `playback.play`
 
-Plays a playlist (optional 1-based track index). Audiobooks resume where they stopped.
+Plays a playlist (optional 1-based track index, which takes priority over random start). A fresh start with `random_start` picks a random song, then follows the playback order; paused or playing playlists continue their current song. Audiobooks resume where they stopped. Spotify/Deezer presets use their service's start behavior.
 
 Payload schema:
 
@@ -544,7 +547,7 @@ Payload schema:
 
 ### `playlist.update`
 
-Renames / links a character (star, or false to unlink) / reorders or removes tracks / sets audiobook. On TRASH only `tracks` is allowed: files really unused are deleted.
+Renames / links a character (star, or false to unlink) / reorders or removes tracks / sets audiobook. Playback modes override Settings; `random_start` accepts true, false or `"settings"` to inherit. On TRASH only `tracks` is allowed: files really unused are deleted.
 
 Payload schema:
 
@@ -559,6 +562,10 @@ Payload schema:
       "maxLength": 80,
       "minLength": 1,
       "type": "string"
+    },
+    "random_start": {
+      "enum": [true, false, "settings"],
+      "type": ["boolean", "string"]
     },
     "repeat_mode": {
       "type": ["integer", "string"]

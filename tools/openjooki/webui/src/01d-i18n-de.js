@@ -45,6 +45,7 @@
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
     toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
+    random_start: 'Mit einem zufälligen Titel starten', random_start_help: 'Danach der Wiedergabereihenfolge folgen. Für Musiklisten auf dem Jooki.',
     language: 'Sprache', power_off: 'Jooki ausschalten', power_off_q: 'Jooki ausschalten?', power_off_text: 'Zum Einschalten musst du seine Taste drücken.', power_off_done: 'Der Jooki schaltet sich aus…',
     air_title: 'Flugmodus', air_help: 'Schaltet WLAN und Bluetooth des Jooki vorübergehend aus. Figuren und Musik funktionieren weiter. Diese Seite kann den Jooki währenddessen nicht erreichen.', air_h: function (n) { return n + ' Std.'; },
     air_morning: function (h) { return 'Bis morgen früh (' + h + ')'; }, air_boot: 'Bis zum Aus- und Wiedereinschalten', air_btn: 'WLAN und Bluetooth ausschalten', air_q: 'Flugmodus einschalten?',

@@ -64,6 +64,7 @@
     lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off all day, even after restarting or with night mode off.',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Ring, side lights and heart turn off during the scheduled hours and come back on afterwards.',
     night_dim_help: 'Dimming is saved and resumes when the lights are on.',
+    random_start: 'Start with a random song', random_start_help: 'Then follow the playback order. For music playlists on the Jooki.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',

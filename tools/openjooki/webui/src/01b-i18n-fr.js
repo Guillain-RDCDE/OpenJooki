@@ -64,6 +64,7 @@
     lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur éteints jour et nuit, même après un redémarrage ou sans mode nuit.',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Anneau, voyants et cœur s’éteignent pendant les heures définies et se rallument ensuite.',
     night_dim_help: 'Le réglage est conservé et reprend quand les lumières s’allument.',
+    random_start: 'Commencer par un morceau au hasard', random_start_help: 'Puis suivre l’ordre de lecture. Pour les playlists musicales sur la Jooki.',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',

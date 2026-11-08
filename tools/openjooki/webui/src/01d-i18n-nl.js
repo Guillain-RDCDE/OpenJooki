@@ -64,6 +64,7 @@
     lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven de hele dag uit, ook na opnieuw opstarten of zonder nachtmodus.',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Ring, zijlampjes en hart gaan tijdens de ingestelde uren uit en daarna weer aan.',
     night_dim_help: 'De diminstelling blijft bewaard en geldt als de lampjes aan zijn.',
+    random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Daarna de afspeelvolgorde volgen. Voor muziekafspeellijsten op de Jooki.',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
     air_title: 'Vliegtuigmodus',

@@ -115,6 +115,7 @@ local function start(doc, pb, playlist_id, opts)
     return { commands = cmds }
   end
   local q = queue_for(doc, pb, playlist_id, p)
+  local shuffle, _, random_start = modes(doc, p)
   local index, queue_pos, seek_ms = nil, nil, nil
   if opts.index and p.tracks[opts.index] then
     index = opts.index; queue_pos = index_of(q, index) or 1
@@ -125,14 +126,24 @@ local function start(doc, pb, playlist_id, opts)
       -- an audiobook follows its saved position only; without one it starts at chapter 1 (1.3 rule)
       index, seek_ms = playback.resume_for(doc.resume, playlist_id, p.tracks)
       index = index or 1
-    elseif (modes(doc, p)) and n > 1 and
-           (not (pb.now and pb.now.playlist == playlist_id) or opts.restart or pb.state == "idle" or pb.state == "ended") then
-      -- A fresh shuffled start draws a new order and starts with its first song.
-      -- Putting back a paused token continues its existing song and order.
+    elseif n > 1 and (shuffle or random_start) and
+        (not (pb.now and pb.now.playlist == playlist_id) or opts.restart or pb.state == "idle" or pb.state == "ended") then
+      -- A fresh start draws again; a paused or still playing token keeps its song.
       pb.seed = queue.next_seed(pb.seed, math.floor((tonumber(opts.now_s) or 0) * 1000))
-      pb.shuffle[playlist_id] = nil
-      q = queue_for(doc, pb, playlist_id, p)
-      queue_pos, index = 1, q[1]
+      local first
+      if random_start then first, pb.seed = queue.draw(pb.seed, n) end
+      if shuffle then
+        pb.shuffle[playlist_id] = nil
+        q = queue_for(doc, pb, playlist_id, p)
+        if first then
+          local pos = index_of(q, first)
+          q[1], q[pos] = q[pos], q[1] -- retain every song in the shuffled queue
+        end
+        queue_pos = 1
+      else
+        queue_pos = first
+      end
+      index = q[queue_pos]
     end
     index = index or pb.last[playlist_id] or 1
     if not p.tracks[index] then index = 1 end

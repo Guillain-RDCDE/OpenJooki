@@ -73,6 +73,14 @@
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    volume_test: 'Tester',
+    volume_testing: 'Test en cours…',
+    volume_test_help: 'Un son court sur le Jooki. Les autres limites de volume actives restent appliquées.',
+    volume_test_level: function (p) { return 'Test à ' + p + ' %'; },
+    volume_test_busy: 'Veuillez attendre que la lecture soit prête.',
+    volume_test_muted: 'Réactivez d’abord le son du Jooki.',
+    volume_test_failed: 'Le son de test n’a pas pu être joué. Veuillez réessayer.',
+    volume_test_unavailable: 'Ce test de volume est indisponible pour le moment.',
     toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
     random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
     lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur éteints jour et nuit, même après un redémarrage ou sans mode nuit.',
@@ -279,6 +287,14 @@
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    volume_test: 'Test',
+    volume_testing: 'Testing…',
+    volume_test_help: 'A short tone on the Jooki. Other active volume limits still apply.',
+    volume_test_level: function (p) { return 'Testing at ' + p + ' %'; },
+    volume_test_busy: 'Please wait until playback is ready.',
+    volume_test_muted: 'Unmute the Jooki first.',
+    volume_test_failed: 'The test tone could not play. Please try again.',
+    volume_test_unavailable: 'This volume test is currently unavailable.',
     toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
     random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off all day, even after restarting or with night mode off.',
@@ -468,6 +484,14 @@
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
     toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
+    volume_test: 'Testen',
+    volume_testing: 'Test läuft…',
+    volume_test_help: 'Kurzer Ton auf dem Jooki. Weitere aktive Lautstärkegrenzen gelten weiter.',
+    volume_test_level: function (p) { return 'Test bei ' + p + ' %'; },
+    volume_test_busy: 'Bitte warte, bis die Wiedergabe bereit ist.',
+    volume_test_muted: 'Hebe zuerst die Stummschaltung auf.',
+    volume_test_failed: 'Der Testton konnte nicht abgespielt werden. Versuche es erneut.',
+    volume_test_unavailable: 'Dieser Lautstärketest ist gerade nicht verfügbar.',
     toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
     toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
     random_start: 'Mit einem zufälligen Titel starten',
@@ -578,6 +602,14 @@
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
     knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
+    volume_test: 'Testen',
+    volume_testing: 'Bezig met testen…',
+    volume_test_help: 'Een korte toon op de Jooki. Andere actieve volumegrenzen blijven gelden.',
+    volume_test_level: function (p) { return 'Test op ' + p + ' %'; },
+    volume_test_busy: 'Wacht tot het afspelen klaar is.',
+    volume_test_muted: 'Zet eerst het geluid van de Jooki weer aan.',
+    volume_test_failed: 'De testtoon kon niet worden afgespeeld. Probeer het opnieuw.',
+    volume_test_unavailable: 'Deze volumetest is momenteel niet beschikbaar.',
     toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
     random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven de hele dag uit, ook na opnieuw opstarten of zonder nachtmodus.',
@@ -1118,7 +1150,9 @@
     if (topic === '/j/web/output/state') {
       var posOnly = data && Object.keys(data).length === 1 && data.audio && Object.keys(data.audio).length === 1 && data.audio.playback &&
         obj(data.audio.playback).state === S.audio.playback.state;
+      var wasTesting = obj(S.audio.volume_test).active;
       mergeState(data);
+      if (wasTesting && !obj(S.audio.volume_test).active && obj(S.audio.volume_test).error) toast(t('volume_test_failed'), 'error');
       if (posOnly) return;
       waiters = waiters.filter(function (w) { return !w(data); });
       if (!autoChecked && S.device.openjooki) { autoChecked = true; resumeUpdate(function (running) { if (!running) setTimeout(checkUpdate, 1500); }); }
@@ -1138,7 +1172,7 @@
     }
   }
   // the Jooki's error messages (the core's own words) -> what the page says
-  var ERR_TEXT = { TRASH_READONLY: 'err_readonly', ERR_INTERNAL: 'err_internal', 'empty title': 'err_empty_title', 'invalid stream url': 'err_radio',
+  var ERR_TEXT = { VOLUME_TEST_BUSY: 'volume_test_busy', VOLUME_TEST_MUTED: 'volume_test_muted', VOLUME_TEST_UNAVAILABLE: 'volume_test_unavailable', TRASH_READONLY: 'err_readonly', ERR_INTERNAL: 'err_internal', 'empty title': 'err_empty_title', 'invalid stream url': 'err_radio',
                    'invalid token type': 'err_unknown_char', 'Not playing spotify right now': 'err_sp_not_playing', SSH_KEY_INVALID: 'err_ssh_key', SSH_CLOSED: 'err_ssh_closed' };
   function errorText(msg) {
     msg = String(msg || '');
@@ -3000,6 +3034,19 @@
     shownSub = body ? sub : null;
     return body ? h('div', { class: 'settings sub' + (enter ? ' enter' : '') }, body) : viewSettings();
   }
+  // Present only when the core advertises the settings-volume audition API.
+  function volumeTestControl(target, disabled) {
+    var v = S.audio.volume_test;
+    if (!v || typeof v !== 'object') return null;
+    var here = v.active && v.target === target;
+    return h('div', { class: 'row', style: 'width:100%;flex-wrap:wrap' },
+      h('button', { type: 'button', class: 'pillbtn', 'data-k': 'testvol-' + target,
+        'aria-label': t('volume_test') + ': ' + t(target === 'kids' ? 'toy_safe_maxvol' : 'night_maxvol'),
+        disabled: disabled || !online || v.active ? 'disabled' : null,
+        onclick: function () { send('OJ_VOLUME_TEST', { target: target }); } }, t(here ? 'volume_testing' : 'volume_test')),
+      h('span', { class: 'small muted grow', role: 'status', 'aria-live': 'polite' },
+        here && typeof v.percent === 'number' ? t('volume_test_level', v.percent) : t('volume_test_help')));
+  }
   function viewSettings() {
     var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config, m = obj(S.maintenance), b = obj(S.bluetooth), c = S.bedtime.cfg;
     var lvl = pw.level && typeof pw.level === 'object' ? Number(pw.level.p) : NaN;
@@ -3022,11 +3069,11 @@
       avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
       sGroup(t('s_listen'), [
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ tag: 'label', col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
-          right: h('div', { class: 'row', style: 'width:100%' },
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
+          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
             h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
               oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
-              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')) }) : null,
+              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
@@ -3383,11 +3430,11 @@
       sRow({ tag: 'label', label: t('night_timer'),
         right: h('select', { class: 'input mini', 'data-k': 'nighttimer', onchange: function (e) { e.target.blur(); setBedtime({ timer: Number(e.target.value) }); } },
           timers.map(function (m) { return h('option', { value: String(m), selected: Number(c.timer) === m ? 'selected' : null }, m ? t('sleep_min', m) : t('night_timer_none')); })) }),
-      h('label', { class: 'srow noico col' }, h('span', { class: 'row', style: 'width:100%' }, h('span', { class: 'l1 grow' }, t('night_maxvol')),
+      h('div', { class: 'srow noico col' }, h('span', { class: 'row', style: 'width:100%' }, h('span', { class: 'l1 grow' }, t('night_maxvol')),
           h('span', { class: 'val', 'data-nightvol': '1' }, volLabel(mv))),
         h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol', 'aria-label': t('night_maxvol'),
           oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
-          onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
+          onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } }), volumeTestControl('night', false)),
       typeof c.lights_off === 'boolean' ? sRow({ label: t('night_lights_off'), sub: t('night_lights_off_help'), sw: true,
         on: c.lights_off, k: 'nightlightsoff', onchange: function (e) { setBedtime({ lights_off: e.target.checked }); } }) : null,
       sRow({ label: t('night_dim'), sub: t('night_dim_help'), sw: true, on: c.dim, k: 'nightdim',

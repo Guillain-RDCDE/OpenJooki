@@ -167,6 +167,8 @@ function power.on_timer(doc, ev)
   return fn(doc, ev)
 end
 
+power.on_shutdown_request = require("services.device.volume_test").wrap(power.on_shutdown_request)
+
 function power.install(api, dispatch)
   dispatch.on("boot", "device.power", power.on_boot)
   for name, fn in pairs(TIMERS) do dispatch.on_timer(name, "device.power", fn) end

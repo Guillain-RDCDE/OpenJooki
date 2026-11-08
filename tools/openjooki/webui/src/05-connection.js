@@ -134,7 +134,9 @@
     if (topic === '/j/web/output/state') {
       var posOnly = data && Object.keys(data).length === 1 && data.audio && Object.keys(data.audio).length === 1 && data.audio.playback &&
         obj(data.audio.playback).state === S.audio.playback.state;
+      var wasTesting = obj(S.audio.volume_test).active;
       mergeState(data);
+      if (wasTesting && !obj(S.audio.volume_test).active && obj(S.audio.volume_test).error) toast(t('volume_test_failed'), 'error');
       if (posOnly) return;
       waiters = waiters.filter(function (w) { return !w(data); });
       if (!autoChecked && S.device.openjooki) { autoChecked = true; resumeUpdate(function (running) { if (!running) setTimeout(checkUpdate, 1500); }); }
@@ -154,7 +156,7 @@
     }
   }
   // the Jooki's error messages (the core's own words) -> what the page says
-  var ERR_TEXT = { TRASH_READONLY: 'err_readonly', ERR_INTERNAL: 'err_internal', 'empty title': 'err_empty_title', 'invalid stream url': 'err_radio',
+  var ERR_TEXT = { VOLUME_TEST_BUSY: 'volume_test_busy', VOLUME_TEST_MUTED: 'volume_test_muted', VOLUME_TEST_UNAVAILABLE: 'volume_test_unavailable', TRASH_READONLY: 'err_readonly', ERR_INTERNAL: 'err_internal', 'empty title': 'err_empty_title', 'invalid stream url': 'err_radio',
                    'invalid token type': 'err_unknown_char', 'Not playing spotify right now': 'err_sp_not_playing', SSH_KEY_INVALID: 'err_ssh_key', SSH_CLOSED: 'err_ssh_closed' };
   function errorText(msg) {
     msg = String(msg || '');

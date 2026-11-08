@@ -18,6 +18,7 @@ local lights = require("services.device.lights")
 local power = require("services.device.power")
 local radio = require("services.device.radio")
 local buttons = require("services.device.buttons")
+local volume_test = require("services.device.volume_test")
 local device = {}
 local DEFAULT_KIDS_MAX = 56 -- factory speaker ceiling on the shared 0–100 curve
 
@@ -33,6 +34,8 @@ local function clamp(v) v = math.floor(tonumber(v) or 0) if v < 0 then return 0 
 
 --- Requested volume through the kids/night ceilings, mute and the fade.
 function device.effective_volume(doc, requested)
+  local test = doc.volume_test_int or {}
+  if test.active and test.phase ~= "restoring" then requested = test.phase == "pausing" and 0 or test.requested end
   local v = clamp(requested)
   local find = (doc.streaming_int or {}).find
   if (doc.upnp or {}).muted or (find and (find.skips or 0) > 0) then return 0 end
@@ -110,6 +113,7 @@ local function set_volume(doc, requested, persist)
   if persist ~= false then cmds[#cmds + 1] = { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } end
   return { state = state, commands = cmds }
 end
+set_volume = volume_test.wrap(set_volume)
 device.set_volume = set_volume
 
 local HEART_PRESS = { none = true, next = true, pause = true }
@@ -512,6 +516,7 @@ S.enable, S.airplane = radio.schemas.enable, radio.schemas.airplane
 device.schemas = S
 
 function device.install(api, dispatch)
+  volume_test.install(api, dispatch)
   dispatch.on("boot", "device", device.on_boot)
   dispatch.on("bus.up", "device", device.on_bus_up)
   for name, fn in pairs(TIMERS) do dispatch.on_timer(name, "device", fn) end

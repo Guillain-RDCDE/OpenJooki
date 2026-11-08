@@ -122,6 +122,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/bench
+      - name: Settings volume test tones
+        run: sudo -E python3 test_volume_test.py
       - name: Web volume and configurable kids ceiling
         run: sudo -E python3 test_device_controls.py
       - name: Scheduled and permanent device darkness

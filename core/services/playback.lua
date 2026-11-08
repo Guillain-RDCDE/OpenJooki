@@ -21,6 +21,7 @@ local sounds = require("services.playback.sounds")
 local resume_rules = require("services.playback.resume")
 local queue = require("services.playback.queue")
 local playback = {}
+local volume_test = require("services.device.volume_test")
 
 local MUSIC, SOUND = 7, 3
 local BACK_PAUSE, BACK_TIMER, MIN_BACK = resume_rules.BACK_PAUSE, resume_rules.BACK_TIMER, resume_rules.MIN_BACK
@@ -480,6 +481,12 @@ S.seek = { type = "object", required = { "ms" }, properties = { ms = { type = "i
 S.skip = { type = "object", required = { "seconds" }, properties = { seconds = { type = "integer", minimum = -3600, maximum = 3600 } }, additionalProperties = false }
 S.playlist = resume_rules.schemas.playlist
 playback.schemas = S
+
+-- A new transport request ends a volume audition before music can restart.
+start = volume_test.wrap(start)
+for _, name in ipairs({ "play_uri", "on_pause", "on_resume", "on_toggle", "on_next", "on_prev", "on_seek", "on_skip", "on_stop" }) do
+  playback[name] = volume_test.wrap(playback[name])
+end
 
 function playback.install(api, dispatch)
   dispatch.on("boot", "playback", playback.on_boot)

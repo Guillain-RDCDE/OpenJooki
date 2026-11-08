@@ -73,6 +73,9 @@
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur éteints jour et nuit, même après un redémarrage ou sans mode nuit.',
+    night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Anneau, voyants et cœur s’éteignent pendant les heures définies et se rallument ensuite.',
+    night_dim_help: 'Le réglage est conservé et reprend quand les lumières s’allument.',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
     power_off_text: 'Il faudra appuyer sur son bouton pour le rallumer.', power_off_done: 'Le Jooki s\'éteint…',
     air_title: 'Mode avion',
@@ -274,6 +277,9 @@
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off all day, even after restarting or with night mode off.',
+    night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Ring, side lights and heart turn off during the scheduled hours and come back on afterwards.',
+    night_dim_help: 'Dimming is saved and resumes when the lights are on.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
     power_off_text: 'You will need to press its button to turn it back on.', power_off_done: 'The Jooki is turning off…',
     air_title: 'Airplane mode',
@@ -561,6 +567,9 @@
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
     knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
+    lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven de hele dag uit, ook na opnieuw opstarten of zonder nachtmodus.',
+    night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Ring, zijlampjes en hart gaan tijdens de ingestelde uren uit en daarna weer aan.',
+    night_dim_help: 'De diminstelling blijft bewaard en geldt als de lampjes aan zijn.',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
     power_off_text: 'Je moet op de knop drukken om hem weer aan te zetten.', power_off_done: 'De Jooki gaat uit…',
     air_title: 'Vliegtuigmodus',
@@ -711,6 +720,14 @@
   if (THEMES.indexOf(theme) < 0) theme = 'auto';
   function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
   applyTheme();
+  // Also translate the light switch when the optional German table is present.
+  if (T.de) {
+    T.de.lights_off = 'Alle Lichter dauerhaft ausschalten';
+    T.de.lights_off_help = 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.';
+    T.de.night_lights_off = 'Alle Lichter während der Nacht ausschalten';
+    T.de.night_lights_off_help = 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.';
+    T.de.night_dim_help = 'Die Dimm-Einstellung bleibt gespeichert und gilt, sobald die Lichter an sind.';
+  }
   function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {
     var v = T[lang][k];
@@ -2934,7 +2951,7 @@
   function sRow(o) {
     var right = [];
     if (o.value !== undefined && o.value !== null && o.value !== '') right.push(h('span', { class: 'val' + (o.vcls ? ' ' + o.vcls : '') }, o.value));
-    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
+    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, disabled: o.disabled ? 'disabled' : null, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
     if (o.check) right.push(h('span', { class: 'tick' }, icon('check')));
     if (o.href || (o.onclick && !o.nochev)) right.push(h('span', { class: 'chev' }, icon('chev')));
     if (o.right) right.push(o.right);
@@ -3012,8 +3029,10 @@
         d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
-      c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
+      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sGroup(t('s_night_trip'), [
         c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
+        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+          onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
         d.airplane !== undefined ? sRow({ icon: 'plane', color: 'orange', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
       sGroup(t('s_general'), [
@@ -3322,7 +3341,7 @@
   }
   var nightVolDrag = null;
   function nightPage() {
-    var c = S.bedtime.cfg;
+    var c = S.bedtime.cfg, cfg = S.audio.config;
     if (c.start === undefined) return null; // firmware without bedtime
     var mv = nightVolDrag !== null ? nightVolDrag : Number(c.maxvol) || 100;
     var timers = [0, 10, 15, 20, 30, 45, 60];
@@ -3348,7 +3367,10 @@
         h('input', { class: 'range', type: 'range', min: '10', max: '100', step: '5', value: String(mv), 'data-k': 'nightvol', 'aria-label': t('night_maxvol'),
           oninput: function (e) { nightVolDrag = Number(e.target.value); var l = document.querySelector('[data-nightvol]'); if (l) l.textContent = volLabel(nightVolDrag); },
           onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
-      sRow({ label: t('night_dim'), sw: true, on: c.dim, k: 'nightdim', onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
+      typeof c.lights_off === 'boolean' ? sRow({ label: t('night_lights_off'), sub: t('night_lights_off_help'), sw: true,
+        on: c.lights_off, k: 'nightlightsoff', onchange: function (e) { setBedtime({ lights_off: e.target.checked }); } }) : null,
+      sRow({ label: t('night_dim'), sub: t('night_dim_help'), sw: true, on: c.dim, k: 'nightdim',
+        disabled: c.lights_off || cfg.lights_off, onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
     return out;
   }

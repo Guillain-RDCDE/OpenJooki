@@ -25,6 +25,7 @@ the 1.x patched program and its `web_ctrl` emulator left with ADR-0012.
 (cd ../../.. && python3 tools/build/bundle.py)   # the core, into build/ at the repository root
 export PLAYER_LUA=core CORE_BUILD=$(cd ../../.. && pwd)/build
 ./make_media.sh && ./up.sh                    # test audio, broker, fake audio
+python3 test_lights_off.py                    # scheduled/permanent darkness, global driver, persistence, parent code and browser
 node test_i18n.js
 python3 test_german.py                        # German browser, narrow layout, picture search
 python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py

@@ -4,7 +4,7 @@
   function sRow(o) {
     var right = [];
     if (o.value !== undefined && o.value !== null && o.value !== '') right.push(h('span', { class: 'val' + (o.vcls ? ' ' + o.vcls : '') }, o.value));
-    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
+    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, disabled: o.disabled ? 'disabled' : null, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
     if (o.check) right.push(h('span', { class: 'tick' }, icon('check')));
     if (o.href || (o.onclick && !o.nochev)) right.push(h('span', { class: 'chev' }, icon('chev')));
     if (o.right) right.push(o.right);
@@ -82,8 +82,10 @@
         d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
         spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
-      c.start !== undefined || d.airplane !== undefined ? sGroup(t('s_night_trip'), [
+      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sGroup(t('s_night_trip'), [
         c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
+        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+          onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
         d.airplane !== undefined ? sRow({ icon: 'plane', color: 'orange', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
       sGroup(t('s_general'), [

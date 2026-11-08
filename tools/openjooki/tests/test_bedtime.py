@@ -27,7 +27,7 @@ def ended(j): j.c.publish("/j/audio/input/ended", json.dumps({"id": MUSIC}))
 j = start()
 b = bt(j)
 check("B1 defaults: 20:00-07:00, 20 min, 30 %, dimmed lights, Paris time",
-      b.get("cfg") == {"enabled": True, "start": 1200, "stop": 420, "timer": 20, "maxvol": 30, "dim": True, "tzbase": 60, "tzdst": "EU"}, b)
+      b.get("cfg") == {"enabled": True, "start": 1200, "stop": 420, "timer": 20, "maxvol": 30, "dim": True, "lights_off": False, "tzbase": 60, "tzdst": "EU"}, b)
 j.errors.clear(); j.send("OJ_BEDTIME_SET", {"start": "24:10"})
 R.expect("B2 invalid setting refused with a message", lambda: j.errors and "invalid start" in str(j.errors[-1]) and bt(j)["cfg"]["start"] == 1200, 5, lambda: j.errors)
 j.send("OJ_BEDTIME_SET", {"start": "20:30", "stop": "06:45", "timer": 25, "maxvol": 35})

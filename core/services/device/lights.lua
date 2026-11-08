@@ -4,6 +4,7 @@
 -- and owns no state but the flag state.device.party; the colours sent are not kept (the simulator
 -- reads them off the bus). Installed by services.device (the facade), which re-exports its handlers.
 local util = require("services.util")
+local bedtime = require("services.bedtime")
 local lights = {}
 
 local LED = "/j/led/output/"
@@ -12,6 +13,9 @@ local COLOURS = { WHITE = { 200, 200, 200 }, BLACK = { 0, 0, 0 }, RED = { 200, 0
                   LIGHTBLUE = { 0, 10, 200 } }
 
 local copy = util.copy
+function lights.off(doc)
+  return (doc.audiocfg or {}).lights_off == true or (doc.limits or {}).lights_off == true
+end
 local function cfg(doc, key, default)
   local c = doc.config or {}
   if c[key] ~= nil then return c[key] end
@@ -61,6 +65,7 @@ end
 --- One frame of the start-up "waiting for Wi-Fi" chase, or its end. Driven by the device.wifi_anim
 --- timer started at boot; it cancels that timer as soon as the wait is over.
 function lights.on_wifi_anim(doc, ev)
+  if lights.off(doc) then return nil end
   if (doc.device or {}).party then return nil end
   if not wifi_waiting(doc) then
     local r = lights.on_lights_refresh(doc)   -- let the dots settle to their real state
@@ -76,6 +81,7 @@ end
 
 --- Idle/playing ring + Wi-Fi dots, recomputed on playback and network changes.
 function lights.on_lights_refresh(doc)
+  if lights.off(doc) then return { commands = {} } end
   local pb = doc.playback or {}
   local cmds = {}
   if (doc.device or {}).party then return { commands = cmds } end   -- the Christmas tree owns the lights for 5 s
@@ -121,6 +127,7 @@ local WARN_EVENTS = { ["Evt.ToySafe.On"] = true, ["Evt.ToySafe.Off"] = true, ["E
                       ["Evt.Power.Low.Warning"] = true, ["Evt.Power.Inactivity.Warning"] = true, ["Evt.Airplane.Enable"] = true }
 
 function lights.on_lights_event(doc, ev)
+  if lights.off(doc) then return nil end
   local f = EVENT_LIGHTS[ev.name]
   if f then return { commands = f(doc) } end
   if ERROR_EVENTS[ev.name] then return { commands = { pulse(doc, "PREV", COLOURS.RED, 2), pulse(doc, "NEXT", COLOURS.RED, 2) } } end
@@ -144,6 +151,7 @@ end
 lights.wheel = wheel
 
 function lights.on_party(doc)
+  if lights.off(doc) then return {} end
   if (doc.device or {}).party then return {} end
   local d = copy(doc.device or {}); d.party = true
   return { state = { device = d }, commands = {
@@ -152,6 +160,7 @@ function lights.on_party(doc)
 end
 
 function lights.on_party_frame(doc, ev)
+  if lights.off(doc) then return nil end
   if not (doc.device or {}).party then return { commands = { { kind = "timer.cancel", name = "device.party" } } } end
   local deg = math.floor((ev.now or 0) / PARTY_FRAME_S) * PARTY_STEP
   return { commands = { set(doc, "RING", wheel(deg)), set(doc, "PREV", wheel(deg + 120)), set(doc, "NEXT", wheel(deg + 240)) } }
@@ -171,11 +180,73 @@ end
 -- ------------------------------------------------------------------ boot / timers / install
 --- Boot starts the side-dot "waiting for Wi-Fi" chase; it stops itself once the network is up (or a
 --- token plays). Off the real Jooki wifi_anim_s is 0 (no frames, no idle bus traffic on the bench).
-function lights.on_boot(doc)
-  if cfg(doc, "wifi_anim_s", ANIM_S) > 0 then
-    return { commands = { { kind = "timer.every", name = "device.wifi_anim", seconds = anim_s(doc) } } }
+-- The global LED driver gates the ring, side dots AND the Holtek-owned heart.
+-- ht_ctrl writes register 34 and reports the read-back on raw_read_response.
+-- A missing / wrong answer gets at most three attempts, including the first.
+local function driver_write(value)
+  return { kind = "bus.publish", topic = "/j/ht/output/raw_write", payload = "34 " .. value }
+end
+local function verify_timer() return { kind = "timer.once", name = "device.lights_verify", seconds = 0.75 } end
+
+function lights.on_apply(doc)
+  local off = lights.off(doc)
+  local d = copy(doc.device or {}); d.party = nil
+  local cmds = {
+    { kind = "timer.cancel", name = "device.party" }, { kind = "timer.cancel", name = "device.party_end" },
+    { kind = "timer.cancel", name = "device.wifi_anim" },
+    -- A set cancels the controller's ongoing pulses too. The global gate remains authoritative.
+    { kind = "bus.publish", topic = LED .. "set_raw", payload = "ALL,0,0,0" },
+    driver_write(off and 0 or 8), verify_timer(),
+  }
+  -- bus.up also changes state.device in the facade. Clear party in the next turn so
+  -- a stale copy here cannot replace its esp32_up / capability reset.
+  if (doc.device or {}).party then cmds[#cmds + 1] = util.emit("lights.cancel_party", {}) end
+  if not off then
+    local after = copy(doc); after.device = d
+    for _, c in ipairs(lights.on_lights_refresh(after).commands) do cmds[#cmds + 1] = c end
+    if cfg(doc, "wifi_anim_s", ANIM_S) > 0 and wifi_waiting(doc) then
+      cmds[#cmds + 1] = { kind = "timer.every", name = "device.wifi_anim", seconds = anim_s(doc) }
+    end
   end
+  return { state = { lights_int = { desired = off and 0 or 8, pending = true, attempts = 1 } }, commands = cmds }
+end
+
+function lights.on_register(doc, ev)
+  local s = doc.lights_int or {}
+  if ev.address ~= 34 or not s.pending or ev.value ~= s.desired then return nil end
+  local done = copy(s); done.pending = false; done.verified = true
+  return { state = { lights_int = done }, commands = { { kind = "timer.cancel", name = "device.lights_verify" } } }
+end
+
+function lights.on_verify(doc)
+  local s = doc.lights_int or {}
+  if not s.pending then return nil end
+  local next_state = copy(s)
+  if s.attempts >= 3 then
+    next_state.pending = false; next_state.verified = false
+    return { state = { lights_int = next_state }, commands = {
+      { kind = "log", level = "warn", key = "device.lights_unconfirmed", fields = { desired = s.desired, attempts = s.attempts } } } }
+  end
+  next_state.attempts = s.attempts + 1
+  return { state = { lights_int = next_state }, commands = { driver_write(s.desired), verify_timer() } }
+end
+
+function lights.on_power(doc, ev)
+  local key = ev.type == "power.charging" and "charging" or "connected"
+  if lights.off(doc) and (doc.power or {})[key] ~= ev.on then return lights.on_apply(doc) end
   return nil
+end
+
+function lights.on_limits(doc)
+  local desired = lights.off(doc) and 0 or 8
+  if (doc.lights_int or {}).desired ~= desired then return lights.on_apply(doc) end
+  return lights.on_lights_refresh(doc)
+end
+
+function lights.on_boot(doc, ev)
+  local after = copy(doc); after.audiocfg = (ev or {}).audiocfg or doc.audiocfg or {}
+  after.limits = bedtime.boot_limits(ev or {})
+  return lights.on_apply(after)
 end
 
 -- the lights' timers, each handler on its own name (kernel.dispatch on_timer)
@@ -183,6 +254,7 @@ local TIMERS = {
   ["device.wifi_anim"] = lights.on_wifi_anim,
   ["device.party"] = lights.on_party_frame,
   ["device.party_end"] = lights.on_party_end,
+  ["device.lights_verify"] = lights.on_verify,
 }
 lights.TIMERS = TIMERS
 
@@ -195,11 +267,17 @@ end
 
 function lights.install(api, dispatch)
   dispatch.on("boot", "device.lights", lights.on_boot)
+  dispatch.on("bus.up", "device.lights", lights.on_apply)
+  dispatch.on("lights.apply", "device.lights", lights.on_apply)
+  dispatch.on("lights.cancel_party", "device.lights", lights.on_party_end)
+  dispatch.on("lights.register", "device.lights", lights.on_register)
+  dispatch.on("power.plugged", "device.lights", lights.on_power)
+  dispatch.on("power.charging", "device.lights", lights.on_power)
   for name, fn in pairs(TIMERS) do dispatch.on_timer(name, "device.lights", fn) end
   dispatch.on("lights.event", "device.lights", lights.on_lights_event)
   dispatch.on("playback.changed", "device.lights", lights.on_lights_refresh)
   dispatch.on("net.status", "device.lights", lights.on_net_status)
-  dispatch.on("limits.changed", "device.lights", lights.on_lights_refresh)   -- after the facade's volume re-apply
+  dispatch.on("limits.changed", "device.lights", lights.on_limits)   -- after the facade's volume re-apply
   api.command("device.party", nil, function(doc) return lights.on_party(doc) end)
 end
 

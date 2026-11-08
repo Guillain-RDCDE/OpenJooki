@@ -68,7 +68,7 @@ local executors = {
       a.host.set_volume(0)
       return
     end
-    a.host.set_volume(c.percent)
+    a.host.set_volume(c.mixer or c.percent)
     -- Bound ALSA before lifting its fixed attenuation. Cache through fade ticks.
     if change and bypass then set_volume_mode(a, bypass, key) end
     -- Jooki 2 speaker / Bluetooth live in the ESP32; wired headphones still use ALSA.

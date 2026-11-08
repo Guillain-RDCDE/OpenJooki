@@ -61,9 +61,9 @@
       avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
       sGroup(t('s_listen'), [
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        typeof cfg.toy_safe_maxvol === 'number' ? sRow({ tag: 'label', col: true, label: t('toy_safe_maxvol'), sub: t(d.volume_api === 2 ? 'toy_safe_maxvol_help' : 'toy_safe_maxvol_unavailable'),
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ tag: 'label', col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
           right: h('div', { class: 'row', style: 'width:100%' },
-            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe || d.volume_api !== 2 ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
+            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
               oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
               onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')) }) : null,
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),

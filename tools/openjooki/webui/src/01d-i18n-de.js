@@ -44,7 +44,6 @@
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
     toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
-    toy_safe_maxvol_unavailable: 'Benötigt aktualisierte Gerätefirmware, damit auch der Lautsprecher begrenzt wird.',
     toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
     toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
     random_start: 'Mit einem zufälligen Titel starten',

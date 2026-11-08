@@ -78,7 +78,7 @@ describe("services.device — volume chain", function()
     step({ volume = 3 }); assert_eq(doc.audiocfg.volume, 15)
   end)
 
-  it("without volume API 2, the saved volume follows the dial, which alone sets the speaker", function()
+  it("without volume API 2, the page lowers the speaker below the dial, never above, and the dial takes over", function()
     for _, api in ipairs({ false, 0, 1 }) do
       local doc = doc_with({ jack = false, audiocfg = { volume = 75 } })
       doc.device.esp32_up = true
@@ -88,11 +88,24 @@ describe("services.device — volume chain", function()
         for k, v in pairs((r or {}).state or {}) do doc[k] = v end
         return r
       end
-      step({ volume = 9 }); assert_eq(doc.audiocfg.volume, 9)         -- at start, not the old saved level
-      local web = device.set_volume(doc, 90); doc.audiocfg = web.state.audiocfg
-      step({ volume = 9 }); assert_eq(doc.audiocfg.volume, 9)         -- the page does not keep a level not played
-      step({ volume = 15 }); assert_eq(doc.audiocfg.volume, 15)
-      assert_nil(((step({ volume = 15 }) or {}).state or {}).audiocfg) -- an unchanged dial writes nothing
+      step({ volume = 60 }); assert_eq(doc.audiocfg.volume, 60)        -- at start, not above the dial
+      local up = device.set_volume(doc, 90); assert_eq(up.state.audiocfg.volume, 60)
+      assert_eq(up.commands[1].mixer, 100)
+      local web = device.set_volume(doc, 30); doc.audiocfg = web.state.audiocfg
+      assert_eq(web.commands[1].mixer, 70)                             -- 30 points below the dial
+      assert_nil(((step({ volume = 60 }) or {}).state or {}).audiocfg) -- an unchanged dial keeps it
+      assert_eq(doc.audiocfg.volume, 30)
+      local moved = step({ volume = 15 })
+      assert_eq(doc.audiocfg.volume, 15); assert_eq(moved.commands[1].mixer, 100)
+      local below = step({ volume = 15 })
+      assert_nil(((below or {}).state or {}).audiocfg)
+      assert_eq(device.volume_command(doc, 0).mixer, 0)                -- silence is silence
+      doc.limits = { maxvol = 5 }
+      assert_eq(device.on_apply_volume(doc).commands[1].mixer, 90)     -- night limit on the speaker
+      doc.limits = {}
+      doc.audiocfg.headphones_en = true
+      local hp = device.set_volume(doc, 90)
+      assert_eq(hp.state.audiocfg.volume, 90); assert_eq(hp.commands[1].mixer, 90) -- headphones: the volume itself
     end
   end)
 

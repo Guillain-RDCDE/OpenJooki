@@ -122,15 +122,27 @@ for volume_api in (0, 1, None):
         before = volume_count()
         for requested in (80, 100):
             j.send("SET_VOL", {"vol": requested})
+            # headphones: the mixer is the volume; speaker: above the dial it stays open, at the dial
             R.expect("legacy API %r, headphones %d: request %d reaches ALSA" % (volume_api, headphones, requested),
-                     lambda: last_alsa() == requested)
+                     lambda: last_alsa() == (requested if headphones else 100))
+            if not headphones:
+                j.wait_state("audio.config.volume", knob)
+        if not headphones:
+            j.send("SET_VOL", {"vol": knob - 10})
+            R.expect("legacy API %r: the page lowers the speaker below the dial" % (volume_api,), lambda: last_alsa() == 90)
+            j.c.publish("/j/esp32/input/knobs/state", knobs_payload())
+            j.barrier()
+            R.check("legacy API %r: an unchanged dial keeps the lower level" % (volume_api,), j.get("audio.config.volume") == knob - 10 and last_alsa() == 90)
+            j.send("SET_VOL", {"vol": 100})
+            R.expect("legacy API %r: back at the dial" % (volume_api,), lambda: last_alsa() == 100)
         j.barrier()
         R.check("legacy API %r, headphones %d: no new ESP32 volume command" % (volume_api, headphones), volume_count() == before)
         R.check("legacy API %r, headphones %d: factory kids attenuation retained" % (volume_api, headphones),
                 last_mixer("Toysafe override").endswith(" off"))
 
-j.send("OJ_BEDTIME_SET", {"enabled": True, "tzbase": 0, "tzdst": "none", "start": hm(minutes - 60), "stop": hm(minutes + 60), "maxvol": 20})
-R.expect("legacy headphones retain the night ceiling", lambda: last_alsa() == 20)
+night_max = knob - 7
+j.send("OJ_BEDTIME_SET", {"enabled": True, "tzbase": 0, "tzdst": "none", "start": hm(minutes - 60), "stop": hm(minutes + 60), "maxvol": night_max})
+R.expect("legacy speaker takes the night ceiling", lambda: last_alsa() == 93)
 j.send("OJ_BEDTIME_SET", {"enabled": False})
 R.expect("legacy night ceiling restores the requested level", lambda: last_alsa() == 100)
 j.send("SET_CFG", {"hp_boost": True})
@@ -163,8 +175,8 @@ with sync_playwright() as pw:
     pg.check("[data-k=toysafe]")
     volume_api=0
     j.c.publish("/j/esp32/input/knobs/state",json.dumps({"volume":knob,"hp_state":0,"volume_api":0}))
-    pg.wait_for_function("() => document.querySelector('[data-k=toysafemax]').disabled")
-    R.expect("legacy firmware explains the unavailable limit",lambda:"Requires updated device firmware" in pg.locator("body").inner_text())
+    pg.wait_for_function("() => !document.querySelector('[data-k=toysafemax]')")
+    R.check("legacy firmware does not offer the limit",pg.locator("[data-k=toysafemax]").count()==0)
     R.check("narrow layout",pg.evaluate("() => document.documentElement.scrollWidth <= innerWidth"))
     R.check("no browser errors",not errors,errors)
     browser.close()

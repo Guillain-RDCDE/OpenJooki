@@ -1,7 +1,7 @@
 """What every bench suite needs: the fake Jooki (setup.sh), the core started and really up, results
 printed the same way, waits with a deadline that say what they waited for, the broker, the logs.
 Suites import it (`import bench as B`); nothing here runs on its own."""
-import json, os, random, socket, struct, subprocess, sys, threading, time, urllib.request, zlib
+import json, os, random, signal, socket, struct, subprocess, sys, threading, time, urllib.request, zlib
 import paho.mqtt.client as mqtt
 from jk import Jooki, PAGE, WaitTimeout, wait_until, poll
 
@@ -122,6 +122,12 @@ def core_pids():
     return [int(x) for x in out]
 def core_pid():
     p = core_pids(); return p[0] if p else None
+def stop_core(t=5):
+    """Stop the core before replacing services its broker watch would restart."""
+    for pid in core_pids():
+        try: os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError: pass
+    wait_no_proc("harness.lua", t)
 def rss_kb(pid):
     try:
         for line in open("/proc/%s/status" % pid):

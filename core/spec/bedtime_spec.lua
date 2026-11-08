@@ -130,6 +130,78 @@ describe("services.bedtime — sleep timer", function()
     assert_nil(r.state.bedtime_int.stop_at_end); assert_eq(r.state.limits.fade, 1); assert_false(r.state.bedtime.sleep)
   end)
 
+  local function spotify_doc(duration)
+    local doc = playing_doc()
+    doc.playback.now = { service = "SPOTIFY", title = "Song one", album = "Album", duration_ms = duration }
+    doc.streaming_int = { clock = { ms = 280000, t = 100 } }
+    return apply(doc, bedtime.on_sleep(doc, { mode = "track" }, 100))
+  end
+
+  it("Spotify reaches the end between position reports: pauses once and restores after confirmation", function()
+    local doc = spotify_doc(300000)
+    doc = apply(doc, bedtime.on_tick(doc, { now = 110 }))
+    assert_eq(doc.limits.fade, 0.5)
+    local r = bedtime.on_tick(doc, { now = 120 })
+    assert_true(has(r, "emit playback.pause_request"))
+    assert_eq(find(r, "emit").event.source, "sleep_timer")
+    doc = apply(doc, r)
+    assert_false(doc.bedtime.sleep); assert_nil(doc.bedtime_int.stop_at_end)
+    assert_eq(doc.limits.fade, 0, "silent while Spotify confirms the pause")
+    assert_false(has(bedtime.on_tick(doc, { now = 121 }), "emit playback.pause_request"))
+    doc.playback.state = "paused"
+    doc = apply(doc, bedtime.on_playback(doc, { state = "paused", now = 122 }))
+    assert_eq(doc.limits.fade, 1)
+  end)
+
+  it("Spotify paused before the end does not count the paused time", function()
+    local doc = spotify_doc(300000)
+    doc.playback.state, doc.playback.position_ms = "paused", 280000
+    doc = apply(doc, bedtime.on_tick(doc, { now = 200 }))
+    assert_true(doc.bedtime.sleep)
+    assert_eq(doc.limits.fade, 1)
+    doc.playback.state = "playing"
+    doc.streaming_int.clock = { ms = 280000, t = 200 }
+    assert_false(has(bedtime.on_tick(doc, { now = 210 }), "emit playback.pause_request"))
+    assert_true(has(bedtime.on_tick(doc, { now = 220 }), "emit playback.pause_request"))
+  end)
+
+  it("Spotify without duration stops on a new track, including the same title on another album", function()
+    for _, field in ipairs({ "title", "album" }) do
+      local doc = spotify_doc(nil)
+      doc = apply(doc, bedtime.on_tick(doc, { now = 101 }))
+      assert_true(doc.bedtime.sleep)
+      doc.playback.now[field] = "Another " .. field
+      assert_true(has(bedtime.on_tick(doc, { now = 102 }), "emit playback.pause_request"))
+    end
+  end)
+
+  it("Spotify metadata arriving after the timer starts is learned without stopping", function()
+    local doc = spotify_doc(nil)
+    doc.playback.now.title, doc.playback.now.album = nil, nil
+    doc = apply(doc, bedtime.on_sleep(doc, { mode = "track" }, 100))
+    doc.playback.now.title, doc.playback.now.album = "Song one", "Album"
+    doc = apply(doc, bedtime.on_tick(doc, { now = 101 }))
+    assert_true(doc.bedtime.sleep)
+    doc.playback.now.title = "Song two"
+    assert_true(has(bedtime.on_tick(doc, { now = 102 }), "emit playback.pause_request"))
+  end)
+
+  it("Spotify repeating the same song cannot evade the timer by resetting its position", function()
+    local doc = spotify_doc(300000)
+    doc.streaming_int.clock = { ms = 299500, t = 100 }
+    doc = apply(doc, bedtime.on_tick(doc, { now = 100 }))
+    doc.streaming_int.clock = { ms = 0, t = 100.5 }
+    assert_true(has(bedtime.on_tick(doc, { now = 100.5 }), "emit playback.pause_request"))
+  end)
+
+  it("cancelling Spotify's track timer leaves the next song playing", function()
+    local doc = spotify_doc(300000)
+    doc = apply(doc, bedtime.on_sleep(doc, { cancel = true }, 101))
+    doc.playback.now.title = "Song two"
+    assert_false(has(bedtime.on_tick(doc, { now = 130 }), "emit playback.pause_request"))
+    assert_eq(doc.limits.fade, 1)
+  end)
+
   it("night: playback gets the automatic timer, day: not", function()
     local doc = apply(doc_with(), bedtime.on_boot(doc_with(), { wall = at(2026, 1, 15, 22, 0) }))
     local r = bedtime.on_playback(doc, { state = "playing", now = 10 })

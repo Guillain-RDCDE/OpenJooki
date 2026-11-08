@@ -479,10 +479,11 @@ function streaming.on_deezer(doc, ev)
     if not active(doc, "DEEZER") then return nil end
     local state
     if kind == "paused" then state = ev.flag == "1" and "paused" or "playing"
+    elseif kind == "ended" and (doc.bedtime_int or {}).stop_at_end then state = "ended"
     elseif kind == "ended" or kind == "stopped" then state = "idle"
     else state = kind end
     local r = external(doc, { service = "DEEZER", state = state, position_ms = kind == "starting" and 0 or nil })
-    if kind == "ended" then table.insert(r.commands, 1, pub(DZ .. "next")) end   -- the daemon is asked for the next track first
+    if kind == "ended" and state ~= "ended" then table.insert(r.commands, 1, pub(DZ .. "next")) end   -- the daemon is asked for the next track first
     return r
   elseif kind == "position" then
     if not active(doc, "DEEZER") or (doc.playback or {}).state ~= "playing" then return nil end

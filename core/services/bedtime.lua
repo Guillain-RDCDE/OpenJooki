@@ -163,8 +163,28 @@ function bedtime.on_tick(doc, ev)
     local fd = math.min(FADE_S, i.sleep.total / 3)
     if remaining < fd then f = remaining / fd end
   else
-    local d = tonumber(pb.now and pb.now.duration_ms) or 0
+    local track = pb.now or {}
+    local d = tonumber(track.duration_ms) or 0
     local p = tonumber(pb.position_ms) or 0
+    if track.service == "SPOTIFY" then
+      -- Spotify advances on its own and sends no audio.ended. Its sparse position
+      -- reports need the streaming clock; metadata changes also catch unknown durations.
+      p = require("services.streaming").sp_position(doc, ev.now)
+      local was = i.sleep.track or {}
+      local changed = (was.title and track.title and was.title ~= track.title)
+                   or (was.album and track.album and was.album ~= track.album)
+      local last = i.sleep.position_ms
+      local repeated = d > 0 and last and last >= d - 1000 and p < last
+      i.sleep.track, i.sleep.position_ms = copy(track), p
+      if pb.state == "playing" and (changed or repeated or (d > 0 and p >= d)) then
+        i.restore = true
+        set_fade(i, 0)   -- keep the next song silent until the daemon confirms the pause
+        cmds[#cmds + 1] = clear_sleep(b, i)
+        cmds[#cmds + 1] = { kind = "log", level = "info", key = "bedtime.sleep_done" }
+        cmds[#cmds + 1] = emit("playback.pause_request", { source = "sleep_timer", now = ev.now })
+        return result(doc, b, i, cmds)
+      end
+    end
     if d > 0 and p > 0 and d - p < TRACK_FADE_MS then f = (d - p) / TRACK_FADE_MS end
   end
   if not i.restore then set_fade(i, f) end
@@ -208,7 +228,9 @@ function bedtime.on_sleep(doc, p, now)
     return result(doc, b, i, cmds)
   end
   if p.mode == "track" then
-    return result(doc, b, i, { start_sleep(b, i, now, nil, "track"), { kind = "log", level = "info", key = "bedtime.sleep", fields = { mode = "track" } } })
+    local timer = start_sleep(b, i, now, nil, "track")
+    i.sleep.track = copy((doc.playback or {}).now or {})
+    return result(doc, b, i, { timer, { kind = "log", level = "info", key = "bedtime.sleep", fields = { mode = "track" } } })
   end
   local s = tonumber(p.seconds) or (tonumber(p.minutes) and tonumber(p.minutes) * 60)
   if not s or s < 1 or s > 4 * 3600 then return nil, err("invalid_argument", "seconds", "invalid duration") end

@@ -29,6 +29,16 @@ local function own_place(doc, r)
 end
 
 describe("services.streaming — starting and transport through playback", function()
+  it("Deezer stops at the song end with a track timer, and otherwise asks for the next song", function()
+    local doc = doc_with({ playback = { state = "playing", now = { service = "DEEZER", title = "Song" } } })
+    assert_eq(topics(streaming.on_deezer(doc, { type = "deezer.ended" })),
+      { "deezer/output/next ", "emit playback.changed idle" })
+    doc.bedtime_int = { stop_at_end = true }
+    local r = streaming.on_deezer(doc, { type = "deezer.ended" })
+    assert_eq(r.state.playback.state, "ended")
+    assert_eq(topics(r), { "emit playback.changed ended" })
+  end)
+
   it("a Spotify playlist plays its preset (hex decoded) and the state follows the daemon's events", function()
     local doc = doc_with()
     local r = playback.on_request(doc, { playlist = "sp", now = 1 })

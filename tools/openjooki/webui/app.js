@@ -8,7 +8,7 @@
   var VERSION = '2.4.21';
 
   /* ------------------------------------------------------------------ i18n */
-  // one table per language (01b fr, 01c en, 01d nl): the same keys in each, checked by the bench
+  // One table per language (fr, en, nl, de): the same keys in each, checked by the bench.
   var T = {};
   T.fr = {
     playlists: 'Playlists', tokens: 'Jetons', library: 'Bibliothèque', settings: 'Réglages',
@@ -418,6 +418,92 @@
     s_connect_info: 'To connect', s_night_hours: 'Hours', s_night_during: 'During the night', s_update: 'Update',
     colon: ': '
   };
+  T.de = {
+    playlists: 'Wiedergabelisten', tokens: 'Figuren', library: 'Mediathek', settings: 'Einstellungen',
+    connecting: 'Verbindung zum Jooki wird hergestellt…', connected: 'Verbunden', offline: 'Offline',
+    offline_long: 'Der Jooki antwortet nicht. Prüfe, ob er eingeschaltet und im selben WLAN ist. Die Verbindung wird automatisch erneut versucht…', retry: 'Erneut versuchen',
+    new_playlist: 'Neue Wiedergabeliste', create: 'Erstellen', cancel: 'Abbrechen', save: 'Speichern', close: 'Schließen',
+    name: 'Name', playlist_name_ph: 'Zum Beispiel: Lieder zum Einschlafen',
+    n_tracks: function (n) { return n + ' Titel'; },
+    audiobook: 'Hörbuch', audiobook_help: 'Spielt immer an der letzten Stelle weiter, ohne Zufallswiedergabe.',
+    no_token: 'Keine Figur', choose_token: 'Figur auswählen', token_for: 'Figur, die diese Wiedergabeliste startet',
+    token_help: 'Alle Figuren derselben Art starten diese Wiedergabeliste (zum Beispiel alle schwarzen Drachen).',
+    used_by: function (t) { return 'bei „' + t + '“'; },
+    token_moved: function (t) { return 'Diese Figur hat bisher „' + t + '“ gestartet. Ab jetzt startet sie diese Wiedergabeliste.'; },
+    play: 'Abspielen', pause: 'Pause', next: 'Weiter', prev: 'Zurück',
+    add_files: 'Dateien hinzufügen', from_library: 'Aus der Mediathek', web_radio: 'Internetradio', delete_playlist: 'Wiedergabeliste löschen',
+    delete_playlist_q: function (t) { return '„' + t + '“ löschen?'; },
+    delete_playlist_text: 'Die Wiedergabeliste wird gelöscht. Ihre Titel bleiben auf dem Jooki unter „Unbenutzt“.', delete: 'Löschen', rename: 'Umbenennen',
+    empty_playlist: 'Diese Wiedergabeliste ist leer.', empty_playlist_hint: 'Füge Dateien vom Handy oder Computer oder Titel aus der Mediathek hinzu.',
+    drop_here: 'Audiodateien hier ablegen', removed_from: 'Aus der Wiedergabeliste entfernt', undo: 'Rückgängig',
+    playlist_missing: 'Diese Wiedergabeliste gibt es nicht mehr.', back: 'Zurück', no_playlists: 'Noch keine Wiedergabeliste.',
+    unused_banner: function (n) { return n + (n === 1 ? ' Titel gehört' : ' Titel gehören') + ' zu keiner Wiedergabeliste.'; }, see: 'Anzeigen',
+    all: 'Alle', unused: 'Unbenutzt', search: 'Suchen', in_playlists: 'In: ', in_none: 'In keiner Wiedergabeliste', add_to: 'Hinzufügen zu…',
+    selected: function (n) { return n + ' ausgewählt'; }, select_all: 'Alle auswählen', select_none: 'Auswahl aufheben', delete_forever: 'Vom Jooki löschen',
+    delete_forever_q: function (n) { return n + ' Titel endgültig löschen?'; }, delete_forever_text: 'Die Dateien werden vom Jooki gelöscht. Das lässt sich nicht rückgängig machen.',
+    deleted: 'Gelöscht', choose_playlist: 'Wiedergabeliste auswählen', added: function (n) { return n + ' Titel hinzugefügt'; },
+    already_in: 'bereits in', add: 'Hinzufügen', add_n: function (n) { return n + ' hinzufügen'; },
+    library_empty: 'Noch keine Titel auf dem Jooki.', unused_empty: 'Alle Titel gehören zu einer Wiedergabeliste.',
+    radio: 'Radio', radio_title: 'Internetradio hinzufügen', radio_name: 'Name des Senders', radio_url: 'Streamadresse (http:// oder https://)', radio_url_bad: 'Die Adresse muss mit http:// oder https:// beginnen.',
+    tokens_intro: 'Jede Figurenart startet eine Wiedergabeliste. Alle Figuren derselben Art (zum Beispiel alle schwarzen Drachen) machen genau dasselbe.',
+    tokens_hint: 'Stelle eine Figur auf den Jooki, damit sie hier erscheint.', nfc_tag: 'NFC-Tag',
+    foreign_hint: 'Auch andere NFC-Objekte (Amiibo, Aufkleber) erscheinen hier beim Auflegen. Sie starten ihre Wiedergabeliste. Beim Wegnehmen wird die Wiedergabe jedoch nicht angehalten. Zwischen zwei Verwendungen muss oft eine echte Jooki-Figur aufgelegt werden. Zum Anhalten die Taste drücken.',
+    launches: 'Startet', none_dash: '— Keine Wiedergabeliste —', token_n: function (n) { return 'Figur ' + n; }, token_name_ph: 'Spitzname (optional)', tag_name_ph: 'Name für diesen Tag (zum Unterscheiden)',
+    tok_search_ph: 'Figur nach Namen suchen', tok_no_match: 'Keine Figur mit diesem Namen.',
+    photo_btn: 'Eigenes Foto', photo_remove: 'Bild entfernen', ed_title: 'Foto der Figur', ed_hint: 'Tippe auf einen Bereich, um ihn zu entfernen (Zauberstab). Ziehen zum Verschieben.', ed_bg: 'Hintergrund entfernen',
+    ed_tol: 'Toleranz', ed_rot: 'Drehung', ed_zoom: 'Zoom', ed_undo: 'Letzten Schritt rückgängig machen', ed_reset: 'Neu beginnen', ed_save: 'Speichern',
+    ed_sending: 'Foto wird übertragen…', photo_fail: 'Das Foto konnte nicht gespeichert werden.', photo_bad: 'Diese Datei ist kein lesbares Bild.',
+    pl_taken: function (pl, ch) { return '„' + pl + '“ wird von ' + ch + ' gestartet. Stattdessen dieser Figur zuweisen?'; }, on_jooki: 'Auf dem Jooki',
+    forget: 'Vergessen', forget_q: 'Diese Figur vergessen?', forget_text: 'Sie verschwindet aus der Liste und erscheint bei der nächsten Verwendung wieder. Die Wiedergabeliste ihrer Figurenart bleibt erhalten.', saved: 'Gespeichert', no_tokens: 'Noch keine Figur bekannt.',
+    device_name: 'Name', battery: 'Akku', charging: 'wird geladen', plugged: 'angeschlossen', name_title: 'Name des Jooki im Netzwerk',
+    name_help: function (f) { return 'Kleinbuchstaben, Ziffern und Bindestriche. Die Seite ist dann unter name.local erreichbar. Leer lassen für den ursprünglichen Namen (' + f + ').'; },
+    name_invalid: 'Nur Kleinbuchstaben, Ziffern und Bindestriche (höchstens 32 Zeichen). Kein Bindestrich am Anfang oder Ende.', name_done: function (n) { return 'Der Jooki heißt jetzt ' + n; },
+    name_text: function (u) { return 'Seine Seite ist jetzt unter ' + u + ' erreichbar. Die alte Adresse antwortet nicht mehr. Speichere diesen Link als Lesezeichen. Spotify zeigt den neuen Namen nach dem nächsten Neustart.'; }, name_open: 'Neue Adresse öffnen',
+    wifi: 'WLAN', ip: 'IP-Adresse', storage: 'Speicher', version: 'Version',
+    heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe',
+    continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
+    knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
+    toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
+    pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
+    language: 'Sprache', power_off: 'Jooki ausschalten', power_off_q: 'Jooki ausschalten?', power_off_text: 'Zum Einschalten musst du seine Taste drücken.', power_off_done: 'Der Jooki schaltet sich aus…',
+    air_title: 'Flugmodus', air_help: 'Schaltet WLAN und Bluetooth des Jooki vorübergehend aus. Figuren und Musik funktionieren weiter. Diese Seite kann den Jooki währenddessen nicht erreichen.', air_h: function (n) { return n + ' Std.'; },
+    air_morning: function (h) { return 'Bis morgen früh (' + h + ')'; }, air_boot: 'Bis zum Aus- und Wiedereinschalten', air_btn: 'WLAN und Bluetooth ausschalten', air_q: 'Flugmodus einschalten?',
+    air_text: function (w) { return 'WLAN und Bluetooth werden ' + w + ' wieder eingeschaltet. Aus- und Wiedereinschalten des Jooki bringt das WLAN ebenfalls zurück. Diese Seite kann den Jooki währenddessen nicht erreichen. Figuren und Musik funktionieren weiter.'; },
+    air_at: function (h) { return 'um ' + h; }, air_next_start: 'beim nächsten Start', air_sent: 'Der Jooki wechselt in den Flugmodus…',
+    air_offline: function (w) { return 'Der Jooki ist im Flugmodus. Das WLAN wird ' + w + ' wieder eingeschaltet. Figuren und Musik funktionieren. Um früher zurückzukehren, schalte den Jooki aus und wieder ein.'; }, air_back: 'Der Jooki ist wieder im WLAN.',
+    bt_help: 'Schalte Lautsprecher oder Kopfhörer ein und aktiviere den Kopplungsmodus (meist die Bluetooth-Taste halten, bis die Leuchte schnell blinkt). Starte dann die Suche.', bt_search: 'Suchen', bt_searching: 'Suche läuft… (15 Sekunden)', bt_connect: 'Verbinden', bt_connecting: 'Verbindung wird hergestellt…',
+    bt_none: 'Nichts gefunden. Prüfe, ob der Lautsprecher im Kopplungsmodus blinkt, und suche erneut.', bt_failed: 'Die Verbindung ist fehlgeschlagen. Aktiviere den Kopplungsmodus erneut und versuche es noch einmal.',
+    bt_on: function (n) { return 'Tonausgabe über: ' + n; }, bt_on_help: 'Wenn der Lautsprecher ausgeht, spielt der Jooki selbst weiter. Beim nächsten Einschalten verbindet sich der Lautsprecher automatisch wieder.',
+    bt_off_btn: 'Diesen Lautsprecher trennen', bt_off_q: 'Diesen Lautsprecher trennen?', bt_off_text: 'Der Ton wird wieder auf dem Jooki ausgegeben. Er verbindet sich nicht mehr automatisch mit diesem Lautsprecher.', bt_air: 'Bluetooth ist im Flugmodus ausgeschaltet.', bt_unnamed: 'Gerät ohne Namen', bt_known: 'Schon einmal verwendet: einfach einschalten, kein Kopplungsmodus nötig',
+    nothing_playing: 'Keine Wiedergabe', nothing_hint: 'Figur aufstellen oder Wiedergabeliste wählen',
+    sp_save: 'Einer Figur zuweisen', sp_save_title: 'Diese Spotify-Musik einer Figur zuweisen', sp_save_help: 'Stelle die Figur danach auf den Jooki. Sie startet diese Spotify-Wiedergabeliste auch ohne Handy. Das Spotify-Konto muss mit dem Jooki verbunden bleiben.', sp_pick_char: 'Figur auswählen', sp_saving: 'Spotify speichert…',
+    sp_saved: function (c, n) { return 'Fertig: ' + c + ' spielt „' + n + '“'; }, sp_timeout: 'Spotify hat nicht geantwortet. Starte die Musik erneut in der Spotify-App und versuche es noch einmal.', err_sp_not_playing: 'Spiele die Musik zuerst über die Spotify-App auf dem Jooki ab.',
+    sp_resume: 'An der letzten Stelle weiterspielen', sp_resume_help: 'Stelle die Figur wieder auf: Die Wiedergabeliste läuft an der letzten Stelle weiter, einige Sekunden zurückgesetzt. Das gilt auch nach einer anderen Figur oder einem Neustart. Ausgeschaltet beginnt sie immer von vorn.', sp_playlist: 'Spotify-Wiedergabeliste', sp_playlist_help: 'Diese Wiedergabeliste kommt von Spotify. Dateien können nicht hinzugefügt werden. Zum Ändern die Musik in Spotify abspielen und der Figur erneut zuweisen.',
+    s_sp: 'Spotify', sp_set: 'Eingerichtet', sp_unset: 'Nicht eingerichtet', sp_guest_v: 'Anderes Konto', sp_own_t: 'Spotify ist eingerichtet', sp_own: 'Figuren spielen über das eigene Konto des Jooki, auch nach einem Neustart.', sp_guest_t: 'Ein anderes Konto spielt gerade', sp_guest: 'Der Jooki spielt gerade für ein anderes Spotify-Konto. Nach dem nächsten Neustart verwendet er wieder sein eigenes Konto, auch für Figuren.',
+    sp_none_t: 'Noch kein Spotify-Konto', sp_none: 'Wähle den Jooki in der Geräteliste der Spotify-App aus. Dieses Konto wird sein eigenes, auch nach einem Neustart.', sp_acc_own: 'Konto des Jooki', sp_acc_now: 'Aktuelle Wiedergabe', sp_acc_help: 'Das ist der Benutzername, den die Spotify-App unter Einstellungen → Konto anzeigt.', sp_change: 'Konto des Jooki ändern', sp_change_q: 'Spotify-Konto ändern?', sp_change_text: 'Der Jooki vergisst sein Spotify-Konto. Wähle ihn anschließend in der Spotify-App mit dem gewünschten Konto aus. Dieses wird sein eigenes, auch nach einem Neustart.', sp_change_btn: 'Konto vergessen', sp_change_done: 'Fertig. Wähle den Jooki jetzt in der Spotify-App aus.', sp_why: 'Spotify merkt sich nur das erste Konto, das den Jooki einrichtet. Andere Konten können ihn bis zum nächsten Neustart verwenden.',
+    live: 'Live', volume: 'Lautstärke', uploading: 'Wird übertragen', processing: 'Wird auf dem Jooki verarbeitet…', done: 'Hinzugefügt', queued: 'Wartet',
+    up_too_small: 'Datei ist leer oder zu klein', up_no_space: 'Nicht genug Speicherplatz auf dem Jooki', up_net: 'Übertragung fehlgeschlagen (Verbindung unterbrochen?)', up_type: 'Dieses Audioformat wird nicht unterstützt', up_fail: 'Der Jooki konnte diese Datei nicht hinzufügen', up_timeout: 'Keine Antwort vom Jooki', uploads_running: 'Übertragungen laufen. Wenn du die Seite verlässt, werden sie abgebrochen.', clear_done: 'Abgeschlossene Übertragungen ausblenden', up_retrying: function (n, m) { return 'Verbindung unterbrochen, neuer Versuch (' + n + '/' + m + ')…'; }, up_retry: 'Erneut versuchen',
+    wifi_good: 'Gutes Signal', wifi_fair: 'Mittleres Signal', wifi_weak: 'Schwaches Signal', wifi_advice: 'Stelle den Jooki näher an einen WLAN-Zugangspunkt. Musik funktioniert ohne WLAN. Nur diese Seite und Übertragungen benötigen es.', wifi_bt: 'Umgezogen, neuer Router oder neues Passwort? Verbinde ihn per Bluetooth von einem Android-Handy oder Computer neu: ', wifi_bt_name: function (n) { return 'In der Liste heißt er ' + n + '.'; },
+    err_readonly: 'Bei unbenutzten Titeln nicht möglich.', err_internal: 'Beim Jooki ist ein Fehler aufgetreten. Bitte erneut versuchen.', err_empty_title: 'Der Name darf nicht leer sein.', err_radio: 'Ungültige Radioadresse.', err_gone: 'Diesen Eintrag gibt es nicht mehr.', err_generic: 'Der Jooki hat die Aktion abgelehnt.', err_unknown_char: 'Unbekannte Figur.', files_hint: 'MP3, M4A, OGG, FLAC, WAV…', open_player: 'Player öffnen',
+    web_page: 'Webseite', upd_check: 'Nach Updates suchen', upd_checking: 'Wird geprüft…', upd_uptodate: 'Dein Jooki ist auf dem neuesten Stand.', upd_offline: 'GitHub ist nicht erreichbar (ist der Jooki online?).', upd_available: function (v) { return 'Neue Version ' + v + ' verfügbar'; }, upd_now: 'Jetzt aktualisieren', upd_q: function (v) { return 'Auf OpenJooki ' + v + ' aktualisieren?'; },
+    upd_text: 'Der Jooki lädt die neue Version und startet automatisch neu. Das dauert etwa 10 bis 20 Minuten. Lass ihn am Ladegerät. Musik und Figuren bleiben erhalten. Falls etwas schiefgeht, wechselt er automatisch zur vorherigen Version zurück.', upd_running: 'Update läuft…', upd_keep: 'Lass den Jooki am Ladegerät. Diese Seite verbindet sich automatisch wieder.', upd_stuck: 'Seit einiger Zeit keine Änderung? Während des Updates trennt und verbindet sich der Jooki mehrmals. Das Handy kann dabei den Anschluss verlieren. Du kannst die Seite neu laden. Das unterbricht nichts.', upd_reload: 'Seite neu laden', upd_wait: 'Der Jooki startet noch. Versuche es in einer Minute erneut.', upd_rebooting: 'Der Jooki startet mit der neuen Version…', upd_done: function (v) { return 'Jooki aktualisiert: OpenJooki ' + v; }, upd_failed: 'Das Update ist fehlgeschlagen. Dein Jooki wurde nicht verändert.', upd_banner: function (v) { return 'Update ' + v + ' verfügbar'; }, upd_see: 'Anzeigen',
+    upd_steps: ['Neue Version suchen', 'Herunterladen', 'Download prüfen', 'Installieren (am Ladegerät lassen)', 'Installation prüfen', 'Mit der neuen Version neu starten'],
+    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
+    night_mode: 'Nachtmodus', night_help: 'In diesen Zeiten endet jede Wiedergabe automatisch. Die Lautstärke wird begrenzt und die Lichter werden gedimmt.', night_from: 'Von', night_to: 'Bis', night_timer: 'Automatischer Timer', night_timer_none: 'Keiner', night_maxvol: 'Maximale Lautstärke', night_nolimit: 'unbegrenzt', night_dim: 'Gedimmte Lichter', night_now: 'Nachtmodus ist gerade aktiv', night_next: function (h) { return 'Beginnt um ' + h; }, night_clock: 'Der Jooki erhält die Uhrzeit aus dem Internet (einschließlich Sommerzeit).',
+    resume_at: function (c, s) { return 'Weiter ab Kapitel ' + c + (s ? ' · ' + s : ''); }, resume_restart: 'Von vorn beginnen', resume_done: 'Beginnt wieder bei Kapitel 1',
+    sort: 'Sortieren', sort_title: 'Wiedergabeliste sortieren', sorted: 'Titel wurden neu geordnet', sort_by_name: 'Dateiname (1, 2, 3…)', sort_by_title: 'Titel', sort_by_artist: 'Interpret', sort_by_album: 'Album', sort_by_duration: 'Dauer', sort_again: 'Tippe erneut auf dasselbe Kriterium, um die Reihenfolge umzukehren.', sort_preview: 'Vorschau der neuen Reihenfolge', sort_apply: 'Reihenfolge übernehmen', sort_same: 'Die Wiedergabeliste ist bereits so sortiert',
+    my_jooki: 'Mein Jooki', bytes: ['B', 'KB', 'MB', 'GB'], n_tokens: function (n) { return n + (n === 1 ? ' Figur' : ' Figuren'); },
+    ssh_label: 'Wartungszugang (SSH)', ssh_help: 'Für Technikinteressierte. Schaltet sich nach einer Stunde aus.', ssh_key_l: 'Öffentlicher SSH-Schlüssel', ssh_key_help: 'Füge deinen öffentlichen Schlüssel ein (eine Zeile, die mit ssh-ed25519 oder ssh-rsa beginnt). Der Jooki behält ihn auch nach Updates.', ssh_key_add: 'Schlüssel hinzufügen', ssh_key_clear: 'Schlüssel vergessen', ssh_key_added: 'Schlüssel hinzugefügt', ssh_keys_n: function (n) { return n ? n + ' Schlüssel gespeichert' : 'Kein Schlüssel gespeichert'; }, err_ssh_key: 'Das ist kein öffentlicher SSH-Schlüssel (eine Zeile mit ssh-ed25519… oder ssh-rsa…).', err_ssh_closed: 'Öffne zuerst den Wartungszugang.',
+    mqtt_label: 'Hausautomation (MQTT im Netzwerk)', mqtt_help: 'Für Home Assistant. Standardmäßig ausgeschaltet.', mqtt_host_l: 'Host', mqtt_port_l: 'Port', mqtt_user_l: 'Benutzer', mqtt_pass_l: 'Passwort',
+    parent_label: 'Elterncode', parent_help: 'Ein vierstelliger Code schützt die Einstellungen vor Änderungen durch Kinder und Gäste (Wiedergabelisten löschen, WLAN, Updates).', parent_change: 'Code ändern', parent_prompt: 'Elterncode eingeben', parent_new: 'Vierstelliger Code', parent_cur: 'Bisheriger Code', parent_bad: 'Falscher Code', parent_reset: 'Code vergessen? Drehe die Lautstärke am Jooki ganz herunter. Halte dann das Titelrad 10 Sekunden nach links (◀).',
+    flat_tok: 'Flacher Chip', thanks_tok: 'Danke-Chip', own_hint: 'Dieser Chip ist eine eigene Figur. Gib ihm einen Namen, ein Bild und eine Wiedergabeliste.', make_token: 'Zu einem echten Jooki-Chip machen', make_token_tip: 'Dann hält das Wegnehmen die Wiedergabe an, und er funktioniert zweimal hintereinander. Mit einem Android-Handy oder einer NFC-App.', flat_shared_hint: 'Flache Chips ohne eigene Wiedergabeliste starten diese hier.',
+    lib_pick: 'Bild auswählen', lib_search_ph: 'Suchen: Katze, Rakete, Schlafen…', lib_loading: 'Bilder werden geladen…', lib_fail: 'Die Bilder konnten nicht geladen werden. Versuche es erneut.', lib_none: function (q) { return 'Kein Bild für „' + q + '“.'; }, lib_n: function (n) { return n + (n === 1 ? ' Bild' : ' Bilder'); }, lib_set: function (n) { return 'Bild ausgewählt: ' + n; },
+    s_listen: 'Wiedergabe', s_bt: 'Lautsprecher oder Kopfhörer', hp_wired: 'Kopfhörer erkannt', hp_wired_sub: 'Mit einem USB-C-auf-Klinke-Adapter ohne eingebauten Chip', hp_yes: 'Ja', hp_no: 'Nein', hp_boost: 'Lautere Kopfhörer', hp_boost_sub: 'Vor dem Aufsetzen die Lautstärke herunterdrehen', hp_boost_kids: 'Funktioniert nur bei ausgeschaltetem Kindermodus', s_upnp: 'Aus anderen Apps abspielen', s_upnp_sub: 'UPnP / DLNA im heimischen WLAN: BubbleUPnP, mconnect, Musikserver', s_none: 'Keine', s_night_trip: 'Schlafenszeit und Reisen', s_general: 'Allgemein', s_parents: 'Eltern', s_advanced: 'Erweitert', s_on: 'Ein', s_off: 'Aus', s_uptodate: 'Aktuell', s_avail: function (v) { return v + ' verfügbar'; }, s_storage_free: 'frei', s_open: 'Offen', s_closed: 'Geschlossen', s_home: 'Hausautomation', s_home_sub: 'Home Assistant', s_maint: 'Wartungszugang', s_maint_sub: 'SSH für Technikinteressierte',
+    disc_add: 'Alben hinzufügen', disc_drop: 'Albumordner hier ablegen: Jeder Ordner wird eine Wiedergabeliste', disc_hint: function (k) { return 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer in MP3 mit ' + k + ' kbps umgewandelt.'; }, converting: function (k) { return 'Wird in MP3 mit ' + k + ' kbps umgewandelt'; }, queued_conv: function (k) { return 'Wartet (Umwandlung in MP3 mit ' + k + ' kbps)'; }, up_conv_fail: 'Dieser Browser konnte die Datei nicht lesen (versuche Chrome oder Firefox auf einem Computer)', disc_progress: function (d, n) { return d + ' / ' + n + ' Titel'; }, disc_errors: function (n) { return n + (n === 1 ? ' Titel konnte' : ' Titel konnten') + ' nicht übertragen werden'; }, disc_created: function (n) { return 'Wiedergabeliste erstellt: ' + n; },
+    story_rec: 'Geschichte aufnehmen', story_default: 'Meine Geschichte', story_got: function (n) { return 'Geschichte empfangen: ' + n; }, story_book: 'Eine Geschichte: Diese Wiedergabeliste ist jetzt ein Hörbuch', story_open: 'Geschichte öffnen', story_open_sub: 'Eine als Datei empfangene Geschichte', story_file_bad: 'Diese Datei ist keine Geschichte aus Jookistory', story_token_t: 'Welche Figur startet diese Geschichte?', story_token_help: 'Stelle sie jetzt auf den Jooki oder wähle sie unten aus.', token_live: 'Warte auf eine Figur auf dem Jooki…', token_seen: function (n) { return 'Figur erkannt: ' + n; }, later: 'Später', cover_set: function (n) { return 'Das Titelbild ist jetzt das Bild von ' + n; }, labels_btn: 'Etiketten drucken', labels_t: 'Etiketten für die Bücher', labels_size: 'Größe', print: 'Drucken', labels_help: 'Ein Etikett pro Chip. Drucken, ausschneiden und auf das jeweilige Buch über den NFC-Aufkleber kleben. Dann das geschlossene Buch auf den Jooki legen und ausprobieren.', labels_none: 'Noch kein eigener Chip. Lege zuerst einen flachen Chip oder NFC-Aufkleber auf den Jooki.',
+    s_mp3: 'MP3-Qualität', s_mp3_sub: 'Für übertragene FLAC- und WAV-Dateien', s_mp3_192: '192 kbps — kleinste Dateien', s_mp3_256: '256 kbps — empfohlen', s_mp3_320: '320 kbps — höchste Qualität', s_mp3_foot: 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer oder Handy in MP3 umgewandelt. Ein Album braucht so etwa ein Drittel des Speicherplatzes. 256 kbps reichen für den Jooki und Bluetooth-Kopfhörer gut aus. Diese Auswahl gilt nur auf diesem Gerät.',
+    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_parent_foot: 'Ein vierstelliger Code schützt die Einstellungen vor Änderungen durch Kinder und Gäste.', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
+  };
   T.nl = {
     playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
     connecting: 'Verbinden met de Jooki…', connected: 'Verbonden', offline: 'Offline',
@@ -622,10 +708,10 @@
     s_connect_info: 'Om te verbinden', s_night_hours: 'Uren', s_night_during: 'Tijdens de nacht', s_update: 'Update',
     colon: ': '
   };
-  var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands']];
+  var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands'], ['de', 'Deutsch']];
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  // English by default; French or Dutch only when the browser itself is set to that language
+  // Follow a supported browser language until this phone has saved a choice.
   var lang = lsGet('oj.lang') || (navigator.language || 'en').slice(0, 2).toLowerCase();
   if (!T[lang]) lang = 'en';
   // Appearance, kept on this phone: 'auto' follows the phone, 'light' / 'dark' force it (app.css, html[data-theme])
@@ -652,37 +738,37 @@
 
   /* ------------------------------------------------------------------ characters */
   var MEDIA = '/static/media/';
-  // id, name in fr / en / nl (every page language: a missing column showed French to Dutch families), picture or colour
+  // id, name in fr / en / nl / de (every page language: a missing column showed French to Dutch families), picture or colour
   var CHARS = [
-    ['Jooki.Dragon', 'Dragon', 'Dragon', 'Draak', 'dragon.cffed3d7.png'],
-    ['Jooki.Fox', 'Renard', 'Fox', 'Vos', 'fox.ac721aec.png'],
-    ['Jooki.Ghost', 'Fantôme', 'Ghost', 'Spook', 'ghost.c2a43882.png'],
-    ['Jooki.Knight', 'Chevalier', 'Knight', 'Ridder', 'knight.dc50962b.png'],
-    ['Jooki.Whale', 'Baleine', 'Whale', 'Walvis', 'whale.da72da11.png'],
-    ['Jooki.Black.Dragon', 'Dragon noir', 'Black dragon', 'Zwarte draak', 'dragon-black.27a71b2c.png'],
-    ['Jooki.Black.Fox', 'Renard noir', 'Black fox', 'Zwarte vos', 'fox-black.7d23b82c.png'],
-    ['Jooki.Black.Knight', 'Chevalier noir', 'Black knight', 'Zwarte ridder', 'knight-black.d995170a.png'],
-    ['Jooki.Black.Whale', 'Baleine noire', 'Black whale', 'Zwarte walvis', 'whale-black.74e936a9.png'],
-    ['Jooki.White.Dragon', 'Dragon blanc', 'White dragon', 'Witte draak', 'dragon-white.921a8110.png'],
-    ['Jooki.White.Fox', 'Renard blanc', 'White fox', 'Witte vos', 'fox-white.8f5e5c27.png'],
-    ['Jooki.White.Knight', 'Chevalier blanc', 'White knight', 'Witte ridder', 'knight-white.b0dd9a37.png'],
-    ['Jooki.White.Whale', 'Baleine blanche', 'White whale', 'Witte walvis', 'whale-white.218d88b9.png'],
-    ['G2.Orange', 'Jeton orange', 'Orange token', 'Oranje figuurtje', '#f28b24'],
-    ['G2.DarkBlue', 'Jeton bleu foncé', 'Dark blue token', 'Donkerblauw figuurtje', '#23408e'],
-    ['G2.Turquoise', 'Jeton turquoise', 'Turquoise token', 'Turquoise figuurtje', '#22b2ad'],
-    ['G2.Yellow', 'Jeton jaune', 'Yellow token', 'Geel figuurtje', '#f4c21b'],
-    ['G2.Red', 'Jeton rouge', 'Red token', 'Rood figuurtje', '#d7362c'],
-    ['G2.Purple', 'Jeton violet', 'Purple token', 'Paars figuurtje', '#7c4db4'],
-    ['G2.Green', 'Jeton vert', 'Green token', 'Groen figuurtje', '#3ba555'],
-    ['G2.Pink', 'Jeton rose', 'Pink token', 'Roze figuurtje', '#ec6ea6'],
-    ['Jooki.Flat', 'Jeton plat', 'Flat token', 'Plat figuurtje', 'flat.5534d75d.png'],
-    ['Jooki.ThankYou', 'Jeton Merci', 'Thank-you token', 'Bedankt-figuurtje', 'flat.5534d75d.png']
+    ['Jooki.Dragon', 'Dragon', 'Dragon', 'Draak', 'Drache', 'dragon.cffed3d7.png'],
+    ['Jooki.Fox', 'Renard', 'Fox', 'Vos', 'Fuchs', 'fox.ac721aec.png'],
+    ['Jooki.Ghost', 'Fantôme', 'Ghost', 'Spook', 'Gespenst', 'ghost.c2a43882.png'],
+    ['Jooki.Knight', 'Chevalier', 'Knight', 'Ridder', 'Ritter', 'knight.dc50962b.png'],
+    ['Jooki.Whale', 'Baleine', 'Whale', 'Walvis', 'Wal', 'whale.da72da11.png'],
+    ['Jooki.Black.Dragon', 'Dragon noir', 'Black dragon', 'Zwarte draak', 'Schwarzer Drache', 'dragon-black.27a71b2c.png'],
+    ['Jooki.Black.Fox', 'Renard noir', 'Black fox', 'Zwarte vos', 'Schwarzer Fuchs', 'fox-black.7d23b82c.png'],
+    ['Jooki.Black.Knight', 'Chevalier noir', 'Black knight', 'Zwarte ridder', 'Schwarzer Ritter', 'knight-black.d995170a.png'],
+    ['Jooki.Black.Whale', 'Baleine noire', 'Black whale', 'Zwarte walvis', 'Schwarzer Wal', 'whale-black.74e936a9.png'],
+    ['Jooki.White.Dragon', 'Dragon blanc', 'White dragon', 'Witte draak', 'Weißer Drache', 'dragon-white.921a8110.png'],
+    ['Jooki.White.Fox', 'Renard blanc', 'White fox', 'Witte vos', 'Weißer Fuchs', 'fox-white.8f5e5c27.png'],
+    ['Jooki.White.Knight', 'Chevalier blanc', 'White knight', 'Witte ridder', 'Weißer Ritter', 'knight-white.b0dd9a37.png'],
+    ['Jooki.White.Whale', 'Baleine blanche', 'White whale', 'Witte walvis', 'Weißer Wal', 'whale-white.218d88b9.png'],
+    ['G2.Orange', 'Jeton orange', 'Orange token', 'Oranje figuurtje', 'Oranger Chip', '#f28b24'],
+    ['G2.DarkBlue', 'Jeton bleu foncé', 'Dark blue token', 'Donkerblauw figuurtje', 'Dunkelblauer Chip', '#23408e'],
+    ['G2.Turquoise', 'Jeton turquoise', 'Turquoise token', 'Turquoise figuurtje', 'Türkiser Chip', '#22b2ad'],
+    ['G2.Yellow', 'Jeton jaune', 'Yellow token', 'Geel figuurtje', 'Gelber Chip', '#f4c21b'],
+    ['G2.Red', 'Jeton rouge', 'Red token', 'Rood figuurtje', 'Roter Chip', '#d7362c'],
+    ['G2.Purple', 'Jeton violet', 'Purple token', 'Paars figuurtje', 'Lila Chip', '#7c4db4'],
+    ['G2.Green', 'Jeton vert', 'Green token', 'Groen figuurtje', 'Grüner Chip', '#3ba555'],
+    ['G2.Pink', 'Jeton rose', 'Pink token', 'Roze figuurtje', 'Rosa Chip', '#ec6ea6'],
+    ['Jooki.Flat', 'Jeton plat', 'Flat token', 'Plat figuurtje', 'Flacher Chip', 'flat.5534d75d.png'],
+    ['Jooki.ThankYou', 'Jeton Merci', 'Thank-you token', 'Bedankt-figuurtje', 'Danke-Chip', 'flat.5534d75d.png']
   ];
   var CHAR = {};
-  CHARS.forEach(function (c, i) { CHAR[c[0]] = { id: c[0], fr: c[1], en: c[2], nl: c[3], art: c[4], order: i }; });
+  CHARS.forEach(function (c, i) { CHAR[c[0]] = { id: c[0], fr: c[1], en: c[2], nl: c[3], de: c[4], art: c[5], order: i }; });
   function charInfo(id) {
     if (CHAR[id]) return CHAR[id];
-    return { id: id, fr: id || '?', en: id || '?', nl: id || '?', art: null, order: 999 };
+    return { id: id, fr: id || '?', en: id || '?', nl: id || '?', de: id || '?', art: null, order: 999 };
   }
   // A token that is a character of its own (docs/23 §4): a foreign NFC tag "tag.<uid>" (amiibo,
   // sticker), a flat token "flat.<uid>" or a Thank-you token "thanks.<uid>" (one code for all of
@@ -2434,7 +2520,7 @@
   /* ------------------------------------------------------------------ the picture library */
   // Ready-made pictures for the tokens of their own (docs/23 §5): Fluent Emoji 3D (Microsoft, MIT,
   // tokimg/LICENSE.txt), 128 px WebP shipped with the page, so it works without Internet.
-  // tokimg/index.json = { cats: [[id, {fr, en, nl}, iconId]], img: [[id, cat, fr, en, nl, "search words"]] }.
+  // tokimg/index.json = { cats: [[id, {fr, en, nl, de}, iconId]], img: [[id, cat, fr, en, nl, "search words", de]] }.
   // The grid is filled here, not by renderModal: typing in the search keeps the field and the scroll.
   var libIdx = null, libWait = null;
   function loadLibIndex(cb) {
@@ -2447,7 +2533,7 @@
       var w = libWait; libWait = null; w.forEach(function (f) { f(libIdx); });
     });
   }
-  function libName(r) { return (lang === 'en' ? r[3] : lang === 'nl' ? r[4] : r[2]) || r[2]; }
+  function libName(r) { return (lang === 'de' ? r[6] : lang === 'en' ? r[3] : lang === 'nl' ? r[4] : r[2]) || r[2]; }
   function libraryPicker(sid, tag) {
     var q = '', failed = false, chips = {}, picked = false;
     var body = h('div', { class: 'libbody', 'data-k': 'libgrid' });
@@ -2871,7 +2957,7 @@
     if (o.right) right.push(o.right);
     var inner = [o.icon ? h('span', { class: 'ico ' + (o.color || 'gray') }, icon(o.icon)) : null,
       h('span', { class: 'lbl' }, h('span', { class: 'l1' }, o.label), o.sub ? h('span', { class: 'l2' }, o.sub) : null), right];
-    var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '') + (o.col ? ' col' : '');
+    var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '') + (o.col ? ' col' : '') + (o.right && o.right.tagName === 'SELECT' ? ' control' : '');
     if (o.sw || o.tag === 'label') return h('label', { class: cls }, inner);
     if (o.href) return h('a', { class: cls, href: o.href, 'data-k': o.k }, inner);
     if (o.onclick) return h('button', { class: cls, type: 'button', 'data-k': o.k, lang: o.lang || null, disabled: o.disabled ? 'disabled' : null, onclick: o.onclick }, inner);

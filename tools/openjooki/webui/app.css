@@ -438,6 +438,15 @@ button.srow:disabled { opacity: .5; cursor: default; }
 .sw:checked { background: var(--ok); }
 .sw:checked::after { transform: translateX(20px); }
 .input.mini { width: auto; min-height: 36px; padding: 4px 10px; }
+/* Long translated options must leave the setting's label readable on a phone. */
+@media (max-width: 520px) {
+  .srow.control { display: grid; grid-template-columns: 32px minmax(0, 1fr); }
+  .srow.control.noico { grid-template-columns: minmax(0, 1fr); }
+  .srow.control .ico { grid-column: 1; grid-row: 1 / span 2; align-self: start; }
+  .srow.control .lbl, .srow.control > select { grid-column: 2; }
+  .srow.control.noico .lbl, .srow.control.noico > select { grid-column: 1; }
+  .srow.control > select { width: 100%; min-width: 0; max-width: 100%; }
+}
 .group .timepair { padding: 6px 16px 12px; position: relative; }
 .group .timepair .input { text-align: center; font-weight: 600; font-size: 17px; }
 .statuscard { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 18px; text-align: center; margin-bottom: 18px; }

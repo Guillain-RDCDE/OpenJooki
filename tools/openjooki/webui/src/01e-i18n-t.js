@@ -1,7 +1,7 @@
-  var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands']];
+  var LANGS = [['en', 'English'], ['fr', 'Français'], ['nl', 'Nederlands'], ['de', 'Deutsch']];
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  // English by default; French or Dutch only when the browser itself is set to that language
+  // Follow a supported browser language until this phone has saved a choice.
   var lang = lsGet('oj.lang') || (navigator.language || 'en').slice(0, 2).toLowerCase();
   if (!T[lang]) lang = 'en';
   // Appearance, kept on this phone: 'auto' follows the phone, 'light' / 'dark' force it (app.css, html[data-theme])

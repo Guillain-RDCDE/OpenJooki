@@ -10,7 +10,7 @@
     if (o.right) right.push(o.right);
     var inner = [o.icon ? h('span', { class: 'ico ' + (o.color || 'gray') }, icon(o.icon)) : null,
       h('span', { class: 'lbl' }, h('span', { class: 'l1' }, o.label), o.sub ? h('span', { class: 'l2' }, o.sub) : null), right];
-    var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '') + (o.col ? ' col' : '');
+    var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '') + (o.col ? ' col' : '') + (o.right && o.right.tagName === 'SELECT' ? ' control' : '');
     if (o.sw || o.tag === 'label') return h('label', { class: cls }, inner);
     if (o.href) return h('a', { class: cls, href: o.href, 'data-k': o.k }, inner);
     if (o.onclick) return h('button', { class: cls, type: 'button', 'data-k': o.k, lang: o.lang || null, disabled: o.disabled ? 'disabled' : null, onclick: o.onclick }, inner);

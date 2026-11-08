@@ -16,7 +16,12 @@ with sync_playwright() as pw:
     pg.goto(PAGE + "/#/settings"); pg.wait_for_selector("[data-k=langnav]")
     R.check("German browser detected", pg.locator("html").get_attribute("lang") == "de" and pg.locator("h1").inner_text() == "Einstellungen")
     for key in ("heartpress", "knobmode"):
-        width = pg.locator("[data-k=" + key + "]").evaluate("el => el.closest('.srow').querySelector('.lbl').getBoundingClientRect().width")
+        width = pg.wait_for_function("""key => {
+            var el = document.querySelector('[data-k=' + key + ']');
+            if (!el) return false;
+            el.scrollIntoView({block: 'center'});
+            return el.closest('.srow').querySelector('.lbl').getBoundingClientRect().width;
+        }""", arg=key).json_value()
         R.check("readable narrow label " + key, width >= 180, width)
     for route in ("settings", "settings/language", "settings/night", "settings/bluetooth", "settings/wifi", "tokens", "library", "playlists"):
         pg.goto(PAGE + "/#/" + route); pg.wait_for_selector("h1")

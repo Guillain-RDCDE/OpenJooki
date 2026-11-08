@@ -43,7 +43,7 @@
   }
   var nightVolDrag = null;
   function nightPage() {
-    var c = S.bedtime.cfg;
+    var c = S.bedtime.cfg, cfg = S.audio.config;
     if (c.start === undefined) return null; // firmware without bedtime
     var mv = nightVolDrag !== null ? nightVolDrag : Number(c.maxvol) || 100;
     var timers = [0, 10, 15, 20, 30, 45, 60];
@@ -51,7 +51,13 @@
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
     var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
-    if (!c.enabled) return out;
+    // Darkness is persistent and independent of the schedule, so keep its switch reachable
+    // here even with night mode off. The timed dimming option above it keeps its own setting.
+    var allLights = typeof cfg.lights_off === 'boolean' ? sGroup(null, [
+      sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+        onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } })
+    ]) : [];
+    if (!c.enabled) return out.concat(allLights);
     out.push(sGroup(t('s_night_hours'), [
       sRow({ k: 'nightstatus', label: S.bedtime.night ? h('b', { class: 'accent-text' }, t('night_now')) : h('span', { class: 'muted' }, t('night_next', hm(c.start))) }),
       h('div', { class: 'timepair' },
@@ -71,5 +77,5 @@
           onchange: function (e) { nightVolDrag = null; setBedtime({ maxvol: Number(e.target.value) }); } })),
       sRow({ label: t('night_dim'), sw: true, on: c.dim, k: 'nightdim', onchange: function (e) { setBedtime({ dim: e.target.checked }); } })
     ]));
-    return out;
+    return out.concat(allLights);
   }

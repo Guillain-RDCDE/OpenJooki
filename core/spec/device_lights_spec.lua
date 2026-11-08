@@ -95,7 +95,7 @@ describe("services.device.lights — the start-up Wi-Fi chase", function()
     end
     assert_true(found)
     local bench = doc_with(); bench.config.wifi_anim_s = 0
-    assert_nil(lights.on_boot(bench))
+    assert_false(has(lights.on_boot(bench), "timer.every", "name", "device.wifi_anim"))
   end)
 end)
 

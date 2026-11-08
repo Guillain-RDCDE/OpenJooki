@@ -102,6 +102,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/bench
+      - name: Persistent device lights switch
+        run: sudo -E python3 test_lights_off.py
       - name: backend
         run: sudo -E python3 test_backend.py
       - name: bedtime

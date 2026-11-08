@@ -31,7 +31,9 @@ jobs:
         run: pip install -q ruff==0.15.14 && ruff check --select F tools scripts core/spec/integration
       - name: app.js is what webui/src gives, and the MP3 encoder in docs/ is the copy of webui/
         run: python3 tools/openjooki/webui/build.py --check
-      - name: The page parses and stays small (app.js <= 256 KiB, app.css <= 64 KiB)
+      - name: Translations (keys, placeholders, German detection, characters, picture search)
+        run: node tools/openjooki/tests/test_i18n.js
+      - name: The page parses and stays small (app.js <= 288 KiB, app.css <= 64 KiB)
         run: |
           node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js && node --check docs/mp3-worker.js
           for f in tools/openjooki/webui/src/*.js; do node --check "$f" || exit 1; done
@@ -40,7 +42,7 @@ jobs:
           node --check /tmp/sdcard-page.js
           python3 - <<'EOF'
           import os, sys
-          caps = {"tools/openjooki/webui/app.js": 256, "tools/openjooki/webui/app.css": 64}
+          caps = {"tools/openjooki/webui/app.js": 288, "tools/openjooki/webui/app.css": 64}
           bad = [(p, os.path.getsize(p) // 1024) for p, k in caps.items() if os.path.getsize(p) > k * 1024]
           print("sizes:", {p: "%d KiB" % (os.path.getsize(p) // 1024) for p in caps})
           sys.exit("over the cap: %r" % bad if bad else 0)
@@ -122,6 +124,10 @@ jobs:
       - uses: ./.github/actions/bench
       - name: Web volume and configurable kids ceiling
         run: sudo -E python3 test_device_controls.py
+      - name: Scheduled and permanent device darkness
+        run: sudo -E python3 test_lights_off.py
+      - name: German device UI
+        run: sudo -E python3 test_german.py
       - name: backend
         run: sudo -E python3 test_backend.py
       - name: bedtime

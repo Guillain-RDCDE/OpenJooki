@@ -23,7 +23,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/
 
 ### `bedtime.set`
 
-Night mode settings: enabled, start/stop ("HH:MM" or minutes), timer (min), maxvol, dim, tzbase (minutes), tzdst (EU|none).
+Night mode settings: enabled, start/stop ("HH:MM" or minutes), timer (min), maxvol, dim, lights_off (all lights off only during the night window), tzbase (minutes), tzdst (EU|none).
 
 Payload schema:
 
@@ -35,6 +35,9 @@ Payload schema:
       "type": "boolean"
     },
     "enabled": {
+      "type": "boolean"
+    },
+    "lights_off": {
       "type": "boolean"
     },
     "maxvol": {
@@ -211,6 +214,9 @@ Payload schema:
     "knob_mode": {
       "enum": ["song", "both", "wind"],
       "type": "string"
+    },
+    "lights_off": {
+      "type": "boolean"
     },
     "repeat_mode": {
       "maximum": 2,

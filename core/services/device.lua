@@ -63,6 +63,7 @@ local function audiocfg_of(doc)
   a.upnp = a.upnp == true
   local max = a.toy_safe_maxvol
   a.toy_safe_maxvol = type(max) == "number" and max >= 0 and max <= 100 and max % 1 == 0 and max or DEFAULT_KIDS_MAX
+  a.lights_off = a.lights_off == true
   a.repeat_mode = a.repeat_mode or 1
   return a
 end
@@ -107,6 +108,9 @@ function device.update_config(doc, changes, opts)
       return nil, err("invalid_argument", "toy_safe_maxvol", "expected an integer from 0 to 100")
     end
   end
+  if changes.lights_off ~= nil and type(changes.lights_off) ~= "boolean" then
+    return nil, err("invalid_argument", "lights_off", "expected a boolean")
+  end
   local a = audiocfg_of(doc)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
   if type(changes.continue_on_token_removal) == "boolean" then a.continue_on_token_removal = changes.continue_on_token_removal end
@@ -132,6 +136,10 @@ function device.update_config(doc, changes, opts)
     cmds[#cmds + 1] = emit("volume.apply", {})
   end
   if changes.toy_safe_maxvol ~= nil then a.toy_safe_maxvol_global = true end
+  if changes.lights_off ~= nil and changes.lights_off ~= a.lights_off then
+    a.lights_off = changes.lights_off
+    cmds[#cmds + 1] = emit("lights.apply", {})
+  end
   if not (opts and opts.silent) then
     cmds[#cmds + 1] = emit("audiocfg.changed", { shuffle_mode = changes.shuffle_mode, repeat_mode = changes.repeat_mode })
   end
@@ -435,7 +443,7 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
-                                              upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
+                                              upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

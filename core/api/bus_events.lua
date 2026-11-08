@@ -64,6 +64,11 @@ function bus_events.translate(topic, payload)
     local d = jsonish(payload) or {}
     return { type = "knobs", volume = tonumber(d.volume), headphones = tonumber(d.hp_state) == 1, control = tonumber(d.control), volume_api = tonumber(d.volume_api) }
   end
+  if topic == "/j/ht/input/raw_read_response" then
+    local addr, value = tostring(payload):match("^%s*(%d+)%s+(%d+)%s*$")
+    addr, value = tonumber(addr), tonumber(value)
+    return { type = "lights.register", address = addr, value = value, bad = not addr or not value or addr > 255 or value > 255 }
+  end
   -- Bluetooth speakers and headphones (docs/26): the ESP32 speaks A2DP itself
   local bt = topic:match("^/j/esp32/input/bt/device_(%w+)$")
   if bt == "connected" or bt == "discovered" or bt == "saved" then

@@ -4,6 +4,7 @@
 -- and owns no state but the flag state.device.party; the colours sent are not kept (the simulator
 -- reads them off the bus). Installed by services.device (the facade), which re-exports its handlers.
 local util = require("services.util")
+local bedtime = require("services.bedtime")
 local lights = {}
 
 local LED = "/j/led/output/"
@@ -12,7 +13,9 @@ local COLOURS = { WHITE = { 200, 200, 200 }, BLACK = { 0, 0, 0 }, RED = { 200, 0
                   LIGHTBLUE = { 0, 10, 200 } }
 
 local copy = util.copy
-function lights.off(doc) return (doc.audiocfg or {}).lights_off == true end
+function lights.off(doc)
+  return (doc.audiocfg or {}).lights_off == true or (doc.limits or {}).lights_off == true
+end
 local function cfg(doc, key, default)
   local c = doc.config or {}
   if c[key] ~= nil then return c[key] end
@@ -234,8 +237,15 @@ function lights.on_power(doc, ev)
   return nil
 end
 
+function lights.on_limits(doc)
+  local desired = lights.off(doc) and 0 or 8
+  if (doc.lights_int or {}).desired ~= desired then return lights.on_apply(doc) end
+  return lights.on_lights_refresh(doc)
+end
+
 function lights.on_boot(doc, ev)
   local after = copy(doc); after.audiocfg = (ev or {}).audiocfg or doc.audiocfg or {}
+  after.limits = bedtime.boot_limits(ev or {})
   return lights.on_apply(after)
 end
 
@@ -267,7 +277,7 @@ function lights.install(api, dispatch)
   dispatch.on("lights.event", "device.lights", lights.on_lights_event)
   dispatch.on("playback.changed", "device.lights", lights.on_lights_refresh)
   dispatch.on("net.status", "device.lights", lights.on_net_status)
-  dispatch.on("limits.changed", "device.lights", lights.on_lights_refresh)   -- after the facade's volume re-apply
+  dispatch.on("limits.changed", "device.lights", lights.on_limits)   -- after the facade's volume re-apply
   api.command("device.party", nil, function(doc) return lights.on_party(doc) end)
 end
 

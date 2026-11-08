@@ -12,8 +12,11 @@
   applyTheme();
   // Also translate the light switch when the optional German table is present.
   if (T.de) {
-    T.de.lights_off = 'Alle Gerätelichter ausschalten';
-    T.de.lights_off_help = 'Ring, Seitenlichter und Herz, rund um die Uhr. Bleibt nach einem Neustart und bei ausgeschaltetem Nachtmodus aus.';
+    T.de.lights_off = 'Alle Lichter dauerhaft ausschalten';
+    T.de.lights_off_help = 'Ring, Seitenlichter und Herz bleiben rund um die Uhr aus, auch nach einem Neustart oder ohne Nachtmodus.';
+    T.de.night_lights_off = 'Alle Lichter während der Nacht ausschalten';
+    T.de.night_lights_off_help = 'Ring, Seitenlichter und Herz gehen während der eingestellten Zeiten aus und danach wieder an.';
+    T.de.night_dim_help = 'Die Dimm-Einstellung bleibt gespeichert und gilt, sobald die Lichter an sind.';
   }
   function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {

@@ -4,7 +4,7 @@
   function sRow(o) {
     var right = [];
     if (o.value !== undefined && o.value !== null && o.value !== '') right.push(h('span', { class: 'val' + (o.vcls ? ' ' + o.vcls : '') }, o.value));
-    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
+    if (o.sw) right.push(h('input', { type: 'checkbox', role: 'switch', class: 'sw', checked: !!o.on, disabled: o.disabled ? 'disabled' : null, 'data-k': o.k, 'aria-label': o.label, onchange: o.onchange }));
     if (o.check) right.push(h('span', { class: 'tick' }, icon('check')));
     if (o.href || (o.onclick && !o.nochev)) right.push(h('span', { class: 'chev' }, icon('chev')));
     if (o.right) right.push(o.right);

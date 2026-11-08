@@ -1,5 +1,6 @@
 local device = require("services.device")
 local lights = require("services.device.lights")
+local bedtime = require("services.bedtime")
 local power = require("services.device.power")
 local schema = require("api.schema")
 local security = require("services.security")
@@ -46,6 +47,121 @@ describe("device configuration contract", function()
     assert_true(allowed.state.audiocfg.lights_off)
     assert_nil(security.gate(v1.PROTECTED, "SET_VOL", nil))
     security._set_parent_code(nil)
+  end)
+end)
+
+describe("scheduled darkness and the permanent override", function()
+  local function event(h, m)
+    -- 2026-01-15, UTC: the schedule crosses midnight and uses UTC for these tests.
+    return { wall = 1768435200 + h * 3600 + (m or 0) * 60,
+      bedtime = { enabled = true, start = 1200, stop = 420, maxvol = 100,
+                  dim = false, lights_off = true, tzbase = 0, tzdst = "none" } }
+  end
+  local function boot(h, m)
+    local d = doc(); apply(d, bedtime.on_boot(d, event(h, m)))
+    apply(d, lights.on_boot(d, event(h, m)))
+    return d
+  end
+  local function driver(r) return has(r, "bus.publish", "topic", "/j/ht/output/raw_write") end
+
+  it("defaults to normal lighting and strictly validates the protected night switch", function()
+    assert_false(bedtime.on_boot(doc(), {}).state.bedtime.cfg.lights_off)
+    for _, value in ipairs({ "false", 0, 1, {} }) do
+      assert_false(schema.validate({ lights_off = value }, bedtime.schemas.set))
+      local r, e = bedtime.on_set(doc(), { lights_off = value }, event(22).wall)
+      assert_nil(r); assert_eq(e.field, "lights_off")
+      r = v1.on_cmd(doc(), { name = "OJ_BEDTIME_SET", raw = json.encode({ lights_off = value }) })
+      assert_nil(r.state); assert_true(has(r, "bus.publish", "topic", v1.TOPIC_ERROR) ~= nil)
+    end
+    security._set_parent_code("1234")
+    assert_true(security.gate(security.PROTECTED_V2, "bedtime.set", nil) ~= nil)
+    assert_nil(security.gate(security.PROTECTED_V2, "bedtime.set", "1234"))
+    local r = v1.on_cmd(doc(), { name = "OJ_BEDTIME_SET", raw = '{"lights_off":true}' })
+    assert_nil(r.state)
+    r = v1.on_cmd(doc(), { name = "OJ_BEDTIME_SET", raw = '{"lights_off":true,"code":"1234"}', wall = event(22).wall })
+    assert_true(r.state.bedtime.cfg.lights_off)
+    security._set_parent_code(nil)
+  end)
+
+  it("turns off at the start and restores at the end even with no dimming or volume limit", function()
+    local d = boot(19, 59)
+    assert_false(lights.off(d)); assert_eq(d.lights_int.desired, 8)
+    apply(d, bedtime.on_clock(d, event(20, 0)))
+    assert_true(lights.off(d)); assert_eq(driver(lights.on_limits(d)).payload, "34 0")
+    apply(d, lights.on_limits(d))
+    assert_nil(driver(lights.on_limits(d))) -- unrelated fades must not restart the global driver
+    assert_nil(bedtime.on_clock(d, event(6, 59)))
+    apply(d, bedtime.on_clock(d, event(7, 0)))
+    assert_false(lights.off(d))
+    local r = lights.on_limits(d); apply(d, r)
+    assert_eq(driver(r).payload, "34 8")
+    assert_true(has(r, "bus.publish", "payload", "RING,200,200,200") ~= nil)
+    assert_false(d.audiocfg.lights_off)
+  end)
+
+  it("uses the saved schedule in the first boot command without a transient driver enable", function()
+    for _, h in ipairs({ 0, 6, 20, 23 }) do
+      local d = doc(); d.limits.lights_off = false
+      local r = lights.on_boot(d, event(h))
+      assert_eq(driver(r).payload, "34 0")
+      for _, c in ipairs(r.commands) do
+        assert_false(c.topic == "/j/ht/output/raw_write" and c.payload == "34 8")
+        if c.topic == "/j/led/output/set_raw" then assert_eq(c.payload, "ALL,0,0,0") end
+      end
+    end
+    assert_eq(driver(lights.on_boot(doc(), event(12))).payload, "34 8")
+  end)
+
+  it("persists each preference independently and disabling night mode restores lighting", function()
+    local d = boot(22)
+    local r = bedtime.on_set(d, { enabled = false, dim = true }, event(22).wall)
+    assert_true(has(r, "files.write").doc.lights_off); apply(d, r)
+    assert_false(lights.off(d)); assert_eq(driver(lights.on_limits(d)).payload, "34 8")
+    assert_true(d.bedtime.cfg.dim); assert_true(d.bedtime.cfg.lights_off)
+    assert_false(d.audiocfg.lights_off)
+    apply(d, bedtime.on_set(d, { enabled = true }, event(22).wall))
+    assert_true(lights.off(d))
+    d.audiocfg.lights_off = true
+    apply(d, bedtime.on_set(d, { enabled = false }, event(22).wall))
+    assert_true(lights.off(d)); assert_nil(driver(lights.on_limits(d)))
+    assert_true(d.audiocfg.lights_off)
+  end)
+
+  it("keeps the permanent override across the morning and only enables when both are off", function()
+    local d = boot(22); d.audiocfg.lights_off = true
+    apply(d, bedtime.on_clock(d, event(8)))
+    assert_true(lights.off(d)); assert_nil(driver(lights.on_limits(d)))
+    d.audiocfg.lights_off = false
+    assert_eq(driver(lights.on_apply(d)).payload, "34 8")
+    apply(d, bedtime.on_clock(d, event(22))); apply(d, lights.on_limits(d))
+    assert_eq(driver(lights.on_apply(d)).payload, "34 0") -- permanent off cannot bypass the night window
+  end)
+
+  it("reapplies scheduled darkness on reconnect and charging, suppressing events and shutdown light", function()
+    local d = boot(22)
+    assert_eq(driver(lights.on_apply(d)).payload, "34 0")
+    assert_eq(driver(lights.on_power(d, { type = "power.plugged", on = true })).payload, "34 0")
+    assert_nil(lights.on_lights_event(d, { name = "Evt.Character.Write" }))
+    assert_nil(lights.on_lights_event(d, { name = "Evt.Power.Low.Warning" }))
+    assert_eq(lights.on_party(d), {})
+    assert_nil(has(power.on_shutdown_request(d, {}), "bus.publish", "payload", "CIRCLE,200,0,0"))
+    apply(d, bedtime.on_clock(d, event(8))); apply(d, lights.on_limits(d))
+    assert_nil(lights.on_register(d, { address = 34, value = 0 })) -- late night acknowledgement
+    apply(d, lights.on_register(d, { address = 34, value = 8 }))
+    assert_true(d.lights_int.verified)
+  end)
+
+  it("does not apply scheduled darkness without a valid clock, enabled window or distinct endpoints", function()
+    local ev = event(22); ev.wall = 0
+    assert_false(bedtime.boot_limits(ev).lights_off)
+    ev = event(22); ev.bedtime.enabled = false
+    assert_false(bedtime.boot_limits(ev).lights_off)
+    ev = event(22); ev.bedtime.stop = ev.bedtime.start
+    assert_false(bedtime.boot_limits(ev).lights_off)
+    ev = event(22); ev.bedtime.lights_off = "true"
+    assert_false(bedtime.boot_limits(ev).lights_off)
+    ev.audiocfg = { lights_off = true }
+    assert_eq(driver(lights.on_boot(doc(), ev)).payload, "34 0")
   end)
 end)
 

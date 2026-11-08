@@ -23,10 +23,13 @@ The playlist page shows *"Will resume at chapter 12 · 3:25"* and a button
 chapter, in memory: after turning itself off, a book always started over.
 
 **Sleep timer.** From the player on the page: 10, 20, 30, 45 or 60 minutes, or
-*End of chapter*. The volume goes down gently during the last minute (the last
-20 seconds of the chapter in *End of chapter* mode), then the Jooki pauses and
+*End of song* (*End of chapter* for audiobooks). The volume goes down gently during
+the last minute (the last 20 seconds of the track in end-of-track mode), then the Jooki pauses and
 its volume goes back to normal for the next time. The player bar shows a moon and
-the time left.
+the time left or the matching end-of-song/chapter label. Local tracks and Deezer
+stop without advancing to the next track. Spotify Connect uses the track duration
+and its playback clock; if the duration is missing, it pauses when Spotify reports
+the next track instead.
 
 **Night mode** (Settings → Bedtime). During a time window (default 20:00–07:00):
 
@@ -81,12 +84,12 @@ changed.
 
 ## Tests
 
-- `core/spec/bedtime_spec.lua`: the module alone with a fake clock: 8 unit specs
+- `core/spec/bedtime_spec.lua`: the module alone with a fake clock: 14 unit specs
   (the resume rules have their own, `core/spec/playback_resume_spec.lua`). The 1.x
   module had a Python harness of 57 checks, `unit_bedtime.py`; it left with the 1.x
   program (ADR-0012).
 - `tools/openjooki/tests/test_bedtime.py`: the core on the bench (volume sent to the
-  hardware, lights, timer, end of chapter, resume across a restart): 24 checks.
+  hardware, lights, timer, end of song/chapter, Spotify/Deezer, resume across a restart): 31 checks.
 - `tools/openjooki/tests/e2e.py`: the page, bedtime included (settings, timer,
   countdown, resume, sorting), 83 checks in all.
 - On a real Jooki v2: resume after pause and after a long pause, dimmed lights,

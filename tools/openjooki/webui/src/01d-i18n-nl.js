@@ -134,7 +134,7 @@
     upd_see: 'Bekijken',
     upd_steps: ['Nieuwe versie zoeken', 'Downloaden', 'Download controleren', 'Installeren (laat de Jooki aangesloten)', 'Installatie controleren', 'Opnieuw opstarten met de nieuwe versie'],
     sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk', sleep_song: 'Einde van het nummer',
     sleep_left: function (s) { return 'Stopt over ' + s; }, sleep_at_end: 'Stopt aan het einde van dit nummer',
     sleep_auto: 'automatisch (nachtmodus)', sleep_cancel: 'Timer annuleren',
     night_mode: 'Nachtmodus', night_help: 'In deze uren stopt elke luisterbeurt vanzelf, is het volume begrensd en zijn de lampjes gedimd.',

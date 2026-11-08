@@ -146,7 +146,7 @@
     upd_see: 'Voir',
     upd_steps: ['Recherche de la nouvelle version', 'Téléchargement', 'Vérification du téléchargement', 'Installation (ne débranche pas le Jooki)', 'Vérification de l\'installation', 'Redémarrage sur la nouvelle version'],
     sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre', sleep_song: 'Fin du morceau',
     sleep_left: function (s) { return 'Arrêt dans ' + s; }, sleep_at_end: 'Arrêt à la fin de ce morceau',
     sleep_auto: 'automatique (mode nuit)', sleep_cancel: 'Annuler la minuterie',
     night_mode: 'Mode nuit', night_help: 'Pendant ces heures, chaque écoute s\'arrête toute seule, le volume est limité et les lumières sont tamisées.',
@@ -347,7 +347,7 @@
     upd_see: 'Show',
     upd_steps: ['Looking for the new version', 'Downloading', 'Checking the download', 'Installing (keep the Jooki plugged in)', 'Checking the installation', 'Restarting on the new version'],
     sleep_timer: 'Sleep timer', sleep_off: 'Off',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter', sleep_song: 'End of song',
     sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
     sleep_auto: 'automatic (night mode)', sleep_cancel: 'Cancel the timer',
     night_mode: 'Night mode', night_help: 'During these hours, every listen stops by itself, the volume is limited and the lights are dimmed.',
@@ -548,7 +548,7 @@
     upd_see: 'Bekijken',
     upd_steps: ['Nieuwe versie zoeken', 'Downloaden', 'Download controleren', 'Installeren (laat de Jooki aangesloten)', 'Installatie controleren', 'Opnieuw opstarten met de nieuwe versie'],
     sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk', sleep_song: 'Einde van het nummer',
     sleep_left: function (s) { return 'Stopt over ' + s; }, sleep_at_end: 'Stopt aan het einde van dit nummer',
     sleep_auto: 'automatisch (nachtmodus)', sleep_cancel: 'Timer annuleren',
     night_mode: 'Nachtmodus', night_help: 'In deze uren stopt elke luisterbeurt vanzelf, is het volume begrensd en zijn de lampjes gedimd.',
@@ -625,6 +625,8 @@
   if (THEMES.indexOf(theme) < 0) theme = 'auto';
   function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
   applyTheme();
+  // Keep the song label available when the optional German table is installed.
+  if (T.de) T.de.sleep_song = 'Am Songende';
   function setTheme(v) { theme = v; lsSet('oj.theme', v); applyTheme(); render(); }
   function t(k) {
     var v = T[lang][k];
@@ -3193,6 +3195,7 @@
 
   /* ------------------------------------------------------------------ bedtime */
   function sleepInfo() { var s = S.bedtime.sleep; return s && typeof s === 'object' && s.mode ? s : null; }
+  function sleepTrackLabel() { return t(S.audio.nowPlaying.audiobook ? 'sleep_track' : 'sleep_song'); }
   function sleepLeft() {
     var s = sleepInfo();
     if (!s || s.remaining === undefined || s.remaining === null) return null;
@@ -3203,7 +3206,7 @@
     if (!s) return t('sleep_timer');
     return (s.mode === 'track' ? t('sleep_at_end') : t('sleep_left', fmtTime(sleepLeft()))) + (s.auto ? ' · ' + t('sleep_auto') : '');
   }
-  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? t('sleep_track') : fmtTime(sleepLeft()); }
+  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? sleepTrackLabel() : fmtTime(sleepLeft()); }
   function hm(m) { m = Number(m) || 0; var hh = Math.floor(m / 60) % 24, mm = m % 60; return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; }
   // the Jooki keeps UTC: tell it the family's time zone (Europe: summer time rule handled on the Jooki)
   function browserClock() {
@@ -3231,7 +3234,7 @@
         [10, 20, 30, 45, 60].map(function (m) {
           return h('button', { class: 'toggle', 'data-sleep-min': String(m), onclick: function () { send('OJ_SLEEP', { minutes: m }); } }, t('sleep_min', m));
         }),
-        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, t('sleep_track')),
+        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, sleepTrackLabel()),
         s ? h('button', { class: 'toggle', 'data-k': 'sleepoff', 'aria-label': t('sleep_cancel'), onclick: function () { send('OJ_SLEEP', { cancel: true }); } }, icon('x'), t('sleep_off')) : null));
   }
   var nightVolDrag = null;
@@ -3389,7 +3392,7 @@
       sig: function () {
         var np = S.audio.nowPlaying, c = S.audio.config, pl0 = pls()[np.playlistId];
         var sl = sleepInfo() || {};
-        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
+        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, np.audiobook, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];

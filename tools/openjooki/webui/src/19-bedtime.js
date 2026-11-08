@@ -1,5 +1,6 @@
   /* ------------------------------------------------------------------ bedtime */
   function sleepInfo() { var s = S.bedtime.sleep; return s && typeof s === 'object' && s.mode ? s : null; }
+  function sleepTrackLabel() { return t(S.audio.nowPlaying.audiobook ? 'sleep_track' : 'sleep_song'); }
   function sleepLeft() {
     var s = sleepInfo();
     if (!s || s.remaining === undefined || s.remaining === null) return null;
@@ -10,7 +11,7 @@
     if (!s) return t('sleep_timer');
     return (s.mode === 'track' ? t('sleep_at_end') : t('sleep_left', fmtTime(sleepLeft()))) + (s.auto ? ' · ' + t('sleep_auto') : '');
   }
-  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? t('sleep_track') : fmtTime(sleepLeft()); }
+  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? sleepTrackLabel() : fmtTime(sleepLeft()); }
   function hm(m) { m = Number(m) || 0; var hh = Math.floor(m / 60) % 24, mm = m % 60; return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; }
   // the Jooki keeps UTC: tell it the family's time zone (Europe: summer time rule handled on the Jooki)
   function browserClock() {
@@ -38,7 +39,7 @@
         [10, 20, 30, 45, 60].map(function (m) {
           return h('button', { class: 'toggle', 'data-sleep-min': String(m), onclick: function () { send('OJ_SLEEP', { minutes: m }); } }, t('sleep_min', m));
         }),
-        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, t('sleep_track')),
+        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, sleepTrackLabel()),
         s ? h('button', { class: 'toggle', 'data-k': 'sleepoff', 'aria-label': t('sleep_cancel'), onclick: function () { send('OJ_SLEEP', { cancel: true }); } }, icon('x'), t('sleep_off')) : null));
   }
   var nightVolDrag = null;

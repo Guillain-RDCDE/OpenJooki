@@ -8,7 +8,7 @@ MUSIC = 7                         # id the program gives to music playback (syst
 R = B.Results(); check = R.check
 
 # everything the program sends to the hardware side
-spy = B.Spy("/j/audio/out/#", "/j/led/output/#")
+spy = B.Spy("/j/audio/out/#", "/j/led/output/#", "/j/spotify/output/#", "/j/deezer/output/#")
 def sent(topic, n): return spy.payloads(topic, n)
 
 def vols(): return [int(x) for x in open(B.VOL_LOG).read().split()] if os.path.exists(B.VOL_LOG) else []
@@ -64,15 +64,48 @@ check("B6 volume lowered gradually before the pause", len([x for x in v if 0 < x
 check("B6 paused at the end, timer gone", j.pb == "PAUSED" and not bt(j).get("sleep"), j.get("audio.playback"))
 check("B6 volume back to normal after the pause", vols()[-1] == 90, vols()[-3:])
 
-# ---------- end of chapter
+# ---------- end of a local song
 j.send("PLAYLIST_PLAY", {"playlistId": q, "trackIndex": 1}); j.wait(lambda: j.np.get("trackIndex") == 1 and j.pb == "PLAYING", what="track 1 playing")
 ended(j)
 R.expect("B7 without timer: next track", lambda: j.np.get("trackIndex") == 2, 5, lambda: j.np)
 j.send("OJ_SLEEP", {"mode": "track"})
-R.expect("B7 'end of this chapter' shown", lambda: (bt(j).get("sleep") or {}).get("mode") == "track", 5, lambda: bt(j).get("sleep"))
+R.expect("B7 'end of this song' shown", lambda: (bt(j).get("sleep") or {}).get("mode") == "track", 5, lambda: bt(j).get("sleep"))
 ended(j)
-R.expect("B7 end of chapter: stops instead of the next track", lambda: j.np.get("trackIndex") == 2 and j.pb == "ENDED" and not bt(j).get("sleep"), 5,
+R.expect("B7 end of song: stops instead of the next track", lambda: j.np.get("trackIndex") == 2 and j.pb == "ENDED" and not bt(j).get("sleep"), 5,
          lambda: (j.np.get("trackIndex"), j.get("audio.playback")))
+
+# Spotify has no audio.ended: sparse position reports and new metadata are its end signals.
+def daemon(service, kind, payload=""):
+    j.c.publish("/j/" + service + "/input/" + kind, payload if isinstance(payload, str) else json.dumps(payload))
+
+track = {"source_uri": "spotify:playlist:sleep", "track": "Song one", "album": "Album", "duration_ms": 120000}
+daemon("spotify", "now_playing", track); daemon("spotify", "playing")
+j.wait(lambda: j.np.get("track") == "Song one" and j.pb == "PLAYING", what="Spotify playing")
+j.send("OJ_SLEEP", {"mode": "track"}); j.wait(lambda: j.get("bedtime.sleep.mode") == "track")
+n = spy.mark(); daemon("spotify", "position", "119000")
+R.expect("B7 Spotify: pauses at the song end without another position report",
+         lambda: sent("/j/spotify/output/pauz", n) and not bt(j).get("sleep"), 4,
+         lambda: (bt(j), spy.since(n)))
+R.expect("B7 Spotify: silent until the pause is confirmed", lambda: vols()[-1] == 0, 3, lambda: vols()[-5:])
+daemon("spotify", "paused"); j.wait_state("audio.playback.state", "PAUSED")
+R.expect("B7 Spotify: normal volume restored after pause", lambda: vols()[-1] == 90, 3, lambda: vols()[-5:])
+
+track["duration_ms"] = 0
+daemon("spotify", "now_playing", track); daemon("spotify", "playing")
+j.wait_state("audio.playback.state", "PLAYING")
+j.send("OJ_SLEEP", {"mode": "track"}); j.wait(lambda: j.get("bedtime.sleep.mode") == "track")
+n = spy.mark(); daemon("spotify", "now_playing", dict(track, track="Song two"))
+R.expect("B7 Spotify: new song stops playback even when duration is unknown",
+         lambda: sent("/j/spotify/output/pauz", n) and not bt(j).get("sleep"), 3,
+         lambda: (bt(j), spy.since(n)))
+daemon("spotify", "paused"); j.wait_state("audio.playback.state", "PAUSED")
+
+daemon("deezer", "now_playing", {"title": "Deezer song", "duration": 120}); daemon("deezer", "playing")
+j.wait(lambda: j.np.get("service") == "DEEZER" and j.pb == "PLAYING")
+j.send("OJ_SLEEP", {"mode": "track"}); j.wait(lambda: j.get("bedtime.sleep.mode") == "track")
+n = spy.mark(); daemon("deezer", "ended")
+R.expect("B7 Deezer: timer ends playback", lambda: j.pb == "ENDED" and not bt(j).get("sleep"), 3, lambda: j.get("audio"))
+check("B7 Deezer: next song is never requested", not sent("/j/deezer/output/next", n), spy.since(n))
 j.close()
 
 # ---------- audiobook: chapter + position survive a restart
@@ -103,6 +136,11 @@ B.poll(lambda: j.np.get("trackIndex") == 1 and j.pb == "PLAYING", 5)
 B.quiet(0.3, "a resume seek, had there been one, goes out with the play command")
 check("B10 then plays chapter 1 from the start", j.np.get("trackIndex") == 1 and not sent("/j/audio/out/seek", n), j.np)
 j.nfc_off(); j.wait_state("audio.playback.state", "PAUSED")
+j.send("PLAYLIST_PLAY", {"playlistId": bk, "trackIndex": 1}); j.wait_state("audio.playback.state", "PLAYING")
+j.send("OJ_SLEEP", {"mode": "track"}); j.wait(lambda: j.get("bedtime.sleep.mode") == "track")
+ended(j)
+R.expect("B10 audiobook: stops after this chapter", lambda: j.np.get("trackIndex") == 1 and j.pb == "ENDED" and not bt(j).get("sleep"), 5,
+         lambda: (j.np, bt(j)))
 j.send("PLAYLIST_PLAY", {"playlistId": bk, "trackIndex": 3}); j.wait(lambda: j.np.get("trackIndex") == 3 and j.pb == "PLAYING", what="chapter 3 playing")
 ended(j)
 R.expect("B11 end of the book: next time starts at chapter 1", lambda: bk not in (bt(j).get("resume") or {}), 5, lambda: bt(j).get("resume"))

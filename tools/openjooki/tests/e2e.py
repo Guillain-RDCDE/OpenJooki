@@ -1,6 +1,6 @@
 """End-to-end tests of the new web UI against the bench (real Lua app + mosquitto)."""
 import time, json, os, re, tempfile, urllib.request, urllib.parse, base64
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 import bench as B
 from jk import PAGE
 URL = PAGE
@@ -431,7 +431,7 @@ with sync_playwright() as p:
     check("E18 timer cancelled", not J.get("bedtime.sleep") and pg.locator(".player .sleepmini").count() == 0)
     pg.click("[data-sleep-min='track']"); J.wait(lambda: J.get("bedtime.sleep.mode") == "track")
     pg.wait_for_selector("text=Arrêt à la fin de ce morceau")
-    check("E18 'end of chapter' timer", True)
+    check("E18 'end of song' timer", pg.locator("[data-sleep-min='track']").inner_text() == "Fin du morceau")
     pg.click("[data-k=sleepoff]"); pg.keyboard.press("Escape")
     # E19 audiobook: put the chapters back in order, resume shown, start again
     pierre = pl_by_title("Pierre et le Loup")
@@ -450,7 +450,12 @@ with sync_playwright() as p:
     pg.click("[data-k=sortbtn]"); pg.wait_for_selector("[data-k=sortby-title]")
     pg.click("[data-k=sortby-title]"); pg.click("[data-k=sortok]")
     J.wait(lambda: titles_of(pierre) == sorted(titles, key=str.lower))
-    J.send("PLAYLIST_PLAY", {"playlistId": pierre, "trackIndex": 3}); J.wait(lambda: J.np.get("trackIndex") == 3)
+    J.send("PLAYLIST_PLAY", {"playlistId": pierre, "trackIndex": 3})
+    J.wait(lambda: J.np.get("playlistId") == pierre and J.np.get("trackIndex") == 3 and J.pb == "PLAYING")
+    pg.click(".player .info"); pg.wait_for_selector("[data-sleep-min='track']")
+    expect(pg.locator("[data-sleep-min='track']")).to_have_text("Fin du chapitre")
+    check("E19 audiobook offers an end-of-chapter timer", pg.locator("[data-sleep-min='track']").inner_text() == "Fin du chapitre")
+    pg.keyboard.press("Escape")
     J.send("SEEK", {"position_ms": 65000}); J.wait(lambda: J.get("audio.playback.position_ms", 0) >= 65000); J.send("DO_PAUSE", {})
     pg.wait_for_function("document.querySelector('[data-k=resume]') && /chapitre 3 · 0:5/.test(document.querySelector('[data-k=resume]').textContent)", timeout=8000)
     rtxt = pg.locator("[data-k=resume]").inner_text()

@@ -151,7 +151,7 @@
     upd_see: 'Voir',
     upd_steps: ['Recherche de la nouvelle version', 'Téléchargement', 'Vérification du téléchargement', 'Installation (ne débranche pas le Jooki)', 'Vérification de l\'installation', 'Redémarrage sur la nouvelle version'],
     sleep_timer: 'Minuterie', sleep_off: 'Arrêt',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Fin du chapitre', sleep_song: 'Fin du morceau',
     sleep_left: function (s) { return 'Arrêt dans ' + s; }, sleep_at_end: 'Arrêt à la fin de ce morceau',
     sleep_auto: 'automatique (mode nuit)', sleep_cancel: 'Annuler la minuterie',
     night_mode: 'Mode nuit', night_help: 'Pendant ces heures, chaque écoute s\'arrête toute seule, le volume est limité et les lumières sont tamisées.',
@@ -357,7 +357,7 @@
     upd_see: 'Show',
     upd_steps: ['Looking for the new version', 'Downloading', 'Checking the download', 'Installing (keep the Jooki plugged in)', 'Checking the installation', 'Restarting on the new version'],
     sleep_timer: 'Sleep timer', sleep_off: 'Off',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter', sleep_song: 'End of song',
     sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
     sleep_auto: 'automatic (night mode)', sleep_cancel: 'Cancel the timer',
     night_mode: 'Night mode', night_help: 'During these hours, every listen stops by itself, the volume is limited and the lights are dimmed.',
@@ -492,7 +492,7 @@
     web_page: 'Webseite', upd_check: 'Nach Updates suchen', upd_checking: 'Wird geprüft…', upd_uptodate: 'Dein Jooki ist auf dem neuesten Stand.', upd_offline: 'GitHub ist nicht erreichbar (ist der Jooki online?).', upd_available: function (v) { return 'Neue Version ' + v + ' verfügbar'; }, upd_now: 'Jetzt aktualisieren', upd_q: function (v) { return 'Auf OpenJooki ' + v + ' aktualisieren?'; },
     upd_text: 'Der Jooki lädt die neue Version und startet automatisch neu. Das dauert etwa 10 bis 20 Minuten. Lass ihn am Ladegerät. Musik und Figuren bleiben erhalten. Falls etwas schiefgeht, wechselt er automatisch zur vorherigen Version zurück.', upd_running: 'Update läuft…', upd_keep: 'Lass den Jooki am Ladegerät. Diese Seite verbindet sich automatisch wieder.', upd_stuck: 'Seit einiger Zeit keine Änderung? Während des Updates trennt und verbindet sich der Jooki mehrmals. Das Handy kann dabei den Anschluss verlieren. Du kannst die Seite neu laden. Das unterbricht nichts.', upd_reload: 'Seite neu laden', upd_wait: 'Der Jooki startet noch. Versuche es in einer Minute erneut.', upd_rebooting: 'Der Jooki startet mit der neuen Version…', upd_done: function (v) { return 'Jooki aktualisiert: OpenJooki ' + v; }, upd_failed: 'Das Update ist fehlgeschlagen. Dein Jooki wurde nicht verändert.', upd_banner: function (v) { return 'Update ' + v + ' verfügbar'; }, upd_see: 'Anzeigen',
     upd_steps: ['Neue Version suchen', 'Herunterladen', 'Download prüfen', 'Installieren (am Ladegerät lassen)', 'Installation prüfen', 'Mit der neuen Version neu starten'],
-    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
+    sleep_timer: 'Einschlaftimer', sleep_off: 'Aus', sleep_min: function (n) { return n + ' Min.'; }, sleep_track: 'Am Kapitelende', sleep_song: 'Am Songende', sleep_left: function (s) { return 'Stoppt in ' + s; }, sleep_at_end: 'Stoppt am Ende dieses Titels', sleep_auto: 'automatisch (Nachtmodus)', sleep_cancel: 'Timer beenden',
     night_mode: 'Nachtmodus', night_help: 'In diesen Zeiten endet jede Wiedergabe automatisch. Die Lautstärke wird begrenzt und die Lichter werden gedimmt.', night_from: 'Von', night_to: 'Bis', night_timer: 'Automatischer Timer', night_timer_none: 'Keiner', night_maxvol: 'Maximale Lautstärke', night_nolimit: 'unbegrenzt', night_dim: 'Gedimmte Lichter', night_now: 'Nachtmodus ist gerade aktiv', night_next: function (h) { return 'Beginnt um ' + h; }, night_clock: 'Der Jooki erhält die Uhrzeit aus dem Internet (einschließlich Sommerzeit).',
     resume_at: function (c, s) { return 'Weiter ab Kapitel ' + c + (s ? ' · ' + s : ''); }, resume_restart: 'Von vorn beginnen', resume_done: 'Beginnt wieder bei Kapitel 1',
     sort: 'Sortieren', sort_title: 'Wiedergabeliste sortieren', sorted: 'Titel wurden neu geordnet', sort_by_name: 'Dateiname (1, 2, 3…)', sort_by_title: 'Titel', sort_by_artist: 'Interpret', sort_by_album: 'Album', sort_by_duration: 'Dauer', sort_again: 'Tippe erneut auf dasselbe Kriterium, um die Reihenfolge umzukehren.', sort_preview: 'Vorschau der neuen Reihenfolge', sort_apply: 'Reihenfolge übernehmen', sort_same: 'Die Wiedergabeliste ist bereits so sortiert',
@@ -649,7 +649,7 @@
     upd_see: 'Bekijken',
     upd_steps: ['Nieuwe versie zoeken', 'Downloaden', 'Download controleren', 'Installeren (laat de Jooki aangesloten)', 'Installatie controleren', 'Opnieuw opstarten met de nieuwe versie'],
     sleep_timer: 'Slaaptimer', sleep_off: 'Uit',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'Einde van het hoofdstuk', sleep_song: 'Einde van het nummer',
     sleep_left: function (s) { return 'Stopt over ' + s; }, sleep_at_end: 'Stopt aan het einde van dit nummer',
     sleep_auto: 'automatisch (nachtmodus)', sleep_cancel: 'Timer annuleren',
     night_mode: 'Nachtmodus', night_help: 'In deze uren stopt elke luisterbeurt vanzelf, is het volume begrensd en zijn de lampjes gedimd.',
@@ -3314,6 +3314,7 @@
 
   /* ------------------------------------------------------------------ bedtime */
   function sleepInfo() { var s = S.bedtime.sleep; return s && typeof s === 'object' && s.mode ? s : null; }
+  function sleepTrackLabel() { return t(S.audio.nowPlaying.audiobook ? 'sleep_track' : 'sleep_song'); }
   function sleepLeft() {
     var s = sleepInfo();
     if (!s || s.remaining === undefined || s.remaining === null) return null;
@@ -3324,7 +3325,7 @@
     if (!s) return t('sleep_timer');
     return (s.mode === 'track' ? t('sleep_at_end') : t('sleep_left', fmtTime(sleepLeft()))) + (s.auto ? ' · ' + t('sleep_auto') : '');
   }
-  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? t('sleep_track') : fmtTime(sleepLeft()); }
+  function sleepShort() { var s = sleepInfo(); return !s ? '' : s.mode === 'track' ? sleepTrackLabel() : fmtTime(sleepLeft()); }
   function hm(m) { m = Number(m) || 0; var hh = Math.floor(m / 60) % 24, mm = m % 60; return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; }
   // the Jooki keeps UTC: tell it the family's time zone (Europe: summer time rule handled on the Jooki)
   function browserClock() {
@@ -3352,7 +3353,7 @@
         [10, 20, 30, 45, 60].map(function (m) {
           return h('button', { class: 'toggle', 'data-sleep-min': String(m), onclick: function () { send('OJ_SLEEP', { minutes: m }); } }, t('sleep_min', m));
         }),
-        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, t('sleep_track')),
+        h('button', { class: 'toggle' + (s && s.mode === 'track' ? ' on' : ''), 'data-sleep-min': 'track', onclick: function () { send('OJ_SLEEP', { mode: 'track' }); } }, sleepTrackLabel()),
         s ? h('button', { class: 'toggle', 'data-k': 'sleepoff', 'aria-label': t('sleep_cancel'), onclick: function () { send('OJ_SLEEP', { cancel: true }); } }, icon('x'), t('sleep_off')) : null));
   }
   var nightVolDrag = null;
@@ -3513,7 +3514,7 @@
       sig: function () {
         var np = S.audio.nowPlaying, c = S.audio.config, pl0 = pls()[np.playlistId];
         var sl = sleepInfo() || {};
-        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
+        return [np.playlistId, np.trackId, np.trackIndex, np.service, np.track, np.image, np.audiobook, S.audio.playback.state, c.volume, c.shuffle_mode, c.repeat_mode, np.duration_ms, pl0 && pl0.shuffle_mode, pl0 && pl0.repeat_mode, sl.mode, sl.total, sl.auto].join('|');
       },
       render: function () {
         var np = S.audio.nowPlaying, pl = pls()[np.playlistId];

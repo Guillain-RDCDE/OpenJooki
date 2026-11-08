@@ -138,7 +138,7 @@
     upd_see: 'Show',
     upd_steps: ['Looking for the new version', 'Downloading', 'Checking the download', 'Installing (keep the Jooki plugged in)', 'Checking the installation', 'Restarting on the new version'],
     sleep_timer: 'Sleep timer', sleep_off: 'Off',
-    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter',
+    sleep_min: function (n) { return n + ' min'; }, sleep_track: 'End of chapter', sleep_song: 'End of song',
     sleep_left: function (s) { return 'Stops in ' + s; }, sleep_at_end: 'Stops at the end of this track',
     sleep_auto: 'automatic (night mode)', sleep_cancel: 'Cancel the timer',
     night_mode: 'Night mode', night_help: 'During these hours, every listen stops by itself, the volume is limited and the lights are dimmed.',

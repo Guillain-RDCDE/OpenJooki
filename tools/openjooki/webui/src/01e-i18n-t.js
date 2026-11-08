@@ -10,6 +10,8 @@
   if (THEMES.indexOf(theme) < 0) theme = 'auto';
   function applyTheme() { if (theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', theme); }
   applyTheme();
+  // Keep the song label available when the optional German table is installed.
+  if (T.de) T.de.sleep_song = 'Am Songende';
   // Also translate the light switch when the optional German table is present.
   if (T.de) {
     T.de.lights_off = 'Alle Lichter dauerhaft ausschalten';

@@ -1,7 +1,7 @@
   /* ------------------------------------------------------------------ the picture library */
   // Ready-made pictures for the tokens of their own (docs/23 §5): Fluent Emoji 3D (Microsoft, MIT,
   // tokimg/LICENSE.txt), 128 px WebP shipped with the page, so it works without Internet.
-  // tokimg/index.json = { cats: [[id, {fr, en, nl}, iconId]], img: [[id, cat, fr, en, nl, "search words"]] }.
+  // tokimg/index.json = { cats: [[id, {fr, en, nl, de}, iconId]], img: [[id, cat, fr, en, nl, "search words", de]] }.
   // The grid is filled here, not by renderModal: typing in the search keeps the field and the scroll.
   var libIdx = null, libWait = null;
   function loadLibIndex(cb) {
@@ -14,7 +14,7 @@
       var w = libWait; libWait = null; w.forEach(function (f) { f(libIdx); });
     });
   }
-  function libName(r) { return (lang === 'en' ? r[3] : lang === 'nl' ? r[4] : r[2]) || r[2]; }
+  function libName(r) { return (lang === 'de' ? r[6] : lang === 'en' ? r[3] : lang === 'nl' ? r[4] : r[2]) || r[2]; }
   function libraryPicker(sid, tag) {
     var q = '', failed = false, chips = {}, picked = false;
     var body = h('div', { class: 'libbody', 'data-k': 'libgrid' });

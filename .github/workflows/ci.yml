@@ -151,6 +151,12 @@ jobs:
       - name: UPnP player (a fake phone app, #29)
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_upnp.py
+      - name: Home Assistant connecting while music plays (#28)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_ha_connect.py
+      - name: The page keeps still while a song plays (#29)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_page_steady.py
       - name: e2e (the page)
         if: ${{ !cancelled() }}
         run: sudo -E python3 e2e.py

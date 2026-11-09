@@ -127,13 +127,27 @@
       return true;
     });
   }
+  // Nothing new to draw: only the song's position moved (the player's timer shows it), or a part came
+  // again as it was (network every 30 s). Redrawing the page each time made the player flicker (#29).
+  // Just after a command from this page it is drawn anyway: a refused change must go back on screen.
+  function nothingNew(data) {
+    if (!data || Date.now() - lastCmd < 3000) return false;
+    var same = function (a, b) { return JSON.stringify(a) === JSON.stringify(b); };
+    return Object.keys(data).every(function (k) {
+      if (k !== 'audio') return same(data[k], S[k]);
+      return Object.keys(obj(data.audio)).every(function (a) {
+        if (a === 'playback') return obj(data.audio.playback).state === S.audio.playback.state;
+        return same(data.audio[a], S.audio[a]);
+      });
+    });
+  }
   function onMessage(topic, text) {
     var data;
     lastRx = Date.now();
     try { data = JSON.parse(text); } catch (e) { return; }
     if (topic === '/j/web/output/state') {
-      var posOnly = data && Object.keys(data).length === 1 && data.audio && Object.keys(data.audio).length === 1 && data.audio.playback &&
-        obj(data.audio.playback).state === S.audio.playback.state;
+      var still = gotState && nothingNew(data);
+      var posOnly = still && Object.keys(data).length === 1 && !!data.audio;
       var wasTesting = obj(S.audio.volume_test).active;
       mergeState(data);
       if (wasTesting && !obj(S.audio.volume_test).active && obj(S.audio.volume_test).error) toast(t('volume_test_failed'), 'error');
@@ -143,7 +157,7 @@
       reloadIfStale();
       syncClock();
       handleUserMessages();
-      scheduleRender();
+      if (!still) scheduleRender();
     } else if (topic === '/j/web/output/error') {
       if (data && data.msg === 'PARENT_CODE_REQUIRED') {
         var bad = !!parentCode;                       // a stored code that no longer matches

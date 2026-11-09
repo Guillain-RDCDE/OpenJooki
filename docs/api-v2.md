@@ -17,9 +17,9 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/
 
 ## State document keys
 
-`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account and metadata readiness, playlists, modes, download, queue, jobs, previews, auth, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
+`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `volume_test` {active, target, percent, error}, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account and metadata readiness, playlists, modes, download, queue, jobs, previews, auth, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
 
-## Commands (49)
+## Commands (50)
 
 ### `bedtime.set`
 
@@ -187,7 +187,7 @@ No payload.
 
 ### `device.power_off`
 
-Plays the power-off sound, then powers off.
+Flashes red three times, then powers off silently, including when the lights are disabled.
 
 No payload.
 
@@ -313,6 +313,26 @@ Payload schema:
 The Jooki says its IP address.
 
 No payload.
+
+### `device.test_volume`
+
+Play a short tone on the Jooki at the stored kids or night ceiling, including outside night hours. Other active limits and fades still apply. Temporarily pauses music and restores its requested volume; changes no settings. Protected by the parent code. Busy/muted requests are rejected. `volume_test` publishes active, target, effective percent and any error.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "target": {
+      "enum": ["kids", "night"],
+      "type": "string"
+    }
+  },
+  "required": ["target"],
+  "type": "object"
+}
+```
 
 ### `device.toy_safe`
 

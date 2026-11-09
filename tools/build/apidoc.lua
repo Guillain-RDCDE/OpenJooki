@@ -33,6 +33,7 @@ local function sorted_json(v, indent)
 end
 
 local DESC = {
+  ["device.test_volume"] = "Play a short tone on the Jooki at the stored kids or night ceiling, including outside night hours. Other active limits and fades still apply. Temporarily pauses music and restores its requested volume; changes no settings. Protected by the parent code. Busy/muted requests are rejected. `volume_test` publishes active, target, effective percent and any error.",
   ["state.get"] = "Publishes the whole state document (full = true).",
   ["core.ping"] = "Answers ok. Liveness check.",
   ["core.version"] = "Emits a core.version event with the core's version.",
@@ -50,7 +51,7 @@ local DESC = {
   ["playback.resume_reset"] = "Forgets an audiobook's saved position (starts at chapter 1 next time).",
   ["device.set_volume"] = "Saves the requested volume (0–100); kids and night ceilings, mute and fades determine the effective output. Speaker/Bluetooth control requires ESP32 volume_api=2; wired headphones use ALSA.",
   ["device.set_config"] = "Shuffle, repeat (0 none, 1 all, 2 one), and `random_start` (boolean, default false). Random start chooses the starting song independently of shuffle; subsequent songs follow the playback order, with repeat deciding whether the end wraps. Saved in audiocfg.json. Local music and Spotify music playlists support random starts; audiobooks, saved Spotify positions, albums, podcasts and Deezer retain their own start behavior. Also toy_safe_maxvol (integer 0–100, default 56 to retain the factory speaker ceiling, active only in kids mode with ESP32 volume_api=2; same global scale as the night maximum). Older firmware retains its fixed factory attenuation. Protected by the parent code when set.",
-  ["device.toy_safe"] = "Kids volume limit (hardware side).", ["device.power_off"] = "Plays the power-off sound, then powers off.",
+  ["device.toy_safe"] = "Kids volume limit (hardware side).", ["device.power_off"] = "Flashes red three times, then powers off silently, including when the lights are disabled.",
   ["device.set_wifi"] = "Always refused (`unavailable`, WIFI_OVER_BLUETOOTH): a Jooki 2 learns a Wi-Fi network over Bluetooth only (docs/wifi.html).", ["device.speak_info"] = "The Jooki says its IP address.",
   ["device.party"] = "Just for fun: for 5 s the ring and the side dots run through the colour wheel, then go back to their real state.",
   ["device.clock"] = "The phone's time (UTC seconds). Taken only while the Jooki's clock is unset (no Internet since the start: no NTP, no RTC); the page sends it at every connection.",
@@ -85,7 +86,7 @@ io.write("| Jooki → page | `" .. api.TOPIC_STATE .. "` | full: `{\"v\":2, \"re
 io.write("| Jooki → page | `" .. api.TOPIC_EVENT .. "` | `{\"v\":2, \"type\":\"…\", \"payload\":{…}}` |\n\n")
 io.write("Error codes: `invalid_argument` (field names the culprit), `not_found`, `forbidden` (the parent code, when one is set: `PARENT_CODE_REQUIRED`), `read_only`, `conflict`, `unavailable`, `internal`.\n\n")
 io.write("The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/api/v1.lua`: it is the one the page speaks (docs/11-content-api.md). The security switches (SSH, parent code, MQTT on the LAN), Bluetooth and a token's photo exist only there.\n\n")
-io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account and metadata readiness, playlists, modes, download, queue, jobs, previews, auth, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
+io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `volume_test` {active, target, percent, error}, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account and metadata readiness, playlists, modes, download, queue, jobs, previews, auth, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
 io.write("## Commands (" .. #api.commands() .. ")\n\n")
 local cmds = api.commands()
 for _, name in ipairs(cmds) do

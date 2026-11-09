@@ -172,7 +172,8 @@ can also wind the song forward or back, and the heart can skip a song on a short
 listen stops by itself after the **Automatic timer**, the volume stays under the
 **Maximum volume** (on the speaker too), and the lights are dim (**Dimmed lights**). **Turn off all lights at night**
 switches off the ring, the side lights and the heart during those hours; they come back on
-afterwards.
+afterwards. **Test**, next to the Maximum volume, plays a short sound at that level, even during
+the day: the music pauses and comes back.
 
 ## Spotify
 
@@ -261,7 +262,8 @@ version.
 **Bedtime and travel**
 - **Night mode**: see *Bedtime* above.
 - **Turn off all lights permanently**: the ring, the side lights and the heart stay off day and
-  night, even after a restart. A brief light can still show while the Jooki starts.
+  night, even after a restart. At the start it stays lit until the Wi-Fi is back (a minute at
+  most), flashes white three times, then goes dark.
 - **Airplane mode**: Wi-Fi and Bluetooth off for the time you choose (1, 2, 4 or 8 hours,
   until the morning, or until it is switched off and on again). The Jooki brings them back
   by itself; tokens and music work the whole time. Meanwhile, this page cannot reach it:

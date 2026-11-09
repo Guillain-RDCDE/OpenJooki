@@ -39,6 +39,19 @@
     shownSub = body ? sub : null;
     return body ? h('div', { class: 'settings sub' + (enter ? ' enter' : '') }, body) : viewSettings();
   }
+  // Present only when the core advertises the settings-volume audition API.
+  function volumeTestControl(target, disabled) {
+    var v = S.audio.volume_test;
+    if (!v || typeof v !== 'object') return null;
+    var here = v.active && v.target === target;
+    return h('div', { class: 'row', style: 'width:100%;flex-wrap:wrap' },
+      h('button', { type: 'button', class: 'pillbtn', 'data-k': 'testvol-' + target,
+        'aria-label': t('volume_test') + ': ' + t(target === 'kids' ? 'toy_safe_maxvol' : 'night_maxvol'),
+        disabled: disabled || !online || v.active ? 'disabled' : null,
+        onclick: function () { send('OJ_VOLUME_TEST', { target: target }); } }, t(here ? 'volume_testing' : 'volume_test')),
+      h('span', { class: 'small muted grow', role: 'status', 'aria-live': 'polite' },
+        here && typeof v.percent === 'number' ? t('volume_test_level', v.percent) : t('volume_test_help')));
+  }
   function viewSettings() {
     var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config, m = obj(S.maintenance), b = obj(S.bluetooth), c = S.bedtime.cfg;
     var lvl = pw.level && typeof pw.level === 'object' ? Number(pw.level.p) : NaN;
@@ -61,17 +74,17 @@
       avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
       sGroup(t('s_listen'), [
         sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ tag: 'label', col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
-          right: h('div', { class: 'row', style: 'width:100%' },
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
+          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
             h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
               oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
-              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')) }) : null,
+              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
         sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
         sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', color: 'teal', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
         // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub'),
+        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
             ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it

@@ -34,7 +34,7 @@ ADDED = ("/etc/openjooki-version", "/etc/rcS.d/S57_oj-security.sh", "/etc/mosqui
          PUB + "/app.js", PUB + "/app.css", PUB + "/mqtt.js", PUB + "/manifest.json", PUB + "/icon-192.png",
          PUB + "/icon-512.png", PUB + "/apple-touch-icon.png", PUB + "/index.html",
          PUB + "/service-worker.js",                           # shipped until 2.2.5: images of that age still carry it
-         PUB + "/mp3-worker.js", PUB + "/lame.min.js", PUB + "/lame.LICENSE.txt",
+         PUB + "/mp3-worker.js", PUB + "/lame.min.js", PUB + "/lame.LICENSE.txt", PUB + "/volume-test.wav",
          PUB + "/oj-auth.json", PUB + "/openjooki-status.txt")
 ADDED_DIRS = (PUB + "/tokimg",)                          # jooki.py WEBUI_DIRS: the token pictures
 CHECKED = ("jooki/app/", "jooki/bin/", "jooki/lib/")    # what a pre-OpenJooki backup holds of the system

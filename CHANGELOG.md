@@ -6,6 +6,9 @@ Thank you to Dirk Drutschmann, who wrote everything below in one weekend.
 - **All lights off.** *Settings → Turn off all lights permanently*, or *Settings → Night mode → Turn off all lights at night* for the scheduled hours only: the ring, the side lights and the heart go dark, and come back when the time is over (#31). Off by default.
 - **Start with a random song.** In *Settings*, or playlist by playlist: the first song is drawn at random, then the playlist goes on in its order, Spotify playlists included. Audiobooks keep their place. Off by default (#32). Shuffle is also properly random now, even before the Jooki knows the time.
 - **Saved Spotify playlists start faster** after a restart: about a second, without the five-second wait (#32).
+- **Lights off, but it still says hello and goodbye.** With the lights off, the Jooki flashes white three times once it is on the Wi-Fi (or after a minute without Wi-Fi), then goes dark (#36).
+- **Switching off is now silent:** three red flashes and no sound, from the heart or from the page (#36).
+- **Hear a limit before bedtime.** A **Test** button next to the night mode's Maximum volume plays a short sound at that level, even during the day. Music pauses and comes back (#38, #9).
 - **The page can turn the speaker down.** Until now only the knob could. The page can now lower the sound below the knob's level, never raise it above; turning the knob takes over again (#34).
 - **Night mode's Maximum volume and the sleep timer's fade now work on the speaker too**, not only on headphones. If your Jooki suddenly plays quieter during its night hours, that is why: change it in *Settings → Night mode*.
 - **The sleep timer stops at the end of the song.** It now says **End of song** for music and **End of chapter** for audiobooks, and Spotify and Deezer really stop there (#35).

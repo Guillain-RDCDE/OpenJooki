@@ -21,6 +21,36 @@ shell.is_update_url = is_update_url
 
 -- name -> { argv = function(args) -> list | nil, err ; background = bool }
 shell.ACTIONS = {
+  -- Fixed, short PCM asset; a separate player leaves audio_ctrl's paused music loaded.
+  volume_test_start = { argv = function(a)
+    if type(a.id) ~= "number" or a.id % 1 ~= 0 or a.id < 1 or a.id > 1000000000
+        or not is_path(a.file) or not a.file:match("/volume%-test%.wav$")
+        or (a.output ~= "speaker" and a.output ~= "headphones") then return nil, "bad volume test" end
+    return { "sh", "-c", [=[
+P=/tmp/oj-volume-test.$1
+rm -f "$P.pid" "$P.status"
+(
+  aplay -q -D "$2" "$3" </dev/null >/dev/null 2>&1 &
+  A=$!; echo "$A" > "$P.pid"
+  wait "$A"; R=$?
+  echo "$R" > "$P.status"
+) </dev/null >/dev/null 2>&1 &
+# Hand back only once cancellation can find the player (normally a few ms).
+N=0
+while [ ! -s "$P.pid" ] && [ ! -s "$P.status" ] && [ "$N" -lt 20 ]; do busybox usleep 10000; N=$((N+1)); done
+[ -s "$P.pid" ] || [ -s "$P.status" ]]=], "volume_test", tostring(a.id), a.output, a.file }
+  end },
+  volume_test_stop = { argv = function(a)
+    if type(a.id) ~= "number" or a.id % 1 ~= 0 or a.id < 1 or a.id > 1000000000 then return nil, "bad volume test" end
+    return { "sh", "-c", [=[
+P=/tmp/oj-volume-test.$1
+A=$(cat "$P.pid" 2>/dev/null)
+case "$A" in ''|*[!0-9]*) ;; *)
+  if tr '\000' ' ' < "/proc/$A/cmdline" 2>/dev/null | grep -qE '(^|[/ ])aplay .*volume-test[.]wav( |$)'; then kill -9 "$A" 2>/dev/null; fi ;;
+esac
+rm -f "$P.pid" "$P.status"
+exit 0]=], "volume_test_stop", tostring(a.id) }
+  end },
   sync           = { argv = function() return { "sync" } end },
   probe_audio    = { argv = function(a) if not (is_path(a.file) and is_path(a.image) and is_path(a.out)) then return nil, "bad path" end
                              return { "/jooki/app/services/ml-audio-probe-wrapper.sh", a.file, a.image, a.out } end },

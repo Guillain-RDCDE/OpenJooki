@@ -48,7 +48,7 @@ local PARTS = {}
 function PARTS.db(doc) return { playlists = (doc.library or {}).playlists or {}, tracks = (doc.library or {}).tracks or {}, tokens = (doc.library or {}).tokens or {} } end
 function PARTS.audio(doc)
   local pb = doc.playback or {}
-  return { config = doc.audiocfg or {}, playback = { state = PB_STATE[pb.state or "idle"], position_ms = pb.position_ms or 0 }, nowPlaying = now_playing(pb) }
+  return { config = doc.audiocfg or {}, volume_test = doc.volume_test, playback = { state = PB_STATE[pb.state or "idle"], position_ms = pb.position_ms or 0 }, nowPlaying = now_playing(pb) }
 end
 function PARTS.device(doc)
   local d = doc.device or {}
@@ -86,7 +86,7 @@ function v1.state(doc)
 end
 
 -- which 1.x sub-trees change when one of our keys changes
-local MAP = { library = { "db" }, playback = { "audio" }, resume = { "bedtime" }, audiocfg = { "audio" }, device = { "device" }, flags = { "device" },
+local MAP = { volume_test = { "audio" }, library = { "db" }, playback = { "audio" }, resume = { "bedtime" }, audiocfg = { "audio" }, device = { "device" }, flags = { "device" },
               health = { "device" }, nfc = { "nfc" }, power = { "power" }, net = { "wifi", "net", "device" }, userMessages = { "userMessages" },
               bedtime = { "bedtime" }, bluetooth = { "bluetooth" }, maintenance = { "maintenance" }, spotify = { "spotify" }, spotify_offline = { "spotifyOffline" } }
 
@@ -235,6 +235,7 @@ H.SWITCH_LOCALE = function(_, p)
   return { commands = { { kind = "shell", action = "set_lang", args = { lang = l } } } }
 end
 H.OJ_SLEEP = function(doc, p, ev) return bedtime.on_sleep(doc, p, ev.now) end
+H.OJ_VOLUME_TEST = function(doc, p) return require("services.device.volume_test").on_request(doc, p) end
 H.OJ_BEDTIME_SET = function(doc, p, ev) return bedtime.on_set(doc, p, ev.wall) end
 H.OJ_RESUME_RESET = function(doc, p)
   if type(p.playlistId) ~= "string" then return nil, { code = "invalid_argument", field = "playlistId", message = "invalid payload" } end
@@ -279,7 +280,7 @@ local PROTECTED = {
   PLAYLIST_NEW = true, PLAYLIST_NEW_DEEZER = true, PLAYLIST_NEW_SPOTIFY = true,
   PLAYLIST_ADD_TRACK = true, PLAYLIST_ADD_STREAM = true, PLAYLIST_ADD_UPLOAD = true,
   PLAYLIST_DELETE = true, PLAYLIST_UPDATE = true, TOKEN_EDIT = true, TOKEN_DELETE = true, TOKEN_SET_IMAGE = true,
-  SET_CFG = true, SET_TOY_SAFE = true, SET_WIFI = true, SHUTDOWN = true,
+  OJ_VOLUME_TEST = true, SET_CFG = true, SET_TOY_SAFE = true, SET_WIFI = true, SHUTDOWN = true,
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,

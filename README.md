@@ -18,7 +18,7 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
   &nbsp;
   <img src="docs/img/shots/jookistory-editor.webp" width="220" alt="Jookistory: record a story page by page, with a sound at the end of each page">
   &nbsp;
-  <img src="docs/img/shots/phone-settings.webp" width="220" alt="Settings on a phone: battery, storage, version, kids volume, shuffle, Bluetooth speaker">
+  <img src="docs/img/shots/phone-settings.webp" width="220" alt="Settings on a phone: battery, storage, version, then a short list of subjects">
 </p>
 <p align="center"><sub>The Jooki's page on a phone · Jookistory, a story read by you · Settings</sub></p>
 
@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.0:** German, all lights off, a Test button for the night volume, a random first song, and the page can turn the speaker down.
-2.4.21: the Jooki can play music sent from other apps (UPnP / DLNA): BubbleUPnP, mconnect, a music server, TIDAL or Qobuz through those apps.
+**New in 2.5.1:** the track knob can bring a playlist back to its start, and a tidier Settings page.
+2.5.0: German, all lights off, a Test button for the night volume, a random first song, and the page can turn the speaker down.
 [All the changes](CHANGELOG.md)
 
 ---

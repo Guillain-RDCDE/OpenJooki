@@ -219,7 +219,7 @@ Apps on your phone, or a music server at home, can send music to the Jooki over 
 At the top: the Jooki's name (**Rename**), its battery, the room left for music, and its
 version.
 
-<img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version up to date, then Limited volume, Shuffle, Repeat, MP3 quality, Speaker or headphones">
+<img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version, then a short list of subjects: Volume and headphones, Playback, Jooki buttons, Night mode">
 
 **Listening**
 - *Volume and headphones*: **Limited volume (kids mode)**.

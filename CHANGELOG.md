@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.1 (9 November 2026) — Back to the start
 - **Back to the start, from the Jooki itself.** A new choice for the track knob, in *Settings → Jooki buttons*: held to the left for three seconds, the playlist starts again from its first song, and an audiobook forgets its place. Short turns stay next and previous. Off by default (#40, thank you aosavi).
 - **A tidier Settings page.** A short list of subjects, the details behind each one, plain icons instead of coloured tiles, two columns on a computer. Nothing is gone: *Volume and headphones*, *Playback*, *Jooki buttons* and *Advanced* hold what the long list had.
 

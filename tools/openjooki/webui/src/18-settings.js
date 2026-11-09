@@ -8,7 +8,7 @@
     if (o.check) right.push(h('span', { class: 'tick' }, icon('check')));
     if (o.href || (o.onclick && !o.nochev)) right.push(h('span', { class: 'chev' }, icon('chev')));
     if (o.right) right.push(o.right);
-    var inner = [o.icon ? h('span', { class: 'ico ' + (o.color || 'gray') }, icon(o.icon)) : null,
+    var inner = [o.icon ? h('span', { class: 'ico' }, icon(o.icon)) : null,
       h('span', { class: 'lbl' }, h('span', { class: 'l1' }, o.label), o.sub ? h('span', { class: 'l2' }, o.sub) : null), right];
     var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '') + (o.col ? ' col' : '') + (o.right && o.right.tagName === 'SELECT' ? ' control' : '');
     if (o.sw || o.tag === 'label') return h('label', { class: cls }, inner);
@@ -28,7 +28,7 @@
       meter !== null && meter !== undefined ? h('div', { class: 'minibar' }, h('i', { class: meterCls || '', style: 'width:' + Math.max(0, Math.min(100, meter)) + '%' })) : null);
   }
   // the topic pages (#/settings/<topic>): the key of each one's title, and what draws it
-  var SUBS = { bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
+  var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
                parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, maintenance: { title: 's_maint', page: maintPage },
                theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
@@ -52,6 +52,55 @@
       h('span', { class: 'small muted grow', role: 'status', 'aria-live': 'polite' },
         here && typeof v.percent === 'number' ? t('volume_test_level', v.percent) : t('volume_test_help')));
   }
+  // the topics behind the short page
+  function soundPage() {
+    var d = S.device, cfg = S.audio.config;
+    return sGroup(null, [
+        sRow({ icon: 'vol', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
+          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
+            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
+              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
+              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
+        // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
+        d.core ? sRow({ icon: 'vol', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
+        // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
+        d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null
+    ]);
+  }
+  function playPage() {
+    var d = S.device, cfg = S.audio.config;
+    return sGroup(null, [
+        sRow({ icon: 'shuffle', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
+        sRow({ icon: 'play', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
+        sRow({ icon: 'repeat', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
+        typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
+        canConvert() ? sRow({ icon: 'note', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
+        // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
+        d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null
+    ]);
+  }
+  function buttonsPage() {
+    var d = S.device, cfg = S.audio.config;
+    return sGroup(null, [
+        // the heart's short press on the Jooki (held 2 s it still switches off)
+        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
+          right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
+            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+        // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
+        d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
+          right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
+            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null
+    ]);
+  }
+  function advPage() {
+    var m = obj(S.maintenance);
+    return sGroup(null, [
+        sRow({ icon: 'home', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
+        sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
+    ]);
+  }
+  function sect(title, rows) { return h('section', null, sGroup(title, rows)); }
   function viewSettings() {
     var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config, m = obj(S.maintenance), b = obj(S.bluetooth), c = S.bedtime.cfg;
     var lvl = pw.level && typeof pw.level === 'object' ? Number(pw.level.p) : NaN;
@@ -70,60 +119,35 @@
         stat('bat', t('battery'), known ? pct + ' %' : '—', pw.charging ? t('charging') : pw.connected ? t('plugged') : null, null, known ? pct : null, pct !== null && pct < 20 ? 'low' : 'ok'),
         stat('disk', t('storage'), total ? fmtBytes(free) : '—', total ? t('s_storage_free') : null, null, total ? used / total * 100 : null),
         stat('tag', t('version'), d.openjooki || '—', avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : null, avail ? 'accent-text' : 'ok-text', null, null, 'version')));
-    return h('div', { class: 'settings' }, hero,
-      avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
-      sGroup(t('s_listen'), [
-        sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
-          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
-            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
-              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
-              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
-        sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
-        sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
-        sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
-        typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', color: 'teal', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
-        // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
-          right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
-            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
-        // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
-        d.core ? sRow({ tag: 'label', icon: 'knob', color: 'red', label: t('knob_mode'), sub: t('knob_mode_sub'),
-          right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
-            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null,
-        canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
-        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
-        // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
-        d.core ? sRow({ icon: 'vol', color: 'gray', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
-        // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
-        d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', color: 'orange', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null,
-        // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
-        d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
-        spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
+    return h('div', { class: 'settings home' }, hero,
+      avail ? sGroup(null, [sRow({ icon: 'up', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
+      sect(t('s_listen'), [
+        sRow({ icon: 'vol', label: t('s_sound'), href: '#/settings/sound', k: 'soundnav' }),
+        sRow({ icon: 'play', label: t('s_play'), href: '#/settings/play', k: 'playnav' }),
+        sRow({ icon: 'heart', label: t('s_buttons'), href: '#/settings/buttons', k: 'buttonsnav' })
       ]),
-      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sGroup(t('s_night_trip'), [
-        c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
-        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sect(t('s_night_trip'), [
+        c.start !== undefined ? sRow({ icon: 'moon', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
+        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', label: t('lights_off'), sw: true, on: cfg.lights_off, k: 'lightsoff',
           onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
-        d.airplane !== undefined ? sRow({ icon: 'plane', color: 'orange', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
+        d.airplane !== undefined ? sRow({ icon: 'plane', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
-      sGroup(t('s_general'), [
-        sRow({ icon: 'wifi', color: 'blue', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
-        sRow({ icon: 'up', color: 'green', label: t('s_update'), value: avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : '', vcls: avail ? 'acc' : 'good', href: '#/settings/update', k: 'updnav' }),
-        sRow({ icon: 'globe', color: 'teal', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
-        sRow({ icon: 'contrast', color: 'gray', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
-        d.core ? sRow({ icon: 'sparkle', color: 'party', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
-          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
-        } }) : null
+      sect(t('s_links'), [
+        sRow({ icon: 'wifi', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
+        typeof b.state === 'number' ? sRow({ icon: 'bt', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
+        spOn() ? sRow({ icon: 'note', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
-      typeof m.parent === 'boolean' ? sGroup(t('s_parents'), [
-        sRow({ icon: 'lock', color: 'red', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' })
-      ], t('s_parent_foot')) : null,
-      typeof m.ssh === 'boolean' ? sGroup(t('s_advanced'), [
-        sRow({ icon: 'home', color: 'gray', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
-        sRow({ icon: 'wrench', color: 'gray', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
-      ]) : null,
-      sGroup(null, [sRow({ icon: 'power', color: 'red', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
+      sect(t('s_general'), [
+        sRow({ icon: 'up', label: t('s_update'), value: avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : '', vcls: avail ? 'acc' : 'good', href: '#/settings/update', k: 'updnav' }),
+        sRow({ icon: 'globe', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
+        sRow({ icon: 'contrast', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
+        typeof m.parent === 'boolean' ? sRow({ icon: 'lock', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' }) : null,
+        d.core ? sRow({ icon: 'sparkle', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
+          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
+        } }) : null,
+        typeof m.ssh === 'boolean' ? sRow({ icon: 'wrench', label: t('s_advanced'), href: '#/settings/advanced', k: 'advancednav' }) : null
+      ]),
+      sect(null, [sRow({ icon: 'power', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
         confirmBox(t('power_off_q'), t('power_off_text'), t('power_off'), true).then(function (ok) {
           if (!ok) return;
           send('SHUTDOWN', { src: 'from-web' }); toast(t('power_off_done'));
@@ -234,7 +258,7 @@
   function parentPage() {
     var m = obj(S.maintenance);
     if (typeof m.parent !== 'boolean') return null;
-    var rows = [sRow({ icon: 'lock', color: 'red', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
+    var rows = [sRow({ icon: 'lock', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
       onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })];
     if (m.parent) rows.push(sRow({ label: t('parent_change'), k: 'pchange', onclick: function () { parentModal('change'); } }));
     return sGroup(null, rows, [t('parent_help'), m.parent ? ' ' + t('parent_reset') : null]);
@@ -242,7 +266,7 @@
   function homePage() {
     var m = obj(S.maintenance);
     if (typeof m.ssh !== 'boolean' && typeof m.parent !== 'boolean') return null;
-    var out = [sGroup(null, [sRow({ icon: 'home', color: 'gray', label: t('mqtt_label'), sw: true, on: m.mqtt_lan, k: 'mqttlan',
+    var out = [sGroup(null, [sRow({ icon: 'home', label: t('mqtt_label'), sw: true, on: m.mqtt_lan, k: 'mqttlan',
       onchange: function (e) { send('OJ_MQTT_LAN', { on: e.target.checked }); } })], t('mqtt_help'))];
     if (m.mqtt_lan) {
       var host = (S.net && S.net.name ? String(S.net.name) : null) || (S.device && S.device.hostname) || location.hostname;
@@ -255,7 +279,7 @@
   function maintPage() {
     var m = obj(S.maintenance);
     if (typeof m.ssh !== 'boolean') return null;
-    var out = [sGroup(null, [sRow({ icon: 'wrench', color: 'gray', label: t('ssh_label'), sw: true, on: m.ssh, k: 'ssh',
+    var out = [sGroup(null, [sRow({ icon: 'wrench', label: t('ssh_label'), sw: true, on: m.ssh, k: 'ssh',
       onchange: function (e) { send(e.target.checked ? 'OJ_SSH_ON' : 'OJ_SSH_OFF', {}); } })], t('ssh_help'))];
     // while the access is open: a public key, kept on the Jooki across updates
     if (m.ssh) out.push(sGroup(t('ssh_key_l') + ' · ' + t('ssh_keys_n', Number(m.ssh_keys) || 0), [h('div', { class: 'gpad' },

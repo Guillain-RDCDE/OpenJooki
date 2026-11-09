@@ -84,7 +84,7 @@
     volume_test_unavailable: 'Ce test de volume est indisponible pour le moment.',
     toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
     random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
-    lights_off: 'Éteindre toutes les lumières en permanence', lights_off_help: 'Anneau, voyants et cœur restent éteints. Après connexion au Wi-Fi : attendre 10 secondes, clignoter trois fois en blanc, puis extinction.',
+    lights_off: 'Éteindre toutes les lumières en permanence',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Éteints pendant les heures définies, rallumés ensuite.',
     night_dim_help: 'Le réglage est conservé et reprend quand les lumières s’allument.',
     language: 'Langue', power_off: 'Éteindre le Jooki', power_off_q: 'Éteindre le Jooki ?',
@@ -194,8 +194,8 @@
     lib_pick: 'Choisir une image', lib_search_ph: 'Chercher : chat, fusée, dodo…', lib_loading: 'Chargement des images…',
     lib_fail: 'Les images n\'ont pas pu être chargées. Réessaie.', lib_none: function (q) { return 'Aucune image pour « ' + q + ' ».'; },
     lib_n: function (n) { return n + (n > 1 ? ' images' : ' image'); }, lib_set: function (n) { return 'Image choisie : ' + n; },
-    s_listen: 'Écoute', s_bt: 'Enceinte ou casque', hp_wired: 'Casque détecté', hp_wired_sub: 'Avec un adaptateur USB-C vers jack sans puce', hp_yes: 'Oui', hp_no: 'Non', hp_boost: 'Casque plus fort', hp_boost_sub: 'Baissez le volume avant de mettre le casque', hp_boost_kids: 'Marche seulement sans le volume limité (mode enfant)', s_upnp: 'Jouer depuis d\'autres applis', s_upnp_sub: 'UPnP / DLNA, sur le Wi-Fi de la maison : BubbleUPnP, mconnect, un serveur de musique', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
-    s_general: 'Général', s_parents: 'Parents', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
+    s_sound: 'Volume et casque', s_play: 'Lecture', s_buttons: 'Boutons du Jooki', s_links: 'Connexions', s_listen: 'Écoute', s_bt: 'Enceinte ou casque', hp_wired: 'Casque détecté', hp_wired_sub: 'Avec un adaptateur USB-C vers jack sans puce', hp_yes: 'Oui', hp_no: 'Non', hp_boost: 'Casque plus fort', hp_boost_sub: 'Baissez le volume avant de mettre le casque', hp_boost_kids: 'Marche seulement sans le volume limité (mode enfant)', s_upnp: 'Jouer depuis d\'autres applis', s_upnp_sub: 'UPnP / DLNA, sur le Wi-Fi de la maison : BubbleUPnP, mconnect, un serveur de musique', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
+    s_general: 'Général', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
     s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
     s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
     disc_add: 'Ajouter des disques', disc_drop: 'Glisse ici les dossiers de tes disques : chaque dossier devient une playlist',
@@ -219,7 +219,6 @@
     s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
     s_theme_foot: 'Automatique : comme le téléphone. Ce choix ne vaut que pour ce téléphone.',
     s_party: 'Sapin de Noël', s_party_sub: 'Toutes les couleurs des lumières, pendant 5 secondes', s_party_done: 'Regarde ton Jooki !',
-    s_parent_foot: 'Un code à 4 chiffres empêche les enfants et les invités de changer les réglages.',
     s_wifi_net: 'Réseau', s_wifi_signal: 'Signal', s_wifi_drops: 'Coupures depuis le démarrage', s_wifi_page: 'Adresse de la page',
     s_wifi_change: 'Changer de réseau', s_air_for: 'Pendant combien de temps ?', s_lang_foot: 'La langue de cette page sur ce téléphone.',
     s_connect_info: 'Pour te connecter', s_night_hours: 'Horaires', s_night_during: 'Pendant la nuit', s_update: 'Mise à jour',
@@ -299,7 +298,7 @@
     volume_test_unavailable: 'This volume test is currently unavailable.',
     toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
     random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
-    lights_off: 'Turn off all lights permanently', lights_off_help: 'Ring, side lights and heart stay off. After Wi-Fi connects: wait 10 seconds, flash white three times, then darkness.',
+    lights_off: 'Turn off all lights permanently',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Off during the scheduled hours, back on afterwards.',
     night_dim_help: 'Dimming is saved and resumes when the lights are on.',
     language: 'Language', power_off: 'Turn off the Jooki', power_off_q: 'Turn off the Jooki?',
@@ -409,8 +408,8 @@
     lib_pick: 'Choose a picture', lib_search_ph: 'Search: cat, rocket, sleep…', lib_loading: 'Loading the pictures…',
     lib_fail: 'The pictures could not be loaded. Try again.', lib_none: function (q) { return 'No picture for “' + q + '”.'; },
     lib_n: function (n) { return n + (n > 1 ? ' pictures' : ' picture'); }, lib_set: function (n) { return 'Picture chosen: ' + n; },
-    s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_upnp: 'Play from other apps', s_upnp_sub: 'UPnP / DLNA, from the home Wi-Fi: BubbleUPnP, mconnect, a music server', s_none: 'None', s_night_trip: 'Bedtime and travel',
-    s_general: 'General', s_parents: 'Parents', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
+    s_sound: 'Volume and headphones', s_play: 'Playback', s_buttons: 'Jooki buttons', s_links: 'Connections', s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_upnp: 'Play from other apps', s_upnp_sub: 'UPnP / DLNA, from the home Wi-Fi: BubbleUPnP, mconnect, a music server', s_none: 'None', s_night_trip: 'Bedtime and travel',
+    s_general: 'General', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
     s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
     s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
     disc_add: 'Add albums', disc_drop: 'Drop your album folders here: each folder becomes a playlist',
@@ -434,7 +433,6 @@
     s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
     s_theme_foot: 'Automatic: like the phone. This choice is for this phone only.',
     s_party: 'Christmas tree', s_party_sub: 'All the colours of the lights, for 5 seconds', s_party_done: 'Look at your Jooki!',
-    s_parent_foot: 'A 4-digit code stops children and guests from changing the settings.',
     s_wifi_net: 'Network', s_wifi_signal: 'Signal', s_wifi_drops: 'Drops since start', s_wifi_page: 'Page address',
     s_wifi_change: 'Change network', s_air_for: 'For how long?', s_lang_foot: 'The language of this page on this phone.',
     s_connect_info: 'To connect', s_night_hours: 'Hours', s_night_during: 'During the night', s_update: 'Update',
@@ -500,7 +498,7 @@
     random_start: 'Mit einem zufälligen Titel starten',
     random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
-    lights_off: 'Alle Lichter dauerhaft ausschalten', lights_off_help: 'Ring, Seitenlichter und Herz bleiben aus. Nach der WLAN-Verbindung: 10 Sekunden warten, dreimal weiß blinken, dann aus.',
+    lights_off: 'Alle Lichter dauerhaft ausschalten',
     night_lights_off: 'Alle Lichter während der Nacht ausschalten', night_lights_off_help: 'Während der eingestellten Zeiten aus, danach wieder an.',
     night_dim_help: 'Die Dimm-Einstellung bleibt gespeichert und gilt, sobald die Lichter an sind.',
     language: 'Sprache', power_off: 'Jooki ausschalten', power_off_q: 'Jooki ausschalten?', power_off_text: 'Zum Einschalten musst du seine Taste drücken.', power_off_done: 'Der Jooki schaltet sich aus…',
@@ -536,11 +534,11 @@
     parent_label: 'Elterncode', parent_help: 'Ein vierstelliger Code schützt die Einstellungen vor Änderungen durch Kinder und Gäste (Wiedergabelisten löschen, WLAN, Updates).', parent_change: 'Code ändern', parent_prompt: 'Elterncode eingeben', parent_new: 'Vierstelliger Code', parent_cur: 'Bisheriger Code', parent_bad: 'Falscher Code', parent_reset: 'Code vergessen? Drehe die Lautstärke am Jooki ganz herunter. Halte dann das Titelrad 10 Sekunden nach links (◀).',
     flat_tok: 'Flacher Chip', thanks_tok: 'Danke-Chip', own_hint: 'Dieser Chip ist eine eigene Figur. Gib ihm einen Namen, ein Bild und eine Wiedergabeliste.', make_token: 'Zu einem echten Jooki-Chip machen', make_token_tip: 'Dann hält das Wegnehmen die Wiedergabe an, und er funktioniert zweimal hintereinander. Mit einem Android-Handy oder einer NFC-App.', flat_shared_hint: 'Flache Chips ohne eigene Wiedergabeliste starten diese hier.',
     lib_pick: 'Bild auswählen', lib_search_ph: 'Suchen: Katze, Rakete, Schlafen…', lib_loading: 'Bilder werden geladen…', lib_fail: 'Die Bilder konnten nicht geladen werden. Versuche es erneut.', lib_none: function (q) { return 'Kein Bild für „' + q + '“.'; }, lib_n: function (n) { return n + (n === 1 ? ' Bild' : ' Bilder'); }, lib_set: function (n) { return 'Bild ausgewählt: ' + n; },
-    s_listen: 'Wiedergabe', s_bt: 'Lautsprecher oder Kopfhörer', hp_wired: 'Kopfhörer erkannt', hp_wired_sub: 'Mit einem USB-C-auf-Klinke-Adapter ohne eingebauten Chip', hp_yes: 'Ja', hp_no: 'Nein', hp_boost: 'Lautere Kopfhörer', hp_boost_sub: 'Vor dem Aufsetzen die Lautstärke herunterdrehen', hp_boost_kids: 'Funktioniert nur bei ausgeschaltetem Kindermodus', s_upnp: 'Aus anderen Apps abspielen', s_upnp_sub: 'UPnP / DLNA im heimischen WLAN: BubbleUPnP, mconnect, Musikserver', s_none: 'Keine', s_night_trip: 'Schlafenszeit und Reisen', s_general: 'Allgemein', s_parents: 'Eltern', s_advanced: 'Erweitert', s_on: 'Ein', s_off: 'Aus', s_uptodate: 'Aktuell', s_avail: function (v) { return v + ' verfügbar'; }, s_storage_free: 'frei', s_open: 'Offen', s_closed: 'Geschlossen', s_home: 'Hausautomation', s_home_sub: 'Home Assistant', s_maint: 'Wartungszugang', s_maint_sub: 'SSH für Technikinteressierte',
+    s_sound: 'Lautstärke und Kopfhörer', s_play: 'Wiedergabe', s_buttons: 'Jooki-Tasten', s_links: 'Verbindungen', s_listen: 'Wiedergabe', s_bt: 'Lautsprecher oder Kopfhörer', hp_wired: 'Kopfhörer erkannt', hp_wired_sub: 'Mit einem USB-C-auf-Klinke-Adapter ohne eingebauten Chip', hp_yes: 'Ja', hp_no: 'Nein', hp_boost: 'Lautere Kopfhörer', hp_boost_sub: 'Vor dem Aufsetzen die Lautstärke herunterdrehen', hp_boost_kids: 'Funktioniert nur bei ausgeschaltetem Kindermodus', s_upnp: 'Aus anderen Apps abspielen', s_upnp_sub: 'UPnP / DLNA im heimischen WLAN: BubbleUPnP, mconnect, Musikserver', s_none: 'Keine', s_night_trip: 'Schlafenszeit und Reisen', s_general: 'Allgemein', s_advanced: 'Erweitert', s_on: 'Ein', s_off: 'Aus', s_uptodate: 'Aktuell', s_avail: function (v) { return v + ' verfügbar'; }, s_storage_free: 'frei', s_open: 'Offen', s_closed: 'Geschlossen', s_home: 'Hausautomation', s_home_sub: 'Home Assistant', s_maint: 'Wartungszugang', s_maint_sub: 'SSH für Technikinteressierte',
     disc_add: 'Alben hinzufügen', disc_drop: 'Albumordner hier ablegen: Jeder Ordner wird eine Wiedergabeliste', disc_hint: function (k) { return 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer in MP3 mit ' + k + ' kbps umgewandelt.'; }, converting: function (k) { return 'Wird in MP3 mit ' + k + ' kbps umgewandelt'; }, queued_conv: function (k) { return 'Wartet (Umwandlung in MP3 mit ' + k + ' kbps)'; }, up_conv_fail: 'Dieser Browser konnte die Datei nicht lesen (versuche Chrome oder Firefox auf einem Computer)', disc_progress: function (d, n) { return d + ' / ' + n + ' Titel'; }, disc_errors: function (n) { return n + (n === 1 ? ' Titel konnte' : ' Titel konnten') + ' nicht übertragen werden'; }, disc_created: function (n) { return 'Wiedergabeliste erstellt: ' + n; },
     story_rec: 'Geschichte aufnehmen', story_default: 'Meine Geschichte', story_got: function (n) { return 'Geschichte empfangen: ' + n; }, story_book: 'Eine Geschichte: Diese Wiedergabeliste ist jetzt ein Hörbuch', story_open: 'Geschichte öffnen', story_open_sub: 'Eine als Datei empfangene Geschichte', story_file_bad: 'Diese Datei ist keine Geschichte aus Jookistory', story_token_t: 'Welche Figur startet diese Geschichte?', story_token_help: 'Stelle sie jetzt auf den Jooki oder wähle sie unten aus.', token_live: 'Warte auf eine Figur auf dem Jooki…', token_seen: function (n) { return 'Figur erkannt: ' + n; }, later: 'Später', cover_set: function (n) { return 'Das Titelbild ist jetzt das Bild von ' + n; }, labels_btn: 'Etiketten drucken', labels_t: 'Etiketten für die Bücher', labels_size: 'Größe', print: 'Drucken', labels_help: 'Ein Etikett pro Chip. Drucken, ausschneiden und auf das jeweilige Buch über den NFC-Aufkleber kleben. Dann das geschlossene Buch auf den Jooki legen und ausprobieren.', labels_none: 'Noch kein eigener Chip. Lege zuerst einen flachen Chip oder NFC-Aufkleber auf den Jooki.',
     s_mp3: 'MP3-Qualität', s_mp3_sub: 'Für übertragene FLAC- und WAV-Dateien', s_mp3_192: '192 kbps — kleinste Dateien', s_mp3_256: '256 kbps — empfohlen', s_mp3_320: '320 kbps — höchste Qualität', s_mp3_foot: 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer oder Handy in MP3 umgewandelt. Ein Album braucht so etwa ein Drittel des Speicherplatzes. 256 kbps reichen für den Jooki und Bluetooth-Kopfhörer gut aus. Diese Auswahl gilt nur auf diesem Gerät.',
-    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_parent_foot: 'Ein vierstelliger Code schützt die Einstellungen vor Änderungen durch Kinder und Gäste.', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
+    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
   };
   T.nl = {
     playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
@@ -616,7 +614,7 @@
     volume_test_unavailable: 'Deze volumetest is momenteel niet beschikbaar.',
     toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
     random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
-    lights_off: 'Alle lampjes altijd uit', lights_off_help: 'Ring, zijlampjes en hart blijven uit. Na verbinding met wifi: 10 seconden wachten, driemaal wit knipperen, daarna uit.',
+    lights_off: 'Alle lampjes altijd uit',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Uit tijdens de ingestelde uren, daarna weer aan.',
     night_dim_help: 'De diminstelling blijft bewaard en geldt als de lampjes aan zijn.',
     language: 'Taal', power_off: 'De Jooki uitzetten', power_off_q: 'De Jooki uitzetten?',
@@ -726,8 +724,8 @@
     lib_pick: 'Kies een plaatje', lib_search_ph: 'Zoek: kat, raket, slapen…', lib_loading: 'Plaatjes laden…',
     lib_fail: 'De plaatjes konden niet geladen worden. Probeer opnieuw.', lib_none: function (q) { return 'Geen plaatje voor “' + q + '”.'; },
     lib_n: function (n) { return n + (n > 1 ? ' plaatjes' : ' plaatje'); }, lib_set: function (n) { return 'Plaatje gekozen: ' + n; },
-    s_listen: 'Luisteren', s_bt: 'Speaker of koptelefoon', hp_wired: 'Koptelefoon gevonden', hp_wired_sub: 'Met een USB-C-naar-jack-adapter zonder chip', hp_yes: 'Ja', hp_no: 'Nee', hp_boost: 'Luidere koptelefoon', hp_boost_sub: 'Zet het volume eerst lager voor je hem opzet', hp_boost_kids: 'Werkt alleen als Begrensd volume (kindermodus) uit staat', s_upnp: 'Afspelen vanuit andere apps', s_upnp_sub: 'UPnP / DLNA, via de wifi thuis: BubbleUPnP, mconnect, een muziekserver', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
-    s_general: 'Algemeen', s_parents: 'Ouders', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
+    s_sound: 'Volume en koptelefoon', s_play: 'Afspelen', s_buttons: 'Knoppen van de Jooki', s_links: 'Verbindingen', s_listen: 'Luisteren', s_bt: 'Speaker of koptelefoon', hp_wired: 'Koptelefoon gevonden', hp_wired_sub: 'Met een USB-C-naar-jack-adapter zonder chip', hp_yes: 'Ja', hp_no: 'Nee', hp_boost: 'Luidere koptelefoon', hp_boost_sub: 'Zet het volume eerst lager voor je hem opzet', hp_boost_kids: 'Werkt alleen als Begrensd volume (kindermodus) uit staat', s_upnp: 'Afspelen vanuit andere apps', s_upnp_sub: 'UPnP / DLNA, via de wifi thuis: BubbleUPnP, mconnect, een muziekserver', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
+    s_general: 'Algemeen', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
     s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
     s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
     disc_add: 'Albums toevoegen', disc_drop: 'Sleep de mappen van je albums hierheen: elke map wordt een afspeellijst',
@@ -751,7 +749,6 @@
     s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
     s_theme_foot: 'Automatisch: zoals de telefoon. Deze keuze geldt alleen voor deze telefoon.',
     s_party: 'Kerstboom', s_party_sub: 'Alle kleuren van de lampjes, 5 seconden lang', s_party_done: 'Kijk naar je Jooki!',
-    s_parent_foot: 'Een code van 4 cijfers voorkomt dat kinderen en gasten instellingen wijzigen.',
     s_wifi_net: 'Netwerk', s_wifi_signal: 'Signaal', s_wifi_drops: 'Onderbrekingen sinds de start', s_wifi_page: 'Adres van de pagina',
     s_wifi_change: 'Ander netwerk', s_air_for: 'Hoe lang?', s_lang_foot: 'De taal van deze pagina op deze telefoon.',
     s_connect_info: 'Om te verbinden', s_night_hours: 'Uren', s_night_during: 'Tijdens de nacht', s_update: 'Update',
@@ -3021,7 +3018,7 @@
     if (o.check) right.push(h('span', { class: 'tick' }, icon('check')));
     if (o.href || (o.onclick && !o.nochev)) right.push(h('span', { class: 'chev' }, icon('chev')));
     if (o.right) right.push(o.right);
-    var inner = [o.icon ? h('span', { class: 'ico ' + (o.color || 'gray') }, icon(o.icon)) : null,
+    var inner = [o.icon ? h('span', { class: 'ico' }, icon(o.icon)) : null,
       h('span', { class: 'lbl' }, h('span', { class: 'l1' }, o.label), o.sub ? h('span', { class: 'l2' }, o.sub) : null), right];
     var cls = 'srow' + (o.icon ? '' : ' noico') + (o.danger ? ' danger' : '') + (o.col ? ' col' : '') + (o.right && o.right.tagName === 'SELECT' ? ' control' : '');
     if (o.sw || o.tag === 'label') return h('label', { class: cls }, inner);
@@ -3041,7 +3038,7 @@
       meter !== null && meter !== undefined ? h('div', { class: 'minibar' }, h('i', { class: meterCls || '', style: 'width:' + Math.max(0, Math.min(100, meter)) + '%' })) : null);
   }
   // the topic pages (#/settings/<topic>): the key of each one's title, and what draws it
-  var SUBS = { bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
+  var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
                parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, maintenance: { title: 's_maint', page: maintPage },
                theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
@@ -3065,6 +3062,55 @@
       h('span', { class: 'small muted grow', role: 'status', 'aria-live': 'polite' },
         here && typeof v.percent === 'number' ? t('volume_test_level', v.percent) : t('volume_test_help')));
   }
+  // the topics behind the short page
+  function soundPage() {
+    var d = S.device, cfg = S.audio.config;
+    return sGroup(null, [
+        sRow({ icon: 'vol', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
+          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
+            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
+              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
+              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
+        // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
+        d.core ? sRow({ icon: 'vol', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
+        // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
+        d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null
+    ]);
+  }
+  function playPage() {
+    var d = S.device, cfg = S.audio.config;
+    return sGroup(null, [
+        sRow({ icon: 'shuffle', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
+        sRow({ icon: 'play', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
+        sRow({ icon: 'repeat', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
+        typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
+        canConvert() ? sRow({ icon: 'note', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
+        // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
+        d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null
+    ]);
+  }
+  function buttonsPage() {
+    var d = S.device, cfg = S.audio.config;
+    return sGroup(null, [
+        // the heart's short press on the Jooki (held 2 s it still switches off)
+        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
+          right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
+            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+        // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
+        d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
+          right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
+            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null
+    ]);
+  }
+  function advPage() {
+    var m = obj(S.maintenance);
+    return sGroup(null, [
+        sRow({ icon: 'home', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
+        sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
+    ]);
+  }
+  function sect(title, rows) { return h('section', null, sGroup(title, rows)); }
   function viewSettings() {
     var d = S.device, pw = S.power, w = S.wifi, cfg = S.audio.config, m = obj(S.maintenance), b = obj(S.bluetooth), c = S.bedtime.cfg;
     var lvl = pw.level && typeof pw.level === 'object' ? Number(pw.level.p) : NaN;
@@ -3083,60 +3129,35 @@
         stat('bat', t('battery'), known ? pct + ' %' : '—', pw.charging ? t('charging') : pw.connected ? t('plugged') : null, null, known ? pct : null, pct !== null && pct < 20 ? 'low' : 'ok'),
         stat('disk', t('storage'), total ? fmtBytes(free) : '—', total ? t('s_storage_free') : null, null, total ? used / total * 100 : null),
         stat('tag', t('version'), d.openjooki || '—', avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : null, avail ? 'accent-text' : 'ok-text', null, null, 'version')));
-    return h('div', { class: 'settings' }, hero,
-      avail ? sGroup(null, [sRow({ icon: 'up', color: 'orange', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
-      sGroup(t('s_listen'), [
-        sRow({ icon: 'vol', color: 'orange', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
-          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
-            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
-              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
-              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
-        sRow({ icon: 'shuffle', color: 'indigo', label: t('shuffle'), sub: t('modes_sub'), sw: true, on: cfg.shuffle_mode, k: 'shuffle', onchange: function (e) { send('SET_CFG', { shuffle_mode: e.target.checked }); } }),
-        sRow({ icon: 'play', color: 'indigo', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
-        sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
-        typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', color: 'teal', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
-        // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
-          right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
-            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
-        // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
-        d.core ? sRow({ tag: 'label', icon: 'knob', color: 'red', label: t('knob_mode'), sub: t('knob_mode_sub'),
-          right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
-            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null,
-        canConvert() ? sRow({ icon: 'note', color: 'teal', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
-        typeof b.state === 'number' ? sRow({ icon: 'bt', color: 'blue', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
-        // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
-        d.core ? sRow({ icon: 'vol', color: 'gray', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
-        // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
-        d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', color: 'orange', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null,
-        // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
-        d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', color: 'blue', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null,
-        spOn() ? sRow({ icon: 'note', color: 'green', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
+    return h('div', { class: 'settings home' }, hero,
+      avail ? sGroup(null, [sRow({ icon: 'up', label: t('upd_banner', upd.latest), value: t('upd_see'), vcls: 'acc', href: '#/settings/update', k: 'updrow' })]) : null,
+      sect(t('s_listen'), [
+        sRow({ icon: 'vol', label: t('s_sound'), href: '#/settings/sound', k: 'soundnav' }),
+        sRow({ icon: 'play', label: t('s_play'), href: '#/settings/play', k: 'playnav' }),
+        sRow({ icon: 'heart', label: t('s_buttons'), href: '#/settings/buttons', k: 'buttonsnav' })
       ]),
-      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sGroup(t('s_night_trip'), [
-        c.start !== undefined ? sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
-        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', color: 'indigo', label: t('lights_off'), sub: t('lights_off_help'), sw: true, on: cfg.lights_off, k: 'lightsoff',
+      c.start !== undefined || d.airplane !== undefined || typeof cfg.lights_off === 'boolean' ? sect(t('s_night_trip'), [
+        c.start !== undefined ? sRow({ icon: 'moon', label: t('night_mode'), value: c.enabled ? hm(c.start) + ' – ' + hm(c.stop) : t('s_off'), href: '#/settings/night', k: 'nightrow' }) : null,
+        typeof cfg.lights_off === 'boolean' ? sRow({ icon: 'moon', label: t('lights_off'), sw: true, on: cfg.lights_off, k: 'lightsoff',
           onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
-        d.airplane !== undefined ? sRow({ icon: 'plane', color: 'orange', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
+        d.airplane !== undefined ? sRow({ icon: 'plane', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
-      sGroup(t('s_general'), [
-        sRow({ icon: 'wifi', color: 'blue', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
-        sRow({ icon: 'up', color: 'green', label: t('s_update'), value: avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : '', vcls: avail ? 'acc' : 'good', href: '#/settings/update', k: 'updnav' }),
-        sRow({ icon: 'globe', color: 'teal', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
-        sRow({ icon: 'contrast', color: 'gray', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
-        d.core ? sRow({ icon: 'sparkle', color: 'party', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
-          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
-        } }) : null
+      sect(t('s_links'), [
+        sRow({ icon: 'wifi', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
+        typeof b.state === 'number' ? sRow({ icon: 'bt', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
+        spOn() ? sRow({ icon: 'note', label: t('s_sp'), value: t(spGuest() ? 'sp_guest_v' : spSaved() ? 'sp_set' : 'sp_unset'), href: '#/settings/spotify', k: 'sprow' }) : null
       ]),
-      typeof m.parent === 'boolean' ? sGroup(t('s_parents'), [
-        sRow({ icon: 'lock', color: 'red', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' })
-      ], t('s_parent_foot')) : null,
-      typeof m.ssh === 'boolean' ? sGroup(t('s_advanced'), [
-        sRow({ icon: 'home', color: 'gray', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
-        sRow({ icon: 'wrench', color: 'gray', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
-      ]) : null,
-      sGroup(null, [sRow({ icon: 'power', color: 'red', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
+      sect(t('s_general'), [
+        sRow({ icon: 'up', label: t('s_update'), value: avail ? t('s_avail', upd.latest) : upd.state === 'checked' ? t('s_uptodate') : '', vcls: avail ? 'acc' : 'good', href: '#/settings/update', k: 'updnav' }),
+        sRow({ icon: 'globe', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
+        sRow({ icon: 'contrast', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
+        typeof m.parent === 'boolean' ? sRow({ icon: 'lock', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' }) : null,
+        d.core ? sRow({ icon: 'sparkle', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
+          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
+        } }) : null,
+        typeof m.ssh === 'boolean' ? sRow({ icon: 'wrench', label: t('s_advanced'), href: '#/settings/advanced', k: 'advancednav' }) : null
+      ]),
+      sect(null, [sRow({ icon: 'power', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
         confirmBox(t('power_off_q'), t('power_off_text'), t('power_off'), true).then(function (ok) {
           if (!ok) return;
           send('SHUTDOWN', { src: 'from-web' }); toast(t('power_off_done'));
@@ -3247,7 +3268,7 @@
   function parentPage() {
     var m = obj(S.maintenance);
     if (typeof m.parent !== 'boolean') return null;
-    var rows = [sRow({ icon: 'lock', color: 'red', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
+    var rows = [sRow({ icon: 'lock', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
       onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })];
     if (m.parent) rows.push(sRow({ label: t('parent_change'), k: 'pchange', onclick: function () { parentModal('change'); } }));
     return sGroup(null, rows, [t('parent_help'), m.parent ? ' ' + t('parent_reset') : null]);
@@ -3255,7 +3276,7 @@
   function homePage() {
     var m = obj(S.maintenance);
     if (typeof m.ssh !== 'boolean' && typeof m.parent !== 'boolean') return null;
-    var out = [sGroup(null, [sRow({ icon: 'home', color: 'gray', label: t('mqtt_label'), sw: true, on: m.mqtt_lan, k: 'mqttlan',
+    var out = [sGroup(null, [sRow({ icon: 'home', label: t('mqtt_label'), sw: true, on: m.mqtt_lan, k: 'mqttlan',
       onchange: function (e) { send('OJ_MQTT_LAN', { on: e.target.checked }); } })], t('mqtt_help'))];
     if (m.mqtt_lan) {
       var host = (S.net && S.net.name ? String(S.net.name) : null) || (S.device && S.device.hostname) || location.hostname;
@@ -3268,7 +3289,7 @@
   function maintPage() {
     var m = obj(S.maintenance);
     if (typeof m.ssh !== 'boolean') return null;
-    var out = [sGroup(null, [sRow({ icon: 'wrench', color: 'gray', label: t('ssh_label'), sw: true, on: m.ssh, k: 'ssh',
+    var out = [sGroup(null, [sRow({ icon: 'wrench', label: t('ssh_label'), sw: true, on: m.ssh, k: 'ssh',
       onchange: function (e) { send(e.target.checked ? 'OJ_SSH_ON' : 'OJ_SSH_OFF', {}); } })], t('ssh_help'))];
     // while the access is open: a public key, kept on the Jooki across updates
     if (m.ssh) out.push(sGroup(t('ssh_key_l') + ' · ' + t('ssh_keys_n', Number(m.ssh_keys) || 0), [h('div', { class: 'gpad' },
@@ -3433,7 +3454,7 @@
     var timers = [0, 10, 15, 20, 30, 45, 60];
     if (timers.indexOf(Number(c.timer)) < 0) { timers.push(Number(c.timer)); timers.sort(function (a, b) { return a - b; }); }
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
-    var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
+    var out = [sGroup(null, [sRow({ icon: 'moon', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
     if (!c.enabled) return out;
     out.push(sGroup(t('s_night_hours'), [

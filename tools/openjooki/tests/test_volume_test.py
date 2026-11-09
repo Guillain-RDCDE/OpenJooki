@@ -114,7 +114,7 @@ try:
         pg = browser.new_page(viewport={"width": 390, "height": 844}, locale="de-DE", timezone_id="UTC")
         errors = []
         pg.on("pageerror", lambda e: errors.append(str(e)))
-        pg.goto(PAGE + "/#/settings")
+        pg.goto(PAGE + "/#/settings/sound")
         pg.wait_for_selector("[data-k=testvol-kids]", timeout=15000)
         R.check("German kids button is beside the new maximum", pg.locator("[data-k=testvol-kids]").inner_text() == "Testen")
         n = count(); pg.click("[data-k=testvol-kids]")
@@ -134,7 +134,7 @@ try:
         R.check("no browser exceptions", not errors, errors)
         Path("/tmp/volume-test-night.png").parent.mkdir(exist_ok=True)
         pg.screenshot(path="/tmp/volume-test-night.png", full_page=True)
-        pg.goto(PAGE + "/#/settings"); pg.wait_for_selector("[data-k=testvol-kids]")
+        pg.goto(PAGE + "/#/settings/sound"); pg.wait_for_selector("[data-k=testvol-kids]")
         pg.screenshot(path="/tmp/volume-test-kids.png", full_page=True)
         browser.close()
     api = 0

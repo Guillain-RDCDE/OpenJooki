@@ -51,7 +51,7 @@ try:
             pg = b.new_page(viewport={"width": 390, "height": 844}, locale="fr-FR")
             pg.goto(PAGE + "/#/settings/maintenance")   # since 2.2 each topic has its own page
             pg.wait_for_selector("[data-k=ssh]", timeout=15000)
-            shown = pg.locator("[data-k=sshkey]").count() == 1 and "1 clé enregistrée" in pg.locator("body").inner_text()
+            shown = pg.locator("[data-k=sshkey]").count() == 1 and "1 clé enregistrée" in pg.locator("body").inner_text().lower()
             check("R4 the page shows the key field and the saved key while the access is open", shown, pg.locator("body").inner_text()[-600:])
             j.send("OJ_SSH_KEY", {"clear": True}); j.poll(lambda: maint().get("ssh_keys") == 0, 5)
             check("R3 'forget the keys' removes both files", not os.path.exists(KEYS) and not os.path.exists(HOME_KEYS), (os.path.exists(KEYS), os.path.exists(HOME_KEYS)))

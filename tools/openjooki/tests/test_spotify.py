@@ -212,7 +212,7 @@ with sync_playwright() as p:
     B.poll(lambda: hp_out(n))
     check("SP6 headphones plugged (two readings): Spotify follows them", hp_out(n) == ["headphones"], since(n, "/j/"))
     J.wait_state("audio.config.headphones_en", True)
-    pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=hprow]")
+    pg.goto(URL + "/#/settings/sound"); pg.wait_for_selector("[data-k=hprow]")
     check("SP6 Settings shows the headphones detected", "Oui" in pg.locator("[data-k=hprow]").inner_text(), pg.locator("[data-k=hprow]").inner_text())
     n = mark(); knobs(0); knobs(0)
     B.poll(lambda: hp_out(n))

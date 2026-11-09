@@ -1,5 +1,8 @@
 # OpenJooki — Changelog
 
+## Next release
+- **A tidier Settings page.** A short list of subjects, the details behind each one, plain icons instead of coloured tiles, two columns on a computer. Nothing is gone: *Volume and headphones*, *Playback*, *Jooki buttons* and *Advanced* hold what the long list had.
+
 ## OpenJooki 2.5.0 (9 November 2026) — Lights out, gute Nacht
 Thank you to Dirk Drutschmann, who wrote nearly all of this in one weekend.
 - **Deutsch.** The Jooki's page now speaks German, the names and searches of all 659 pictures included (#30).

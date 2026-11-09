@@ -322,7 +322,7 @@ with sync_playwright() as p:
     check("E11e '+ New playlist' in a token's sheet: created on that token, then opened",
           J.pls[fresh].get("title") == "Histoires de l'éléphant" and J.pls[fresh].get("star") == ech and pg.url.endswith("#/p/" + fresh), (J.pls[fresh], pg.url))
     # E12 settings
-    pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=shuffle]")
+    pg.goto(URL + "/#/settings/play"); pg.wait_for_selector("[data-k=shuffle]")
     check("E12 random start is off by default", not pg.is_checked("[data-k=randomstart]"))
     sh0 = bool(J.get("audio.config.shuffle_mode"))
     pg.check("[data-k=randomstart]"); J.wait(lambda: J.get("audio.config.random_start") is True)
@@ -336,10 +336,12 @@ with sync_playwright() as p:
     pg.check("[data-k=continuetoken]")
     R.expect("E12 token removal setting enabled", lambda: J.get("audio.config.continue_on_token_removal") is True, 5, lambda: J.get("audio.config"))
     pg.uncheck("[data-k=continuetoken]"); J.wait(lambda: J.get("audio.config.continue_on_token_removal") is False)
+    pg.goto(URL + "/#/settings/sound"); pg.wait_for_selector("[data-k=hpboost]")
     check("E12 louder headphones off by default (issue #10)", not pg.is_checked("[data-k=hpboost]"))
     pg.check("[data-k=hpboost]")
     R.expect("E12 louder headphones saved", lambda: J.get("audio.config.hp_boost") is True, 5, lambda: J.get("audio.config"))
     pg.uncheck("[data-k=hpboost]"); J.wait(lambda: J.get("audio.config.hp_boost") is False)
+    pg.goto(URL + "/#/settings/buttons"); pg.wait_for_selector("[data-k=heartpress]")
     pg.select_option("[data-k=heartpress]", "next")
     R.expect("E12 the heart's short press is chosen in Settings (issue #11)", lambda: J.get("audio.config.heart_press") == "next", 5, lambda: J.get("audio.config"))
     pg.select_option("[data-k=heartpress]", "none"); J.wait(lambda: J.get("audio.config.heart_press") == "none")
@@ -347,8 +349,9 @@ with sync_playwright() as p:
     pg.select_option("[data-k=knobmode]", "wind")
     R.expect("E12 the track knob's choice is made in Settings (issue #11)", lambda: J.get("audio.config.knob_mode") == "wind", 5, lambda: J.get("audio.config"))
     pg.select_option("[data-k=knobmode]", "song"); J.wait(lambda: J.get("audio.config.knob_mode") == "song")
+    pg.goto(URL + "/#/settings"); pg.wait_for_selector("[data-k=langnav]")
     check("E12 the settings page is short: the topics open on their own pages",
-          pg.locator("[data-k=nightstart]").count() == 0 and pg.locator("[data-k=sshkey]").count() == 0 and pg.locator("a[href='#/settings/night']").count() == 1)
+          pg.locator(".settings.home .srow").count() <= 20 and pg.locator("[data-k=shuffle]").count() == 0 and pg.locator("[data-k=heartpress]").count() == 0 and pg.locator("[data-k=hpboost]").count() == 0 and pg.locator("[data-k=nightstart]").count() == 0 and pg.locator("[data-k=sshkey]").count() == 0 and pg.locator("a[href='#/settings/night']").count() == 1)
     pg.click("[data-k=langnav]"); pg.wait_for_url("**/#/settings/language")
     pg.click("text=English"); pg.wait_for_selector("h1:text-is('Language')")
     pg.click("a.icon-btn[href='#/settings']"); pg.wait_for_selector("h1:text-is('Settings')")

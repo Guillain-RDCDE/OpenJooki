@@ -162,7 +162,7 @@ with sync_playwright() as pw:
     pg = browser.new_page(locale="en-GB", viewport={"width":375,"height":812})
     errors=[]
     pg.on("pageerror", lambda e: errors.append(str(e)))
-    pg.goto(PAGE + "/#/settings")
+    pg.goto(PAGE + "/#/settings/sound")
     pg.wait_for_selector("[data-k=toysafemax]")
     R.check("one-percent slider and accessible label", pg.get_attribute("[data-k=toysafemax]","step")=="1" and pg.get_attribute("[data-k=toysafemax]","aria-label")=="Maximum volume in kids mode")
     pg.locator("[data-k=toysafemax]").fill("42")

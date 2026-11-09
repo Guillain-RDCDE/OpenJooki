@@ -50,7 +50,7 @@
     var timers = [0, 10, 15, 20, 30, 45, 60];
     if (timers.indexOf(Number(c.timer)) < 0) { timers.push(Number(c.timer)); timers.sort(function (a, b) { return a - b; }); }
     function volLabel(v) { return v >= 100 ? t('night_nolimit') : v + ' %'; }
-    var out = [sGroup(null, [sRow({ icon: 'moon', color: 'indigo', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
+    var out = [sGroup(null, [sRow({ icon: 'moon', label: t('night_mode'), sw: true, on: c.enabled, k: 'nighton',
       onchange: function (e) { setBedtime({ enabled: e.target.checked }); } })], t('night_help'), 'bedcard')];
     if (!c.enabled) return out;
     out.push(sGroup(t('s_night_hours'), [

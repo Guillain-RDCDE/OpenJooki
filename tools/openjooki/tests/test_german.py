@@ -15,6 +15,7 @@ with sync_playwright() as pw:
     pg.on("pageerror", lambda e: errors.append(str(e)))
     pg.goto(PAGE + "/#/settings"); pg.wait_for_selector("[data-k=langnav]")
     R.check("German browser detected", pg.locator("html").get_attribute("lang") == "de" and pg.locator("h1").inner_text() == "Einstellungen")
+    pg.goto(PAGE + "/#/settings/buttons"); pg.wait_for_selector("[data-k=heartpress]")
     for key in ("heartpress", "knobmode"):
         width = pg.wait_for_function("""key => {
             var el = document.querySelector('[data-k=' + key + ']');
@@ -23,7 +24,7 @@ with sync_playwright() as pw:
             return el.closest('.srow').querySelector('.lbl').getBoundingClientRect().width;
         }""", arg=key).json_value()
         R.check("readable narrow label " + key, width >= 180, width)
-    for route in ("settings", "settings/language", "settings/night", "settings/bluetooth", "settings/wifi", "tokens", "library", "playlists"):
+    for route in ("settings", "settings/sound", "settings/play", "settings/buttons", "settings/advanced", "settings/language", "settings/night", "settings/bluetooth", "settings/wifi", "tokens", "library", "playlists"):
         pg.goto(PAGE + "/#/" + route); pg.wait_for_selector("h1")
         R.check("narrow layout " + route, pg.evaluate("() => document.documentElement.scrollWidth <= innerWidth"))
     pg.goto(PAGE + "/#/tokens"); pg.wait_for_selector("[data-char='Jooki.Fox']")

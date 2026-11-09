@@ -45,7 +45,7 @@ R.check('rapid heart presses cannot change the light preference',j.get('audio.co
 with sync_playwright() as pw:
     browser=pw.chromium.launch(args=['--no-sandbox'])
     pg=browser.new_page(locale='de-DE',viewport={'width':375,'height':812})
-    pg.goto(PAGE+'/#/settings');pg.wait_for_selector('[data-k=heartpress]')
+    pg.goto(PAGE+'/#/settings/buttons');pg.wait_for_selector('[data-k=heartpress]')
     text=pg.locator('[data-k=heartpress]').evaluate("e => e.closest('.srow').textContent")
     R.check('heart setting explains silent red shutdown feedback','dreimal kurz rot blinken, ohne Ton' in text,text)
     R.check('no obsolete five-click instruction remains','Fünfmal' not in pg.locator('body').inner_text() and 'Fünf schnelle' not in pg.locator('body').inner_text())

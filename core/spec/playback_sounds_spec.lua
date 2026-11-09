@@ -85,6 +85,30 @@ describe("services.playback.sounds — system sounds", function()
     assert_nil(doc.playback_int.sys)
   end)
 
+  it("Pause during the sound never reaches the engine, and the song stays paused after it", function()
+    for _, confirmed in ipairs({ false, true }) do
+      local doc = doc_with()
+      apply(doc, playback.on_request(doc, { playlist = "music" }))
+      apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+      apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 5000 }))
+      local uri = doc.playback.now.uri
+      apply(doc, sounds.on_system_event(doc, { name = "Evt.Jooki.Ready" }))
+      if confirmed then apply(doc, playback.on_audio(doc, { type = "audio.paused", id = 7 }) or {}) end
+      local r = playback.on_pause(doc, { source = "token", now = 10 })
+      assert_eq(topics(r), {})                                     -- no "pauz": it would freeze the sound
+      apply(doc, r)
+      assert_eq(doc.playback.state, "paused")
+      r = playback.on_audio(doc, { type = "audio.ended", id = 3 })
+      assert_eq(topics(r), {})
+      apply(doc, r)
+      assert_nil(doc.playback_int.sys)
+      r = playback.on_resume(doc, { now = 20 })                    -- the token back: the song, at its place
+      assert_eq(topics(r), { "play 7\t" .. uri, "emit playback.changed starting" })
+      apply(doc, r)
+      assert_eq(topics(playback.on_audio(doc, { type = "audio.playing", id = 7 }))[1], "seek 7\t5000")
+    end
+  end)
+
   it("before powering off (`after`) the song stays paused instead of starting again", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "music" }))

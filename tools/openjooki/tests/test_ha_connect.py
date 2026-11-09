@@ -79,6 +79,22 @@ check("never 'cont': on one pipeline it would play the sound again", spy.payload
 R.expect("and goes back to its place", lambda: any(int(p.split("\t")[1]) > 0 for p in spy.payloads("/j/audio/out/seek", n)))
 j.wait_state("audio.playback.state", "PLAYING")
 
+# --- 3b. Pause during a sound: nothing frozen, the song stays paused, Play brings it back
+n = spy.mark()
+j.c.publish("/j/event", "Evt.Character.Write")
+R.expect("a second sound takes the engine", lambda: any(p.startswith("3\t") for p in spy.payloads("/j/audio/out/play", n)))
+m = spy.mark()
+j.send("DO_PAUSE", {})
+j.wait_state("audio.playback.state", "PAUSED")
+check("Pause during the sound sends no pauz", spy.payloads("/j/audio/out/pauz", m) == [], spy.since(m))
+sound_ended(j)
+B.quiet(0.3, "the sound ends")
+check("the song stays paused", j.state["audio"]["playback"]["state"] == "PAUSED", j.state["audio"]["playback"])
+m = spy.mark()
+j.send("DO_PLAY", {})
+R.expect("Play loads the song again", lambda: want in spy.payloads("/j/audio/out/play", m))
+j.wait_state("audio.playback.state", "PLAYING")
+
 # --- 4. With nothing loaded the connect sound still greets, as the original did
 n = spy.mark()
 j.send("DO_PAUSE", {})

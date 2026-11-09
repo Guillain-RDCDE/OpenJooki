@@ -252,6 +252,13 @@ end
 
 function playback.on_pause(doc, ev)
   local pb = pb_of(doc)
+  -- during a sound the engine holds the sound: "pauz" would freeze it, and its end would never come.
+  -- The song is already away: it just does not come back after the sound.
+  if pb.sys and pb.song_replaced then
+    pb.sys.resume_music = nil
+    pb.state, pb.paused_by, pb.paused_at = "paused", ev.source, ev.now
+    return { state = st(pb) }
+  end
   if not is_playing(doc) then return nil end
   if is_streaming(pb) then
     -- taking a token off pauses what a token started, not Spotify started from the phone

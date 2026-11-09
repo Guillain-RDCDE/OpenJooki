@@ -60,7 +60,7 @@
     heart_shutdown_help: 'Uitschakelen: driemaal kort rood knipperen, zonder geluid.',
     heart_press: 'Kort op het hart drukken', heart_press_sub: 'Twee seconden ingedrukt zet het de Jooki nog steeds uit', heart_press_sub5: 'Vijf seconden ingedrukt zet het de Jooki uit', heart_none: 'Niets', heart_next: 'Volgend nummer', heart_pause: 'Pauze / afspelen',
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
-    knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
+    knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_start: 'Nummers, links vasthouden: begin', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
     toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
     volume_test: 'Testen',
     volume_testing: 'Bezig met testen…',

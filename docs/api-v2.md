@@ -212,7 +212,7 @@ Payload schema:
       "type": "boolean"
     },
     "knob_mode": {
-      "enum": ["song", "both", "wind"],
+      "enum": ["song", "both", "wind", "start"],
       "type": "string"
     },
     "lights_off": {

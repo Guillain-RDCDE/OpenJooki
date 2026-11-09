@@ -33,6 +33,29 @@ local function apply(doc, r)
   return doc
 end
 
+describe("playback.on_restart — the knob's back to the start (#40)", function()
+  it("the first song, the audiobook's place forgotten, no seek", function()
+    local doc = doc_with()
+    doc.library.playlists.music.audiobook = true
+    doc.resume = { music = { id = "b", pos = 90000 } }
+    apply(doc, playback.on_request(doc, { playlist = "music" }))
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    assert_eq(doc.playback.now.index, 2)
+    local r = playback.on_restart(doc, { now = 5 })
+    apply(doc, r)
+    assert_eq(doc.playback.now.index, 1)
+    assert_nil(doc.resume.music)
+    assert_nil(doc.playback.resume_ms)
+    assert_eq(doc.playback.state, "starting")
+  end)
+  it("nothing loaded, or a song from an app: nothing", function()
+    local doc = doc_with()
+    assert_nil(playback.on_restart(doc, { now = 5 }))
+    doc.playback = { state = "playing", now = { service = "UPNP", uri = "http://x" } }
+    assert_nil(playback.on_restart(doc, { now = 5 }))
+  end)
+end)
+
 describe("services.playback.sounds — system sounds", function()
   it("pauses the music, plays the sound on stream 3, then loads the same song again at its place", function()
     local doc = doc_with()

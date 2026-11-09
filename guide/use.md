@@ -238,7 +238,9 @@ version.
   does something, so a small child pressing a bit too long does not switch it off.
 - **The track knob**: **Next / previous song** (as before), **Both (halfway winds)**: held
   halfway, it winds the song, turned all the way it changes the song, or **Wind the song**:
-  the knob only winds, and the heart can change the song.
+  the knob only winds, and the heart can change the song. Or **Songs, held left: back to the
+  start**: as before, and held to the left for three seconds, the playlist starts again from its
+  first song; an audiobook forgets its place. A child can do it without the page.
 
 **Bedtime and travel**
 - **Night mode**: see *Bedtime* above.

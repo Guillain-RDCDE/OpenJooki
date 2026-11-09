@@ -314,6 +314,23 @@ local function step(doc, pb, delta, ev)
   return start(doc, pb, now.playlist, { queue_pos = pos, restart = true, now_s = ev.now })
 end
 
+--- The knob held to the left ("start", services.device.buttons): the playlist from its first song; an
+--- audiobook or a Spotify playlist set to resume forgets its place.
+function playback.on_restart(doc, ev)
+  local pb = pb_of(doc)
+  local id = pb.now and pb.now.playlist
+  if not id then return nil end
+  local reset = playback.on_resume_reset(doc, id)
+  local after = copy(doc)
+  after.resume = reset.state.resume
+  local r = start(after, pb, id, { queue_pos = 1, restart = true, now_s = ev.now })
+  if not r then return reset end
+  r.state = r.state or {}
+  r.state.resume = reset.state.resume
+  table.insert(r.commands, 1, reset.commands[1])
+  return r
+end
+
 function playback.on_next(doc, ev)
   local pb = pb_of(doc)
   if is_streaming(pb) then return stream_cmds(pb, "next") end
@@ -529,6 +546,7 @@ function playback.install(api, dispatch)
   dispatch.on("playback.request", "playback", playback.on_request)
   dispatch.on("playback.pause_request", "playback", playback.on_pause)
   dispatch.on("playback.next", "playback", playback.on_next)
+  dispatch.on("playback.restart", "playback", playback.on_restart)
   dispatch.on("playback.prev", "playback", playback.on_prev)
   -- the Jooki's own controls (services.device.buttons): the heart's short press, the knob held halfway
   dispatch.on("playback.toggle_request", "playback", playback.on_toggle)

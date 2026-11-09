@@ -118,7 +118,7 @@ set_volume = volume_test.wrap(set_volume)
 device.set_volume = set_volume
 
 local HEART_PRESS = { none = true, next = true, pause = true }
-local KNOB_MODE = { song = true, both = true, wind = true }
+local KNOB_MODE = { song = true, both = true, wind = true, start = true }
 
 -- Shuffle and repeat arrive three ways: v2 device.set_config (schema-checked: a boolean and an integer
 -- 0-2), v1 SET_CFG (the page sends booleans; repeat_mode may be a boolean -- true = all, false = none --
@@ -507,7 +507,7 @@ local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, random_start = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
-                                              knob_mode = { type = "string", enum = { "song", "both", "wind" } },
+                                              knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
                                               upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }

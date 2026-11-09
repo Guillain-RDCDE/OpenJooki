@@ -154,6 +154,9 @@ jobs:
       - name: A system whose core does not answer goes back by itself
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_guard.py
+      - name: The track knob's back to the start (#40)
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_knob_start.py
       - name: Home Assistant connecting while music plays (#28)
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_ha_connect.py

@@ -125,6 +125,26 @@ describe("services.device.buttons — presses and long presses", function()
     end
   end)
 
+  it("'start' (#40): held left 3 s -> back to the start, once; a short turn stays previous; right stays next", function()
+    local doc = doc_with({ audiocfg = { volume = 40, knob_mode = "start" }, activity = { buttons = { prev = 0 } } })
+    assert_nil(buttons.on_tick(doc, { now = 2.5 }))
+    local r = buttons.on_tick(doc, { now = 3 })
+    same(kinds(r), { "emit playback.restart", "timer.cancel" })
+    doc.activity = r.state.activity
+    same(kinds(buttons.on_button(doc, { button = "prev", down = false, now = 3.2 })), {})
+    doc = doc_with({ audiocfg = { volume = 40, knob_mode = "start" }, activity = { buttons = { prev = 0 } } })
+    same(kinds(buttons.on_button(doc, { button = "prev", down = false, now = 1 })), { "emit playback.prev", "timer.cancel" })
+    doc = doc_with({ audiocfg = { volume = 40, knob_mode = "start" }, activity = { buttons = { next = 0 } } })
+    assert_nil(buttons.on_tick(doc, { now = 4 }))
+    same(kinds(buttons.on_button(doc, { button = "next", down = false, now = 4 })), { "emit playback.next", "timer.cancel" })
+  end)
+
+  it("'start' with the volume all the way down: the hold stays the parent-code gesture", function()
+    local doc = doc_with({ audiocfg = { volume = 0, knob_mode = "start" }, activity = { buttons = { prev = 0 } } })
+    assert_nil(buttons.on_tick(doc, { now = 3 }))
+    same(kinds(buttons.on_tick(doc, { now = 10 })), { "emit security.parent_clear", "timer.cancel" })
+  end)
+
   it("'wind': the knob only winds, halfway or all the way; a short turn winds once", function()
     local function wound(r) for _, c in ipairs(r.commands) do if c.kind == "emit" then return c.event.seconds end end end
     local doc = doc_with({ audiocfg = { volume = 40, knob_mode = "wind" }, activity = { buttons = { next = 3 } } })

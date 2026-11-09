@@ -36,6 +36,7 @@ local function clamp(v) v = math.floor(tonumber(v) or 0) if v < 0 then return 0 
 function device.effective_volume(doc, requested)
   local test = doc.volume_test_int or {}
   if test.active and test.phase ~= "restoring" then requested = test.phase == "pausing" and 0 or test.requested end
+  if (doc.poweroff_int or {}).step then return 0 end
   local v = clamp(requested)
   local find = (doc.streaming_int or {}).find
   if (doc.upnp or {}).muted or (find and (find.skips or 0) > 0) then return 0 end

@@ -60,6 +60,7 @@ describe("scheduled darkness and the permanent override", function()
   local function boot(h, m)
     local d = doc(); apply(d, bedtime.on_boot(d, event(h, m)))
     apply(d, lights.on_boot(d, event(h, m)))
+    for _ = 1, 7 do apply(d, lights.on_boot_frame(d)) end
     return d
   end
   local function driver(r) return has(r, "bus.publish", "topic", "/j/ht/output/raw_write") end
@@ -99,17 +100,24 @@ describe("scheduled darkness and the permanent override", function()
     assert_false(d.audiocfg.lights_off)
   end)
 
-  it("uses the saved schedule in the first boot command without a transient driver enable", function()
+  it("waits ten seconds and blinks three times before applying saved boot darkness", function()
     for _, h in ipairs({ 0, 6, 20, 23 }) do
-      local d = doc(); d.limits.lights_off = false
-      local r = lights.on_boot(d, event(h))
-      assert_eq(driver(r).payload, "34 0")
-      for _, c in ipairs(r.commands) do
-        assert_false(c.topic == "/j/ht/output/raw_write" and c.payload == "34 8")
-        if c.topic == "/j/led/output/set_raw" then assert_eq(c.payload, "ALL,0,0,0") end
+      local d = doc(); apply(d, bedtime.on_boot(d, event(h)))
+      local r = lights.on_boot(d, event(h)); apply(d, r)
+      assert_eq(driver(r).payload, "34 8")
+      assert_eq(has(r, "timer.once", "name", "device.lights_boot").seconds, 10)
+      assert_false(lights.off(d))
+      for step = 1, 6 do
+        r = lights.on_boot_frame(d); apply(d, r)
+        assert_eq(driver(r).payload, step % 2 == 1 and "34 8" or "34 0")
+        assert_true(lights.off(d)) -- ordinary animations cannot overwrite the cue
       end
+      r = lights.on_boot_frame(d); apply(d, r)
+      assert_true(lights.off(d)); assert_eq(driver(r).payload, "34 0")
+      assert_nil(lights.on_boot_frame(d))
     end
     assert_eq(driver(lights.on_boot(doc(), event(12))).payload, "34 8")
+    assert_nil(has(lights.on_boot(doc(), event(12)), "timer.once", "name", "device.lights_boot"))
   end)
 
   it("persists each preference independently and disabling night mode restores lighting", function()
@@ -161,7 +169,7 @@ describe("scheduled darkness and the permanent override", function()
     ev = event(22); ev.bedtime.lights_off = "true"
     assert_false(bedtime.boot_limits(ev).lights_off)
     ev.audiocfg = { lights_off = true }
-    assert_eq(driver(lights.on_boot(doc(), ev)).payload, "34 0")
+    assert_eq(driver(lights.on_boot(doc(), ev)).payload, "34 8")
   end)
 end)
 
@@ -172,8 +180,8 @@ describe("all device lights off", function()
     local r = device.update_config(d, { lights_off = true }); apply(d, r)
     assert_true(has(r, "files.write").doc.lights_off)
     local boot = lights.on_boot(doc(), { audiocfg = d.audiocfg })
-    assert_eq(has(boot, "bus.publish", "topic", "/j/ht/output/raw_write").payload, "34 0")
-    assert_false(has(boot, "timer.every") ~= nil)
+    assert_eq(has(boot, "bus.publish", "topic", "/j/ht/output/raw_write").payload, "34 8")
+    assert_eq(has(boot, "timer.once", "name", "device.lights_boot").seconds, 10)
     assert_eq(device.on_boot(d, { audiocfg = d.audiocfg }).state.audiocfg.lights_off, true)
   end)
 

@@ -125,8 +125,34 @@ function power.on_activity(doc, ev)
 end
 
 -- ------------------------------------------------------------------ power off
-function power.on_off_request(_, ev)
-  return { commands = { emit("system.event", { name = "Evt.Jooki.Poweroff", after = { type = "shutdown.request", reason = ev.reason } }) } }
+local POWEROFF_FRAME_S = 0.15
+function power.on_off_request(doc, ev)
+  if ev.reason ~= "button" and ev.reason ~= "page" then
+    return { commands = { emit("system.event", { name = "Evt.Jooki.Poweroff", after = { type = "shutdown.request", reason = ev.reason } }) } }
+  end
+  if (doc.poweroff_int or {}).step then return nil end
+  local after = copy(doc); after.poweroff_int = { step = 1, reason = ev.reason }; after.lights_boot_int = {}
+  local r = lights.on_apply(after)
+  r.state.poweroff_int = after.poweroff_int; r.state.lights_boot_int = {}
+  -- No power-off sound, and no music during the acknowledgement. Keep the
+  -- desired volume; effective_volume holds all output at zero until shutdown.
+  table.insert(r.commands, 1, volume().volume_command(after, 0))
+  r.commands[#r.commands + 1] = emit("playback.pause_request", { source = "shutdown", now = ev.now })
+  r.commands[#r.commands + 1] = { kind = "bus.publish", topic = "/j/audio/out/stop", payload = "3" }
+  r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.lights_boot" }
+  r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.poweroff", seconds = POWEROFF_FRAME_S }
+  return r
+end
+
+function power.on_off_frame(doc)
+  local s = copy(doc.poweroff_int or {})
+  if not s.step then return nil end
+  if s.step == 6 then return { commands = { emit("shutdown.request", { reason = s.reason }) } } end
+  s.step = s.step + 1
+  local after = copy(doc); after.poweroff_int = s
+  local r = lights.on_apply(after); r.state.poweroff_int = s
+  r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.poweroff", seconds = POWEROFF_FRAME_S }
+  return r
 end
 
 function power.on_shutdown_request(doc, ev)
@@ -157,6 +183,7 @@ end
 -- the power timers, each handler on its own name (kernel.dispatch on_timer)
 local TIMERS = {
   ["device.inactivity"] = power.on_inactivity,
+  ["device.poweroff"] = power.on_off_frame,
 }
 power.TIMERS = TIMERS
 
@@ -179,7 +206,7 @@ function power.install(api, dispatch)
   dispatch.on("shutdown.request", "device.power", power.on_shutdown_request)
   dispatch.on("host.terminating", "device.power", function(doc) return power.on_shutdown_request(doc, { reason = "signal" }) end)
   for _, t in ipairs({ "nfc.tag", "api.cmd", "v1.cmd", "playback.request" }) do dispatch.on(t, "device.power", power.on_activity) end
-  api.command("device.power_off", nil,function(_, _, ev) return power.on_off_request(nil, { reason = "page", now = ev.now }) end)
+  api.command("device.power_off", nil,function(doc, _, ev) return power.on_off_request(doc, { reason = "page", now = ev.now }) end)
 end
 
 return power

@@ -187,7 +187,7 @@ No payload.
 
 ### `device.power_off`
 
-Plays the power-off sound, then powers off.
+Flashes red three times, then powers off silently, including when the lights are disabled.
 
 No payload.
 

@@ -84,7 +84,7 @@
         sRow({ icon: 'repeat', color: 'indigo', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', color: 'teal', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
         // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub'),
+        d.core ? sRow({ tag: 'label', icon: 'heart', color: 'red', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
             ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it

@@ -61,6 +61,7 @@ local function tick_change(cmds, held_before, held)
 end
 
 function buttons.on_button(doc, ev)
+  if (doc.poweroff_int or {}).step then return nil end
   -- headphones plugged in or out: not a button (services.device reads the knobs again); held, it
   -- would keep the long-press tick running for as long as the headphones stay in
   if ev.button == "hp_plugged" then return nil end
@@ -109,6 +110,7 @@ end
 
 --- Long presses are detected on the tick (like 1.x): circle 2 s (5 s when the heart has a job) -> power off, airplane 5 s.
 function buttons.on_tick(doc, ev)
+  if (doc.poweroff_int or {}).step then return nil end
   local act = doc.activity
   if not act or not act.buttons then return nil end
   local now = ev.now

@@ -489,6 +489,13 @@ function streaming.on_spotify(doc, ev)
   if not (pb.now and pb.now.service == "SPOTIFY") then return r end
   local was = (doc.playback or {}).now or {}
   local ms = tonumber(pb.position_ms) or 0
+  -- Repeated state/metadata notifications are not position reports. Keep the
+  -- elapsed time, including on pause, instead of resetting it to a stale value.
+  if kind ~= "position" and pb.now.title == was.title and pb.now.album == was.album then
+    ms = sp_position(doc, ev.now)
+    r.state = r.state or {}
+    r.state.playback = copy(pb); r.state.playback.position_ms = ms
+  end
   -- a new track starts at 0 until the daemon says otherwise
   if kind == "now_playing" and pb.now.title ~= was.title then ms = 0 end
   r.state = r.state or {}

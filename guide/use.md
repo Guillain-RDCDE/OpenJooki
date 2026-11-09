@@ -199,6 +199,22 @@ afterwards.
   becomes the Jooki's own, even after a restart. Do it if a token stops the music of another
   Spotify speaker at home, or if the tokens play on the wrong account after a restart.
 
+### Experimental song lists and offline downloads
+
+On the offline test branch, **Settings → Spotify → Song lists & offline** connects
+Spotify through a computer helper. Song lists support Free accounts; a separate
+verified Premium permission enables offline downloads. Without that permission,
+offline controls stay hidden and the existing online player remains available.
+
+A playlist’s page shows ordered titles, artists and durations before download.
+**Download for offline use** synchronizes a complete snapshot; other requests join
+a persistent queue. **Automatic** chooses the last complete copy, otherwise the
+original online player. Storage follows free SD space with a reserve. **Sign out**
+removes this integration’s grant and queue while preserving the original account.
+See the [computer login and test guide (German)](spotify-offline.de.md) and
+[validation notes](../docs/34-spotify-offline-test.md) before installing this
+experimental version.
+
 ## From other apps (UPnP / DLNA)
 
 Apps on your phone, or a music server at home, can send music to the Jooki over your Wi-Fi.

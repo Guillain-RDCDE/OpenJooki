@@ -154,7 +154,7 @@
           if (ok && send('OJ_SPOTIFY_FORGET', {}) !== false) toast(t('sp_change_done'));
         });
       } }, t('sp_change')) : null,
-      h('p', { class: 'gfoot' }, t('sp_why'))];
+      h('p', { class: 'gfoot' }, t('sp_why')), spotifyConnectionCard()];
   }
   // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
   // speaker by itself once connected, and reconnects to it when it comes back.

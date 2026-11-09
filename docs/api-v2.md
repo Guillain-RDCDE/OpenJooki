@@ -17,9 +17,9 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/
 
 ## State document keys
 
-`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account readiness, playlists, modes, download, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
+`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account and metadata readiness, playlists, modes, download, queue, jobs, previews, auth, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
 
-## Commands (43)
+## Commands (49)
 
 ### `bedtime.set`
 
@@ -633,15 +633,100 @@ Payload schema:
 }
 ```
 
-### `spotify_offline.forget_account`
+### `spotify_offline.auth_helper`
 
-Stops this backend and forgets its separate Premium authentication. Parent code protected.
+Computer helper heartbeat and public authorization status. Completion must match the active request; secrets travel separately over SSH. Parent code protected.
 
 Payload schema:
 
 ```json
 {
   "additionalProperties": false,
+  "properties": {
+    "error": {
+      "maxLength": 100,
+      "type": "string"
+    },
+    "phase": {
+      "enum": ["ready", "working", "url", "complete", "error"],
+      "type": "string"
+    },
+    "request": {
+      "maxLength": 64,
+      "type": "string"
+    },
+    "url": {
+      "maxLength": 4096,
+      "type": "string"
+    }
+  },
+  "required": ["phase"],
+  "type": "object"
+}
+```
+
+### `spotify_offline.cancel_login`
+
+Invalidates the pending computer login request while retaining the existing account. Parent code protected.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "type": "object"
+}
+```
+
+### `spotify_offline.cancel_queued`
+
+Removes a waiting playlist from the account-bound download queue. Parent code protected.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "playlist": {
+      "maxLength": 100,
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": ["playlist"],
+  "type": "object"
+}
+```
+
+### `spotify_offline.forget_account`
+
+Stops owned jobs, invalidates pending login, clears the queue and forgets this backend’s grants. Keeps the original online account. Parent code protected.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "type": "object"
+}
+```
+
+### `spotify_offline.login`
+
+Requests settings-driven computer OAuth: metadata-only for song lists, or Premium for native metadata and offline audio. Requires a connected helper and parent code when set.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "mode": {
+      "enum": ["metadata", "premium"],
+      "type": "string"
+    }
+  },
   "type": "object"
 }
 ```
@@ -697,6 +782,32 @@ Payload schema:
 }
 ```
 
+### `spotify_offline.preview`
+
+Reads a bounded metadata page (offset, up to 50 songs) with metadata-only Free OAuth or Premium. Does not download audio.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "properties": {
+    "offset": {
+      "maximum": 10000,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "playlist": {
+      "maxLength": 100,
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": ["playlist"],
+  "type": "object"
+}
+```
+
 ### `spotify_offline.remove`
 
 Removes the saved snapshot while playback and synchronization are stopped. Parent code protected.
@@ -718,9 +829,22 @@ Payload schema:
 }
 ```
 
+### `spotify_offline.resume_queue`
+
+Continues the queue after storage/authentication trouble is resolved. Parent code protected.
+
+Payload schema:
+
+```json
+{
+  "additionalProperties": false,
+  "type": "object"
+}
+```
+
 ### `spotify_offline.sync`
 
-Synchronizes the exact Spotify playlist to a verified, account-scoped SD snapshot. Parent code protected; Premium required.
+Enqueues or resumes the exact Spotify playlist for a verified, account-scoped SD snapshot. A single active download, up to 32 waiting entries. Parent code protected; Premium required.
 
 Payload schema:
 

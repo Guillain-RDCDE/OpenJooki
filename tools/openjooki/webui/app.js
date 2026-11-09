@@ -801,6 +801,139 @@
     of_empty: 'Nummers verschijnen tijdens het synchroniseren.', of_play: 'Offline afspelen', of_remove_q: 'Offline kopie verwijderen?',
     of_remove_help: 'Alleen de gedownloade kopie wordt verwijderd. De afspeellijst en het figuurtje blijven behouden.'
   });
+  Object.assign(T.en, {
+    of_title: 'Save for offline use', of_songs: 'Songs', of_online_badge: 'Online', of_queued: 'Queued', of_enqueue: 'Add to download queue',
+    of_cancel_queue: 'Remove from queue', of_queue: 'Download queue', of_queue_position: function (n) { return 'Position ' + n + ' in the download queue'; },
+    of_free: 'Free on SD', of_auto_storage: 'The storage budget follows free SD space and keeps a reserve available.',
+    of_titles_login: 'Connect Spotify to see the songs. Spotify Free is supported.', of_connect: 'Connect Spotify', of_titles_loading: 'Loading songs…',
+    of_load_titles: 'Load songs', of_retry: 'Try again', of_previous: 'Previous', of_next: 'Next', of_item_unavailable: 'Unavailable for offline playback',
+    of_unsupported: 'This playlist contains items the offline player cannot download.', of_too_large: 'This playlist exceeds the metadata capacity.',
+    of_incomplete: 'Spotify returned an incomplete playlist. Reload the songs before trying again.', of_changed: 'The playlist changed during the download. Try again.',
+    of_unavailable: 'A song is unavailable for this account or region.', of_rate: 'Spotify is limiting requests. Please wait before trying again.',
+    of_network: 'Spotify did not respond in time. Check the connection and try again.', of_auth_error: 'Connect Spotify again in Settings.', of_start_error: 'Playback could not start. Try again.'
+  });
+  Object.assign(T.de, {
+    of_title: 'Offline speichern', of_songs: 'Titelliste', of_online_badge: 'Online', of_queued: 'Vorgemerkt', of_enqueue: 'Zur Download-Queue hinzufügen',
+    of_cancel_queue: 'Aus Queue entfernen', of_queue: 'Download-Warteschlange', of_queue_position: function (n) { return 'Platz ' + n + ' in der Download-Warteschlange'; },
+    of_free: 'Frei auf der SD-Karte', of_auto_storage: 'Das Speicherbudget richtet sich nach dem freien SD-Speicher und lässt eine Reserve frei.',
+    of_titles_login: 'Spotify verbinden, um die Titel zu sehen. Das funktioniert auch mit Spotify Free.', of_connect: 'Spotify verbinden', of_titles_loading: 'Titelliste wird geladen …',
+    of_load_titles: 'Titelliste laden', of_retry: 'Erneut versuchen', of_previous: 'Zurück', of_next: 'Weiter', of_item_unavailable: 'Offline nicht verfügbar',
+    of_unsupported: 'Diese Playlist enthält Einträge, die der Offline-Player nicht herunterladen kann.', of_too_large: 'Die Titelliste überschreitet die Metadatenkapazität.',
+    of_incomplete: 'Spotify hat eine unvollständige Playlist geliefert. Titelliste neu laden und erneut versuchen.', of_changed: 'Die Playlist wurde während des Downloads geändert. Bitte erneut versuchen.',
+    of_unavailable: 'Ein Titel ist für dieses Konto oder diese Region nicht verfügbar.', of_rate: 'Spotify begrenzt gerade die Abfragen. Bitte etwas warten und erneut versuchen.',
+    of_network: 'Spotify hat nicht rechtzeitig geantwortet. Verbindung prüfen und erneut versuchen.', of_auth_error: 'Spotify in den Einstellungen erneut verbinden.', of_start_error: 'Die Wiedergabe konnte nicht starten. Bitte erneut versuchen.'
+  });
+  Object.assign(T.fr, {
+    of_title: 'Enregistrer hors ligne', of_songs: 'Titres', of_online_badge: 'En ligne', of_queued: 'En attente', of_enqueue: 'Ajouter aux téléchargements',
+    of_cancel_queue: 'Retirer de la file', of_queue: 'File de téléchargement', of_queue_position: function (n) { return 'Position ' + n + ' dans la file de téléchargement'; },
+    of_free: 'Libre sur la carte SD', of_auto_storage: 'Le budget suit l’espace libre de la carte SD en conservant une réserve.',
+    of_titles_login: 'Connectez Spotify pour voir les titres. Spotify Free est accepté.', of_connect: 'Connecter Spotify', of_titles_loading: 'Chargement des titres…',
+    of_load_titles: 'Charger les titres', of_retry: 'Réessayer', of_previous: 'Précédent', of_next: 'Suivant', of_item_unavailable: 'Indisponible hors ligne',
+    of_unsupported: 'Cette playlist contient des éléments non pris en charge hors ligne.', of_too_large: 'Cette playlist dépasse la capacité des métadonnées.',
+    of_incomplete: 'Spotify a renvoyé une playlist incomplète. Rechargez les titres.', of_changed: 'La playlist a changé pendant le téléchargement. Réessayez.',
+    of_unavailable: 'Un titre est indisponible pour ce compte ou cette région.', of_rate: 'Spotify limite les requêtes. Patientez avant de réessayer.',
+    of_network: 'Spotify n’a pas répondu à temps. Vérifiez la connexion.', of_auth_error: 'Reconnectez Spotify dans les réglages.', of_start_error: 'La lecture n’a pas démarré. Réessayez.'
+  });
+  Object.assign(T.nl, {
+    of_title: 'Offline opslaan', of_songs: 'Nummers', of_online_badge: 'Online', of_queued: 'In wachtrij', of_enqueue: 'Toevoegen aan downloadwachtrij',
+    of_cancel_queue: 'Uit wachtrij verwijderen', of_queue: 'Downloadwachtrij', of_queue_position: function (n) { return 'Plaats ' + n + ' in de downloadwachtrij'; },
+    of_free: 'Vrij op de SD-kaart', of_auto_storage: 'Het opslagbudget volgt de vrije SD-ruimte en houdt een reserve vrij.',
+    of_titles_login: 'Verbind Spotify om de nummers te zien. Spotify Free wordt ondersteund.', of_connect: 'Spotify verbinden', of_titles_loading: 'Nummers laden…',
+    of_load_titles: 'Nummers laden', of_retry: 'Opnieuw proberen', of_previous: 'Vorige', of_next: 'Volgende', of_item_unavailable: 'Offline niet beschikbaar',
+    of_unsupported: 'Deze afspeellijst bevat items die offline niet worden ondersteund.', of_too_large: 'Deze afspeellijst overschrijdt de metadatacapaciteit.',
+    of_incomplete: 'Spotify heeft een onvolledige lijst geleverd. Laad de nummers opnieuw.', of_changed: 'De lijst is tijdens de download gewijzigd. Probeer opnieuw.',
+    of_unavailable: 'Een nummer is niet beschikbaar voor dit account of deze regio.', of_rate: 'Spotify beperkt de aanvragen. Wacht even en probeer opnieuw.',
+    of_network: 'Spotify heeft niet op tijd geantwoord. Controleer de verbinding.', of_auth_error: 'Verbind Spotify opnieuw in Instellingen.', of_start_error: 'Afspelen kon niet starten. Probeer opnieuw.'
+  });
+  Object.assign(T.en, { of_error: 'The download could not finish. Try again to continue.', of_metadata_error: 'The song list could not load. Please try again.' });
+  Object.assign(T.de, { of_error: 'Der Download konnte nicht abgeschlossen werden. Erneut versuchen, um fortzusetzen.', of_metadata_error: 'Die Titelliste konnte nicht geladen werden. Bitte erneut versuchen.' });
+  Object.assign(T.fr, { of_error: 'Le téléchargement est incomplet. Réessayez pour le reprendre.', of_metadata_error: 'Les titres n’ont pas pu être chargés. Réessayez.' });
+  Object.assign(T.nl, { of_error: 'De download is niet voltooid. Probeer opnieuw om verder te gaan.', of_metadata_error: 'De nummers konden niet worden geladen. Probeer opnieuw.' });
+
+  Object.assign(T.en, { of_resume_queue: 'Continue queue' });
+
+  Object.assign(T.de, { of_resume_queue: 'Warteschlange fortsetzen' });
+
+  Object.assign(T.fr, { of_resume_queue: 'Reprendre la file' });
+
+  Object.assign(T.nl, { of_resume_queue: 'Wachtrij hervatten' });
+
+  Object.assign(T.en, { of_audio_format: 'The offline player does not yet support an audio format in this playlist.' });
+
+  Object.assign(T.de, { of_audio_format: 'Ein Audioformat dieser Playlist wird vom Offline-Player noch nicht unterstützt.' });
+
+  Object.assign(T.fr, { of_audio_format: 'Un format audio de cette playlist n’est pas encore pris en charge hors ligne.' });
+
+  Object.assign(T.nl, { of_audio_format: 'De offline speler ondersteunt een audioformaat in deze afspeellijst nog niet.' });
+
+  Object.assign(T.en, { of_failed_at: function (n, total) { return 'Stopped at song ' + n + ' of ' + total + '.'; }, of_unavailable: 'The test player could not obtain downloadable audio for this song.' });
+  Object.assign(T.de, { of_failed_at: function (n, total) { return 'Abbruch bei Titel ' + n + ' von ' + total + '.'; }, of_unavailable: 'Für diesen Titel erhält der Testplayer keine herunterladbare Audiodatei.' });
+  Object.assign(T.fr, { of_failed_at: function (n, total) { return 'Arrêt au titre ' + n + ' sur ' + total + '.'; }, of_unavailable: 'Le lecteur de test ne reçoit pas de fichier audio téléchargeable pour ce titre.' });
+  Object.assign(T.nl, { of_failed_at: function (n, total) { return 'Gestopt bij nummer ' + n + ' van ' + total + '.'; }, of_unavailable: 'De testspeler ontvangt geen downloadbaar audiobestand voor dit nummer.' });
+  Object.assign(T.en, {
+    oa_title: 'Song lists & offline', oa_connected: 'Connected', oa_not_connected: 'Not connected', oa_account: 'Connected account',
+    oa_intro: 'Connect Spotify to show playlist songs, including with Spotify Free. Offline downloads require a separate Premium permission.',
+    oa_titles_help: 'The original online player works as before. Connecting here adds song lists.', oa_titles_ready: 'Song lists are available. Offline functions stay hidden until Premium is connected.',
+    oa_premium_ready: 'Song lists and Premium offline downloads are available.', oa_computer_ready: 'Computer helper connected.',
+    oa_computer_missing: 'Start the helper on your computer to sign in.', oa_guide: 'Computer sign-in instructions',
+    oa_browser: 'Complete the Spotify permission in the browser on your computer.', oa_checking: 'Checking and saving the permission…', oa_open: 'Open Spotify on this computer',
+    oa_premium_required: 'This permission requires Spotify Premium. Song lists and the original online player remain available.',
+    oa_mismatch: 'Use the same Spotify account for both permissions.', oa_failed: 'The connection failed or was cancelled. Please try again.',
+    oa_login: 'Connect Spotify', oa_reconnect: 'Connect another account', oa_enable_offline: 'Enable offline · Premium', oa_logout: 'Sign out',
+    oa_logout_q: 'Disconnect song lists and offline?', oa_logout_text: 'Stops offline playback and downloads, clears the download queue and removes this permission from the Jooki. The original online account is kept.'
+  });
+  Object.assign(T.de, {
+    oa_title: 'Titellisten & Offline', oa_connected: 'Verbunden', oa_not_connected: 'Nicht verbunden', oa_account: 'Verbundenes Konto',
+    oa_intro: 'Spotify verbinden, um die Titel deiner Playlists zu sehen – auch mit Spotify Free. Offline-Downloads benötigen eine zusätzliche Premium-Freigabe.',
+    oa_titles_help: 'Der bisherige Online-Player funktioniert wie gewohnt. Diese Verbindung ergänzt die Titellisten.', oa_titles_ready: 'Titellisten sind verfügbar. Offline-Funktionen erscheinen erst mit der Premium-Freigabe.',
+    oa_premium_ready: 'Titellisten und Premium-Offline-Downloads sind verfügbar.', oa_computer_ready: 'Computer-Helfer verbunden.',
+    oa_computer_missing: 'Zum Anmelden den Helfer auf deinem Computer starten.', oa_guide: 'Anleitung für den Computer-Login',
+    oa_browser: 'Die Spotify-Freigabe im Browser auf deinem Computer abschließen.', oa_checking: 'Freigabe wird geprüft und gespeichert …', oa_open: 'Spotify auf diesem Computer öffnen',
+    oa_premium_required: 'Diese Freigabe benötigt Spotify Premium. Titellisten und der bisherige Online-Player bleiben verfügbar.',
+    oa_mismatch: 'Für beide Freigaben dasselbe Spotify-Konto verwenden.', oa_failed: 'Die Verbindung ist fehlgeschlagen oder wurde abgebrochen. Bitte erneut versuchen.',
+    oa_login: 'Spotify verbinden', oa_reconnect: 'Anderes Konto verbinden', oa_enable_offline: 'Offline aktivieren · Premium', oa_logout: 'Abmelden',
+    oa_logout_q: 'Titellisten und Offline trennen?', oa_logout_text: 'Stoppt Offline-Wiedergabe und Downloads, leert die Warteschlange und entfernt diese Freigabe vom Jooki. Das bisherige Online-Konto bleibt eingerichtet.'
+  });
+  Object.assign(T.fr, {
+    oa_title: 'Titres et hors ligne', oa_connected: 'Connecté', oa_not_connected: 'Non connecté', oa_account: 'Compte connecté',
+    oa_intro: 'Connectez Spotify pour afficher les titres, y compris avec Spotify Free. Les téléchargements demandent une autorisation Premium supplémentaire.',
+    oa_titles_help: 'Le lecteur en ligne actuel fonctionne comme avant. Cette connexion ajoute les titres.', oa_titles_ready: 'Les titres sont disponibles. Les fonctions hors ligne apparaissent après la connexion Premium.',
+    oa_premium_ready: 'Les titres et les téléchargements Premium sont disponibles.', oa_computer_ready: 'Assistant sur ordinateur connecté.',
+    oa_computer_missing: 'Démarrez l’assistant sur votre ordinateur pour vous connecter.', oa_guide: 'Guide de connexion sur ordinateur',
+    oa_browser: 'Terminez l’autorisation Spotify dans le navigateur de votre ordinateur.', oa_checking: 'Vérification et enregistrement…', oa_open: 'Ouvrir Spotify sur cet ordinateur',
+    oa_premium_required: 'Cette autorisation nécessite Premium. Les titres et le lecteur actuel restent disponibles.',
+    oa_mismatch: 'Utilisez le même compte pour les deux autorisations.', oa_failed: 'Connexion échouée ou annulée. Réessayez.',
+    oa_login: 'Connecter Spotify', oa_reconnect: 'Connecter un autre compte', oa_enable_offline: 'Activer hors ligne · Premium', oa_logout: 'Déconnecter',
+    oa_logout_q: 'Déconnecter titres et hors ligne ?', oa_logout_text: 'Arrête la lecture et les téléchargements hors ligne, vide la file et supprime cette autorisation du Jooki. Le compte en ligne actuel est conservé.'
+  });
+  Object.assign(T.nl, {
+    oa_title: 'Nummers en offline', oa_connected: 'Verbonden', oa_not_connected: 'Niet verbonden', oa_account: 'Verbonden account',
+    oa_intro: 'Verbind Spotify om de nummers te zien, ook met Spotify Free. Offline downloaden vereist een extra Premium-toestemming.',
+    oa_titles_help: 'De bestaande online speler werkt zoals voorheen. Deze verbinding voegt de nummers toe.', oa_titles_ready: 'Nummers zijn beschikbaar. Offline functies verschijnen na de Premium-toestemming.',
+    oa_premium_ready: 'Nummers en Premium offline downloads zijn beschikbaar.', oa_computer_ready: 'Computerhulp verbonden.',
+    oa_computer_missing: 'Start de hulp op je computer om je aan te melden.', oa_guide: 'Handleiding voor aanmelden op de computer',
+    oa_browser: 'Rond de Spotify-toestemming af in de browser op je computer.', oa_checking: 'Toestemming controleren en opslaan…', oa_open: 'Spotify op deze computer openen',
+    oa_premium_required: 'Deze toestemming vereist Premium. De nummers en de bestaande online speler blijven beschikbaar.',
+    oa_mismatch: 'Gebruik hetzelfde account voor beide toestemmingen.', oa_failed: 'De verbinding is mislukt of geannuleerd. Probeer opnieuw.',
+    oa_login: 'Spotify verbinden', oa_reconnect: 'Ander account verbinden', oa_enable_offline: 'Offline inschakelen · Premium', oa_logout: 'Afmelden',
+    oa_logout_q: 'Nummers en offline loskoppelen?', oa_logout_text: 'Stopt offline afspelen en downloaden, wist de wachtrij en verwijdert deze toestemming van de Jooki. Het bestaande online account blijft behouden.'
+  });
+
+  Object.assign(T.en, { oa_premium_reconnect: 'Connect another Premium account' });
+
+  Object.assign(T.de, { oa_premium_reconnect: 'Anderes Premium-Konto verbinden' });
+
+  Object.assign(T.fr, { oa_premium_reconnect: 'Connecter un autre compte Premium' });
+
+  Object.assign(T.nl, { oa_premium_reconnect: 'Ander Premium-account verbinden' });
+
+  Object.assign(T.en, { oa_signing_out: 'Signing out…' });
+
+  Object.assign(T.de, { oa_signing_out: 'Wird abgemeldet …' });
+
+  Object.assign(T.fr, { oa_signing_out: 'Déconnexion…' });
+
+  Object.assign(T.nl, { oa_signing_out: 'Afmelden…' });
   /* ------------------------------------------------------------------ characters */
   var MEDIA = '/static/media/';
   // id, name in fr / en / nl / de (every page language: a missing column showed French to Dutch families), picture or colour
@@ -2189,7 +2322,7 @@
       // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
       return [head, h('div', { class: 'actions' },
           h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { playPlaylist(p); } }, icon('play'), t('play'))),
-        h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
+        obj(S.spotifyOffline).available ? h('p', { class: 'small muted', 'data-k': 'sphelp' }, t('sp_playlist_help')) : h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
         spotifyOfflineCard(p, id),
         resumeSwitch(p, id), p.resume || p.audiobook ? null : h('div', { class: 'card', style: 'margin-top:16px' }, modeRows(p, id)),
         deletePlaylistBtn(p, id)];
@@ -2260,62 +2393,115 @@
   }
   function optimisticTracks(id, tracks) { if (pls()[id]) { pls()[id].tracks = tracks; IDX = null; render(); } }
 
+  var offlinePreviewAsked = {}, offlinePreviewCache = {}, offlinePageOffsets = {}, offlinePageBack = {};
   function offlineBusy() {
     return /^(resolving|downloading|verifying)$/.test(obj(obj(S.spotifyOffline).download).phase || '');
   }
-  function offlineBytes(n) { return (Math.max(0, Number(n) || 0) / 1048576).toFixed(1) + ' MiB'; }
+  function offlineBytes(n) {
+    n = Math.max(0, Number(n) || 0);
+    return n >= 1073741824 ? (n / 1073741824).toFixed(1) + ' GiB' : (n / 1048576).toFixed(1) + ' MiB';
+  }
+  function offlineErrorText(code, context) {
+    var key = { storage_full: 'of_space', unsupported_item: 'of_unsupported', unsupported_playlist: 'of_error',
+      playlist_too_large: 'of_too_large', playlist_incomplete: 'of_incomplete', playlist_changed: 'of_changed',
+      track_unavailable: 'of_unavailable', rate_limited: 'of_rate', network_timeout: 'of_network',
+      authentication_required: 'of_auth_error', backend_start_failed: 'of_start_error', player_interrupted: 'of_start_error' }[code];
+    if (code === 'unsupported_audio_format') key = 'of_audio_format';
+    return t(key || (context === 'metadata' ? 'of_metadata_error' : context === 'playback' ? 'of_start_error' : 'of_error'));
+  }
+  function askSpotifyTitles(id, offset, force) {
+    var key = (obj(S.spotifyOffline).account_id || '') + ':' + id + ':' + offset;
+    if (!force && offlinePreviewAsked[key] && Date.now() - offlinePreviewAsked[key] < 10000) return;
+    offlinePreviewAsked[key] = Date.now();
+    setTimeout(function () { send('OJ_OFFLINE_PREVIEW', { playlistId: id, offset: offset }); }, 0);
+  }
   function spotifyOfflineCard(p, id) {
-    var o = obj(S.spotifyOffline);
-    if (!o.available) return null;
-    var snap = obj(obj(o.playlists)[p.spotify.uri]);
-    var job = obj(o.download), mine = job.uri === p.spotify.uri, busy = offlineBusy();
-    var downloading = userPlaylists().filter(function (item) { return item.spotify && item.spotify.uri === job.uri; })[0];
-    var tracks = arr(snap.tracks), ready = !!snap.ready;
-    if (!tracks.length && mine) tracks = arr(job.tracks);
-    var mode = obj(o.modes)[id] || 'online';
-    var np = obj(S.audio.nowPlaying), offlineActive = np.service === 'SPOTIFY_OFFLINE' && !/^(STOPPED|ENDED)$/.test(S.audio.playback.state || ''), inUse = offlineActive && np.playlistId === id, playing = offlineActive && (S.audio.playback.state !== 'PAUSED' || obj(o.player).state !== 'paused');
-    var storage = obj(o.storage);
-    function button(label, kind, disabled) {
-      return h('button', { class: 'btn', disabled: disabled, onclick: function () { send(kind, { playlistId: id }); } }, label);
+    var o = obj(S.spotifyOffline), premium = !!o.account_ready;
+    if (!o.available || !/^spotify:playlist:[A-Za-z0-9]{22}$/.test(p.spotify.uri || '')) return null;
+    var snap = obj(obj(o.playlists)[p.spotify.uri]), latest = obj(obj(o.previews)[p.spotify.uri]);
+    var pageKey = (o.account_id || '') + ':' + p.spotify.uri + ':' + (snap.snapshot_id || ''), wanted = offlinePageOffsets[pageKey] || 0;
+    if (latest.phase) offlinePreviewCache[pageKey + ':' + (Number(latest.offset) || 0)] = latest;
+    var meta = obj(offlinePreviewCache[pageKey + ':' + wanted]);
+    var active = obj(o.download), mine = active.uri === p.spotify.uri, busy = offlineBusy();
+    var own = mine ? active : obj(obj(o.jobs)[p.spotify.uri]);
+    var ready = !!snap.ready, offset = Number(meta.offset) || wanted;
+    var tracks = arr(meta.tracks).length ? arr(meta.tracks) : wanted === 0 && arr(snap.tracks).length ? arr(snap.tracks) : mine && wanted === 0 ? arr(active.tracks) : [];
+    var total = Number(meta.total) || Number(snap.total_tracks) || Number(own.total) || tracks.length;
+    var queue = arr(o.queue), queuedAt = -1;
+    queue.forEach(function (item, index) { if (item.uri === p.spotify.uri) queuedAt = index; });
+    var np = obj(S.audio.nowPlaying), offlineActive = np.service === 'SPOTIFY_OFFLINE' && !/^(STOPPED|ENDED)$/.test(S.audio.playback.state || '');
+    var playing = offlineActive && (S.audio.playback.state !== 'PAUSED' || obj(o.player).state !== 'paused');
+    var inUse = offlineActive && np.playlistId === id, storage = obj(o.storage), mode = obj(o.modes)[id] || 'online';
+    var metadataReady = o.metadata_ready || premium;
+    if (!metadataReady) tracks = [];
+    function pageTo(next, backwards) {
+      var history = offlinePageBack[pageKey] || (offlinePageBack[pageKey] = []);
+      if (backwards) next = history.length ? history.pop() : Math.max(0, wanted - 50);
+      else history.push(wanted);
+      offlinePageOffsets[pageKey] = next; askSpotifyTitles(id, next, true);
     }
-    return h('div', { class: 'card', style: 'margin-top:16px;padding:16px', 'data-k': 'spotify-offline' },
-      h('h3', null, t('of_title')),
-      h('p', { class: 'small muted' }, t('of_premium')),
-      o.error || (obj(o.player).playlist === id && obj(o.player).error) ? h('p', { class: 'banner', role: 'alert' }, t('of_backend_error')) : null,
-      !o.account_ready ? h('p', { class: 'banner' }, t('of_login')) : null,
-      h('select', { class: 'input', 'aria-label': t('of_title'), 'data-k': 'offline-mode', onchange: function (e) {
+    if (metadataReady && !meta.phase && (!ready || !tracks.length || tracks.length < total)) askSpotifyTitles(id, wanted, false);
+    var other = userPlaylists().filter(function (item) { return item.spotify && item.spotify.uri === active.uri; })[0];
+    function command(kind) { send(kind, { playlistId: id }); }
+    var titleBlock = h('section', { class: 'spotify-titles', 'data-k': 'spotify-titles' },
+      h('div', { class: 'offline-heading' }, h('h3', null, t('of_songs')), h('span', { class: 'offline-count' }, total ? String(total) : '')),
+      !metadataReady ? h('p', { class: 'small muted' }, t('of_titles_login'), ' ', h('a', { href: '#/settings/spotify' }, t('of_connect'))) : null,
+      meta.phase === 'loading' && !tracks.length ? h('p', { class: 'small muted', role: 'status' }, t('of_titles_loading')) : null,
+      meta.phase === 'error' ? h('div', { class: 'offline-notice', role: 'alert' }, offlineErrorText(meta.error, 'metadata'),
+        h('button', { class: 'btn ghost', onclick: function () { askSpotifyTitles(id, offset, true); } }, t('of_retry'))) : null,
+      tracks.length ? h('ol', { class: 'offline-tracks', start: offset + 1, 'data-k': 'offline-tracks' }, tracks.map(function (track, i) {
+        var position = offset + i + 1, selected = np.service === 'SPOTIFY_OFFLINE' && np.playlistId === id && np.trackIndex === position;
+        return h('li', { class: 'offline-track' + (selected ? ' selected' : '') },
+          h('span', { class: 'offline-number', 'aria-hidden': 'true' }, selected ? '♪' : String(position)),
+          h('span', { class: 'offline-track-info' }, h('span', { class: 'title' }, track.name || '—'),
+            h('span', { class: 'small muted' }, arr(track.artists).join(', ')),
+            track.problem ? h('span', { class: 'small muted' }, t('of_item_unavailable')) : null),
+          h('span', { class: 'small muted offline-duration' }, fmtTime((track.duration_ms || 0) / 1000)),
+          premium && ready ? h('button', { class: 'icon-btn', disabled: busy || !!track.problem, 'aria-label': t('of_play') + ': ' + (track.name || ''), onclick: function () {
+            send('OJ_OFFLINE_PLAY', { playlistId: id, trackIndex: position });
+          } }, icon('play')) : null);
+      })) : metadataReady && !meta.phase ? h('button', { class: 'btn ghost', onclick: function () { askSpotifyTitles(id, 0, true); } }, t('of_load_titles')) : null,
+      tracks.length && (offset > 0 || offset + tracks.length < total) ? h('div', { class: 'offline-paging' },
+        h('button', { class: 'btn ghost', disabled: offset === 0 || meta.phase === 'loading', onclick: function () { pageTo(0, true); } }, t('of_previous')),
+        h('span', { class: 'small muted' }, (offset + 1) + '–' + (offset + tracks.length) + ' / ' + total),
+        h('button', { class: 'btn ghost', disabled: offset + tracks.length >= total || meta.phase === 'loading', onclick: function () { pageTo(offset + tracks.length, false); } }, t('of_next'))) : null);
+    if (!premium) return h('div', { class: 'card offline-panel', 'data-k': 'spotify-metadata' }, titleBlock);
+    return h('section', { class: 'card offline-panel', 'data-k': 'spotify-offline' },
+      h('div', { class: 'offline-heading' }, h('h3', null, t('of_title')),
+        h('span', { class: 'offline-badge' + (ready ? ' ready' : '') }, t(ready ? 'of_ready' : queuedAt >= 0 ? 'of_queued' : 'of_online_badge'))),
+      h('div', { class: 'offline-toolbar' }, h('select', { class: 'input', 'aria-label': t('of_title'), 'data-k': 'offline-mode', onchange: function (e) {
         send('OJ_OFFLINE_MODE', { playlistId: id, mode: e.target.value });
       } }, ['online', 'auto', 'offline'].map(function (value, i) {
         return h('option', { value: value, selected: mode === value, disabled: value === 'offline' && !ready }, t(['of_online', 'of_auto', 'of_only'][i]));
-      })),
+      }))),
       h('p', { class: 'small muted' }, t('of_hint')),
-      h('div', { class: 'actions' },
-        button(t(ready ? 'of_update' : 'of_download'), 'OJ_OFFLINE_SYNC', !o.account_ready || busy || playing),
-        ready ? h('button', { class: 'btn danger', disabled: busy || inUse, onclick: function () {
-          confirmBox(t('of_remove_q'), t('of_remove_help'), t('of_remove'), true).then(function (yes) {
-            if (yes) send('OJ_OFFLINE_REMOVE', { playlistId: id });
-          });
+      h('div', { class: 'offline-actions' },
+        h('button', { class: 'btn primary', disabled: (busy && mine) || queuedAt >= 0, onclick: function () { command('OJ_OFFLINE_SYNC'); } },
+          t(queuedAt >= 0 ? 'of_queued' : busy && mine ? 'of_busy' : busy || playing ? 'of_enqueue' : ready ? 'of_update' : 'of_download')),
+        queuedAt >= 0 ? h('button', { class: 'btn ghost', onclick: function () { command('OJ_OFFLINE_CANCEL_QUEUED'); } }, t('of_cancel_queue')) : null,
+        ready ? h('button', { class: 'btn ghost', disabled: busy || inUse, onclick: function () {
+          confirmBox(t('of_remove_q'), t('of_remove_help'), t('of_remove'), true).then(function (yes) { if (yes) command('OJ_OFFLINE_REMOVE'); });
         } }, t('of_remove')) : null),
-      playing && !busy ? h('p', { class: 'banner', role: 'status' }, t('of_pause_sync')) : null,
-      busy ? h('div', { role: 'status', 'data-k': 'offline-progress' },
-        !mine ? h('p', null, t('of_other'), downloading ? h('a', { href: '#/p/' + encodeURIComponent(downloading.id) }, downloading.title || 'Spotify') : 'Spotify') : null,
-        h('p', null, t('of_busy') + ' · ' + (job.completed || 0) + '/' + (job.total || '…')),
-        h('progress', { max: Math.max(1, Number(job.total) || 1), value: Number(job.completed) || 0, 'aria-label': t('of_busy') }),
-        h('p', { class: 'small muted' }, t('of_processed') + ': ' + offlineBytes(job.bytes))) : null,
-      mine && /^(error|interrupted)$/.test(job.phase || '') ? h('p', { class: 'banner', role: 'alert' },
-        t(job.error === 'storage_full' ? 'of_space' : 'of_error')) : null,
-      ready ? h('p', { class: 'small', 'data-k': 'offline-ready' }, t('of_ready') + ' · ' + tracks.length + ' · ' + offlineBytes(snap.bytes)) : null,
-      h('p', { class: 'small muted' }, t('of_storage') + ': ' + offlineBytes(storage.used_bytes) + ' / ' + offlineBytes(storage.quota_bytes)),
-      h('h3', null, t('of_songs')),
-      tracks.length ? h('ol', { class: 'tracks', 'data-k': 'offline-tracks' }, tracks.map(function (track, index) {
-        return h('li', { class: 'row', style: 'padding:8px 0' },
-          h('span', { class: 'grow' }, h('span', null, track.name || '—'),
-            h('span', { class: 'small muted', style: 'display:block' }, arr(track.artists).join(', '))),
-          h('span', { class: 'small muted' }, fmtTime((track.duration_ms || 0) / 1000)),
-          ready ? h('button', { class: 'icon-btn', disabled: busy, 'aria-label': t('of_play') + ': ' + (track.name || ''), onclick: function () {
-            send('OJ_OFFLINE_PLAY', { playlistId: id, trackIndex: index + 1 });
-          } }, icon('play')) : null);
-      })) : h('p', { class: 'small muted' }, t('of_empty')));
+      playing && queue.length ? h('p', { class: 'offline-notice', role: 'status' }, t('of_pause_sync')) : null,
+      o.queue_paused ? h('div', { class: 'offline-notice', role: 'status' }, offlineErrorText(o.queue_paused), ' ',
+        h('button', { class: 'btn ghost', onclick: function () { send('OJ_OFFLINE_RESUME_QUEUE', {}); } }, t('of_resume_queue'))) : null,
+      queuedAt >= 0 ? h('p', { class: 'small muted', role: 'status' }, t('of_queue_position', queuedAt + 1)) : null,
+      busy ? h('div', { class: 'offline-progress', role: 'status', 'data-k': 'offline-progress' },
+        h('div', { class: 'offline-heading' }, h('span', null, t('of_busy')), h('b', null, (active.completed || 0) + ' / ' + (active.total || '…'))),
+        !mine ? h('p', { class: 'small' }, t('of_other'), other ? h('a', { href: '#/p/' + encodeURIComponent(other.id) }, other.title || 'Spotify') : 'Spotify') : null,
+        h('progress', { max: Math.max(1, Number(active.total) || 1), value: Number(active.completed) || 0, 'aria-label': t('of_busy') }),
+        h('span', { class: 'small muted' }, t('of_processed') + ': ' + offlineBytes(active.bytes))) : null,
+      /^(error|interrupted)$/.test(own.phase || '') ? h('p', { class: 'offline-notice error', role: 'alert' },
+        own.total ? own.phase === 'error' && /^(track_unavailable|unsupported_audio_format)$/.test(own.error || '') ? t('of_failed_at', (own.completed || 0) + 1, own.total) + ' ' : (own.completed || 0) + ' / ' + own.total + ' · ' : '', offlineErrorText(own.error)) : null,
+      obj(o.player).playlist === id && obj(o.player).error ? h('p', { class: 'offline-notice error', role: 'alert' }, offlineErrorText(o.player.error, 'playback')) : null,
+      ready ? h('p', { class: 'small', 'data-k': 'offline-ready' }, t('of_ready') + ' · ' + (snap.total_tracks || arr(snap.tracks).length) + ' · ' + offlineBytes(snap.bytes)) : null,
+      h('div', { class: 'offline-storage small muted' }, h('span', null, t('of_storage') + ': ' + offlineBytes(storage.used_bytes)),
+        h('span', null, t('of_free') + ': ' + offlineBytes(storage.free_bytes))),
+      h('p', { class: 'small muted' }, t('of_auto_storage')),
+      queue.length ? h('details', { class: 'offline-queue', 'data-k': 'offline-queue' }, h('summary', null, t('of_queue') + ' · ' + queue.length),
+        h('ol', null, queue.map(function (item) { return h('li', null, h('a', { href: '#/p/' + encodeURIComponent(item.playlist) }, item.title || 'Spotify'),
+          h('button', { class: 'icon-btn', 'aria-label': t('of_cancel_queue') + ': ' + (item.title || ''), onclick: function () { send('OJ_OFFLINE_CANCEL_QUEUED', { playlistId: item.playlist }); } }, icon('x'))); }))) : null,
+      titleBlock);
   }
   /* drag & drop reorder (mouse + touch through pointer events) */
   var drag = null;
@@ -3234,7 +3420,7 @@
           if (ok && send('OJ_SPOTIFY_FORGET', {}) !== false) toast(t('sp_change_done'));
         });
       } }, t('sp_change')) : null,
-      h('p', { class: 'gfoot' }, t('sp_why'))];
+      h('p', { class: 'gfoot' }, t('sp_why')), spotifyConnectionCard()];
   }
   // Bluetooth speaker or headphones (docs/26), only on a core that offers it. The ESP32 plays to the
   // speaker by itself once connected, and reconnects to it when it comes back.
@@ -3435,6 +3621,30 @@
   }
   function setLang(l) { lang = l; lsSet('oj.lang', l); document.documentElement.lang = l; IDX = null; render(); }
 
+  function spotifyConnectionCard() {
+    var o = obj(S.spotifyOffline);
+    if (!o.available) return null;
+    var auth = obj(o.auth), pending = o.logging_out || /^(requested|working|checking)$/.test(auth.phase || '');
+    var metadata = !!(o.metadata_ready || o.account_ready), premium = !!o.account_ready;
+    function login(mode) { send('OJ_OFFLINE_LOGIN', { mode: mode }); }
+    return h('section', { class: 'card offline-panel', 'data-k': 'spotify-connection' },
+      h('div', { class: 'offline-heading' }, h('h3', null, t('oa_title')), h('span', { class: 'offline-badge' + (metadata ? ' ready' : '') }, t(metadata ? 'oa_connected' : 'oa_not_connected'))),
+      h('p', { class: 'small muted' }, t('oa_intro')),
+      o.account_name && metadata ? h('p', { class: 'small' }, t('oa_account') + ': ' + o.account_name) : null,
+      h('p', { class: 'small' }, t(premium ? 'oa_premium_ready' : metadata ? 'oa_titles_ready' : 'oa_titles_help')),
+      h('p', { class: 'small muted' }, t(o.helper_ready ? 'oa_computer_ready' : 'oa_computer_missing')),
+      !o.helper_ready ? h('p', { class: 'small' }, h('a', { href: 'https://github.com/dirkdrutschmann/openjooki/blob/feature/spotify-offline-audit/guide/spotify-offline.de.md', target: '_blank', rel: 'noopener' }, t('oa_guide'))) : null,
+      pending ? h('div', { class: 'offline-notice', role: 'status' }, t(o.logging_out ? 'oa_signing_out' : auth.phase === 'checking' ? 'oa_checking' : 'oa_browser'),
+        auth.url ? h('p', null, h('a', { href: auth.url, target: '_blank', rel: 'noopener' }, t('oa_open'))) : null) : null,
+      auth.phase === 'error' ? h('p', { class: 'offline-notice error', role: 'alert' }, t(auth.error === 'premium_required' ? 'oa_premium_required' : auth.error === 'account_mismatch' ? 'oa_mismatch' : auth.error === 'rate_limited' ? 'of_rate' : 'oa_failed')) : null,
+      h('div', { class: 'offline-actions' },
+        pending && !o.logging_out ? h('button', { class: 'btn ghost', onclick: function () { send('OJ_OFFLINE_CANCEL_LOGIN', {}); } }, t('cancel')) : null,
+        h('button', { class: 'btn' + (!metadata ? ' primary' : ''), disabled: pending || !o.helper_ready || offlineBusy(), 'data-k': 'spotify-oauth', onclick: function () { login('metadata'); } }, t(metadata ? 'oa_reconnect' : 'oa_login')),
+        h('button', { class: 'btn' + (!premium ? ' primary' : ''), disabled: pending || !o.helper_ready || offlineBusy(), 'data-k': 'spotify-premium-login', onclick: function () { login('premium'); } }, t(premium ? 'oa_premium_reconnect' : 'oa_enable_offline')),
+        metadata ? h('button', { class: 'btn danger', 'data-k': 'spotify-oauth-logout', onclick: function () {
+          confirmBox(t('oa_logout_q'), t('oa_logout_text'), t('oa_logout'), true).then(function (yes) { if (yes) send('OJ_OFFLINE_FORGET', {}); });
+        } }, t('oa_logout')) : null));
+  }
   /* ------------------------------------------------------------------ bedtime */
   function sleepInfo() { var s = S.bedtime.sleep; return s && typeof s === 'object' && s.mode ? s : null; }
   function sleepTrackLabel() { return t(S.audio.nowPlaying.audiobook ? 'sleep_track' : 'sleep_song'); }

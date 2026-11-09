@@ -9,7 +9,7 @@ local function fixture()
   return { config = { spotify_offline_enabled = true, spotify_offline_root = "/offline", scratch_dir = "/run/test" },
     library = { playlists = { user_1 = { title = "Test", spotify = { uri = URI, preset = "00" }, tracks = {} } }, tracks = {} },
     spotify = { active = true }, playback = { state = "idle" }, playback_int = {},
-    spotify_offline = { available = true, account_ready = true, modes = { user_1 = "auto" }, playlists = { [URI] = { ready = true, bytes = 3000, tracks = {
+    spotify_offline = { available = true, account_ready = true, metadata_ready = true, account_id = "account-one", modes = { user_1 = "auto" }, playlists = { [URI] = { ready = true, bytes = 3000, tracks = {
       { uri = "spotify:track:1111111111111111111111", name = "First", artists = { "Artist" }, album = "Album", duration_ms = 10000 },
       { uri = "spotify:track:2222222222222222222222", name = "Second", artists = { "Artist" }, album = "Album", duration_ms = 20000 },
     } } } }, spotify_offline_int = { next_id = 0, controls = {} } }
@@ -52,13 +52,84 @@ describe("Spotify offline snapshots and routing", function()
     local none, e = offline.start(d, "user_1", d.library.playlists.user_1, {})
     assert_nil(none); assert_eq(e.code, "unavailable")
   end)
-  it("starts a typed background sync and rejects untrusted IDs and simultaneous jobs", function()
+  it("starts a typed background sync, deduplicates requests and rejects untrusted IDs", function()
     local d = fixture(); local r = offline.on_sync(d, { playlist = "user_1" })
     assert_eq(shell(r, "offline_sync").args.uri, URI)
     assert_eq(r.state.spotify_offline.download.phase, "resolving")
     apply(d, r)
-    local none, e = offline.on_sync(d, { playlist = "user_1" }); assert_nil(none); assert_eq(e.code, "conflict")
-    none, e = offline.on_sync(d, { playlist = "../../secret" }); assert_nil(none); assert_eq(e.code, "not_found")
+    local same = offline.on_sync(d, { playlist = "user_1" }); assert_nil(shell(same, "offline_sync"))
+    local none, e = offline.on_sync(d, { playlist = "../../secret" }); assert_nil(none); assert_eq(e.code, "not_found")
+  end)
+  it("queues other playlists, keeps exact order and removes waiting entries", function()
+    local d = fixture(); local second = "spotify:playlist:2222222222222222222222"
+    d.library.playlists.user_2 = { title = "Second playlist", spotify = { uri = second, preset = "00" } }
+    apply(d, offline.on_sync(d, { playlist = "user_1", now = 10 }))
+    local r = offline.on_sync(d, { playlist = "user_2", now = 11 }); apply(d, r)
+    assert_nil(shell(r, "offline_sync")); assert_eq(#d.spotify_offline.queue, 1)
+    assert_eq(d.spotify_offline.queue[1].uri, second)
+    apply(d, offline.on_sync(d, { playlist = "user_2", now = 12 })); assert_eq(#d.spotify_offline.queue, 1)
+    local job = json.encode({ version = 1, request = d.spotify_offline_int.job_request, uri = URI, account_id = "account-one", phase = "complete" })
+    apply(d, offline.on_job(d, { text = job }))
+    r = offline.on_timer(d, { now = 13 }); assert_eq(shell(r, "offline_sync").args.uri, second)
+    apply(d, r); assert_eq(#d.spotify_offline.queue, 0)
+    d.spotify_offline.queue = { { playlist = "user_1", uri = URI } }
+    r = offline.on_cancel_queued(d, { playlist = "user_1" }); assert_eq(#r.state.spotify_offline.queue, 0)
+  end)
+  it("metadata-only accounts can list songs while forced offline mode falls back to the original player", function()
+    local d = fixture(); d.spotify_offline.account_ready = false; d.spotify_offline.modes.user_1 = "offline"
+    assert_false(offline.wants(d, "user_1"))
+    local r = offline.on_preview_request(d, { playlist = "user_1", offset = 50, now = 12 })
+    assert_eq(shell(r, "offline_preview").args.offset, 50)
+    local none, e = offline.on_sync(d, { playlist = "user_1" }); assert_nil(none); assert_eq(e.code, "unavailable")
+  end)
+  it("accepts song positions beyond the first bounded catalog page", function()
+    local d = fixture(); d.spotify_offline.playlists[URI].total_tracks = 710
+    local r = playback.on_request(d, { playlist = "user_1", index = 700, restart = true, now = 10 }); apply(d, r)
+    assert_eq(shell(r, "offline_play").args.index, 699)
+    local session = d.spotify_offline_int.session
+    r = offline.on_player(d, { path = session.status, text = json.encode({ version = 1, session = session.id, phase = "playing", index = 699, track = { uri = "spotify:track:3333333333333333333333", name = "Chapter 700", artists = { "Artist" }, duration_ms = 10000 } }) })
+    assert_eq(r.state.playback.now.title, "Chapter 700"); assert_eq(r.state.playback.now.index, 700)
+  end)
+  it("accepts helper completion only for the active login and logout invalidates it", function()
+    local d = fixture(); d.spotify_offline.helper_ready = true
+    apply(d, offline.on_login(d, { mode = "metadata", now = 20 }))
+    local id = d.spotify_offline.auth.request
+    assert_nil(offline.on_auth_helper(d, { phase = "complete", request = "stale" }))
+    local r = offline.on_auth_helper(d, { phase = "complete", request = id }); assert_true(shell(r, "offline_auth_activate") ~= nil)
+    apply(d, offline.on_forget(d)); assert_nil(offline.on_auth_helper(d, { phase = "complete", request = id }))
+    assert_false(d.spotify_offline.metadata_ready)
+  end)
+  it("resumes a paused offline figure without replacing its player or rewinding", function()
+    local d = fixture(); d.library.playlists.user_1.resume = true
+    boot_play(d); d.playback.state = "paused"; d.playback.position_ms = 180000
+    local session = d.spotify_offline_int.session.id
+    local r = playback.on_request(d, { playlist = "user_1", now = 60 })
+    assert_nil(shell(r, "offline_play")); apply(d, r)
+    assert_eq(d.spotify_offline_int.session.id, session)
+    assert_eq(d.spotify_offline_int.controls[1].action, "resume")
+    assert_eq(d.playback.position_ms, 180000)
+  end)
+  it("restores the interrupted download first in either boot read order and binds the queue to its account", function()
+    for _, reverse in ipairs({ false, true }) do
+      local d = fixture(); apply(d, offline.on_boot(d))
+      local queue = { text = json.encode({ account_id = "account-one", active = { playlist = "user_1", uri = URI }, items = {} }) }
+      local catalog = { text = json.encode({ version = 1, account_id = "account-one", account_ready = true, playlists = {} }) }
+      if reverse then apply(d, offline.on_catalog(d, catalog)); apply(d, offline.on_queue(d, queue))
+      else apply(d, offline.on_queue(d, queue)); apply(d, offline.on_catalog(d, catalog)) end
+      assert_eq(d.spotify_offline.queue[1].uri, URI)
+      local r = offline.on_timer(d, { now = 90 }); assert_eq(shell(r, "offline_sync").args.uri, URI)
+      apply(d, offline.on_catalog(d, { text = json.encode({ version = 1, account_id = "other", account_ready = true, playlists = {} }) }))
+      assert_eq(#d.spotify_offline.queue, 0)
+    end
+  end)
+  it("pauses the remaining queue on a full card until explicitly continued", function()
+    local d = fixture(); apply(d, offline.on_sync(d, { playlist = "user_1", now = 10 }))
+    apply(d, offline.on_job(d, { text = json.encode({ version = 1, account_id = "account-one", request = d.spotify_offline_int.job_request, uri = URI, phase = "error", error = "storage_full" }) }))
+    assert_eq(d.spotify_offline.queue_paused, "storage_full")
+    apply(d, offline.on_sync(d, { playlist = "user_1", now = 11 }))
+    assert_nil(shell(offline.on_timer(d, { now = 12 }), "offline_sync"))
+    apply(d, offline.on_resume_queue(d))
+    assert_true(shell(offline.on_timer(d, { now = 13 }), "offline_sync") ~= nil)
   end)
   it("requires an offline account only for the new download path", function()
     local d = fixture(); d.spotify_offline.account_ready = false

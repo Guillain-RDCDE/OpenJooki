@@ -168,8 +168,7 @@ python3 tools/spotify-offline/install.py \
 The last command is read-only: it checks every package checksum and the installed
 OpenJooki 2.4.21/partition layout. Explicit `--apply` installs through the existing
 A/B path and reboots. `--auth-cache /private/sdk/cache` optionally provisions the
-separate already-authenticated SDK account; no browser pairing flow is included
-in this test candidate. No credentials, music, keys or device backups are in the
+separate already-authenticated SDK account; the settings-driven computer OAuth flow is described below. No credentials, music, keys or device backups are in the
 archive. Keep any locally generated `private-backups/` private.
 
 The SDK lives on the SD card at `/jooki/external/openjooki-offline`; an opt-in flag
@@ -184,6 +183,58 @@ python3 tools/spotify-offline/install.py --host DEVICE_IP \
 ```
 
 The package is an **experimental application candidate**, not a replacement
-kernel/bootloader image or a finished release. Cold offline reboot and physical
-figure acceptance still need to pass. The implementation and exact validation
+kernel/bootloader image or a finished release. Cold offline reboot with UI playback passed on one Jooki 2; physical
+figure acceptance still needs to pass. The implementation and exact validation
 boundary are in [docs/34](../../docs/34-spotify-offline-test.md).
+
+
+## Settings-driven computer OAuth, song lists and queue
+
+See [the German setup guide](../../guide/spotify-offline.de.md). Start
+`computer_login.py --host DEVICE_IP --known-hosts /path/to/known_hosts` with
+Python 3.11+, `paho-mqtt`, Rust and your existing device SSH key. The helper builds
+the reviewed native profile when needed, watches parent-authorized settings
+requests, opens loopback OAuth on the computer, verifies account identity, and
+stages credentials over SSH. Core activates a completed request; cancellation
+or logout invalidates it. Tokens never travel in MQTT status. A parent code can
+be read with `--parent-code-file`; never put it in committed files.
+
+Metadata-only OAuth supports song lists with Free accounts and never connects a
+streaming session. Premium is separately verified before enabling audio downloads.
+Spotify Web API access/rate limits still apply; the shared client returned HTTP
+429 during the current live metadata-only check, so a real Free-account success
+is not yet established. Premium metadata and synchronization use native playlist
+metadata, including the 710-entry case, instead of the former 500-entry guard.
+
+Public song pages are bounded to 50 entries and carry the full total and offset;
+private indexes keep the exact complete ordering. The queue is account-bound,
+persistent, deduplicated, limited to 32 waiting playlists and paused on full
+storage. The default quota `0` derives capacity from actual free SD space with a
+128 MiB reserve and additional temporary-write checks. Complete generations are
+not evicted automatically. The prior explicit quota option remains available.
+
+Sign-out stops owned jobs/playback and removes this backend’s credentials. Cached
+audio remains private to its account on disk. The original online backend retains
+its own account and presets. Physical figures and a real Free-account check remain separate acceptance items.
+
+Premium sign-in can be selected directly in Settings and needs only the native
+streaming grant; song metadata then uses that session. Upgrading a metadata-only
+grant validates the same account. Native activation and logout share a lock and
+stop owned metadata/sync/playback before swapping/removing cache directories.
+
+The installed `2.4.21-offline.3` candidate passed cold kernel boot with Internet
+rejected before Wi-Fi/app startup, local audio transport while still blocked,
+then automatic/manual restoration of networking. No physical figure was present.
+Real installed checks also cover the 710-title pages, queue operation, original
+online resume, staged activation/logout/cancel and late helper completion.
+
+Canonical tracks with empty file maps now resolve Spotify-provided alternatives
+while retaining the original playlist URI. Missing audio and unsupported codecs
+have distinct public errors; downloaded-count/total remains visible after failure.
+
+The 710-item “Anton Fuchs” list currently includes entries whose native metadata
+has no files or alternatives (items 3 and 4). The .5 preview marks these positions
+unavailable; exact sync retains partial files and reports the failed position,
+without publishing or silently truncating the playlist. The 18-song Krokodil
+snapshot remains fully available. Native children close inherited descriptors
+before exec so a paused child cannot hold the web listener across core restart.

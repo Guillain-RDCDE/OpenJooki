@@ -17,7 +17,7 @@ import trial
 sys.path.insert(0, str(trial.ROOT / 'tools/openjooki'))
 import jooki  # noqa: E402
 
-VERSION = '2.4.21-offline.1'
+VERSION = '2.4.21-offline.5'
 SD_ROOT = '/jooki/external/openjooki-offline'
 
 
@@ -70,7 +70,7 @@ def assemble(work, output, version):
             'Requires existing OpenJooki 2.4.21, mounted SD and separate Premium sign-in.\n'
             'Credentials, audio files and keys are deliberately excluded.\n'
             'Online keeps the existing vendor player; auto selects a completed local snapshot.\n'
-            'A cold offline reboot and physical figure acceptance remain required.\n\n'
+            'Cold offline reboot/UI playback passed on one Jooki 2; physical figure acceptance remains.\n\n'
             'Inspect/install with tools/spotify-offline/install.py from the matching source branch.\n'
             'It checks the package, prepares A/B rollback and leaves account data on SD.\n'
             'Use its default check mode before explicitly selecting --apply.\n'

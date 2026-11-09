@@ -5,7 +5,7 @@ index 37ed57a..e719bf6 100644
 @@ -5754,0 +5755 @@ dependencies = [
 + "rustix 1.1.4",
 diff --git a/README.md b/README.md
-index d9684ae..044a4f0 100644
+index d9684ae..47b3d5b 100644
 --- a/README.md
 +++ b/README.md
 @@ -271,0 +272,2 @@ spotify_player downloads play 'https://open.spotify.com/playlist/PLAYLIST_ID'
@@ -17,7 +17,7 @@ index d9684ae..044a4f0 100644
 +without a terminal and stops after at most 20 seconds (default 30; range 1–300).
 +It reports final public playback status as JSON and propagates audio errors.
 +
-@@ -308,0 +316,28 @@ See [the offline design and validation notes](docs/offline.md).
+@@ -308,0 +316,29 @@ See [the offline design and validation notes](docs/offline.md).
 +#### Managed application integration (Unix)
 +
 +`downloads managed` provides atomic account-scoped playlist snapshots for a local
@@ -27,11 +27,12 @@ index d9684ae..044a4f0 100644
 +```sh
 +spotify_player -c /sd/offline/config -C /sd/offline/cache downloads managed \
 +  --store /sd/offline/store --catalog /run/offline/catalog.json \
-+  --job /run/offline/job.json --quota-bytes 536870912 --request 1000-1 \
++  --job /run/offline/job.json --quota-bytes 0 --request 1000-1 \
 +  sync 'spotify:playlist:PLAYLIST_ID'
 +```
 +
-+Actions are `catalog`, `sync URI`, `remove URI`, `forget`, and
++Actions are `catalog`, `sync URI`, `remove URI`, `forget`, `metadata-login`,
++`login`, `verify-login`, `preview URI --output FILE --offset 0`, and
 +`play URI --session 1000-2 --control FILE --status FILE --index 0 [--resume]`.
 +The catalog exposes ordered songs, completed snapshots and storage usage. Download
 +status includes completed/total tracks and the caller's request identifier. Only
@@ -46,14 +47,44 @@ index d9684ae..044a4f0 100644
 +contains no audio keys; the private store must remain owner-only. This remains
 +experimental and requires Premium for synchronization.
 +
+@@ -608,0 +645,29 @@ Set the `RUST_LOG` environment variable to control [logging level](https://docs.
++
++The managed preview supports Web API metadata-only OAuth, including Spotify Free,
++without creating a streaming session. Premium synchronization uses native playlist
++metadata and verifies the complete ordered list again before commit. Public song
++pages contain at most 50 entries; larger private indexes retain every entry.
++`--quota-bytes 0` (default) derives capacity from actual free space, reserving
++128 MiB for other applications and temporary writes. A positive value remains an
++explicit quota. No complete snapshot is automatically evicted.
++
++`activate-login --marker FILE` (with global `--request ID`) commits an SSH-staged
++computer grant. Activation and forget share a lock; owned metadata/sync/playback
++processes stop before credentials move. Cancelled request markers cannot activate.
++Premium `login` also enables native song metadata without requiring a Web API
++grant. The metadata-only login remains available for Free accounts. Unsaved
++metadata pages are cached for five minutes and retained during failed refreshes.
++
++Internal `cancel-login` uses global `--request ID` to remove only that staged
++grant under the same authentication lock as activation/logout. Metadata-only
++OAuth requests read-only playlist/profile scopes, with no streaming or write
++permissions. Premium can connect directly without a Web API grant.
++
++Managed downloads also resolve Spotify-provided alternatives when a canonical
++track is marked available but has no audio files. Original playlist URIs/order
++are retained; the replacement file’s own ID is used to obtain its audio key.
++No playable alternative or an unsupported codec is reported explicitly.
++
++Native preview marks items unavailable when metadata has neither audio files
++nor alternatives; those playlist positions remain visible. Metadata cache schema
++2 refreshes older previews while retaining them during network failure.
 diff --git a/docs/config.md b/docs/config.md
-index 60c84e3..a42e114 100644
+index 60c84e3..1502e06 100644
 --- a/docs/config.md
 +++ b/docs/config.md
 @@ -85 +85 @@ spotify_player -o device.volume=80 -o theme=dracula
 -- By default, `spotify-player` uses [ncspot](https://github.com/hrkfdn/ncspot)'s client ID for compatibility with Spotify's API. When a custom `client_id` is configured, most requests use it first and any `4xx` response is retried once with a separately authenticated ncspot fallback client. Each Web API token is stored as `<client_id>_token.json`, so changing `client_id` selects a different cache instead of reusing a token issued to another client. The fallback OAuth flow always uses `http://127.0.0.1:8989/login`, while `login_redirect_uri` applies only to the custom client. See the [Authentication section of the README](../README.md#authentication) for details.
 +- By default, `spotify-player` uses [ncspot](https://github.com/hrkfdn/ncspot)'s client ID for compatibility with Spotify's API. When a custom `client_id` is configured, most requests use it first and any `4xx` response is retried once with a separately authenticated ncspot fallback client. Each Web API token is stored as `<client_id>_token.json`, so changing `client_id` selects a different cache instead of reusing a token issued to another client. The ncspot primary and fallback OAuth flows always use `http://127.0.0.1:8989/ncspot_login`, while `login_redirect_uri` applies only to the custom client. See the [Authentication section of the README](../README.md#authentication) for details.
-@@ -378,0 +379,12 @@ key_sequence="C-l"
+@@ -378,0 +379,29 @@ key_sequence="C-l"
 +
 +Offline diagnostics and timed headless playback use `download_folder` and
 +`[device].volume`; see [offline playback](offline.md). They do not require a
@@ -66,8 +97,25 @@ index 60c84e3..a42e114 100644
 +Managed playback uses the system mixer at full source gain so the integrating
 +application can enforce its normal volume limits. Configuration and credentials
 +still come from `-c`/`-C`, separately from the vendor Spotify controller.
++
++Managed `--quota-bytes` defaults to `0`: use actual free store space minus a
++128 MiB reserve. Set a positive byte count only to impose an explicit quota.
++Managed metadata-only OAuth (`metadata-login`) supports song lists without
++streaming credentials; Premium is required for `login` and audio synchronization.
++
++`activate-login --marker FILE` (with global `--request ID`) commits an SSH-staged
++computer grant. Activation and forget share a lock; owned metadata/sync/playback
++processes stop before credentials move. Cancelled request markers cannot activate.
++Premium `login` also enables native song metadata without requiring a Web API
++grant. The metadata-only login remains available for Free accounts. Unsaved
++metadata pages are cached for five minutes and retained during failed refreshes.
++
++Internal `cancel-login` uses global `--request ID` to remove only that staged
++grant under the same authentication lock as activation/logout. Metadata-only
++OAuth requests read-only playlist/profile scopes, with no streaming or write
++permissions. Premium can connect directly without a Web API grant.
 diff --git a/docs/offline.md b/docs/offline.md
-index cfc9316..12b97b1 100644
+index cfc9316..46ae94a 100644
 --- a/docs/offline.md
 +++ b/docs/offline.md
 @@ -23,0 +24,7 @@ tracks in playlist order; rerun `downloads add` to retry failed downloads.
@@ -89,7 +137,7 @@ index cfc9316..12b97b1 100644
 +  167-byte prefix. This avoids whole-track encrypted/decrypted copies. The player
 +  uses the existing decoder/output backend and creates no Spotify session or HTTP
 +  client.
-@@ -80,0 +90,32 @@ to test the UI. Offline playback itself requires an accessible local audio devic
+@@ -80,0 +90,76 @@ to test the UI. Offline playback itself requires an accessible local audio devic
 +
 +
 +## Managed file protocol
@@ -122,6 +170,50 @@ index cfc9316..12b97b1 100644
 +Status includes version, session, phase, index, position_ms, ack, error and process
 +identity. Controls for another session are ignored. The integrating application
 +owns volume, parent permissions and routing from physical figures/buttons.
++
++### Managed metadata and storage
++
++`metadata-login` grants Web API access for song lists (Free or Premium). It
++does not request streaming credentials. `login` additionally verifies Premium
++through a connected SDK session and persists reusable credentials;
++`verify-login` checks existing credentials without opening a browser. Use the
++same account for both grants. The embedding application owns any browser or
++computer-companion flow. `forget` stops owned sync/preview/playback processes and
++removes this backend’s grants; cached audio remains account-scoped on disk.
++
++`preview URI --output FILE --offset N` publishes loading/complete/error and a
++page of up to 50 public songs, offset and full total. It prefers the complete
++local snapshot, then cached metadata; otherwise Premium uses native metadata
++and a metadata-only account uses the Web API. Rate limits and unsupported or
++unavailable items are explicit; no placeholder is silently removed. Background
++commands never open a login browser. Public JSON is capped at 128 KiB, while
++private indexes may use 2 MiB and contain the full order.
++
++The default `--quota-bytes 0` uses free space on the store filesystem with a
++128 MiB reserve, recomputed before each new track. Positive values apply an
++explicit quota and retain a 16 MiB reserve. Additional temporary space is
++checked before writes. Playback saves on pause/track changes and every 15 seconds.
++
++`activate-login --marker FILE` (with global `--request ID`) commits an SSH-staged
++computer grant. Activation and forget share a lock; owned metadata/sync/playback
++processes stop before credentials move. Cancelled request markers cannot activate.
++Premium `login` also enables native song metadata without requiring a Web API
++grant. The metadata-only login remains available for Free accounts. Unsaved
++metadata pages are cached for five minutes and retained during failed refreshes.
++
++Internal `cancel-login` uses global `--request ID` to remove only that staged
++grant under the same authentication lock as activation/logout. Metadata-only
++OAuth requests read-only playlist/profile scopes, with no streaming or write
++permissions. Premium can connect directly without a Web API grant.
++
++Managed downloads also resolve Spotify-provided alternatives when a canonical
++track is marked available but has no audio files. Original playlist URIs/order
++are retained; the replacement file’s own ID is used to obtain its audio key.
++No playable alternative or an unsupported codec is reported explicitly.
++
++Native preview marks items unavailable when metadata has neither audio files
++nor alternatives; those playlist positions remain visible. Metadata cache schema
++2 refreshes older previews while retaining them during network failure.
 diff --git a/spotify_player/Cargo.toml b/spotify_player/Cargo.toml
 index e3ebeae..342f3b1 100644
 --- a/spotify_player/Cargo.toml
@@ -157,23 +249,44 @@ index 18aabcb..d100f71 100644
 +        "authentication_required: no renewable cached Web API token"
 +    );
 diff --git a/spotify_player/src/client/mod.rs b/spotify_player/src/client/mod.rs
-index fd82dac..ddee7ed 100644
+index fd82dac..72ee50f 100644
 --- a/spotify_player/src/client/mod.rs
 +++ b/spotify_player/src/client/mod.rs
-@@ -126 +126 @@ pub fn new_api_client() -> Result<WebApiClient> {
+@@ -94,0 +95,11 @@ pub fn new_api_client() -> Result<WebApiClient> {
++    new_api_client_scopes(auth::OAUTH_SCOPES)
++}
++
++#[cfg(all(unix, feature = "streaming"))]
++const METADATA_SCOPES: &[&str] = &[
++    "playlist-read-private",
++    "playlist-read-collaborative",
++    "user-read-private",
++];
++
++fn new_api_client_scopes(requested_scopes: &[&str]) -> Result<WebApiClient> {
+@@ -99 +110 @@ pub fn new_api_client() -> Result<WebApiClient> {
+-    let mut scopes = auth::OAUTH_SCOPES
++    let mut scopes = requested_scopes
+@@ -126 +137 @@ pub fn new_api_client() -> Result<WebApiClient> {
 -            build_oauth(configs.app_config.login_redirect_uri.clone()),
 +            build_oauth(auth::NCSPOT_REDIRECT_URI.to_string()),
-@@ -166,0 +167,9 @@ impl AppClient {
-+        Self::build(true).await
+@@ -166,0 +178,14 @@ impl AppClient {
++        Self::build(true, new_api_client()?).await
 +    }
 +
 +    #[cfg(all(unix, feature = "streaming"))]
 +    pub async fn cached() -> Result<Self> {
-+        Self::build(false).await
++        Self::build(false, new_api_client_scopes(METADATA_SCOPES)?).await
 +    }
 +
-+    async fn build(interactive: bool) -> Result<Self> {
-@@ -171,3 +180,5 @@ impl AppClient {
++    #[cfg(all(unix, feature = "streaming"))]
++    pub async fn metadata_login() -> Result<Self> {
++        Self::build(true, new_api_client_scopes(METADATA_SCOPES)?).await
++    }
++
++    async fn build(interactive: bool, mut api_client: WebApiClient) -> Result<Self> {
+@@ -170,4 +195,5 @@ impl AppClient {
+-        let mut api_client = new_api_client()?;
 -        auth::prompt_for_user_token(&mut api_client, false)
 -            .await
 -            .context("authenticate Spotify Web API client")?;
@@ -182,13 +295,8 @@ index fd82dac..ddee7ed 100644
 +        } else {
 +            auth::cached_user_token(&mut api_client).await?;
 +        }
-@@ -1458,0 +1470,13 @@ impl AppClient {
+@@ -1458,0 +1485,8 @@ impl AppClient {
 +        self.playlist_context_checked(playlist_id, false).await
-+    }
-+
-+    #[cfg(all(unix, feature = "streaming"))]
-+    pub async fn playlist_context_exact(&self, playlist_id: PlaylistId<'_>) -> Result<Context> {
-+        self.playlist_context_checked(playlist_id, true).await
 +    }
 +
 +    async fn playlist_context_checked(
@@ -196,29 +304,101 @@ index fd82dac..ddee7ed 100644
 +        playlist_id: PlaylistId<'_>,
 +        exact: bool,
 +    ) -> Result<Context> {
-@@ -1469,0 +1494,5 @@ impl AppClient {
+@@ -1469,0 +1504,5 @@ impl AppClient {
 +        let expected = playlist.items.total as usize;
 +        anyhow::ensure!(
 +            !exact || (expected > 0 && expected <= 500),
 +            "unsupported_playlist: expected 1–500 music tracks"
 +        );
-@@ -1471,4 +1500 @@ impl AppClient {
+@@ -1471,4 +1510 @@ impl AppClient {
 -            .all_paging_items(
 -                &format!("playlists/{}/items", playlist_id.id()),
 -                playlist.items.total as usize,
 -            )
 +            .all_paging_items(&format!("playlists/{}/items", playlist_id.id()), expected)
-@@ -1479,0 +1506,4 @@ impl AppClient {
+@@ -1479,0 +1516,4 @@ impl AppClient {
 +        anyhow::ensure!(
 +            !exact || tracks.len() == expected,
 +            "unsupported_playlist: unavailable, local or non-music items cannot be omitted"
 +        );
+@@ -2047,0 +2088,9 @@ mod tests {
++    #[test]
++    #[cfg(all(unix, feature = "streaming"))]
++    fn metadata_login_never_requests_playback_or_write_permissions() {
++        assert!(super::METADATA_SCOPES
++            .iter()
++            .all(|scope| scope.contains("-read-")));
++        assert!(!super::METADATA_SCOPES.contains(&"streaming"));
++        assert!(!super::METADATA_SCOPES.contains(&"app-remote-control"));
++    }
+diff --git a/spotify_player/src/client/spotify.rs b/spotify_player/src/client/spotify.rs
+index bc21f41..a98e781 100644
+--- a/spotify_player/src/client/spotify.rs
++++ b/spotify_player/src/client/spotify.rs
+@@ -218,0 +219,21 @@ impl WebApiClient {
++    #[cfg(all(unix, feature = "streaming"))]
++    pub async fn playlist_metadata_page(
++        &self,
++        playlist_id: rspotify::model::PlaylistId<'_>,
++        offset: usize,
++    ) -> anyhow::Result<rspotify::model::Page<rspotify::model::PlaylistItem>> {
++        use rspotify::model::Id as _;
++        let offset_text = offset.to_string();
++        let params = Query::from([
++            ("market", "from_token"),
++            ("limit", "50"),
++            ("offset", offset_text.as_str()),
++            ("additional_types", "track,episode"),
++        ]);
++        Ok(serde_json::from_str(
++            &self
++                .api_get(&format!("playlists/{}/items", playlist_id.id()), &params)
++                .await?,
++        )?)
++    }
++
+@@ -428,0 +450,35 @@ mod tests {
++    #[tokio::test]
++    #[cfg(all(unix, feature = "streaming"))]
++    async fn metadata_only_playlist_uses_one_bounded_http_page_and_keeps_missing_slots() {
++        let server = MockServer::start().await;
++        Mock::given(method("GET"))
++            .and(path("/v1/playlists/1111111111111111111111/items"))
++            .and(header("authorization", "Bearer metadata-only-token"))
++            .and(wiremock::matchers::query_param("offset", "700"))
++            .and(wiremock::matchers::query_param("limit", "50"))
++            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
++                "href": "https://api.spotify.com/v1/playlists/test/items", "limit":50,
++                "next":null,"previous":null,"offset":700,"total":710,
++                "items":[{"added_at":null,"added_by":null,"is_local":false,"item":null}]
++            })))
++            .expect(1)
++            .mount(&server)
++            .await;
++        let api = WebApiClient::new(
++            client_with_token(&server, false, "metadata-only-token").await,
++            None,
++        );
++        let page = api
++            .playlist_metadata_page(
++                rspotify::model::PlaylistId::from_id("1111111111111111111111").unwrap(),
++                700,
++            )
++            .await
++            .unwrap();
++        assert_eq!(page.total, 710);
++        assert_eq!(page.offset, 700);
++        assert_eq!(page.items.len(), 1);
++        assert!(page.items[0].item.is_none());
++        assert_eq!(server.received_requests().await.unwrap().len(), 1);
++    }
++
 diff --git a/spotify_player/src/downloads/managed.rs b/spotify_player/src/downloads/managed.rs
 new file mode 100644
-index 0000000..b06d120
+index 0000000..f5b073d
 --- /dev/null
 +++ b/spotify_player/src/downloads/managed.rs
-@@ -0,0 +1,1385 @@
+@@ -0,0 +1,1996 @@
 +use std::{
 +    collections::{BTreeMap, HashSet},
 +    fs::{self, File, OpenOptions},
@@ -232,7 +412,7 @@ index 0000000..b06d120
 +use anyhow::{bail, ensure, Context, Result};
 +use clap::{Arg, ArgAction, ArgMatches, Command};
 +use parking_lot::Mutex;
-+use rspotify::model::{Id, PlaylistId};
++use rspotify::model::Id;
 +use serde::{de::DeserializeOwned, Deserialize, Serialize};
 +use sha2::{Digest, Sha256};
 +
@@ -241,9 +421,12 @@ index 0000000..b06d120
 +    store::{Download, Library},
 +};
 +use crate::{auth, client::AppClient, config, state};
++use rspotify::clients::OAuthClient as _;
 +
 +const VERSION: u32 = 1;
-+const MAX_JSON: u64 = 128 * 1024;
++const MAX_JSON: u64 = 2 * 1024 * 1024;
++const PUBLIC_JSON: u64 = 128 * 1024;
++const AUTO_RESERVE: u64 = 128 * 1024 * 1024;
 +const RESERVE: u64 = 16 * 1024 * 1024;
 +
 +pub fn command() -> Command {
@@ -255,12 +438,31 @@ index 0000000..b06d120
 +        .arg(
 +            Arg::new("quota-bytes")
 +                .long("quota-bytes")
-+                .default_value("536870912")
-+                .value_parser(clap::value_parser!(u64).range(1_048_576..)),
++                .default_value("0")
++                .value_parser(clap::value_parser!(u64)),
 +        )
 +        .arg(Arg::new("request").long("request").default_value("manual"))
 +        .subcommand_required(true)
 +        .subcommand(Command::new("catalog"))
++        .subcommand(Command::new("inspect").arg(Arg::new("uri").required(true)))
++        .subcommand(Command::new("login"))
++        .subcommand(Command::new("metadata-login"))
++        .subcommand(Command::new("verify-login"))
++        .subcommand(Command::new("cancel-login"))
++        .subcommand(
++            Command::new("activate-login").arg(Arg::new("marker").long("marker").required(true)),
++        )
++        .subcommand(
++            Command::new("preview")
++                .arg(Arg::new("uri").required(true))
++                .arg(Arg::new("output").long("output").required(true))
++                .arg(
++                    Arg::new("offset")
++                        .long("offset")
++                        .default_value("0")
++                        .value_parser(clap::value_parser!(usize)),
++                ),
++        )
 +        .subcommand(Command::new("sync").arg(Arg::new("uri").required(true)))
 +        .subcommand(Command::new("remove").arg(Arg::new("uri").required(true)))
 +        .subcommand(Command::new("forget"))
@@ -357,6 +559,7 @@ index 0000000..b06d120
 +#[derive(Serialize)]
 +struct PublicEntry {
 +    ready: bool,
++    total_tracks: usize,
 +    name: String,
 +    snapshot_id: String,
 +    synced_at: u64,
@@ -366,6 +569,11 @@ index 0000000..b06d120
 +#[derive(Serialize)]
 +struct Catalog {
 +    version: u32,
++    account_name: Option<String>,
++    premium_verified: bool,
++    metadata_ready: bool,
++    auth_request: Option<String>,
++    reserve_bytes: u64,
 +    account_ready: bool,
 +    account_id: Option<String>,
 +    used_bytes: u64,
@@ -424,6 +632,7 @@ index 0000000..b06d120
 +#[derive(Serialize)]
 +struct Playback {
 +    version: u32,
++    track: Option<Track>,
 +    process: Process,
 +    session: String,
 +    phase: String,
@@ -524,6 +733,13 @@ index 0000000..b06d120
 +    Ok(())
 +}
 +
++fn write_public(path: &Path, value: &impl Serialize) -> Result<()> {
++    ensure!(
++        serde_json::to_vec(value)?.len() as u64 <= PUBLIC_JSON,
++        "metadata_limit"
++    );
++    write_json(path, value)
++}
 +fn write_json(path: &Path, value: &impl Serialize) -> Result<()> {
 +    let dir = path.parent().context("missing status directory")?;
 +    fs::create_dir_all(dir)?;
@@ -558,13 +774,23 @@ index 0000000..b06d120
 +    visit(root, &mut HashSet::new())
 +}
 +fn account_id() -> Result<Option<String>> {
-+    Ok(auth::AuthConfig::new(config::get_config())?
++    let username = auth::AuthConfig::new(config::get_config())?
 +        .cache
 +        .credentials()
 +        .and_then(|c| c.username)
-+        .filter(|s| !s.is_empty())
-+        .map(|s| hash(s.as_bytes())))
++        .filter(|s| !s.is_empty());
++    if let Some(username) = username {
++        return Ok(Some(hash(username.as_bytes())));
++    }
++    let info = config::get_config()
++        .cache_folder
++        .join("offline-account.json");
++    Ok(read_json::<serde_json::Value>(&info)
++        .ok()
++        .filter(|v| v["metadata_ready"] == true)
++        .and_then(|v| v["username"].as_str().map(|u| hash(u.as_bytes()))))
 +}
++
 +fn index_path(paths: &Paths, id: &str) -> PathBuf {
 +    paths.account(id).join("index.json")
 +}
@@ -636,6 +862,7 @@ index 0000000..b06d120
 +            catalog_error = Some("snapshot_index_corrupt".into());
 +            Index::empty(id)
 +        });
++        let page_limit = (200 / index.playlists.len().max(1)).min(super::native::PAGE_SIZE);
 +        for (uri, entry) in index.playlists {
 +            let ready = entry_library(paths, id, &entry)
 +                .and_then(|l| select_complete(&l, &uri, &entry))
@@ -644,31 +871,45 @@ index 0000000..b06d120
 +                uri,
 +                PublicEntry {
 +                    ready,
++                    total_tracks: entry.tracks.len(),
 +                    name: entry.name,
 +                    snapshot_id: entry.snapshot_id,
 +                    synced_at: entry.synced_at,
 +                    bytes: entry.bytes,
-+                    tracks: entry.tracks,
++                    tracks: entry.tracks.into_iter().take(page_limit).collect(),
 +                },
 +            );
 +        }
 +    }
-+    write_json(
++    write_public(
 +        &paths.catalog,
 +        &Catalog {
 +            version: VERSION,
-+            account_ready: id.is_some(),
++            account_name: auth::AuthConfig::new(config::get_config())
++                .ok()
++                .and_then(|a| a.cache.credentials())
++                .and_then(|c| c.username)
++                .or_else(|| account_info()["username"].as_str().map(str::to_owned)),
++            premium_verified: verified_account(paths, id.as_deref()),
++            metadata_ready: metadata_ready(paths, id.as_deref()),
++            auth_request: account_info()["request"].as_str().map(str::to_owned),
++            reserve_bytes: if paths.quota == 0 {
++                AUTO_RESERVE
++            } else {
++                RESERVE
++            },
++            account_ready: verified_account(paths, id.as_deref()),
 +            account_id: id,
 +            used_bytes: used_bytes(&paths.root).unwrap_or(0),
 +            free_bytes: free_bytes(&paths.root).unwrap_or(0),
-+            quota_bytes: paths.quota,
++            quota_bytes: effective_quota(paths).unwrap_or(0),
 +            playlists,
 +            error: catalog_error,
 +        },
 +    )
 +}
 +fn publish_job(paths: &Paths, job: &Job) -> Result<()> {
-+    write_json(&paths.job, job)?;
++    write_public(&paths.job, job)?;
 +    // On a full card the RAM status still reports the error and the old index survives.
 +    let _ = write_json(
 +        &paths.root.join("last-job.json"),
@@ -716,13 +957,60 @@ index 0000000..b06d120
 +    }
 +    Ok(())
 +}
++fn effective_quota(paths: &Paths) -> Result<u64> {
++    if paths.quota > 0 {
++        return Ok(paths.quota);
++    }
++    Ok(used_bytes(&paths.root)?
++        .saturating_add(free_bytes(&paths.root)?.saturating_sub(AUTO_RESERVE)))
++}
++fn account_info() -> serde_json::Value {
++    read_json(
++        &config::get_config()
++            .cache_folder
++            .join("offline-account.json"),
++    )
++    .unwrap_or_default()
++}
++fn metadata_ready(paths: &Paths, id: Option<&str>) -> bool {
++    let Some(id) = id else {
++        return false;
++    };
++    let info = account_info();
++    (info["account_id"] == id && info["metadata_ready"] == true)
++        || verified_account(paths, Some(id))
++}
++fn verified_account(paths: &Paths, id: Option<&str>) -> bool {
++    let Some(id) = id else {
++        return false;
++    };
++    let creds = auth::AuthConfig::new(config::get_config())
++        .ok()
++        .and_then(|a| a.cache.credentials())
++        .and_then(|c| c.username);
++    if creds.is_none_or(|u| hash(u.as_bytes()) != id) {
++        return false;
++    }
++    let info = account_info();
++    if info["metadata_ready"] == true && info["premium"] == false {
++        return false;
++    }
++    (info["account_id"] == id && info["premium"] == true)
++        || load_index(paths, id).is_ok_and(|i| !i.playlists.is_empty())
++}
++
 +fn check_capacity(paths: &Paths, bytes: u64) -> Result<()> {
 +    ensure!(
-+        used_bytes(&paths.root)?.saturating_add(bytes.saturating_mul(3)) <= paths.quota,
++        used_bytes(&paths.root)?.saturating_add(bytes.saturating_mul(3)) <= effective_quota(paths)?,
 +        "storage_full: offline quota reached"
 +    );
 +    ensure!(
-+        free_bytes(&paths.root)? >= bytes.saturating_mul(3).saturating_add(RESERVE),
++        free_bytes(&paths.root)?
++            >= bytes.saturating_mul(3).saturating_add(if paths.quota == 0 {
++                AUTO_RESERVE
++            } else {
++                RESERVE
++            }),
 +        "storage_full: insufficient free space"
 +    );
 +    Ok(())
@@ -847,6 +1135,10 @@ index 0000000..b06d120
 +        );
 +    }
 +    let id = account_id()?.context("authentication_required")?;
++    ensure!(
++        verified_account(paths, Some(&id)),
++        "authentication_required"
++    );
 +    let stage = paths.pending(&id, uri);
 +    let library = Library::new(stage.clone());
 +    library.create()?;
@@ -875,19 +1167,6 @@ index 0000000..b06d120
 +    };
 +    publish_job(paths, &job)?;
 +    let result = async {
-+        let client = AppClient::cached().await?;
-+        let state::Context::Playlist { playlist, tracks } = client
-+            .playlist_context_exact(PlaylistId::from_uri(uri)?)
-+            .await?
-+        else {
-+            bail!("unsupported_playlist");
-+        };
-+        ensure!(!tracks.is_empty(), "empty_playlist");
-+        let expected: Vec<String> = tracks.iter().map(|t| t.id.uri()).collect();
-+        job.total = tracks.len();
-+        job.tracks = tracks.iter().map(Track::from).collect();
-+        job.phase = "downloading".into();
-+        publish_job(paths, &job)?;
 +        let auth = auth::AuthConfig {
 +            cache: librespot_core::cache::Cache::new(
 +                Some(config::get_config().cache_folder.clone()),
@@ -902,13 +1181,21 @@ index 0000000..b06d120
 +        tokio::time::timeout(Duration::from_secs(30), session.connect(creds, true))
 +            .await
 +            .context("Spotify connection timeout")??;
++        let listing = super::native::listing(&session, uri).await?;
++        ensure!(!listing.uris.is_empty(), "empty_playlist");
++        ensure!(
++            listing.uris.iter().all(|s| s.starts_with("spotify:track:")),
++            "unsupported_item"
++        );
++        let expected = listing.uris.clone();
++        let mut completed_tracks = Vec::with_capacity(expected.len());
++        job.total = expected.len();
++        job.phase = "downloading".into();
++        publish_job(paths, &job)?;
 +        let downloaded = async {
-+            for (index, track) in tracks.iter().enumerate() {
++            for (index, track_uri) in expected.iter().enumerate() {
 +                ensure!(account_id()?.as_deref() == Some(&id), "account_changed");
-+                let track_uri = &expected[index];
 +                if !library.contains_valid(track_uri) {
-+                    let estimate = (track.duration.as_millis() as u64).saturating_mul(12000) / 1000;
-+                    check_capacity(paths, estimate.saturating_add(1024 * 1024))?;
 +                    super::download_checked(&session, &library, track_uri, |bytes| {
 +                        check_capacity(paths, bytes)
 +                    })
@@ -924,7 +1211,11 @@ index 0000000..b06d120
 +                }
 +                library.verify_cover(&saved)?;
 +                job.bytes += saved.bytes;
-+                job.tracks[index] = Track::from(saved);
++                let metadata = Track::from(saved);
++                if index < super::native::PAGE_SIZE {
++                    job.tracks.push(metadata.clone());
++                }
++                completed_tracks.push(metadata);
 +                job.completed = index + 1;
 +                publish_job(paths, &job)?;
 +                tokio::time::sleep(Duration::from_millis(500)).await;
@@ -932,25 +1223,16 @@ index 0000000..b06d120
 +            Result::<()>::Ok(())
 +        }
 +        .await;
-+        session.shutdown();
 +        downloaded?;
 +        job.phase = "verifying".into();
 +        publish_job(paths, &job)?;
-+        for track in &job.tracks {
++        for track in &completed_tracks {
 +            ensure!(library.contains_valid(&track.uri), "incomplete_snapshot");
 +        }
-+        let state::Context::Playlist {
-+            playlist: after,
-+            tracks: after_tracks,
-+        } = client
-+            .playlist_context_exact(PlaylistId::from_uri(uri)?)
-+            .await?
-+        else {
-+            bail!("unsupported_playlist");
-+        };
++        let after = super::native::listing(&session, uri).await?;
++        session.shutdown();
 +        ensure!(
-+            playlist.snapshot_id == after.snapshot_id
-+                && expected == after_tracks.iter().map(|t| t.id.uri()).collect::<Vec<_>>(),
++            listing.revision == after.revision && expected == after.uris,
 +            "playlist_changed"
 +        );
 +        prune_stage(&library, &expected)?;
@@ -959,10 +1241,10 @@ index 0000000..b06d120
 +            paths,
 +            &id,
 +            uri,
-+            playlist.name,
-+            playlist.snapshot_id,
++            listing.name,
++            listing.revision,
 +            &library,
-+            job.tracks.clone(),
++            completed_tracks,
 +        )?;
 +        publish_catalog(paths, None)?;
 +        job.phase = "complete".into();
@@ -998,10 +1280,25 @@ index 0000000..b06d120
 +    } else if text.contains("authentication_required")
 +        || text.contains("cached credentials")
 +        || text.contains("BadCredentials")
++        || text.contains("401 Unauthorized")
 +    {
 +        "authentication_required"
 +    } else if text.contains("playlist_changed") {
 +        "playlist_changed"
++    } else if text.contains("429") || text.contains("rate limit") {
++        "rate_limited"
++    } else if text.contains("unsupported_item") {
++        "unsupported_item"
++    } else if text.contains("unsupported_audio_format") {
++        "unsupported_audio_format"
++    } else if text.contains("playlist_incomplete") {
++        "playlist_incomplete"
++    } else if text.contains("playlist_too_large") {
++        "playlist_too_large"
++    } else if text.contains("timed out") || text.contains("timeout") {
++        "network_timeout"
++    } else if text.contains("unavailable in your market") || text.contains("track_unavailable") {
++        "track_unavailable"
 +    } else if text.contains("unsupported_playlist") || text.contains("metadata_limit") {
 +        "unsupported_playlist"
 +    } else if text.contains("busy:") {
@@ -1150,6 +1447,7 @@ index 0000000..b06d120
 +    let mut started = false;
 +    let mut stopped = false;
 +    let mut last_resume = Instant::now();
++    let mut last_saved_state = None;
 +    let mut last_publish = Instant::now()
 +        .checked_sub(Duration::from_secs(1))
 +        .unwrap_or_else(Instant::now);
@@ -1195,6 +1493,11 @@ index 0000000..b06d120
 +                    &record.status,
 +                    &Playback {
 +                        version: VERSION,
++                        track: state
++                            .current
++                            .and_then(|i| tracks.get(i))
++                            .cloned()
++                            .map(Track::from),
 +                        process: record.process.clone(),
 +                        session: record.session.clone(),
 +                        phase: if state.error.is_some() {
@@ -1217,9 +1520,13 @@ index 0000000..b06d120
 +                )?;
 +                last_publish = Instant::now();
 +            }
-+            if last_resume.elapsed() >= Duration::from_secs(15) {
++            let resume_state = (state.current, state.playing, state.ended);
++            if last_saved_state != Some(resume_state)
++                || last_resume.elapsed() >= Duration::from_secs(15)
++            {
 +                save_resume(paths, &record, &tracks, &state);
 +                last_resume = Instant::now();
++                last_saved_state = Some(resume_state);
 +            }
 +            if stopped || state.error.is_some() {
 +                break;
@@ -1240,6 +1547,11 @@ index 0000000..b06d120
 +        &record.status,
 +        &Playback {
 +            version: VERSION,
++            track: final_state
++                .current
++                .and_then(|i| tracks.get(i))
++                .cloned()
++                .map(Track::from),
 +            process: record.process.clone(),
 +            session: record.session.clone(),
 +            phase: if result.is_err() || final_state.error.is_some() {
@@ -1298,28 +1610,135 @@ index 0000000..b06d120
 +    }
 +    publish_catalog(paths, None)
 +}
-+fn forget(paths: &Paths) -> Result<()> {
-+    if let Ok(record) = read_json::<SessionRecord>(&paths.root.join("playback.json")) {
-+        if record.process.alive() {
-+            send_stop(&record)?;
++fn wait_auth_lock(paths: &Paths) -> Result<Lock> {
++    let start = Instant::now();
++    loop {
++        match Lock::take(&paths.root.join("auth.lock")) {
++            Ok(lock) => return Ok(lock),
++            Err(error) if start.elapsed() >= Duration::from_secs(12) => return Err(error),
++            Err(_) => std::thread::sleep(Duration::from_millis(50)),
 +        }
 +    }
-+    if let Ok(process) = read_json::<Process>(&paths.root.join("sync.lock")) {
-+        if process.alive() {
-+            if let Some(pid) = rustix::process::Pid::from_raw(process.pid as i32) {
-+                let _ = rustix::process::kill_process(pid, rustix::process::Signal::TERM);
++}
++fn stop_operation(path: &Path) -> Result<Lock> {
++    let start = Instant::now();
++    loop {
++        if let Ok(lock) = Lock::take(path) {
++            return Ok(lock);
++        }
++        if let Ok(process) = read_json::<Process>(path) {
++            if process.pid != std::process::id() && process.alive() {
++                if let Some(pid) = rustix::process::Pid::from_raw(process.pid as i32) {
++                    let _ = rustix::process::kill_process(pid, rustix::process::Signal::TERM);
++                }
 +            }
 +        }
-+        let start = Instant::now();
-+        while process.alive() && start.elapsed() < Duration::from_secs(3) {
-+            std::thread::sleep(Duration::from_millis(100));
-+        }
-+        ensure!(!process.alive(), "busy: sync has not stopped");
++        ensure!(
++            start.elapsed() < Duration::from_secs(3),
++            "busy: owned operation has not stopped"
++        );
++        std::thread::sleep(Duration::from_millis(50));
 +    }
-+    let _lock = take_playback(paths)?;
++}
++fn swap_cache(cache: &Path, stage: &Path, old: &Path) -> Result<()> {
++    ensure!(!old.exists(), "activation_failed: backup already exists");
++    let had_cache = cache.exists();
++    if had_cache {
++        fs::rename(cache, old)?;
++    }
++    if let Err(error) = fs::rename(stage, cache) {
++        if had_cache {
++            fs::rename(old, cache).context("restore previous credentials")?;
++        }
++        return Err(error).context("activate credentials");
++    }
++    if let Err(error) = sync_dir(cache.parent().context("cache parent")?) {
++        fs::rename(cache, stage)?;
++        if had_cache {
++            fs::rename(old, cache)?;
++        }
++        return Err(error);
++    }
++    Ok(())
++}
++fn activation_matches(marker: &Path, request: &str) -> Result<()> {
++    ensure!(
++        !request.is_empty()
++            && request.len() <= 64
++            && request.bytes().all(|b| b.is_ascii_digit() || b == b'-'),
++        "invalid authentication request"
++    );
++    ensure!(
++        fs::metadata(marker)?.len() <= 64 && fs::read_to_string(marker)? == request,
++        "authentication_cancelled"
++    );
++    Ok(())
++}
++fn activate_login(paths: &Paths, marker: &Path) -> Result<()> {
++    let _auth = wait_auth_lock(paths)?;
++    activation_matches(marker, &paths.request)?;
++    let cache = &config::get_config().cache_folder;
++    let parent = cache.parent().context("cache parent")?;
++    let stage = parent.join("auth-stage").join(&paths.request).join("cache");
++    let info: serde_json::Value = read_json(&stage.join("offline-account.json"))?;
++    let username = info["username"]
++        .as_str()
++        .context("invalid account identity")?;
++    ensure!(
++        info["request"] == paths.request
++            && info["account_id"] == hash(username.as_bytes())
++            && info["metadata_ready"] == true,
++        "invalid account identity"
++    );
++    let _sync = stop_operation(&paths.root.join("sync.lock"))?;
++    let _preview = stop_operation(&paths.root.join("preview.lock"))?;
++    let _playback = take_playback(paths)?;
++    activation_matches(marker, &paths.request)?;
++    let old = parent.join(format!("cache-old-{}", paths.request));
++    swap_cache(cache, &stage, &old)?;
++    if let Err(error) =
++        activation_matches(marker, &paths.request).and_then(|()| publish_catalog(paths, None))
++    {
++        fs::rename(cache, &stage)?;
++        if old.exists() {
++            fs::rename(&old, cache)?;
++        }
++        return Err(error);
++    }
++    if old.exists() {
++        let _ = fs::remove_dir_all(old);
++    }
++    Ok(())
++}
++fn cancel_login(paths: &Paths) -> Result<()> {
++    let _auth = wait_auth_lock(paths)?;
++    let request = &paths.request;
++    ensure!(
++        !request.is_empty()
++            && request.len() <= 64
++            && request.bytes().all(|b| b.is_ascii_digit() || b == b'-'),
++        "invalid authentication request"
++    );
++    let stage = config::get_config()
++        .cache_folder
++        .parent()
++        .context("cache parent")?
++        .join("auth-stage")
++        .join(request);
++    if stage.exists() {
++        fs::remove_dir_all(stage)?;
++    }
++    Ok(())
++}
++fn forget(paths: &Paths) -> Result<()> {
++    let _auth = wait_auth_lock(paths)?;
++    let _sync = stop_operation(&paths.root.join("sync.lock"))?;
++    let _preview = stop_operation(&paths.root.join("preview.lock"))?;
++    let _playback = take_playback(paths)?;
 +    let cache = &config::get_config().cache_folder;
 +    for name in [
 +        "credentials.json".to_owned(),
++        "offline-account.json".to_owned(),
 +        format!("{}_token.json", auth::NCSPOT_CLIENT_ID),
 +    ] {
 +        let path = cache.join(name);
@@ -1327,7 +1746,252 @@ index 0000000..b06d120
 +            fs::remove_file(path)?;
 +        }
 +    }
++    let stages = cache.parent().context("cache parent")?.join("auth-stage");
++    if stages.exists() {
++        fs::remove_dir_all(stages)?;
++    }
 +    publish_catalog(paths, None)
++}
++
++fn login_metadata() -> Result<()> {
++    tokio::runtime::Runtime::new()?.block_on(async {
++        let client = AppClient::metadata_login().await?;
++        let user = client.current_user().await?;
++        let user_id = user.id.id().to_owned();
++        let info = serde_json::json!({"version":1,"username":user_id,"account_id":hash(user_id.as_bytes()),"metadata_ready":true,"premium":false});
++        write_json(&config::get_config().cache_folder.join("offline-account.json"), &info)?;
++        serde_json::to_writer(std::io::stdout().lock(), &info)?;
++        Result::<()>::Ok(())
++    })
++}
++
++fn login_native(interactive: bool) -> Result<()> {
++    let auth = auth::AuthConfig::new(config::get_config())?;
++    let creds = auth::get_creds(&auth, interactive, !interactive)?;
++    let rt = tokio::runtime::Runtime::new()?;
++    rt.block_on(async {
++        let session = auth.session();
++        tokio::time::timeout(Duration::from_secs(30), session.connect(creds, true)).await??;
++        let start = Instant::now();
++        while session.get_user_attribute("type").is_none()
++            && start.elapsed() < Duration::from_secs(10)
++        {
++            tokio::time::sleep(Duration::from_millis(100)).await;
++        }
++        ensure!(
++            session.get_user_attribute("type").as_deref() == Some("premium"),
++            "premium_required"
++        );
++        let user = session.username();
++        let mut info = account_info();
++        if !info.is_object() {
++            info = serde_json::json!({});
++        }
++        if let Some(old_user) = info["username"].as_str() {
++            ensure!(
++                old_user == user,
++                "account_changed: use the same account for both permissions"
++            );
++        }
++        info["version"] = VERSION.into();
++        info["username"] = user.clone().into();
++        info["account_id"] = hash(user.as_bytes()).into();
++        info["premium"] = true.into();
++        info["metadata_ready"] = true.into();
++        write_json(
++            &config::get_config()
++                .cache_folder
++                .join("offline-account.json"),
++            &info,
++        )?;
++        session.shutdown();
++        serde_json::to_writer(std::io::stdout().lock(), &info)?;
++        Result::<()>::Ok(())
++    })
++}
++#[derive(Serialize, Deserialize)]
++struct Preview {
++    version: u32,
++    #[serde(default)]
++    metadata_version: u32,
++    account_id: String,
++    request: String,
++    uri: String,
++    phase: String,
++    offset: usize,
++    total: usize,
++    name: String,
++    tracks: Vec<super::native::Song>,
++    error: Option<String>,
++}
++async fn preview_native(paths: &Paths, args: &ArgMatches, uri: &str) -> Result<()> {
++    let _lock = Lock::take(&paths.root.join("preview.lock"))?;
++    let id = account_id()?.context("authentication_required")?;
++    let output = Path::new(args.get_one::<String>("output").context("missing output")?);
++    let offset = *args.get_one::<usize>("offset").context("missing offset")?;
++    let mut result = Preview {
++        version: VERSION,
++        metadata_version: 2,
++        account_id: id.clone(),
++        request: paths.request.clone(),
++        uri: uri.into(),
++        phase: "loading".into(),
++        offset,
++        total: 0,
++        name: String::new(),
++        tracks: Vec::new(),
++        error: None,
++    };
++    write_public(output, &result)?;
++    let cache = paths
++        .account(&id)
++        .join("previews")
++        .join(hash(uri.as_bytes()))
++        .join(format!("{offset}.json"));
++    let attempt: Result<()> = async {
++        if let Some(entry) = load_index(paths, &id)?.playlists.get(uri) {
++            result.total = entry.tracks.len();
++            result.name.clone_from(&entry.name);
++            result.tracks = entry
++                .tracks
++                .iter()
++                .skip(offset)
++                .take(super::native::PAGE_SIZE)
++                .map(|t| super::native::Song {
++                    uri: t.uri.clone(),
++                    name: t.name.clone(),
++                    artists: t.artists.clone(),
++                    album: t.album.clone(),
++                    duration_ms: t.duration_ms,
++                    bytes: t.bytes,
++                    problem: None,
++                })
++                .collect();
++            return Ok(());
++        }
++        if let Ok(saved) = read_json::<Preview>(&cache) {
++            if saved.account_id == id && saved.phase == "complete" {
++                result.name = saved.name;
++                result.total = saved.total;
++                result.tracks = saved.tracks;
++                let fresh = fs::metadata(&cache)
++                    .and_then(|m| m.modified())
++                    .ok()
++                    .and_then(|t| t.elapsed().ok())
++                    .is_some_and(|age| age < Duration::from_secs(300))
++                    && saved.metadata_version == 2;
++                if fresh {
++                    return Ok(());
++                }
++                write_public(output, &result)?;
++            }
++        }
++        if !verified_account(paths, Some(&id)) {
++            ensure!(metadata_ready(paths, Some(&id)), "authentication_required");
++            let client = AppClient::cached().await?;
++            let page = client
++                .playlist_metadata_page(rspotify::model::PlaylistId::from_uri(uri)?, offset)
++                .await?;
++            result.total = page.total as usize;
++            result.tracks = page
++                .items
++                .into_iter()
++                .map(|row| match row.item {
++                    Some(rspotify::model::PlayableItem::Track(t)) => super::native::Song {
++                        uri: t.id.map(|id| id.uri()).unwrap_or_default(),
++                        name: t.name,
++                        artists: t.artists.into_iter().map(|a| a.name).collect(),
++                        album: t.album.name,
++                        duration_ms: t.duration.num_milliseconds().max(0) as u32,
++                        bytes: 0,
++                        problem: None,
++                    },
++                    Some(rspotify::model::PlayableItem::Episode(e)) => super::native::Song {
++                        uri: e.id.uri(),
++                        name: e.name,
++                        artists: vec![e.show.name.clone()],
++                        album: e.show.name,
++                        duration_ms: e.duration.num_milliseconds().max(0) as u32,
++                        bytes: 0,
++                        problem: Some("unsupported_item".into()),
++                    },
++                    _ => super::native::Song {
++                        uri: String::new(),
++                        name: "Unavailable item".into(),
++                        artists: Vec::new(),
++                        album: String::new(),
++                        duration_ms: 0,
++                        bytes: 0,
++                        problem: Some("metadata_unavailable".into()),
++                    },
++                })
++                .collect();
++            return Ok(());
++        }
++        let auth = auth::AuthConfig::new(config::get_config())?;
++        let session = auth.session();
++        let creds = auth::get_creds(&auth, false, true)?;
++        tokio::time::timeout(Duration::from_secs(30), session.connect(creds, true)).await??;
++        let listing = super::native::listing(&session, uri).await?;
++        result.total = listing.uris.len();
++        result.name = listing.name;
++        result.tracks.clear();
++        for uri in listing
++            .uris
++            .iter()
++            .skip(offset)
++            .take(super::native::PAGE_SIZE)
++        {
++            match super::native::song(&session, uri).await {
++                Ok(song) => result.tracks.push(song),
++                Err(_) => result.tracks.push(super::native::Song {
++                    uri: uri.clone(),
++                    name: uri.clone(),
++                    artists: Vec::new(),
++                    album: String::new(),
++                    duration_ms: 0,
++                    bytes: 0,
++                    problem: Some("metadata_unavailable".into()),
++                }),
++            }
++            if result.tracks.len().is_multiple_of(5) {
++                write_public(output, &result)?;
++            }
++        }
++        session.shutdown();
++        Ok(())
++    }
++    .await;
++    result.phase = if attempt.is_ok() { "complete" } else { "error" }.into();
++    result.error = attempt.as_ref().err().map(|e| error_code(e).into());
++    if attempt.is_ok() {
++        let _ = write_json(&cache, &result);
++    }
++    write_public(output, &result)?;
++    attempt
++}
++
++async fn inspect_native(uri: &str) -> Result<()> {
++    use librespot_metadata::Metadata as _;
++    let auth = auth::AuthConfig::new(config::get_config())?;
++    let session = auth.session();
++    let creds = auth::get_creds(&auth, false, true)?;
++    tokio::time::timeout(Duration::from_secs(30), session.connect(creds, true)).await??;
++    let playlist = librespot_metadata::playlist::Playlist::get(
++        &session,
++        &librespot_core::SpotifyUri::from_uri(uri)?,
++    )
++    .await?;
++    let uris = playlist
++        .tracks()
++        .map(librespot_core::SpotifyUri::to_uri)
++        .collect::<std::result::Result<Vec<_>, _>>()?;
++    session.shutdown();
++    serde_json::to_writer(
++        std::io::stdout().lock(),
++        &serde_json::json!({"name": playlist.name(), "total": playlist.length, "truncated": playlist.contents.is_truncated, "position": playlist.contents.position, "uris": uris}),
++    )?;
++    Ok(())
 +}
 +
 +pub fn handle(args: &ArgMatches) -> Result<()> {
@@ -1368,10 +2032,28 @@ index 0000000..b06d120
 +        );
 +    }
 +    let result = match command {
++        "activate-login" => activate_login(
++            &paths,
++            Path::new(
++                sub.get_one::<String>("marker")
++                    .context("missing authentication marker")?,
++            ),
++        ),
++        "cancel-login" => cancel_login(&paths),
++        "metadata-login" => login_metadata(),
++        "login" => login_native(true),
++        "verify-login" => login_native(false),
++        "preview" => tokio::runtime::Runtime::new()?.block_on(preview_native(
++            &paths,
++            sub,
++            uri.as_deref().context("missing playlist")?,
++        )),
 +        "catalog" => {
 +            recover_job(&paths)?;
 +            publish_catalog(&paths, None)
 +        }
++        "inspect" => tokio::runtime::Runtime::new()?
++            .block_on(inspect_native(uri.as_deref().context("missing playlist")?)),
 +        "sync" => tokio::runtime::Runtime::new()?.block_on(synchronize(
 +            &paths,
 +            uri.as_deref().context("missing playlist")?,
@@ -1383,7 +2065,16 @@ index 0000000..b06d120
 +    };
 +    if let Err(error) = &result {
 +        let code = error_code(error);
-+        if command == "sync" && code != "busy" {
++        let _ = write_json(
++            &paths.root.join("last-error.json"),
++            &serde_json::json!({"code":code,"detail":format!("{error:#}")}),
++        );
++        let already_reported = read_json::<Job>(&paths.job).is_ok_and(|job| {
++            job.request == paths.request
++                && job.uri == uri.as_deref().unwrap_or_default()
++                && job.phase == "error"
++        });
++        if command == "sync" && code != "busy" && !already_reported {
 +            if let Some(uri) = &uri {
 +                let _ = publish_job(
 +                    &paths,
@@ -1412,6 +2103,7 @@ index 0000000..b06d120
 +                    Path::new(path),
 +                    &Playback {
 +                        version: VERSION,
++                        track: None,
 +                        process: Process::current()?,
 +                        session: session.clone(),
 +                        phase: "error".into(),
@@ -1593,6 +2285,105 @@ index 0000000..b06d120
 +            .is_dir());
 +    }
 +    #[test]
++    fn failed_credential_activation_restores_the_existing_account() {
++        let root = tempfile::tempdir().unwrap();
++        let cache = root.path().join("cache");
++        fs::create_dir(&cache).unwrap();
++        fs::write(cache.join("credentials.json"), b"invented old account").unwrap();
++        let old = root.path().join("old");
++        assert!(swap_cache(&cache, &root.path().join("missing-stage"), &old).is_err());
++        assert_eq!(
++            fs::read(cache.join("credentials.json")).unwrap(),
++            b"invented old account"
++        );
++        assert!(!old.exists());
++    }
++    #[test]
++    fn metadata_only_activation_does_not_inherit_the_previous_streaming_credentials() {
++        let root = tempfile::tempdir().unwrap();
++        let cache = root.path().join("cache");
++        let stage = root.path().join("stage");
++        fs::create_dir(&cache).unwrap();
++        fs::create_dir(&stage).unwrap();
++        fs::write(cache.join("credentials.json"), b"invented old account").unwrap();
++        fs::write(
++            stage.join("offline-account.json"),
++            b"invented metadata grant",
++        )
++        .unwrap();
++        let old = root.path().join("old");
++        swap_cache(&cache, &stage, &old).unwrap();
++        assert!(!cache.join("credentials.json").exists());
++        assert_eq!(
++            fs::read(cache.join("offline-account.json")).unwrap(),
++            b"invented metadata grant"
++        );
++        assert!(old.join("credentials.json").exists());
++    }
++    #[test]
++    fn logout_and_new_login_invalidate_a_previously_staged_request() {
++        let root = tempfile::tempdir().unwrap();
++        let marker = root.path().join("request");
++        fs::write(&marker, b"1234-1").unwrap();
++        assert!(activation_matches(&marker, "1234-1").is_ok());
++        fs::write(&marker, b"").unwrap();
++        assert!(activation_matches(&marker, "1234-1").is_err());
++        fs::write(&marker, b"5678-2").unwrap();
++        assert!(activation_matches(&marker, "1234-1").is_err());
++        assert!(activation_matches(&marker, "../../cache").is_err());
++    }
++    #[test]
++    fn large_playlists_keep_every_position_while_public_pages_stay_bounded() {
++        let root = tempfile::tempdir().unwrap();
++        let p = paths(root.path());
++        let lib = stage(&p);
++        let a = fixture(&lib, "1111111111111111111111", &"Long title ".repeat(20));
++        let b = fixture(&lib, "2222222222222222222222", "Second");
++        let tracks: Vec<_> = (0..710)
++            .map(|i| if i % 2 == 0 { a.clone() } else { b.clone() })
++            .collect();
++        publish(&p, tracks.clone()).unwrap();
++        let index = load_index(&p, ACCOUNT).unwrap();
++        let entry = &index.playlists[URI];
++        let saved = entry_library(&p, ACCOUNT, entry).unwrap();
++        let actual = select_complete(&saved, URI, entry).unwrap();
++        assert_eq!(actual.len(), 710);
++        assert!(actual.iter().zip(tracks).all(|(a, b)| a.uri == b.uri));
++        assert!(fs::metadata(index_path(&p, ACCOUNT)).unwrap().len() > PUBLIC_JSON);
++        let public = PublicEntry {
++            ready: true,
++            total_tracks: entry.tracks.len(),
++            name: entry.name.clone(),
++            snapshot_id: entry.snapshot_id.clone(),
++            synced_at: entry.synced_at,
++            bytes: entry.bytes,
++            tracks: entry
++                .tracks
++                .iter()
++                .take(super::super::native::PAGE_SIZE)
++                .cloned()
++                .collect(),
++        };
++        let output = p.root.join("public.json");
++        write_public(&output, &public).unwrap();
++        assert_eq!(public.total_tracks, 710);
++        assert_eq!(public.tracks.len(), 50);
++        assert!(fs::metadata(output).unwrap().len() <= PUBLIC_JSON);
++    }
++    #[test]
++    fn automatic_quota_uses_available_disk_space_and_keeps_the_reserve() {
++        let root = tempfile::tempdir().unwrap();
++        let mut p = paths(root.path());
++        fs::create_dir_all(&p.root).unwrap();
++        p.quota = 0;
++        let before = used_bytes(&p.root).unwrap();
++        let free = free_bytes(&p.root).unwrap();
++        let budget = effective_quota(&p).unwrap();
++        assert!(budget.abs_diff(before + free.saturating_sub(AUTO_RESERVE)) < 1024 * 1024);
++        assert!(check_capacity(&p, free).is_err());
++        assert!(check_capacity(&p, 1).is_ok());
++    }
++    #[test]
 +    fn the_public_song_schema_contains_neither_keys_nor_storage_paths() {
 +        let root = tempfile::tempdir().unwrap();
 +        let p = paths(root.path());
@@ -1605,18 +2396,20 @@ index 0000000..b06d120
 +    }
 +}
 diff --git a/spotify_player/src/downloads/mod.rs b/spotify_player/src/downloads/mod.rs
-index b15bcea..4ee64fc 100644
+index b15bcea..8b64428 100644
 --- a/spotify_player/src/downloads/mod.rs
 +++ b/spotify_player/src/downloads/mod.rs
-@@ -0,0 +1,2 @@
+@@ -0,0 +1,4 @@
 +#[cfg(unix)]
 +mod managed;
-@@ -10,0 +13 @@ use librespot_metadata::audio::{AudioFileFormat, AudioItem, UniqueFields};
++#[cfg(unix)]
++mod native;
+@@ -10,0 +15 @@ use librespot_metadata::audio::{AudioFileFormat, AudioItem, UniqueFields};
 +use librespot_playback::decoder::AudioDecoder;
-@@ -17 +20 @@ pub fn command() -> Command {
+@@ -17 +22 @@ pub fn command() -> Command {
 -    Command::new("downloads")
 +    let command = Command::new("downloads")
-@@ -37,0 +41,12 @@ pub fn command() -> Command {
+@@ -37,0 +43,12 @@ pub fn command() -> Command {
 +                )
 +                .arg(
 +                    Arg::new("headless")
@@ -1629,7 +2422,7 @@ index b15bcea..4ee64fc 100644
 +                        .requires("headless")
 +                        .value_parser(clap::value_parser!(u64).range(1..=300))
 +                        .help("Maximum playback seconds in headless mode (default: 30)"),
-@@ -47,0 +63,8 @@ pub fn command() -> Command {
+@@ -47,0 +65,8 @@ pub fn command() -> Command {
 +        .subcommand(
 +            Command::new("probe")
 +                .about("Check local decoding and seeking without opening an audio device")
@@ -1638,7 +2431,7 @@ index b15bcea..4ee64fc 100644
 +    #[cfg(unix)]
 +    let command = command.subcommand(managed::command());
 +    command
-@@ -95 +118,12 @@ pub fn handle(args: &ArgMatches) -> Result<()> {
+@@ -95 +120,12 @@ pub fn handle(args: &ArgMatches) -> Result<()> {
 -        ("play", args) => play(args.get_one::<String>("source").map(String::as_str), None),
 +        ("play", args) => {
 +            let source = args.get_one::<String>("source").map(String::as_str);
@@ -1652,7 +2445,7 @@ index b15bcea..4ee64fc 100644
 +                play(source, None)
 +            }
 +        }
-@@ -121,0 +156,33 @@ pub fn handle(args: &ArgMatches) -> Result<()> {
+@@ -121,0 +158,33 @@ pub fn handle(args: &ArgMatches) -> Result<()> {
 +        ("probe", args) => {
 +            let source = parse_source(
 +                args.get_one::<String>("source")
@@ -1686,8 +2479,62 @@ index b15bcea..4ee64fc 100644
 +        }
 +        #[cfg(unix)]
 +        ("managed", args) => managed::handle(args),
-@@ -232,0 +300,9 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
+@@ -233,2 +302,7 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
+-    let original_uri = SpotifyUri::from_uri(uri)?;
+-    let mut item = AudioItem::get_file(session, original_uri).await?;
 +    download_checked(session, library, uri, |_| Ok(())).await
++}
++
++fn selected_file(
++    item: &AudioItem,
++    formats: &[(AudioFileFormat, usize)],
++) -> Option<(librespot_core::FileId, usize)> {
+@@ -236,9 +310,26 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
+-        let alternatives = item
+-            .alternatives
+-            .clone()
+-            .context("track unavailable in your market")?;
+-        for alternative in alternatives.0 {
+-            let candidate = AudioItem::get_file(session, alternative).await?;
+-            if candidate.availability.is_ok() {
+-                item = candidate;
+-                break;
++        return None;
++    }
++    formats
++        .iter()
++        .find_map(|(format, rate)| item.files.get(format).map(|id| (*id, *rate)))
++}
++async fn resolve_downloadable<F, Fut>(
++    item: AudioItem,
++    formats: &[(AudioFileFormat, usize)],
++    mut load: F,
++) -> Result<AudioItem>
++where
++    F: FnMut(SpotifyUri) -> Fut,
++    Fut: std::future::Future<Output = Result<AudioItem>>,
++{
++    if selected_file(&item, formats).is_some() {
++        return Ok(item);
++    }
++    // Spotify may mark a track available while providing its files only on an
++    // alternative ID. Keep the playlist URI, but use that ID for the audio key.
++    if let Some(alternatives) = &item.alternatives {
++        for alternative in &alternatives.0 {
++            if let Ok(candidate) = load(alternative.clone()).await {
++                if selected_file(&candidate, formats).is_some() {
++                    return Ok(candidate);
++                }
+@@ -249,2 +340,2 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
+-        item.availability.is_ok(),
+-        "track unavailable in your market"
++        item.availability.is_ok() && !item.files.is_empty(),
++        "track_unavailable: Spotify returned no downloadable version"
+@@ -251,0 +343,14 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
++    anyhow::bail!(
++        "unsupported_audio_format: available formats {:?}",
++        item.files.keys().collect::<Vec<_>>()
++    )
 +}
 +
 +async fn download_checked(
@@ -1696,8 +2543,177 @@ index b15bcea..4ee64fc 100644
 +    uri: &str,
 +    check: impl FnOnce(u64) -> Result<()>,
 +) -> Result<()> {
-@@ -278,0 +355 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
++    let original_uri = SpotifyUri::from_uri(uri)?;
++    let item = AudioItem::get_file(session, original_uri).await?;
+@@ -270,4 +375,5 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
+-    let (file_id, rate) = formats
+-        .iter()
+-        .find_map(|(f, rate)| item.files.get(f).map(|id| (*id, *rate)))
+-        .context("no supported Ogg Vorbis audio file for this track")?;
++    let item = resolve_downloadable(item, &formats, |alternative| async move {
++        Ok(AudioItem::get_file(session, alternative).await?)
++    })
++    .await?;
++    let (file_id, rate) = selected_file(&item, &formats).context("track_unavailable")?;
+@@ -278,0 +385 @@ async fn download(session: &Session, library: &Library, uri: &str) -> Result<()>
 +    check(bytes)?;
+@@ -340,0 +448,59 @@ mod tests {
++    fn metadata(uri: SpotifyUri) -> AudioItem {
++        AudioItem {
++            track_id: uri.clone(),
++            uri: uri.to_uri().unwrap(),
++            files: librespot_metadata::audio::AudioFiles::default(),
++            name: "Fixture".into(),
++            covers: vec![],
++            language: vec![],
++            duration_ms: 1000,
++            is_explicit: false,
++            availability: Ok(()),
++            alternatives: None,
++            unique_fields: UniqueFields::Local {
++                artists: None,
++                album: None,
++                album_artists: None,
++                number: None,
++                disc_number: None,
++                path: std::path::PathBuf::new(),
++            },
++        }
++    }
++    #[tokio::test]
++    async fn resolves_an_available_track_whose_audio_exists_only_on_an_alternative() {
++        let uri = SpotifyUri::from_uri("spotify:track:1111111111111111111111").unwrap();
++        let alternative = SpotifyUri::from_uri("spotify:track:2222222222222222222222").unwrap();
++        let mut original = metadata(uri);
++        original.alternatives = Some(librespot_metadata::track::Tracks(vec![alternative.clone()]));
++        let formats = [(AudioFileFormat::OGG_VORBIS_96, 96)];
++        assert!(selected_file(&original, &formats).is_none());
++        let mut candidate = metadata(alternative.clone());
++        candidate.files.insert(
++            AudioFileFormat::OGG_VORBIS_96,
++            librespot_core::FileId([1; 20]),
++        );
++        let resolved = resolve_downloadable(original, &formats, |_| {
++            let candidate = candidate.clone();
++            async { Ok(candidate) }
++        })
++        .await
++        .unwrap();
++        assert_eq!(resolved.track_id, alternative);
++        assert_eq!(
++            selected_file(&resolved, &formats).unwrap().0,
++            librespot_core::FileId([1; 20])
++        );
++    }
++    #[tokio::test]
++    async fn a_track_without_audio_or_alternatives_is_explicitly_unavailable() {
++        let item = metadata(SpotifyUri::from_uri("spotify:track:1111111111111111111111").unwrap());
++        let error =
++            resolve_downloadable(item, &[(AudioFileFormat::OGG_VORBIS_96, 96)], |_| async {
++                unreachable!()
++            })
++            .await
++            .unwrap_err();
++        assert!(format!("{error:#}").contains("track_unavailable"));
++    }
++
+diff --git a/spotify_player/src/downloads/native.rs b/spotify_player/src/downloads/native.rs
+new file mode 100644
+index 0000000..a499089
+--- /dev/null
++++ b/spotify_player/src/downloads/native.rs
+@@ -0,0 +1,91 @@
++use anyhow::{ensure, Context, Result};
++use librespot_core::{Session, SpotifyUri};
++use librespot_metadata::{
++    audio::{AudioItem, UniqueFields},
++    playlist::Playlist,
++    Metadata as _,
++};
++use serde::{Deserialize, Serialize};
++use sha2::{Digest, Sha256};
++use std::fmt::Write as _;
++
++pub(super) const PAGE_SIZE: usize = 50;
++pub(super) struct Listing {
++    pub name: String,
++    pub revision: String,
++    pub uris: Vec<String>,
++}
++
++pub(super) async fn listing(session: &Session, uri: &str) -> Result<Listing> {
++    let playlist = Playlist::get(session, &SpotifyUri::from_uri(uri)?).await?;
++    ensure!(
++        playlist.length >= 0 && playlist.length <= 10_000,
++        "playlist_too_large"
++    );
++    let uris = playlist
++        .tracks()
++        .map(SpotifyUri::to_uri)
++        .collect::<std::result::Result<Vec<_>, _>>()?;
++    ensure!(
++        !playlist.contents.is_truncated
++            && playlist.contents.position == 0
++            && uris.len() == playlist.length as usize,
++        "playlist_incomplete: metadata page was truncated"
++    );
++    let revision = Sha256::digest(&playlist.revision).iter().fold(
++        String::with_capacity(64),
++        |mut out, byte| {
++            let _ = write!(out, "{byte:02x}");
++            out
++        },
++    );
++    Ok(Listing {
++        name: playlist.name().to_owned(),
++        revision,
++        uris,
++    })
++}
++
++#[derive(Clone, Serialize, Deserialize)]
++pub(super) struct Song {
++    pub uri: String,
++    pub name: String,
++    pub artists: Vec<String>,
++    pub album: String,
++    pub duration_ms: u32,
++    pub bytes: u64,
++    pub problem: Option<String>,
++}
++
++pub(super) async fn song(session: &Session, uri: &str) -> Result<Song> {
++    let item = AudioItem::get_file(session, SpotifyUri::from_uri(uri)?)
++        .await
++        .context("playlist item metadata unavailable")?;
++    let problem = if !uri.starts_with("spotify:track:") {
++        Some("unsupported_item".into())
++    } else if item.alternatives.is_none() && (item.availability.is_err() || item.files.is_empty()) {
++        Some("track_unavailable".into())
++    } else {
++        None
++    };
++    let (artists, album) = match &item.unique_fields {
++        UniqueFields::Track { artists, album, .. } => (
++            artists.0.iter().map(|a| a.name.clone()).collect(),
++            album.clone(),
++        ),
++        UniqueFields::Episode { show_name, .. } => (vec![show_name.clone()], show_name.clone()),
++        UniqueFields::Local { artists, album, .. } => (
++            artists.clone().into_iter().collect(),
++            album.clone().unwrap_or_default(),
++        ),
++    };
++    Ok(Song {
++        uri: uri.to_owned(),
++        name: item.name,
++        artists,
++        album,
++        duration_ms: item.duration_ms,
++        bytes: 0,
++        problem,
++    })
++}
 diff --git a/spotify_player/src/downloads/player.rs b/spotify_player/src/downloads/player.rs
 index f277f8b..ad67eb1 100644
 --- a/spotify_player/src/downloads/player.rs

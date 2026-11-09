@@ -85,6 +85,7 @@ local function start(doc, pb, playlist_id, opts)
   if has_offline and offline.wants(doc, playlist_id) then
     local r, e = offline.start(doc, playlist_id, p, opts)
     if not r then return nil, e end
+    if r.continued then r.now, r.continued = nil, nil; return r end
     local cmds = {}
     if pb.now and (pb.now.service == "SPOTIFY" or pb.now.service == "DEEZER") then
       for _, c in ipairs(require("services.streaming").transport(pb.now.service, "stop")) do cmds[#cmds + 1] = c end
@@ -264,9 +265,9 @@ function playback.on_pause(doc, ev)
     -- taking a token off pauses what a token started, not Spotify started from the phone
     if ev.source == "token" and not pb.now.playlist then return nil end
     -- a Spotify playlist set to resume first asks Spotify where it is (services.streaming saves it)
-    local p = ev.source == "token" and doc.library and doc.library.playlists[pb.now.playlist]
+    local p = doc.library and doc.library.playlists[pb.now.playlist]
     if p and p.resume and pb.now.service == "SPOTIFY" then
-      return { commands = { emit("streaming.save_resume", { playlist = pb.now.playlist, position_ms = pb.position_ms }) } }
+      return { commands = { emit("streaming.save_resume", { playlist = pb.now.playlist, position_ms = pb.position_ms, now = ev.now }) } }
     end
     return stream_cmds(pb, "pause")
   end

@@ -505,3 +505,37 @@ button.srow:disabled { opacity: .5; cursor: default; }
   .labels { gap: 4mm; justify-content: start; }
   .label { border-color: #bbb; break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Spotify playlist details: readable songs, one download, visible queue. */
+.offline-panel { margin-top: 16px; padding: 20px; overflow: hidden; }
+.offline-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.offline-heading h3 { margin: 0; font-size: 18px; }
+.offline-count, .offline-badge { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: var(--muted); background: var(--bg); padding: 5px 9px; border-radius: 999px; }
+.offline-badge.ready { color: #19834a; background: #19834a15; }
+.offline-toolbar { margin-top: 16px; }
+.offline-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 10px; }
+.offline-actions .btn.primary { flex: 1 1 180px; }
+.offline-notice { margin: 12px 0; padding: 12px; border-radius: 10px; background: var(--bg); font-size: 14px; }
+.offline-notice.error { background: #d76d1518; }
+.offline-progress { margin: 16px 0; padding: 14px; background: var(--bg); border-radius: 12px; }
+.offline-progress p { margin: 8px 0; }
+.offline-progress progress { display: block; width: 100%; height: 7px; accent-color: var(--accent); margin: 12px 0; }
+.offline-storage { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 16px; margin-top: 16px; }
+.offline-queue { padding: 12px 0; }
+.offline-queue summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.offline-queue ol { padding-left: 22px; }
+.offline-queue li { padding: 4px 0; }
+.offline-queue .icon-btn { width: 32px; height: 32px; margin-left: 8px; }
+.spotify-titles { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 20px; }
+[data-k=spotify-metadata] .spotify-titles { margin-top: 0; border: 0; padding-top: 0; }
+.offline-tracks { list-style: none; margin: 14px 0 0; padding: 0; }
+.offline-track { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.offline-track:last-child { border-bottom: 0; }
+.offline-track.selected { color: var(--accent); }
+.offline-number { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.offline-track-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; overflow-wrap: anywhere; }
+.offline-track-info .title { font-weight: 600; font-size: 14px; line-height: 1.35; }
+.offline-duration { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.offline-paging { display: flex; align-items: center; justify-content: space-between; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.offline-paging .btn { padding: 9px; font-size: 13px; }
+@media (max-width: 420px) { .offline-panel { padding: 16px; } .offline-track { gap: 7px; grid-template-columns: 20px minmax(0, 1fr) auto auto; } .offline-heading h3 { font-size: 17px; } }

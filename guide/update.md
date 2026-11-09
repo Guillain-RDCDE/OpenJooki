@@ -25,4 +25,14 @@ No message? *Settings → Update → **Check for updates***.
 
 What changed in each version: [CHANGELOG](../CHANGELOG.md).
 
+## Offline test branch
+
+The `feature/spotify-offline-audit` branch in the fork produces experimental
+`2.4.21-offline.N` application packages, separately from normal upstream updates.
+They include the web page, Lua core and an SD-resident player; credentials and
+music are excluded. Use the matching installer and retain its private rollback
+state. A normal upstream update can replace these experimental additions.
+See [the test setup and login guide](spotify-offline.de.md) and
+[the package/rollback commands](../tools/spotify-offline/README.md).
+
 [← Back](../README.md)

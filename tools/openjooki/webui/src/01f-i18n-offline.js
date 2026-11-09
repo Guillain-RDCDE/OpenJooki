@@ -50,3 +50,72 @@
     of_empty: 'Nummers verschijnen tijdens het synchroniseren.', of_play: 'Offline afspelen', of_remove_q: 'Offline kopie verwijderen?',
     of_remove_help: 'Alleen de gedownloade kopie wordt verwijderd. De afspeellijst en het figuurtje blijven behouden.'
   });
+  Object.assign(T.en, {
+    of_title: 'Save for offline use', of_songs: 'Songs', of_online_badge: 'Online', of_queued: 'Queued', of_enqueue: 'Add to download queue',
+    of_cancel_queue: 'Remove from queue', of_queue: 'Download queue', of_queue_position: function (n) { return 'Position ' + n + ' in the download queue'; },
+    of_free: 'Free on SD', of_auto_storage: 'The storage budget follows free SD space and keeps a reserve available.',
+    of_titles_login: 'Connect Spotify to see the songs. Spotify Free is supported.', of_connect: 'Connect Spotify', of_titles_loading: 'Loading songs…',
+    of_load_titles: 'Load songs', of_retry: 'Try again', of_previous: 'Previous', of_next: 'Next', of_item_unavailable: 'Unavailable for offline playback',
+    of_unsupported: 'This playlist contains items the offline player cannot download.', of_too_large: 'This playlist exceeds the metadata capacity.',
+    of_incomplete: 'Spotify returned an incomplete playlist. Reload the songs before trying again.', of_changed: 'The playlist changed during the download. Try again.',
+    of_unavailable: 'A song is unavailable for this account or region.', of_rate: 'Spotify is limiting requests. Please wait before trying again.',
+    of_network: 'Spotify did not respond in time. Check the connection and try again.', of_auth_error: 'Connect Spotify again in Settings.', of_start_error: 'Playback could not start. Try again.'
+  });
+  Object.assign(T.de, {
+    of_title: 'Offline speichern', of_songs: 'Titelliste', of_online_badge: 'Online', of_queued: 'Vorgemerkt', of_enqueue: 'Zur Download-Queue hinzufügen',
+    of_cancel_queue: 'Aus Queue entfernen', of_queue: 'Download-Warteschlange', of_queue_position: function (n) { return 'Platz ' + n + ' in der Download-Warteschlange'; },
+    of_free: 'Frei auf der SD-Karte', of_auto_storage: 'Das Speicherbudget richtet sich nach dem freien SD-Speicher und lässt eine Reserve frei.',
+    of_titles_login: 'Spotify verbinden, um die Titel zu sehen. Das funktioniert auch mit Spotify Free.', of_connect: 'Spotify verbinden', of_titles_loading: 'Titelliste wird geladen …',
+    of_load_titles: 'Titelliste laden', of_retry: 'Erneut versuchen', of_previous: 'Zurück', of_next: 'Weiter', of_item_unavailable: 'Offline nicht verfügbar',
+    of_unsupported: 'Diese Playlist enthält Einträge, die der Offline-Player nicht herunterladen kann.', of_too_large: 'Die Titelliste überschreitet die Metadatenkapazität.',
+    of_incomplete: 'Spotify hat eine unvollständige Playlist geliefert. Titelliste neu laden und erneut versuchen.', of_changed: 'Die Playlist wurde während des Downloads geändert. Bitte erneut versuchen.',
+    of_unavailable: 'Ein Titel ist für dieses Konto oder diese Region nicht verfügbar.', of_rate: 'Spotify begrenzt gerade die Abfragen. Bitte etwas warten und erneut versuchen.',
+    of_network: 'Spotify hat nicht rechtzeitig geantwortet. Verbindung prüfen und erneut versuchen.', of_auth_error: 'Spotify in den Einstellungen erneut verbinden.', of_start_error: 'Die Wiedergabe konnte nicht starten. Bitte erneut versuchen.'
+  });
+  Object.assign(T.fr, {
+    of_title: 'Enregistrer hors ligne', of_songs: 'Titres', of_online_badge: 'En ligne', of_queued: 'En attente', of_enqueue: 'Ajouter aux téléchargements',
+    of_cancel_queue: 'Retirer de la file', of_queue: 'File de téléchargement', of_queue_position: function (n) { return 'Position ' + n + ' dans la file de téléchargement'; },
+    of_free: 'Libre sur la carte SD', of_auto_storage: 'Le budget suit l’espace libre de la carte SD en conservant une réserve.',
+    of_titles_login: 'Connectez Spotify pour voir les titres. Spotify Free est accepté.', of_connect: 'Connecter Spotify', of_titles_loading: 'Chargement des titres…',
+    of_load_titles: 'Charger les titres', of_retry: 'Réessayer', of_previous: 'Précédent', of_next: 'Suivant', of_item_unavailable: 'Indisponible hors ligne',
+    of_unsupported: 'Cette playlist contient des éléments non pris en charge hors ligne.', of_too_large: 'Cette playlist dépasse la capacité des métadonnées.',
+    of_incomplete: 'Spotify a renvoyé une playlist incomplète. Rechargez les titres.', of_changed: 'La playlist a changé pendant le téléchargement. Réessayez.',
+    of_unavailable: 'Un titre est indisponible pour ce compte ou cette région.', of_rate: 'Spotify limite les requêtes. Patientez avant de réessayer.',
+    of_network: 'Spotify n’a pas répondu à temps. Vérifiez la connexion.', of_auth_error: 'Reconnectez Spotify dans les réglages.', of_start_error: 'La lecture n’a pas démarré. Réessayez.'
+  });
+  Object.assign(T.nl, {
+    of_title: 'Offline opslaan', of_songs: 'Nummers', of_online_badge: 'Online', of_queued: 'In wachtrij', of_enqueue: 'Toevoegen aan downloadwachtrij',
+    of_cancel_queue: 'Uit wachtrij verwijderen', of_queue: 'Downloadwachtrij', of_queue_position: function (n) { return 'Plaats ' + n + ' in de downloadwachtrij'; },
+    of_free: 'Vrij op de SD-kaart', of_auto_storage: 'Het opslagbudget volgt de vrije SD-ruimte en houdt een reserve vrij.',
+    of_titles_login: 'Verbind Spotify om de nummers te zien. Spotify Free wordt ondersteund.', of_connect: 'Spotify verbinden', of_titles_loading: 'Nummers laden…',
+    of_load_titles: 'Nummers laden', of_retry: 'Opnieuw proberen', of_previous: 'Vorige', of_next: 'Volgende', of_item_unavailable: 'Offline niet beschikbaar',
+    of_unsupported: 'Deze afspeellijst bevat items die offline niet worden ondersteund.', of_too_large: 'Deze afspeellijst overschrijdt de metadatacapaciteit.',
+    of_incomplete: 'Spotify heeft een onvolledige lijst geleverd. Laad de nummers opnieuw.', of_changed: 'De lijst is tijdens de download gewijzigd. Probeer opnieuw.',
+    of_unavailable: 'Een nummer is niet beschikbaar voor dit account of deze regio.', of_rate: 'Spotify beperkt de aanvragen. Wacht even en probeer opnieuw.',
+    of_network: 'Spotify heeft niet op tijd geantwoord. Controleer de verbinding.', of_auth_error: 'Verbind Spotify opnieuw in Instellingen.', of_start_error: 'Afspelen kon niet starten. Probeer opnieuw.'
+  });
+  Object.assign(T.en, { of_error: 'The download could not finish. Try again to continue.', of_metadata_error: 'The song list could not load. Please try again.' });
+  Object.assign(T.de, { of_error: 'Der Download konnte nicht abgeschlossen werden. Erneut versuchen, um fortzusetzen.', of_metadata_error: 'Die Titelliste konnte nicht geladen werden. Bitte erneut versuchen.' });
+  Object.assign(T.fr, { of_error: 'Le téléchargement est incomplet. Réessayez pour le reprendre.', of_metadata_error: 'Les titres n’ont pas pu être chargés. Réessayez.' });
+  Object.assign(T.nl, { of_error: 'De download is niet voltooid. Probeer opnieuw om verder te gaan.', of_metadata_error: 'De nummers konden niet worden geladen. Probeer opnieuw.' });
+
+  Object.assign(T.en, { of_resume_queue: 'Continue queue' });
+
+  Object.assign(T.de, { of_resume_queue: 'Warteschlange fortsetzen' });
+
+  Object.assign(T.fr, { of_resume_queue: 'Reprendre la file' });
+
+  Object.assign(T.nl, { of_resume_queue: 'Wachtrij hervatten' });
+
+  Object.assign(T.en, { of_audio_format: 'The offline player does not yet support an audio format in this playlist.' });
+
+  Object.assign(T.de, { of_audio_format: 'Ein Audioformat dieser Playlist wird vom Offline-Player noch nicht unterstützt.' });
+
+  Object.assign(T.fr, { of_audio_format: 'Un format audio de cette playlist n’est pas encore pris en charge hors ligne.' });
+
+  Object.assign(T.nl, { of_audio_format: 'De offline speler ondersteunt een audioformaat in deze afspeellijst nog niet.' });
+
+  Object.assign(T.en, { of_failed_at: function (n, total) { return 'Stopped at song ' + n + ' of ' + total + '.'; }, of_unavailable: 'The test player could not obtain downloadable audio for this song.' });
+  Object.assign(T.de, { of_failed_at: function (n, total) { return 'Abbruch bei Titel ' + n + ' von ' + total + '.'; }, of_unavailable: 'Für diesen Titel erhält der Testplayer keine herunterladbare Audiodatei.' });
+  Object.assign(T.fr, { of_failed_at: function (n, total) { return 'Arrêt au titre ' + n + ' sur ' + total + '.'; }, of_unavailable: 'Le lecteur de test ne reçoit pas de fichier audio téléchargeable pour ce titre.' });
+  Object.assign(T.nl, { of_failed_at: function (n, total) { return 'Gestopt bij nummer ' + n + ' van ' + total + '.'; }, of_unavailable: 'De testspeler ontvangt geen downloadbaar audiobestand voor dit nummer.' });

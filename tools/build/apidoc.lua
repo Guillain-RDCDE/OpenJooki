@@ -62,11 +62,17 @@ local DESC = {
   ["update.start"] = "Starts the A/B update (progress in /oj-status.txt).",
   ["spotify.new_playlist"] = "Saves what Spotify is playing as a playlist (preset), optionally linked to a character.",
   ["spotify.forget_account"] = "Forgets the Jooki's own Spotify account (`state.spotify.saved`, the one it logs back into at every start): the daemon starts again with none, and the next account that picks the Jooki in the Spotify app becomes its own.",
-  ["spotify_offline.sync"] = "Synchronizes the exact Spotify playlist to a verified, account-scoped SD snapshot. Parent code protected; Premium required.",
+  ["spotify_offline.sync"] = "Enqueues or resumes the exact Spotify playlist for a verified, account-scoped SD snapshot. A single active download, up to 32 waiting entries. Parent code protected; Premium required.",
+  ["spotify_offline.preview"] = "Reads a bounded metadata page (offset, up to 50 songs) with metadata-only Free OAuth or Premium. Does not download audio.",
+  ["spotify_offline.cancel_queued"] = "Removes a waiting playlist from the account-bound download queue. Parent code protected.",
+  ["spotify_offline.resume_queue"] = "Continues the queue after storage/authentication trouble is resolved. Parent code protected.",
+  ["spotify_offline.login"] = "Requests settings-driven computer OAuth: metadata-only for song lists, or Premium for native metadata and offline audio. Requires a connected helper and parent code when set.",
+  ["spotify_offline.cancel_login"] = "Invalidates the pending computer login request while retaining the existing account. Parent code protected.",
+  ["spotify_offline.auth_helper"] = "Computer helper heartbeat and public authorization status. Completion must match the active request; secrets travel separately over SSH. Parent code protected.",
   ["spotify_offline.remove"] = "Removes the saved snapshot while playback and synchronization are stopped. Parent code protected.",
   ["spotify_offline.mode"] = "Selects original streaming (online), saved snapshot when complete (auto), or required offline playback. Parent code protected.",
   ["spotify_offline.play"] = "Plays a saved snapshot, optionally at a one-based song index, through normal transport controls.",
-  ["spotify_offline.forget_account"] = "Stops this backend and forgets its separate Premium authentication. Parent code protected.",
+  ["spotify_offline.forget_account"] = "Stops owned jobs, invalidates pending login, clears the queue and forgets this backend’s grants. Keeps the original online account. Parent code protected.",
   ["deezer.get_playlists"] = "Asks the Deezer daemon for the user's playlists.", ["deezer.set_config"] = "Stores Deezer credentials for the daemon.",
 }
 
@@ -79,7 +85,7 @@ io.write("| Jooki → page | `" .. api.TOPIC_STATE .. "` | full: `{\"v\":2, \"re
 io.write("| Jooki → page | `" .. api.TOPIC_EVENT .. "` | `{\"v\":2, \"type\":\"…\", \"payload\":{…}}` |\n\n")
 io.write("Error codes: `invalid_argument` (field names the culprit), `not_found`, `forbidden` (the parent code, when one is set: `PARENT_CODE_REQUIRED`), `read_only`, `conflict`, `unavailable`, `internal`.\n\n")
 io.write("The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/api/v1.lua`: it is the one the page speaks (docs/11-content-api.md). The security switches (SSH, parent code, MQTT on the LAN), Bluetooth and a token's photo exist only there.\n\n")
-io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account readiness, playlists, modes, download, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
+io.write("## State document keys\n\n`device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `spotify_offline` {availability, account and metadata readiness, playlists, modes, download, queue, jobs, previews, auth, player, storage}, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)\n\n")
 io.write("## Commands (" .. #api.commands() .. ")\n\n")
 local cmds = api.commands()
 for _, name in ipairs(cmds) do

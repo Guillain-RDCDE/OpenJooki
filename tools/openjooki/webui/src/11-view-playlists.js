@@ -202,7 +202,7 @@
       // a Spotify preset: it plays from Spotify, there is nothing of ours to add or sort
       return [head, h('div', { class: 'actions' },
           h('button', { class: 'btn primary', 'data-k': 'spplay', onclick: function () { playPlaylist(p); } }, icon('play'), t('play'))),
-        h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
+        obj(S.spotifyOffline).available ? h('p', { class: 'small muted', 'data-k': 'sphelp' }, t('sp_playlist_help')) : h('div', { class: 'card empty', 'data-k': 'sphelp' }, h('div', { class: 'big' }, '🎧'), h('div', null, t('sp_playlist')), h('div', { class: 'small' }, t('sp_playlist_help'))),
         spotifyOfflineCard(p, id),
         resumeSwitch(p, id), p.resume || p.audiobook ? null : h('div', { class: 'card', style: 'margin-top:16px' }, modeRows(p, id)),
         deletePlaylistBtn(p, id)];

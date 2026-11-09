@@ -53,7 +53,7 @@ config.defaults = {
   spotify_offline_enabled = false,
   spotify_offline_root = "/jooki/external/openjooki-offline",
   spotify_offline_binary = "/jooki/external/openjooki-offline/current/spotify_player",
-  spotify_offline_quota_bytes = 512 * 1024 * 1024,
+  spotify_offline_quota_bytes = 0,
   -- streaming module (ADR-0009)
   streaming_enabled = true,
   -- the Spotify account the daemon logs back into at every start: spotify_ctrl writes it only for the

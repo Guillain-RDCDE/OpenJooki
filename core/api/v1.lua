@@ -252,6 +252,12 @@ H.OJ_BT_SCAN = function(doc) return bluetooth.on_scan(doc) end
 H.OJ_BT_CONNECT = function(doc, p) return bluetooth.on_connect(doc, p) end
 H.OJ_BT_FORGET = function(doc, p) return bluetooth.on_forget(doc, p) end
 -- security switches (docs/adr/0007)
+H.OJ_OFFLINE_CANCEL_LOGIN = function(doc) return offline.on_cancel_login(doc) end
+H.OJ_OFFLINE_LOGIN = function(doc, p, ev) return offline.on_login(doc, { mode = p.mode, now = ev.now }) end
+H.OJ_OFFLINE_AUTH_HELPER = function(doc, p) return offline.on_auth_helper(doc, p) end
+H.OJ_OFFLINE_PREVIEW = function(doc, p, ev) return offline.on_preview_request(doc, { playlist = p.playlistId, offset = p.offset, now = ev.now }) end
+H.OJ_OFFLINE_CANCEL_QUEUED = function(doc, p) return offline.on_cancel_queued(doc, { playlist = p.playlistId }) end
+H.OJ_OFFLINE_RESUME_QUEUE = function(doc) return offline.on_resume_queue(doc) end
 H.OJ_OFFLINE_PLAY = function(doc, p, ev) return offline.on_play(doc, { playlist = p.playlistId, index = tonumber(p.trackIndex), now = ev.now }) end
 H.OJ_OFFLINE_SYNC = function(doc, p, ev) return offline.on_sync(doc, { playlist = p.playlistId, now = ev.now }) end
 H.OJ_OFFLINE_REMOVE = function(doc, p) return offline.on_remove(doc, { playlist = p.playlistId }) end
@@ -277,7 +283,7 @@ local PROTECTED = {
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,
-  OJ_OFFLINE_SYNC = true, OJ_OFFLINE_REMOVE = true, OJ_OFFLINE_MODE = true, OJ_OFFLINE_FORGET = true,
+  OJ_OFFLINE_CANCEL_LOGIN = true, OJ_OFFLINE_LOGIN = true, OJ_OFFLINE_AUTH_HELPER = true, OJ_OFFLINE_CANCEL_QUEUED = true, OJ_OFFLINE_RESUME_QUEUE = true, OJ_OFFLINE_SYNC = true, OJ_OFFLINE_REMOVE = true, OJ_OFFLINE_MODE = true, OJ_OFFLINE_FORGET = true,
   OJ_BT_CONNECT = true, OJ_BT_FORGET = true, OJ_SPOTIFY_FORGET = true,
 }
 v1.PROTECTED = PROTECTED

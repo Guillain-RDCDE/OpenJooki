@@ -4,7 +4,7 @@ Needs Playwright's Chromium only (no Bluetooth, no Jooki).      python3 test_wif
 
 Covers: no Web Bluetooth, find + scan (sorted, one per name, open network, empty name dropped),
 remembered networks, password guard, good password, wrong password (chip says AuthError), network
-not found, chip silent (timeout), a Bluetooth read failing once, the handshake before every set-up,
+not found, chip silent (timeout), a Bluetooth read failing once, the link dropping while looking for networks, the handshake before every set-up,
 forget (confirmed / cancelled), Bluetooth off."""
 import os, threading, http.server, functools
 from playwright.sync_api import sync_playwright
@@ -72,6 +72,7 @@ MOCK = r"""
         last = handle(uuid, buf); },
       readValue: async function () {
         if (uuid.slice(-3) === 'd03') return new DataView(enc.encode(J.known.map(function (s) { return '"' + s + '"'; }).join(',')).buffer);
+        if (J.dropScan > 0 && uuid.slice(4, 8) === 'ff50') { J.dropScan--; device.gatt.connected = false; throw err('NetworkError', 'GATT Server is disconnected.'); }
         if (J.dropOnce && uuid.slice(4, 8) === 'ff52' && J.polls === 1) { J.dropOnce = false; throw err('NetworkError', 'GATT Server is disconnected.'); }
         if (!last) throw err('NotSupportedError', 'GATT operation failed for unknown reason.');
         var v = new Uint8Array(last); last = null; return new DataView(v.buffer); } };
@@ -178,6 +179,21 @@ with sync_playwright() as p:
     pg.click("#again"); pg.click(".net[data-ssid='Home']"); pg.fill("#pw", "goodpassword"); pg.click("#connect")
     pg.wait_for_selector("#result:not([hidden])", timeout=20000)
     check("W9 one failed Bluetooth read does not end the attempt", "ok" in pg.locator("#result").get_attribute("class") and not pg.evaluate("window.__jooki.dropOnce"))
+    # W16 the link drops while looking for networks (mail of 09/11/2026): it is made again, nothing typed is lost
+    pg.click("#again"); pg.click(".net[data-ssid='Home']"); pg.fill("#pw", "goodpassword")
+    pg.evaluate("window.__jooki.dropScan = 2"); pg.click("#rescan")
+    check("W16 no sending while it looks for networks", pg.locator("#connect").is_disabled())
+    pg.wait_for_function("window.__jooki.dropScan === 0 && document.querySelector(\".net[data-ssid='Home']\")", timeout=20000)
+    check("W16 two dropped links: the list comes back, no error", pg.locator("#err").is_hidden() and pg.locator(".net").count() >= 3)
+    check("W16 the chosen network and the password stay", pg.input_value("#pw") == "goodpassword" and pg.locator(".net.on[data-ssid='Home']").count() == 1 and pg.locator("#connect").is_enabled())
+    # W17 it keeps dropping: what was found stays usable, and the page says what else to try
+    pg.evaluate("window.__jooki.dropScan = 3"); pg.click("#rescan")
+    pg.wait_for_selector("#err:not([hidden])", timeout=20000)
+    txt = pg.locator("#etext").inner_text()
+    check("W17 three dropped links: it says so, and to try an Android phone", "dropped" in txt and "Android" in txt and "found earlier" in txt, txt)
+    check("W17 the earlier list, the choice and the password stay", pg.locator(".net").count() >= 3 and pg.input_value("#pw") == "goodpassword" and pg.locator("#connect").is_enabled())
+    pg.click("#connect"); pg.wait_for_selector("#result:not([hidden])", timeout=20000)
+    check("W17 ... and the network can still be given", "ok" in pg.locator("#result").get_attribute("class"), pg.locator("#rtext").inner_text())
     # W15 a new link finds no set-up service (the Jooki ends it once it has joined a network):
     # the page says where to look, never a bare "Something went wrong" (mail of 07/11/2026)
     pg.evaluate("window.__jooki.noService = true; document.querySelector('#again').click()")

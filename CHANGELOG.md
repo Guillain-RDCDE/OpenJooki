@@ -4,6 +4,9 @@
 - **Back to the start, from the Jooki itself.** A new choice for the track knob, in *Settings → Jooki buttons*: held to the left for three seconds, the playlist starts again from its first song, and an audiobook forgets its place. Short turns stay next and previous. Off by default (#40, thank you aosavi).
 - **A tidier Settings page.** A short list of subjects, the details behind each one, plain icons instead of coloured tiles, two columns on a computer. Nothing is gone: *Volume and headphones*, *Playback*, *Jooki buttons* and *Advanced* hold what the long list had.
 
+## Wi-Fi page (9 November 2026)
+- When the Bluetooth link drops while the [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html) looks for networks, it links again and starts over, three times. If it still fails, the networks already found, the chosen one and the password stay on the page, so the network can still be given. Tests W16, W17.
+
 ## OpenJooki 2.5.0 (9 November 2026) — Lights out, gute Nacht
 Thank you to Dirk Drutschmann, who wrote nearly all of this in one weekend.
 - **Deutsch.** The Jooki's page now speaks German, the names and searches of all 659 pictures included (#30).

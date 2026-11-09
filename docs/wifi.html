@@ -303,7 +303,7 @@
     // Anywhere else NotFoundError = the Jooki's set-up service was not there on a new link. It ends that
     // service once it has joined a network (factory chip code), so it may well be on the Wi-Fi already.
     if (e && e.name === 'NotFoundError') return 'The Jooki stopped answering over Bluetooth. It may have joined your Wi-Fi already: look in your internet box\'s list of connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If not, switch the Jooki off and on, then try again.';
-    if (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(m)) return 'The Bluetooth link dropped. Bring the Jooki closer and try again.';
+    if (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(m)) return 'The Bluetooth link dropped. Bring the Jooki closer and try again. If it keeps dropping, try from an Android phone with Chrome, right next to the Jooki.';
     if (/nodevice/.test(m)) return 'Find the Jooki first.';
     if (/refused|session/.test(m)) return 'The Jooki refused the request. Switch it off and on, then try again.';
     return 'Bluetooth error: ' + m;
@@ -343,11 +343,23 @@
       show('knownbox', true);
     } catch (e) { show('knownbox', false); }
   }
+  // The link can drop while the chip scans (seen from a Windows PC on a new Jooki): it is made again
+  // and the look starts over, three times. If it still fails, a list already seen stays on the page,
+  // with the chosen network and the password: giving the network does not need a new list.
   async function doScan() {
+    var last = nets;
     show('scanstart', false); show('scanrow', true);
-    show('scanning', true); $('nets').innerHTML = ''; show('netnote', false); $('rescan').disabled = true;
-    try { await link(); nets = await scanNetworks(); }
-    catch (e) { err('Could not look for networks', explain(e)); nets = []; }
+    show('scanning', true); $('nets').innerHTML = ''; show('netnote', false); $('rescan').disabled = true; $('connect').disabled = true;
+    for (var round = 0; ; round++) {
+      try { await link(); nets = await scanNetworks(); break; }
+      catch (e) {
+        TRACE.push('retry look: ' + (e && e.name) + ': ' + (e && e.message));
+        if (round < 2 && (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(String(e && e.message || e)))) { dropLink(); await sleep(2000); continue; }
+        nets = last || [];
+        err('Could not look for networks', explain(e) + (nets.length ? ' The networks below were found earlier: you can still choose one and connect.' : ''));
+        break;
+      }
+    }
     show('scanning', false); $('rescan').disabled = false;
     renderNets();
     if (!nets.length && $('err').hidden) $('nets').innerHTML = '<p class="muted" data-k="nonet">The Jooki sees no 2.4 GHz network from here. Bring it closer to the box, or type a hidden network name.</p>';

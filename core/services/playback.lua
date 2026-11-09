@@ -170,6 +170,7 @@ local function start(doc, pb, playlist_id, opts)
   pb.position_ms = 0
   pb.resume_ms = seek_ms
   pb.paused_by, pb.paused_at, pb.song_replaced = nil, nil, nil
+  if pb.sys and not pb.sys.after then pb.sys = nil end   -- "play" ends a sound still going
   cmds[#cmds + 1] = cmd_audio("play", MUSIC, now.uri)
   cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
   return { state = st(pb), commands = cmds }
@@ -180,6 +181,7 @@ end
 function playback.load_song_again(pb, cmds)
   local position = tonumber(pb.position_ms) or 0
   pb.song_replaced, pb.paused_by, pb.paused_at = nil, nil, nil
+  pb.sys = nil   -- "play" ends a sound still going, and the engine may not report it
   pb.state = "starting"
   pb.resume_ms = (pb.now.service ~= "STREAM" and position > 0) and position or nil
   cmds[#cmds + 1] = cmd_audio("play", MUSIC, pb.now.uri)
@@ -409,6 +411,12 @@ function playback.on_audio(doc, ev)
     pb.state, pb.position_ms = "idle", 0
     return { state = st(pb), commands = { emit("playback.changed", { state = "idle" }),
       { kind = "log", level = "warn", key = "playback.upnp_failed", fields = { uri = tostring(pb.now.uri):sub(1, 120) } } } }
+  end
+  -- a sound took the only pipeline: the engine says the song stopped, but it is only away, and comes
+  -- back after the sound (services.playback.sounds)
+  if pb.sys and pb.song_replaced and (kind == "stopped" or kind == "paused") then
+    if kind == "paused" and pb.state ~= "paused" then pb.state = "paused"; return { state = st(pb) } end
+    return nil
   end
   local cmds = {}
   local resume, resume_changed = nil, false

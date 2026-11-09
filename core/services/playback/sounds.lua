@@ -61,6 +61,8 @@ function sounds.on_boot(_, ev)
   return { state = { system = ev.system or { tracks = {} } } }
 end
 
+sounds.on_system_event = require("services.device.volume_test").wrap(sounds.on_system_event)
+
 function sounds.install(_, dispatch)
   dispatch.on("boot", "playback.sounds", sounds.on_boot)
   dispatch.on("system.event", "playback.sounds", sounds.on_system_event)

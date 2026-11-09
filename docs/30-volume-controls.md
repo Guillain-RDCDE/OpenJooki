@@ -97,3 +97,46 @@ Tested image hashes, source details and remaining device checks are in
 hardware peer; successful protocol replies alone do not establish audible gain.
 Linux A/B rollback does not restore ESP32 flash or NVS. Both recovery layers are
 required for a firmware trial.
+
+## Audition a settings maximum
+
+The kids maximum in Settings and the maximum on the Night mode page each have a
+**Test** button. There is no test button on the player's volume slider. The night
+test works during the day, before the schedule starts (issue
+[#9](https://github.com/Guillain-RDCDE/OpenJooki/issues/9)).
+
+The Jooki plays a short, 660 Hz PCM tone lasting 0.8 seconds through its speaker or wired
+headphone route; Bluetooth follows the speaker route through the ESP32. This uses
+the same mixer and firmware volume command as music. The selected stored maximum
+replaces the requested music volume for the audition; other active kids/night
+ceilings and any fade still apply. The page shows the effective test percentage.
+On stock firmware the physical dial remains the speaker's upper ceiling.
+
+Playing music is muted and paused before the test level is applied. API 2 waits
+for the controller's volume acknowledgments before starting the tone, and again
+before continuing music at its previous requested volume. A separate `aplay`
+process keeps audio_ctrl's file/radio loaded, so continuing a book does not rewind
+or restart its chapter. Previously paused music stays paused. A transport action
+or a moved volume control cancels the audition and takes over. A timeout, rejected
+command, player failure or output change also clears the temporary level; failed
+volume acknowledgments leave music paused.
+
+Neither the requested music volume nor any settings are written by a test.
+`device.test_volume {target:"kids"|"night"}` (v2) and `OJ_VOLUME_TEST` (v1) are
+protected by the parent code. The UI offers the buttons only on a core advertising
+`audio.volume_test`; the configurable kids maximum still requires API 2. Busy or
+muted playback returns a translated message instead of unmuting the Jooki.
+
+The tone is generated locally by `tools/openjooki/make_volume_tone.py`, packaged
+with the device UI, and uses no downloaded sound or browser audio. Its cosine ramps
+avoid abrupt edges. `volume_test_spec.lua` covers caps, acknowledgments, both API
+versions, cancellation and restoration. `test_volume_test.py` runs the real core
+with MQTT/PCM peers and Chromium, including daytime tests, stock fallback, parent
+protection, player failure and the German UI at 390 px. These peers verify the
+control path; a physical listening test verifies audible output.
+
+The API-2 device trial passed at 5%, 15% (with a smaller parent ceiling), and 0%.
+The real tone player exited successfully, every volume command was acknowledged,
+and Spotify continued on the same title after the test. The owner confirmed that
+both UI buttons produce the expected tone and resume music correctly. Wired
+headphone and Bluetooth tone output have not been physically auditioned.

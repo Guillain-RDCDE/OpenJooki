@@ -306,7 +306,7 @@ def switch_or_back(host, part, back):
 
 # ---------------- "webui": the OpenJooki core + its web page, via A/B ----------------
 WEBUI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui")
-WEBUI_FILES = ("index.html", "app.js", "app.css", "mqtt.js",
+WEBUI_FILES = ("volume-test.wav", "index.html", "app.js", "app.css", "mqtt.js",
                "manifest.json", "icon-192.png", "icon-512.png", "apple-touch-icon.png",   # home-screen icon (make_icons.py)
                "mp3-worker.js", "lame.min.js", "lame.LICENSE.txt")   # FLAC/WAV -> MP3 in the browser (lamejs, LGPL-3.0)
 # Folders of the page shipped whole (many small files): the token pictures of the library (docs/23 §5).

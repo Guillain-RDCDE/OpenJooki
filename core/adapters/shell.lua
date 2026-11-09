@@ -35,9 +35,10 @@ rm -f "$P.pid" "$P.status"
   wait "$A"; R=$?
   echo "$R" > "$P.status"
 ) </dev/null >/dev/null 2>&1 &
-# Hand back only once cancellation can find the player (normally a few ms).
+# Hand back only once cancellation can find the player (normally a few ms; well over 200 ms on a
+# real Jooki just after a volume change wrote to the card, and giving up there killed the tone).
 N=0
-while [ ! -s "$P.pid" ] && [ ! -s "$P.status" ] && [ "$N" -lt 20 ]; do busybox usleep 10000; N=$((N+1)); done
+while [ ! -s "$P.pid" ] && [ ! -s "$P.status" ] && [ "$N" -lt 150 ]; do busybox usleep 10000; N=$((N+1)); done
 [ -s "$P.pid" ] || [ -s "$P.status" ]]=], "volume_test", tostring(a.id), a.output, a.file }
   end },
   volume_test_stop = { argv = function(a)

@@ -180,7 +180,8 @@ function test.on_started(doc, ev)
   if active(doc) and ev.ref == doc.volume_test_int.id and ev.rc ~= 0 then return restore(doc, "VOLUME_TEST_FAILED") end
 end
 function test.on_done(doc, ev)
-  if not active(doc) or ev.ref ~= doc.volume_test_int.id or ev.text == nil then return nil end
+  -- nothing yet, or read in the instant the shell opens the file to write its status
+  if not active(doc) or ev.ref ~= doc.volume_test_int.id or tonumber(ev.text) == nil then return nil end
   if doc.volume_test_int.phase ~= "playing" then return nil end
   return restore(doc, tonumber(ev.text) ~= 0 and "VOLUME_TEST_FAILED" or nil)
 end

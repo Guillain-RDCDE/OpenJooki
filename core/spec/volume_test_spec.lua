@@ -180,6 +180,7 @@ describe("settings volume auditions", function()
     local d = doc(); start(d); playing(d)
     assert_nil(test.on_done(d, { ref = 0, text = "0" }))
     assert_nil(test.on_done(d, { ref = 1 }))
+    assert_nil(test.on_done(d, { ref = 1, text = "" }))     -- read while the shell is writing it: not an answer yet
     apply(d, test.on_done(d, { ref = 1, text = "1" }))
     apply(d, test.on_confirmed(d, { percent = 15, ok = true }))
     assert_eq(d.volume_test.error, "VOLUME_TEST_FAILED")

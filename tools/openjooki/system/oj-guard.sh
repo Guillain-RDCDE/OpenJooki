@@ -64,8 +64,9 @@
   mkdir -p "$DATA/openjooki"
   echo "$cur" > "$MARK"; sync
   say "going back to partition $other"
-  { echo "mender_boot_part $other"; echo "mender_boot_part_hex $other"
-    echo "upgrade_available 0"; echo "bootcount 0"; } > "$MNT.env"
+  # name=value: the Jooki's fw_setenv says nothing and changes nothing on any other form
+  { echo "mender_boot_part=$other"; echo "mender_boot_part_hex=$other"
+    echo "upgrade_available=0"; echo "bootcount=0"; } > "$MNT.env"
   fw_setenv -s "$MNT.env" || { rm -f "$MARK"; say "the bootloader settings could not be written: staying here"; exit 0; }
   [ "$(fw_printenv mender_boot_part 2>/dev/null | sed 's/.*=//')" = "$other" ] || { rm -f "$MARK"; say "the settings did not hold: staying here"; exit 0; }
   sync

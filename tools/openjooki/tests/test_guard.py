@@ -17,7 +17,9 @@ TOOLS = {
             'l=$(sed -n "${n}p" "$T/page"); [ -n "$l" ] || l=$(tail -n 1 "$T/page"); [ "$l" = ok ]\n',
     "fw_printenv": 'cat "$T/env_$1" 2>/dev/null | sed "s/^/$1=/"\n',
     "fw_setenv": '[ -e "$T/setenv_fails" ] && exit 1\n'
-                 'while read k v; do echo "$v" > "$T/env_$k"; echo "$k $v" >> "$T/setenv.log"; done < "$2"\n',
+                 # as the Jooki's own fw_setenv (measured under qemu-mipsel): a line that is not name=value
+                 # is ignored, and it still answers success
+                 'while IFS= read -r l; do case "$l" in *=*) k=${l%%=*}; v=${l#*=}; echo "$v" > "$T/env_$k"; echo "$k=$v" >> "$T/setenv.log" ;; esac; done < "$2"\n',
     "mount": '[ -e "$T/mount_fails" ] && exit 1\nmkdir -p "$4/boot" "$4/jooki/lib" "$4/jooki/bin"\n'
              'if [ ! -e "$T/incomplete" ]; then touch "$4/boot/uImage" "$4/jooki/lib/player.lib" "$4/jooki/bin/player"; fi\n'
              'echo "$2 $3" >> "$T/mount.log"\n',
@@ -82,7 +84,7 @@ check("a core that takes its time: nothing changes", not r["rebooted"] and not r
 
 r = run(page=("no",))
 check("no page: back to the other partition, and a restart", r["rebooted"] and r["part"] == "3", r)
-check("no page: all four settings", r["setenv"].split("\n")[:4] == ["mender_boot_part 3", "mender_boot_part_hex 3", "upgrade_available 0", "bootcount 0"], r["setenv"])
+check("no page: all four settings", r["setenv"].split("\n")[:4] == ["mender_boot_part=3", "mender_boot_part_hex=3", "upgrade_available=0", "bootcount=0"], r["setenv"])
 check("no page: the other partition is looked at read-only", "/dev/card-p3" in r["mount"] and "ro" in r["mount"], r["mount"])
 check("no page: it remembers what it fled", r["mark"] == "2", r)
 

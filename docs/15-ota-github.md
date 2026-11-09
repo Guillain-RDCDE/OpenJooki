@@ -64,7 +64,7 @@ unchanged — if every attempt fails.
   their hashes: from then on a change on Pages alone (the `docs/` folder deploys on every push)
   cannot run on a Jooki until a release carries it.
 - **`device_type` gate** = a v1 (or any other model) is refused before any write.
-- **A/B + armed rollback + the guard** (`system/oj-guard.sh`, S95): a kernel that does not boot goes back through U-Boot; a system that boots but whose core's page does not answer five minutes later goes back by itself, once, to a partition that holds a system. Tested on a real Jooki with a core broken on purpose.
+- **A/B + armed rollback + the guard** (`system/oj-guard.sh`, S95): a kernel that does not boot goes back through U-Boot; a system that boots but whose core's page does not answer five minutes later goes back by itself, once, to a partition that holds a system.
 - No signing keys to manage: unnecessary in this context.
 
 ## Scope / rights

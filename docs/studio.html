@@ -141,6 +141,7 @@
       <button type="button" data-l="en" aria-label="English" title="English"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="16" fill="#012169"/><path d="M0 0L24 16M24 0L0 16" stroke="#fff" stroke-width="3.2"/><path d="M0 0L24 16M24 0L0 16" stroke="#c8102e" stroke-width="1.2"/><path d="M12 0v16M0 8h24" stroke="#fff" stroke-width="5.4"/><path d="M12 0v16M0 8h24" stroke="#c8102e" stroke-width="3"/></svg></button>
       <button type="button" data-l="fr" aria-label="Français" title="Français"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="8" height="16" fill="#0055a4"/><rect x="8" width="8" height="16" fill="#fff"/><rect x="16" width="8" height="16" fill="#ef4135"/></svg></button>
       <button type="button" data-l="nl" aria-label="Nederlands" title="Nederlands"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#ae1c28"/><rect y="5.33" width="24" height="5.34" fill="#fff"/><rect y="10.66" width="24" height="5.34" fill="#21468b"/></svg></button>
+      <button type="button" data-l="de" aria-label="Deutsch" title="Deutsch"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="5.34" fill="#000"/><rect y="5.33" width="24" height="5.34" fill="#dd0000"/><rect y="10.66" width="24" height="5.34" fill="#ffce00"/></svg></button>
     </div>
   </header>
 
@@ -777,11 +778,12 @@
   function cleanName(title) { return String(title).replace(/[\\\/:*?"<>|\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').replace(/^[ .]+|[ .]+$/g, '') || 'story'; }
   function fileName(title, i) { return (i < 9 ? '0' : '') + (i + 1) + ' ' + cleanName(title) + '.mp3'; }
 
-  // ---- the three languages (same keys in each) ---------------------------
+  // ---- the four languages (same keys in each) ----------------------------
 
   var T = {
     en: {
       title: "Jookistory · OpenJooki",
+      description: "Read a story aloud, page by page, and get it ready for the Jooki. Nothing is sent: your voice stays on your device.",
       sub: "Read a story aloud. The Jooki plays it back, page by page.",
       title_ph: "Title of the story", start: "Start", untitled: "My story", test: "Test my voice (10 seconds)",
       no_pages: "No page yet.", rec: "Record page {n}", page: "Page",
@@ -839,6 +841,7 @@
     },
     fr: {
       title: "Jookistory · OpenJooki",
+      description: "Lis une histoire à voix haute, page par page, et prépare-la pour le Jooki. Rien n'est envoyé : ta voix reste sur ton appareil.",
       sub: "Lis une histoire à voix haute. Le Jooki la rejoue, page par page.",
       title_ph: "Titre de l'histoire", start: "Commencer", untitled: "Mon histoire", test: "Tester ma voix (10 secondes)",
       no_pages: "Aucune page pour l'instant.", rec: "Enregistrer la page {n}", page: "Page",
@@ -896,6 +899,7 @@
     },
     nl: {
       title: "Jookistory · OpenJooki",
+      description: "Lees een verhaal voor, bladzijde per bladzijde, en maak het klaar voor de Jooki. Er wordt niets verstuurd: je stem blijft op dit toestel.",
       sub: "Lees een verhaal voor. De Jooki speelt het af, bladzijde per bladzijde.",
       title_ph: "Titel van het verhaal", start: "Beginnen", untitled: "Mijn verhaal", test: "Mijn stem testen (10 seconden)",
       no_pages: "Nog geen bladzijde.", rec: "Bladzijde {n} opnemen", page: "Bladzijde",
@@ -950,6 +954,64 @@
       n_verdict: "oordeel", n_voice: "stem", n_noise: "ruis", n_room: "kamer", n_gaps: "tussen de woorden", n_snr: "verschil stem / ruis",
       n_peak: "piek", n_clip: "overstuurd", n_active: "gesproken deel", n_mic: "microfoon", n_echo: "echo", n_ns: "ruisfilter",
       n_agc: "auto-volume", yes: "ja", no: "nee"
+    },
+    de: {
+      title: "Jookistory · OpenJooki",
+      description: "Lies eine Geschichte laut vor, Seite für Seite, und bereite sie für den Jooki vor. Deine Stimme bleibt auf diesem Gerät.",
+      sub: "Lies eine Geschichte laut vor. Der Jooki spielt sie Seite für Seite ab.",
+      title_ph: "Titel der Geschichte", start: "Los geht's", untitled: "Meine Geschichte", test: "Meine Stimme testen (10 Sekunden)",
+      no_pages: "Noch keine Seite.", rec: "Seite {n} aufnehmen", page: "Seite",
+      listen_b: "Anhören", stop: "Stopp", redo: "Neu aufnehmen", remove: "Entfernen", sure: "Wirklich?",
+      w_loud: "Zu laut", w_far: "Zu weit weg", w_noisy: "Zu viele Umgebungsgeräusche",
+      chime_title: "Der Klang am Ende jeder Seite", bell: "Glöckchen", carillon: "Glockenspiel", box: "Spieluhr", none: "Kein Ton",
+      finish: "Geschichte fertigstellen", del_story: "Diese Geschichte löschen", page_done: "Seite fertig", cancel: "Abbrechen",
+      n_unheard: "Ich habe nichts gehört. Versuch es noch einmal.",
+      n_long: "Lange Seite: Hier habe ich aufgehört. Nimm die nächste Seite auf.",
+      n_failed: "Diese Seite konnte nicht gespeichert werden. Nimm sie noch einmal auf.",
+      done_t: "Deine Geschichte ist fertig", pages_1: "1 Seite", pages_n: "{n} Seiten",
+      share: "Geschichte senden oder speichern", files_t: "Geschichte speichern:", pages_sum: "Die Seiten einzeln",
+      done_hint: "Öffne dann auf der Jooki-Seite eine Geschichte und wähle diese Datei aus.",
+      making: "Seite {n} von {m} wird vorbereitet…",
+      invite: "Jemanden aus der Ferne zum Vorlesen einladen", invite_share: "Link senden", invite_text: "Lies eine Geschichte für den Jooki laut vor, Seite für Seite: ",
+      invite_lead: "Oma, Opa oder eine Patin: Sie öffnen diese Seite auf dem Handy und lesen vor. Dann schicken sie dir die Geschichte.",
+      invite_hint: "Mit „Geschichte senden oder speichern“ bekommst du eine Datei. Öffne auf der Jooki-Seite Jookistory und dann „Geschichte öffnen“.",
+      amb_title: "Ein Klang im Hintergrund", amb_none: "Kein Klang", amb_rain: "Regen", amb_forest: "Wald", amb_night: "Nacht", amb_sea: "Meer", amb_fire: "Kaminfeuer", amb_stream: "Bach", amb_castle: "Schloss", amb_train: "Zug", amb_farm: "Morgen auf dem Bauernhof", amb_snow: "Schnee",
+      sleep_t: "Nach der Geschichte einschlafen", sleep_x: "Nach der letzten Seite folgt kein Klang: Die Stimme klingt langsam aus.",
+      cover_title: "Buchcover", cover_take: "Foto aufnehmen", cover_del: "Entfernen", cover_bad: "Dieses Foto konnte nicht gelesen werden.",
+      cover_hint: "Es wird zum Bild der Figur, mit der die Geschichte gestartet wird.",
+      fx_knock: "Klopfen", fx_thunder: "Donner", fx_owl: "Eule", fx_magic: "Magie", fx_wind: "Wind",
+      listen_all: "Ganze Geschichte anhören", adv: "Erweiterter Modus", cut: "Schneiden", more: "Weiter",
+      pause_title: "Stille vor und nach dem Vorlesen", pause_0: "Kurz (1 s)", pause_1: "Normal (2 s)", pause_2: "Lang (4 s)",
+      cut_start: "Anfang", cut_end: "Ende", cut_hint: "Verschiebe die beiden Regler, um den Anfang oder das Ende zu entfernen. Tippe auf die Wellenform, um von dort aus anzuhören.", keep: "Übernehmen", cut_head: "Anfang, 10 s", cut_tail: "Ende, 10 s",
+      send_jooki: "An den Jooki senden", j_sent: "Gesendet. Wechsle zurück zur Jooki-Seite.",
+      j_back: "Wechsle zurück zum Jooki-Tab: Dort wartet die Geschichte.",
+      j_asked: "Wird an den Jooki gesendet…", j_failed: "Der Jooki konnte die Geschichte nicht empfangen. Versuch es erneut oder speichere die Datei.",
+      back_story: "Zurück zur Geschichte", new_story: "Neue Geschichte", back: "Zurück", retry: "Erneut versuchen",
+      readlabel: "Lies laut vor:",
+      sentence: "„Es war einmal tief in einem großen Wald ein kleiner Fuchs, der einfach nicht einschlafen konnte. Deshalb hörte er jeden Abend eine Geschichte.“",
+      k_vol: "Lautstärke", k_dist: "Abstand", k_noise: "Umgebungsgeräusche",
+      vol_ok: "Gut", vol_no: "Zu laut", dist_ok: "Gut", dist_no: "Zu weit weg", noise_ok: "Ruhiger Raum", noise_no: "Zu laut",
+      listen: "Anhören", play_raw: "Meine Stimme, unbearbeitet", play_pol: "Meine Stimme, verbessert",
+      again: "Test wiederholen", nums_sum: "Messwerte dieses Tests", copy: "Messwerte kopieren", copied: "Kopiert",
+      footer: "Es wird nichts gesendet: deine Stimme bleibt auf diesem Gerät.",
+      allow_mic: "Mikrofon freigeben…", hush: "Pssst… ich lausche in den Raum", l_loud: "Das ist zu laut",
+      l_good: "Ich höre dich gut", l_quiet: "Ich höre dich kaum", l_go: "Lies den Satz vor", l_go_page: "Lies jetzt vor", wait: "Einen Moment…",
+      p_nomic_t: "Dieser Browser kann das Mikrofon nicht verwenden.",
+      p_nomic_x: "Öffne diese Seite in Safari (iPhone) oder Chrome (Android, Computer).",
+      p_denied_t: "Der Zugriff auf das Mikrofon wurde verweigert.",
+      p_denied_x: "Lade die Seite neu und wähle „Erlauben“. Wenn auf dem iPhone keine Abfrage erscheint: Einstellungen → Safari → Mikrofon.",
+      p_notfound_t: "Kein Mikrofon gefunden.",
+      p_notfound_x: "Vielleicht wird es von einer anderen App verwendet. Schließe sie und versuche es erneut.",
+      p_stuck_t: "Das Mikrofon reagiert nicht.",
+      p_stuck_x: "Schließe Apps, die das Mikrofon verwenden (z. B. einen Anruf oder eine Diktier-App), und versuche es erneut.",
+      v_ok_t: "Das passt", v_ok_x: "Deine Stimme ist klar. Lies so vor.",
+      v_loud_t: "Zu laut", v_loud_x: "Halte das Handy etwas weiter weg.",
+      v_far_t: "Du bist zu weit weg", v_far_x: "Halte das Handy etwa eine Handbreit vor den Mund.",
+      v_noisy_t: "Zu viele Umgebungsgeräusche", v_noisy_x: "Schalte den Fernseher aus, schließe das Fenster oder geh in einen anderen Raum.",
+      v_silent_t: "Ich habe dich nicht gehört", v_silent_x: "Lies den Satz laut vor, sobald er erscheint.",
+      n_verdict: "Ergebnis", n_voice: "Stimme", n_noise: "Geräusche", n_room: "Raum", n_gaps: "zwischen den Wörtern", n_snr: "Abstand Stimme / Geräusch",
+      n_peak: "Spitzenpegel", n_clip: "Übersteuerung", n_active: "Sprechanteil", n_mic: "Mikrofon", n_echo: "Echo", n_ns: "Rauschunterdrückung",
+      n_agc: "automatische Aussteuerung", yes: "ja", no: "nein"
     }
   };
 
@@ -1500,6 +1562,7 @@
   function refresh() {
     document.documentElement.lang = lang;
     document.title = t('title');
+    document.querySelector('meta[name="description"]').content = t('description');
     Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (e) { e.textContent = t(e.getAttribute('data-t')); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-p]'), function (e) { var v = t(e.getAttribute('data-p')); e.placeholder = v; e.setAttribute('aria-label', v); });
     Array.prototype.forEach.call($('langs').children, function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-l') === lang ? 'true' : 'false'); });

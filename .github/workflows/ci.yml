@@ -151,6 +151,9 @@ jobs:
       - name: UPnP player (a fake phone app, #29)
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_upnp.py
+      - name: A system whose core does not answer goes back by itself
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_guard.py
       - name: Home Assistant connecting while music plays (#28)
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_ha_connect.py

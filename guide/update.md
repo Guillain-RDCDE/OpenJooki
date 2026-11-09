@@ -20,8 +20,8 @@ No message? *Settings → Update → **Check for updates***.
 
 **Good to know**
 - Your music and tokens are never touched by an update.
-- If the new version does not start, switch the Jooki off and on again: it goes back to
-  the previous one by itself.
+- If the new version does not start properly, give it five minutes: the Jooki goes back to the
+  previous one by itself.
 
 What changed in each version: [CHANGELOG](../CHANGELOG.md).
 

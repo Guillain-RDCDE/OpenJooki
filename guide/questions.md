@@ -4,7 +4,7 @@
 No. They live on a part of the Jooki that updates never touch.
 
 **What if something goes wrong?**
-Switch the Jooki off and on again: it goes back to the previous version by itself.
+If the new version does not start properly, the Jooki goes back to the previous one by itself: give it five minutes.
 
 **My Jooki does not start at all, whatever I do.**
 Nine times out of ten its memory card (the SD card inside it) is dead.

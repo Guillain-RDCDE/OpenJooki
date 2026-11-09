@@ -91,9 +91,17 @@ mkdir -p /mnt/spchk/etc/rcS.d
 cat > /mnt/spchk/etc/rcS.d/S99_openjooki_commit.sh <<'CMT'
 #!/bin/ash
 # OpenJooki: commit the A/B update on a healthy boot (idempotent, runs late).
+# Only once the core's page answers: a system that starts without its core is not healthy. Not
+# answering in 6 minutes: restart with the trial still armed, U-Boot goes back to the other partition.
 ( sleep 30
   UA=$(fw_printenv upgrade_available 2>/dev/null | sed 's/.*=//')
   if [ "$UA" = "1" ]; then
+    i=0
+    while ! curl -s -f -m 5 -o /dev/null http://127.0.0.1/ 2>/dev/null; do
+      i=$((i+1))
+      if [ "$i" -ge 33 ]; then logger -s "openjooki: no answer from the core, rollback"; /sbin/reboot; exit 0; fi
+      sleep 10
+    done
     fw_setenv upgrade_available 0
     fw_setenv bootcount 0
     echo -n 0 > /sys/kernel/htdrv/bootcount 2>/dev/null

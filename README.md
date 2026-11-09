@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.4.21:** the Jooki can play music sent from other apps (UPnP / DLNA): BubbleUPnP, mconnect, a music server, TIDAL or Qobuz through those apps.
-2.4.20: a switch makes wired headphones louder (only with kids mode off).
+**New in 2.5.0:** German, all lights off, a Test button for the night volume, a random first song, and the page can turn the speaker down.
+2.4.21: the Jooki can play music sent from other apps (UPnP / DLNA): BubbleUPnP, mconnect, a music server, TIDAL or Qobuz through those apps.
 [All the changes](CHANGELOG.md)
 
 ---

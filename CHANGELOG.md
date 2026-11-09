@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.0 (9 November 2026) — Lights out, gute Nacht
 Thank you to Dirk Drutschmann, who wrote nearly all of this in one weekend.
 - **Deutsch.** The Jooki's page now speaks German, the names and searches of all 659 pictures included (#30).
 - **All lights off.** *Settings → Turn off all lights permanently*, or *Settings → Night mode → Turn off all lights at night* for the scheduled hours only: the ring, the side lights and the heart go dark, and come back when the time is over (#31). Off by default.

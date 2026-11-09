@@ -27,6 +27,8 @@ export PLAYER_LUA=core CORE_BUILD=$(cd ../../.. && pwd)/build
 ./make_media.sh && ./up.sh                    # test audio, broker, fake audio
 python3 test_device_controls.py               # web/dial arbitration, kids/night ceilings, legacy headphones and live capability changes
 python3 test_lights_off.py                    # scheduled/permanent darkness, global driver, persistence, parent code and browser
+python3 test_lights_cues.py                   # connected ten-second startup cue and immediate short heart presses
+python3 test_shutdown_lights.py               # three red flashes, silent manual shutdown; actual poweroff intercepted
 node test_i18n.js
 python3 test_german.py                        # German browser, narrow layout, picture search
 python3 test_backend.py && python3 test_bedtime.py && python3 test_net.py

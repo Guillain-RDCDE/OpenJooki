@@ -34,17 +34,79 @@ local function apply(doc, r)
 end
 
 describe("services.playback.sounds — system sounds", function()
-  it("pauses the music, plays the sound on stream 3, then continues the music and runs `after`", function()
+  it("pauses the music, plays the sound on stream 3, then loads the same song again at its place", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "music" }))
     apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
-    local r = sounds.on_system_event(doc, { name = "Evt.Jooki.Ready", after = { type = "shutdown.request" } })
-    -- positional: the music is paused BEFORE the sound starts, and continued BEFORE `after` runs
+    apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 42000 }))
+    local uri = doc.playback.now.uri
+    local r = sounds.on_system_event(doc, { name = "Evt.Jooki.Ready" })
+    -- positional: the music is paused BEFORE the sound starts
     assert_eq(topics(r), { "emit lights.event Evt.Jooki.Ready", "pauz 7", "play 3\tfile:///sys/assets/ready.ogg" })
     apply(doc, r)
-    r = playback.on_audio(doc, { type = "audio.ended", id = 3 })   -- the engine's report comes through the facade
-    assert_eq(topics(r), { "cont 7", "emit shutdown.request" })
+    -- the engine's report comes through the facade. "cont 7" would play the sound again: one pipeline
+    r = playback.on_audio(doc, { type = "audio.ended", id = 3 })
+    assert_eq(topics(r), { "play 7\t" .. uri, "emit playback.changed starting" })
     assert_nil(r.state.playback_int.sys); assert_nil(r.state.playback.sys)
+    apply(doc, r)
+    assert_nil(doc.playback.song_replaced)                          -- private, and over
+    r = playback.on_audio(doc, { type = "audio.playing", id = 7 })
+    assert_eq(topics(r)[1], "seek 7\t42000")
+  end)
+
+  it("before powering off (`after`) the song stays paused instead of starting again", function()
+    local doc = doc_with()
+    apply(doc, playback.on_request(doc, { playlist = "music" }))
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    apply(doc, sounds.on_system_event(doc, { name = "Evt.Jooki.Ready", after = { type = "shutdown.request" } }))
+    assert_eq(topics(playback.on_audio(doc, { type = "audio.ended", id = 3 })), { "emit shutdown.request" })
+  end)
+
+  it("#28: a sound that must not stop the music is not played over a song, playing or paused", function()
+    for _, state in ipairs({ "playing", "paused" }) do
+      local doc = doc_with()
+      doc.system.tracks["Evt.Mobile.connect"] = { filename = "assets/connect.ogg" }
+      apply(doc, playback.on_request(doc, { playlist = "music" }))
+      apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+      if state == "paused" then apply(doc, playback.on_audio(doc, { type = "audio.paused", id = 7 })) end
+      local r = sounds.on_system_event(doc, { name = "Evt.Mobile.connect", no_pause = true })
+      assert_eq(topics(r), { "emit lights.event Evt.Mobile.connect" })
+      assert_nil(r.state)
+    end
+  end)
+
+  it("#28: with nothing loaded the connect sound still plays", function()
+    local doc = doc_with()
+    doc.system.tracks["Evt.Mobile.connect"] = { filename = "assets/connect.ogg" }
+    local r = sounds.on_system_event(doc, { name = "Evt.Mobile.connect", no_pause = true })
+    assert_eq(topics(r), { "emit lights.event Evt.Mobile.connect", "play 3\tfile:///sys/assets/connect.ogg" })
+  end)
+
+  it("a paused song under a sound stays paused, and its resume loads it again", function()
+    local doc = doc_with()
+    apply(doc, playback.on_request(doc, { playlist = "music" }))
+    apply(doc, playback.on_audio(doc, { type = "audio.playing", id = 7 }))
+    apply(doc, playback.on_audio(doc, { type = "audio.position", id = 7, ms = 9000 }))
+    apply(doc, playback.on_audio(doc, { type = "audio.paused", id = 7 }))
+    local uri = doc.playback.now.uri
+    apply(doc, sounds.on_system_event(doc, { name = "Evt.Power.Low.Warning" }))
+    local r = playback.on_audio(doc, { type = "audio.ended", id = 3 })
+    assert_eq(topics(r), {})
+    apply(doc, r)
+    assert_eq(doc.playback.state, "paused")
+    r = playback.on_resume(doc, { now = 100 })
+    assert_eq(topics(r), { "play 7\t" .. uri, "emit playback.changed starting" })
+    apply(doc, r)
+    assert_eq(topics(playback.on_audio(doc, { type = "audio.playing", id = 7 }))[1], "seek 7\t9000")
+  end)
+
+  it("Spotify has its own daemon: nothing to pause or load again in audio_ctrl", function()
+    local doc = doc_with()
+    doc.playback = { state = "playing", now = { service = "SPOTIFY", uri = "spotify:x" } }
+    local r = sounds.on_system_event(doc, { name = "Evt.Jooki.Ready" })
+    assert_eq(topics(r), { "emit lights.event Evt.Jooki.Ready", "play 3\tfile:///sys/assets/ready.ogg" })
+    apply(doc, r)
+    assert_eq(topics(playback.on_audio(doc, { type = "audio.ended", id = 3 })), {})
   end)
 
   it("an event without a sound only lights up and runs `after` at once", function()
@@ -60,13 +122,13 @@ describe("services.playback.sounds — system sounds", function()
     apply(doc, sounds.on_system_event(doc, { name = "Evt.Jooki.Ready" }))
     assert_true(doc.playback_int.sys.resume_music)
     doc.playback.state = "paused"                                     -- the engine confirmed the pause meanwhile
-    local r = sounds.on_system_event(doc, { name = "Evt.Power.Low.Warning", no_pause = true })
+    local r = sounds.on_system_event(doc, { name = "Evt.Power.Low.Warning" })
     assert_eq(topics(r), { "emit lights.event Evt.Power.Low.Warning", "stop 3", "play 3\tfile:///sys/assets/low.ogg" })
     assert_true(r.state.playback_int.sys.resume_music); assert_eq(r.state.playback_int.sys.name, "Evt.Power.Low.Warning")
     apply(doc, r)
     assert_nil(sounds.on_sound_audio(doc, {}, "playing"))             -- only the end of the sound matters
     r = sounds.on_sound_audio(doc, {}, "stopped")
-    assert_eq(topics(r), { "cont 7" })
+    assert_eq(topics(r), { "play 7\t" .. doc.playback.now.uri, "emit playback.changed starting" })
     apply(doc, r)
     assert_nil(sounds.on_sound_audio(doc, {}, "ended"))               -- nothing in progress any more
   end)

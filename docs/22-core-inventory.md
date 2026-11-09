@@ -103,7 +103,7 @@ handler is caught (`ERR_HANDLER`) instead of killing the process.
 
 | Message | Payload | Effect |
 |---|---|---|
-| `CONNECT` | — | plays the "connect" sound (Evt.Mobile.connect), does not pause music |
+| `CONNECT` | — | plays the "connect" sound (Evt.Mobile.connect) only with no song loaded: `audio_ctrl` has one pipeline, a sound would replace the song (#28) |
 | `GET_STATE` | — | publishes the whole state |
 | `MESSAGE_DISMISS` | `{id}` | removes a user message |
 | `SWITCH_LOCALE` | `{locale}` | runs `lang_set.sh` (voice language) |

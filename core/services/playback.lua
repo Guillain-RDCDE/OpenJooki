@@ -26,7 +26,7 @@ local volume_test = require("services.device.volume_test")
 local MUSIC, SOUND = 7, 3
 local BACK_PAUSE, BACK_TIMER, MIN_BACK = resume_rules.BACK_PAUSE, resume_rules.BACK_TIMER, resume_rules.MIN_BACK
 local AUDIO_OUT = "/j/audio/out/"
-local INT = { last = true, shuffle = true, seed = true, sys = true, resume_dirty = true }   -- the playback_int keys
+local INT = { song_replaced = true, last = true, shuffle = true, seed = true, sys = true, resume_dirty = true }   -- the playback_int keys
 
 local copy, emit, is_playing = util.copy, util.emit, util.is_playing
 local queue_for, index_of, modes = queue.queue_for, queue.index_of, queue.modes
@@ -169,10 +169,21 @@ local function start(doc, pb, playlist_id, opts)
   pb.state = "starting"
   pb.position_ms = 0
   pb.resume_ms = seek_ms
-  pb.paused_by, pb.paused_at = nil, nil
+  pb.paused_by, pb.paused_at, pb.song_replaced = nil, nil, nil
   cmds[#cmds + 1] = cmd_audio("play", MUSIC, now.uri)
   cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
   return { state = st(pb), commands = cmds }
+end
+
+--- A system sound took audio_ctrl's only pipeline (services.playback.sounds): the same song again,
+--- from its place, by the road of any start ("playing" then seeks to resume_ms).
+function playback.load_song_again(pb, cmds)
+  local position = tonumber(pb.position_ms) or 0
+  pb.song_replaced, pb.paused_by, pb.paused_at = nil, nil, nil
+  pb.state = "starting"
+  pb.resume_ms = (pb.now.service ~= "STREAM" and position > 0) and position or nil
+  cmds[#cmds + 1] = cmd_audio("play", MUSIC, pb.now.uri)
+  cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
 end
 
 --- Continue after a pause, with the rewind rules: short pause -> exactly where it
@@ -180,6 +191,10 @@ end
 --- sleep timer -> the faded minute is played again (60 s back).
 function playback.resume_paused(_, pb, now_s)
   local cmds = {}
+  if pb.song_replaced and pb.now then
+    playback.load_song_again(pb, cmds)
+    return { state = st(pb), commands = cmds }
+  end
   if pb.now and pb.now.audiobook and pb.now.service == "FILE" and pb.paused_at and now_s then
     local long = (now_s - pb.paused_at) > 60
     if long or pb.paused_by == "sleep_timer" then
@@ -222,6 +237,7 @@ function playback.play_uri(doc, uri, info)
   if not streamed and (pb.state == "playing" or pb.state == "paused" or pb.state == "starting") then
     cmds[#cmds + 1] = cmd_audio("stop", MUSIC)
   end
+  pb.song_replaced = nil
   pb.now = { service = "UPNP", uri = uri, title = info.title, artist = info.artist, album = info.album,
              image = info.image, duration_ms = math.floor(tonumber(info.duration_ms) or 0),
              has_next = false, has_prev = false, source = info.album }
@@ -313,6 +329,7 @@ function playback.on_seek(doc, ev)
   local ms = math.max(1, math.floor(tonumber(ev.ms) or 1))
   if is_streaming(pb) then return stream_cmds(pb, "seek", ms) end
   pb.position_ms = ms
+  if pb.song_replaced then return { state = st(pb) } end   -- not in the engine now: its resume goes there
   return { state = st(pb), commands = { cmd_audio("seek", MUSIC, ms) } }
 end
 
@@ -320,6 +337,10 @@ function playback.on_skip(doc, ev)
   local pb = pb_of(doc)
   if not pb.now or pb.now.service == "STREAM" then return nil end
   if is_streaming(pb) then return stream_cmds(pb, "skip", math.floor(tonumber(ev.seconds) or 0)) end
+  if pb.song_replaced then
+    pb.position_ms = math.max(0, (tonumber(pb.position_ms) or 0) + math.floor(tonumber(ev.seconds) or 0) * 1000)
+    return { state = st(pb) }
+  end
   return { commands = { cmd_audio("skip_sec", MUSIC, math.floor(tonumber(ev.seconds) or 0)) } }
 end
 

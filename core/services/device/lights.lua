@@ -17,6 +17,7 @@ local copy = util.copy
 local function requested_off(doc)
   return (doc.audiocfg or {}).lights_off == true or (doc.limits or {}).lights_off == true
 end
+lights.requested_off = requested_off
 function lights.off(doc)
   local boot = doc.lights_boot_int or {}
   if (doc.poweroff_int or {}).step then return true end
@@ -137,7 +138,7 @@ function lights.on_net_status(doc, ev)
     r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.lights_boot", seconds = 10 }
   elseif boot.phase == "waiting" and not connected(after) then
     boot.phase = "connecting"; r.state.lights_boot_int = boot
-    r.commands[#r.commands + 1] = { kind = "timer.cancel", name = "device.lights_boot" }
+    r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.lights_boot", seconds = lights.NO_WIFI_S }
   end
   if not next(r.state) and #r.commands == 0 then return nil end
   return r
@@ -290,6 +291,8 @@ function lights.on_limits(doc)
 end
 
 local BOOT_WAIT_S, BLINK_S = 10, 0.15
+-- Holidays, airplane mode, a router that is off: the dark the parent asked for does not wait for ever.
+lights.NO_WIFI_S = 60
 function lights.on_boot(doc, ev)
   local after = copy(doc); after.audiocfg = (ev or {}).audiocfg or doc.audiocfg or {}
   after.limits = bedtime.boot_limits(ev or {})
@@ -298,14 +301,16 @@ function lights.on_boot(doc, ev)
   r.state.lights_boot_int = after.lights_boot_int
   if after.lights_boot_int.phase == "waiting" then
     r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.lights_boot", seconds = BOOT_WAIT_S }
+  elseif after.lights_boot_int.phase == "connecting" then
+    r.commands[#r.commands + 1] = { kind = "timer.once", name = "device.lights_boot", seconds = lights.NO_WIFI_S }
   end
   return r
 end
 
 function lights.on_boot_frame(doc)
   local b = copy(doc.lights_boot_int or {})
-  if (doc.poweroff_int or {}).step or (b.phase ~= "waiting" and b.phase ~= "blinking") then return nil end
-  if b.phase == "waiting" then b = { phase = "blinking", step = 1 }
+  if (doc.poweroff_int or {}).step or not b.phase then return nil end
+  if b.phase ~= "blinking" then b = { phase = "blinking", step = 1 }
   elseif b.step < 6 then b.step = b.step + 1
   else b = {} end
   local after = copy(doc); after.lights_boot_int = b

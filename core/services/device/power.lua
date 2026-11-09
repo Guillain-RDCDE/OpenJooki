@@ -147,7 +147,15 @@ end
 function power.on_off_frame(doc)
   local s = copy(doc.poweroff_int or {})
   if not s.step then return nil end
-  if s.step == 6 then return { commands = { emit("shutdown.request", { reason = s.reason }) } } end
+  if s.step == 6 then
+    -- The heart is also the charging light of a Jooki switched off: give the driver back, unless
+    -- the parent asked for darkness.
+    local cmds = { emit("shutdown.request", { reason = s.reason }) }
+    if not lights.requested_off(doc) then
+      table.insert(cmds, 1, { kind = "bus.publish", topic = "/j/ht/output/raw_write", payload = "34 8" })
+    end
+    return { commands = cmds }
+  end
   s.step = s.step + 1
   local after = copy(doc); after.poweroff_int = s
   local r = lights.on_apply(after); r.state.poweroff_int = s

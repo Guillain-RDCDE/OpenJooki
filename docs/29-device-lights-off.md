@@ -81,3 +81,8 @@ volume changes and silence at zero. These checks establish API 2 compatibility,
 not stock-firmware speaker gain. The connected startup and silent shutdown cues
 pass the real-core bench; their final visible behavior after a full physical
 power cycle remains to be confirmed. ESP32 firmware remains unchanged.
+
+Two guards on the cues: without a usable Wi-Fi address the startup cue waits at most a minute
+(`lights.NO_WIFI_S`), so a Jooki away from home or in airplane mode still goes dark. After the red
+power-off flashes the driver is written back to `34 8`, unless darkness was requested, because the
+heart is also the charging light of a Jooki switched off.

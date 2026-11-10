@@ -110,11 +110,13 @@ j.nfc_off()
 # Old and intermediate firmware keep the factory attenuation, including after
 # a live downgrade with an unchanged dial. The answering peer also covers the
 # original controller, which omits volume_api altogether.
-j.c.publish("/j/power/input/plugged_in", "1")
-j.wait_state("power.connected", True)
+# On battery: with the charger in, a "plugged" reading is the charger and never switches to
+# headphones. The first reading on battery raises usb_mux and the next one is skipped, so four.
+j.c.publish("/j/power/input/plugged_in", "0")
+j.wait_state("power.connected", False)
 for volume_api in (0, 1, None):
     for headphones in (1, 0):
-        for _ in range(2):
+        for _ in range(4):
             j.c.publish("/j/esp32/input/knobs/state", knobs_payload())
         j.wait_state("device.volume_api", volume_api or 0)
         j.wait_state("audio.config.headphones_en", bool(headphones))

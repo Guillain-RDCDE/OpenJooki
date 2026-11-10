@@ -70,10 +70,16 @@ function power.on_plugged(doc, ev)
   local cmds = {}
   local st = { power = p }
   if not first then
-    -- usb_mux also pulls up the headphones detection (services.device): it is told, and skips the next reading
-    local mux = (ev.on and not volume().audiocfg_of(doc).headphones_en) and "0" or "1"
+    -- usb_mux also pulls up the headphones detection (services.device): it is told, and skips the next reading.
+    -- Headphones switched on by the last reading, or with a reading pending that says they are out, were
+    -- the charger (or an adapter swapped for it): the next reading goes back to the speaker (drop).
+    local hp = doc.hp_int or {}
+    local on_hp = volume().audiocfg_of(doc).headphones_en == true
+    local drop = (ev.on and on_hp and (hp.new_on or hp.pending == false)) and true or nil
+    local mux = (ev.on and (not on_hp or drop)) and "0" or "1"
     cmds[#cmds + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = mux }
-    st.hp_int = { mux = mux, fresh = true }
+    st.hp_int = { mux = mux, fresh = true, drop = drop }
+    if drop then cmds[#cmds + 1] = { kind = "timer.once", name = "device.hp_check", seconds = 1 } end
     cmds[#cmds + 1] = emit("system.event", { name = ev.on and "Evt.Power.Cable.Insert" or "Evt.Power.Cable.Remove" })
   end
   return { state = st, commands = cmds }

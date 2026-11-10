@@ -245,8 +245,13 @@ end
 -- Wired headphones, as Muuselabs' player.lua (on_knobs_state, pwr_plug) does it. The ESP32 reads the
 -- detection line on the USB-C port, and only usb_mux pulls that line up: on battery, with usb_mux at
 -- 0, it reads "plugged" with nothing there (what made 2.1.3 switch the detection off). So on battery
--- usb_mux is set to 1 first and the reading after it is skipped (the line needs 0.5 s to settle); on
--- the charger the reading is good as it is. A change is made only when two readings in a row agree,
+-- usb_mux is set to 1 first and the reading after it is skipped (the line needs 0.5 s to settle). A
+-- charger in the port reads "plugged" too, so with the charger in the reading can only take the sound
+-- off headphones, never put it on them (charging and headphones do not mix on this port anyway,
+-- docs/24-hardware-and-lights.md). A charger that comes in just as the headphones were switched on,
+-- or while a reading says they are out, is what the readings saw: services.device.power marks the
+-- state (drop) and the next reading goes back to the speaker. Headphones that have played for a while
+-- stay on (a splitter). A change is made only when two readings in a row agree,
 -- which also covers the cable and the headphones coming out together. Muuselabs polled every
 -- second; here a reading that wants a change asks for the next one 1 s later (device.hp_check), and
 -- the ESP32's own plug event (hp_plugged) asks for one too.
@@ -261,18 +266,25 @@ local function headphones_reading(doc, a, seen, cmds)
     cmds[#cmds + 1] = { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = "1" }
     hp.mux, hp.fresh, hp.pending = "1", true, nil
     cmds[#cmds + 1] = hp_check()
+  elseif hp.drop then
+    hp.drop, hp.fresh, hp.pending, hp.new_on = nil, nil, nil, nil
+    if a.headphones_en then switch = false end
   elseif hp.fresh then
     hp.fresh = nil
     cmds[#cmds + 1] = hp_check()
   elseif seen == a.headphones_en then
+    hp.pending, hp.new_on = nil, nil
+  elseif seen and (doc.power or {}).connected then
     hp.pending = nil
   elseif hp.pending == seen then
     hp.pending, switch = nil, seen
+    hp.new_on = seen or nil
   else
     hp.pending = seen
     cmds[#cmds + 1] = hp_check()
   end
   local changed = hp.mux ~= before.mux or hp.fresh ~= before.fresh or hp.pending ~= before.pending
+    or hp.new_on ~= before.new_on or hp.drop ~= before.drop
   return switch, changed and hp or nil
 end
 

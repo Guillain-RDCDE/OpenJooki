@@ -242,7 +242,7 @@ end)
 describe("services.device — audio output / amplifier", function()
   local function amp_and_out(r)
     local amp, out
-    for _, c in ipairs(r.commands) do
+    for _, c in ipairs((r or {}).commands or {}) do
       if c.kind == "files.write_text" and c.path == "/sys/kernel/htdrv/amp_en" then amp = c.text end
       if c.kind == "bus.publish" and c.topic == "/j/audio/out/set_output_device" then out = c.payload end
     end
@@ -296,11 +296,73 @@ describe("services.device — audio output / amplifier", function()
     assert_false(doc.audiocfg.headphones_en == true)
   end)
 
-  it("on the charger the reading counts as it is: no usb_mux write, two readings switch", function()
+  it("on the charger a 'plugged' reading is the charger itself: the speaker stays on", function()
     local doc = hp_doc({ power = { connected = true } })
-    local r = step(doc, { headphones = true })
-    assert_nil(mux_written(r)); assert_nil(select(1, amp_and_out(r)))
-    assert_eq(select(1, amp_and_out(step(doc, { headphones = true }))), "0")
+    for _ = 1, 3 do
+      local r = step(doc, { headphones = true })
+      assert_nil(mux_written(r)); assert_nil(select(1, amp_and_out(r)))
+    end
+    assert_false(doc.audiocfg.headphones_en == true); assert_nil((doc.hp_int or {}).pending)
+  end)
+
+  it("on the charger, headphones already on still go back to the speaker when they come out", function()
+    local doc = hp_doc({ power = { connected = true } })
+    doc.audiocfg.headphones_en = true
+    step(doc, { headphones = false })
+    assert_eq(select(1, amp_and_out(step(doc, { headphones = false }))), "1")
+    assert_false(doc.audiocfg.headphones_en)
+  end)
+
+  it("a charger plugged in on battery: the first 'plugged' reading waits, the cable event follows, no switch", function()
+    local power = require("services.device.power")
+    local doc = hp_doc({ power = { connected = false } })
+    step(doc, { headphones = false }); step(doc, { headphones = false })   -- usb_mux up and settled
+    local r = step(doc, { headphones = true })                             -- the charger's plug, read before its event
+    assert_nil(select(1, amp_and_out(r)))
+    r = power.on_plugged(doc, { on = true })
+    for k, v in pairs(r.state) do doc[k] = v end
+    for _ = 1, 3 do assert_nil(select(1, amp_and_out(step(doc, { headphones = true })))) end
+    assert_false(doc.audiocfg.headphones_en == true)
+  end)
+
+  -- headphones on battery, settled: usb_mux up, two readings switch, a third confirms
+  local function plug(doc)
+    local r = require("services.device.power").on_plugged(doc, { on = true })
+    for k, v in pairs(r.state) do doc[k] = v end
+    return r
+  end
+  local function headphones_on(doc, confirmed)
+    step(doc, { headphones = false }); step(doc, { headphones = false })
+    step(doc, { headphones = true }); step(doc, { headphones = true })
+    assert_true(doc.audiocfg.headphones_en)
+    if confirmed then step(doc, { headphones = true }) end
+  end
+
+  it("a charger whose readings switched to headphones before its cable event goes back to the speaker", function()
+    local doc = hp_doc({ power = { connected = false } })
+    headphones_on(doc, false)                        -- the charger's two readings won the race
+    local r = plug(doc)
+    assert_eq(mux_written(r).text, "0"); assert_true(has(r, "timer.once", "name", "device.hp_check"))
+    assert_eq(select(1, amp_and_out(step(doc, { headphones = true }))), "1")
+    for _ = 1, 3 do assert_nil(select(1, amp_and_out(step(doc, { headphones = true })))) end
+    assert_false(doc.audiocfg.headphones_en)
+  end)
+
+  it("headphones swapped for the charger before the 'out' readings agreed go back to the speaker", function()
+    local doc = hp_doc({ power = { connected = false } })
+    headphones_on(doc, true)
+    step(doc, { headphones = false })                -- the adapter out: one reading, the next not yet in
+    assert_eq(mux_written(plug(doc)).text, "0")
+    assert_eq(select(1, amp_and_out(step(doc, { headphones = true }))), "1")
+    assert_false(doc.audiocfg.headphones_en)
+  end)
+
+  it("headphones that have been playing keep the sound when a charger is added (a splitter)", function()
+    local doc = hp_doc({ power = { connected = false } })
+    headphones_on(doc, true)
+    assert_eq(mux_written(plug(doc)).text, "1")
+    for _ = 1, 3 do assert_nil(select(1, amp_and_out(step(doc, { headphones = true })))) end
+    assert_true(doc.audiocfg.headphones_en)
   end)
 
   it("a cable change sets usb_mux and the reading after it is skipped", function()

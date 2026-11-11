@@ -59,7 +59,7 @@ describe("volume firmware compatibility", function()
 
   it("silences wired output switches and restores the saved level under the negotiated policy", function()
     for _, api in ipairs({ 0, 1, 2 }) do
-      local d = doc(); d.device.volume_api = api; d.power = { connected = true }
+      local d = doc(); d.device.volume_api = api; d.power = { connected = false }
       local dial = api == 2 and 8 or 80   -- without API 2 the saved volume is the dial's
       d.hp_int = { mux = "1" }; d.volume_int = { knob = dial }
       for _, plugged in ipairs({ true, false }) do

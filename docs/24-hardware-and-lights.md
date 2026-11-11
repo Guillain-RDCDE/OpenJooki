@@ -256,7 +256,10 @@ port do not mix**. When the cable goes in, the program only puts the
 multiplexer on the charger side if headphones are *not* enabled
 (`usb_mux`, in the original program and in `core/services/device/power.lua` alike),
 which matches what owners see: with a splitter, the headphones work and the
-charging does not (u/Rubman tried five).
+charging does not (u/Rubman tried five). A charger reads "plugged" on the
+headphones line too, and keeps it there: since the next release the core ignores that reading
+with the charger in (#43), so headphones plugged after the charger are chosen by hand
+(*Settings → Sound to the headphones*, `OJ_HEADPHONES`).
 
 **Wired headphones: only a passive adapter.** The Jooki finds headphones by a
 voltage on the port's CC line, read by the ESP32 (`update_cc_state` in

@@ -63,7 +63,9 @@
               oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
               onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
         // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
-        d.core ? sRow({ icon: 'vol', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
+        // on the charger the detection sees the charger, not headphones added after it: the parent chooses
+        d.core && S.power.connected ? sRow({ icon: 'vol', label: t('hp_force'), sub: t('hp_force_sub'), sw: true, on: !!cfg.headphones_en, k: 'hpforce', onchange: function (e) { send('OJ_HEADPHONES', { on: e.target.checked }); } })
+          : d.core ? sRow({ icon: 'vol', label: t('hp_wired'), sub: t('hp_wired_sub'), value: t(cfg.headphones_en ? 'hp_yes' : 'hp_no'), vcls: cfg.headphones_en ? 'good' : '', k: 'hprow' }) : null,
         // louder wired headphones (#10): +6 dB on the sound chip, only while kids mode is off
         d.core && typeof cfg.hp_boost === 'boolean' ? sRow({ icon: 'vol', label: t('hp_boost'), sub: t(d.toy_safe ? 'hp_boost_kids' : 'hp_boost_sub'), sw: true, on: cfg.hp_boost, k: 'hpboost', onchange: function (e) { send('SET_CFG', { hp_boost: e.target.checked }); } }) : null
     ]);

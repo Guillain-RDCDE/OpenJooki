@@ -225,6 +225,8 @@ version.
 - *Volume and headphones*: **Limited volume (kids mode)**.
 - **Headphones detected**: **Yes** when wired headphones are plugged in. They need a USB-C to
   jack adapter with no chip inside ([which one](lights-and-battery.md#charging)).
+- **Sound to the headphones** (shown while the charger is in): the Jooki can't see headphones
+  plugged in after the charger, so turn this on for them. It doesn't charge meanwhile.
 - **Louder headphones**: if wired headphones are too quiet. It only works with **Limited
   volume (kids mode)** off. Turn the volume down before putting them on.
 - *Playback*: **Shuffle**, **Start with a random song**, **Repeat**. These are for the playlists

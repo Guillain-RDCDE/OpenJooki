@@ -142,6 +142,26 @@ for volume_api in (0, 1, None):
         R.check("legacy API %r, headphones %d: factory kids attenuation retained" % (volume_api, headphones),
                 last_mixer("Toysafe override").endswith(" off"))
 
+# On the charger the page's switch decides (headphones added after the charger cannot be seen);
+# on battery it is refused and the detection decides. A charger reads "plugged" on the line.
+headphones = 1
+j.c.publish("/j/power/input/plugged_in", "1")
+j.wait_state("power.connected", True)
+j.send("OJ_HEADPHONES", {"on": True})
+j.wait_state("audio.config.headphones_en", True)
+for _ in range(3):
+    j.c.publish("/j/esp32/input/knobs/state", knobs_payload())
+j.barrier()
+R.check("charger: the switch keeps the headphones", j.get("audio.config.headphones_en") is True)
+j.send("OJ_HEADPHONES", {"on": False})
+j.wait_state("audio.config.headphones_en", False)
+headphones = 0
+j.c.publish("/j/power/input/plugged_in", "0")
+j.wait_state("power.connected", False)
+j.send("OJ_HEADPHONES", {"on": True})
+j.barrier()
+R.check("battery: the switch is refused", j.get("audio.config.headphones_en") is False)
+
 night_max = knob - 7
 j.send("OJ_BEDTIME_SET", {"enabled": True, "tzbase": 0, "tzdst": "none", "start": hm(minutes - 60), "stop": hm(minutes + 60), "maxvol": night_max})
 R.expect("legacy speaker takes the night ceiling", lambda: last_alsa() == 93)

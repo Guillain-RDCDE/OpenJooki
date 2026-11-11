@@ -210,6 +210,12 @@ H.SET_CFG = function(doc, p)
   return r, e, { "audio" }
 end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end
+-- the "Sound to the headphones" switch, with the charger in (device.set_headphones)
+H.OJ_HEADPHONES = function(doc, p)
+  if type(p.on) ~= "boolean" then return nil, { code = "invalid_argument", field = "on", message = "on must be true or false" } end
+  local r, e = device.set_headphones(doc, p.on)
+  return r, e, { "audio" }
+end
 -- refused without echoing the payload: it holds a Wi-Fi password, and the error topic reaches every page
 H.SET_WIFI = function() return { commands = { err_cmd(device.WIFI_OVER_BLUETOOTH.message) } } end
 -- the phone's time, sent by the page at every connection (taken only while the Jooki's clock is unset)
@@ -265,7 +271,7 @@ local PROTECTED = {
   PLAYLIST_NEW = true, PLAYLIST_NEW_DEEZER = true, PLAYLIST_NEW_SPOTIFY = true,
   PLAYLIST_ADD_TRACK = true, PLAYLIST_ADD_STREAM = true, PLAYLIST_ADD_UPLOAD = true,
   PLAYLIST_DELETE = true, PLAYLIST_UPDATE = true, TOKEN_EDIT = true, TOKEN_DELETE = true, TOKEN_SET_IMAGE = true,
-  OJ_VOLUME_TEST = true, SET_CFG = true, SET_TOY_SAFE = true, SET_WIFI = true, SHUTDOWN = true,
+  OJ_VOLUME_TEST = true, SET_CFG = true, SET_TOY_SAFE = true, OJ_HEADPHONES = true, SET_WIFI = true, SHUTDOWN = true,
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,

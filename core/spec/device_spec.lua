@@ -365,6 +365,34 @@ describe("services.device — audio output / amplifier", function()
     assert_true(doc.audiocfg.headphones_en)
   end)
 
+  -- the page's "Sound to the headphones" switch (headphones added after the charger cannot be seen)
+  local function apply(doc, r) for k, v in pairs((r or {}).state or {}) do doc[k] = v end return r end
+  it("with the charger in, the switch sends the sound to the headphones and they keep it", function()
+    local doc = hp_doc({ power = { connected = true } })
+    local r = apply(doc, device.set_headphones(doc, true))
+    assert_eq(mux_written(r).text, "1")
+    assert_eq(select(1, amp_and_out(r)), "0"); assert_eq(select(2, amp_and_out(r)), "headphones")
+    assert_true(doc.audiocfg.headphones_en)
+    for _ = 1, 3 do assert_nil(select(1, amp_and_out(step(doc, { headphones = true })))) end
+    assert_true(doc.audiocfg.headphones_en)
+  end)
+
+  it("the switch back puts the sound on the speaker and usb_mux on the charger side", function()
+    local doc = hp_doc({ power = { connected = true } })
+    apply(doc, device.set_headphones(doc, true))
+    local r = apply(doc, device.set_headphones(doc, false))
+    assert_eq(mux_written(r).text, "0"); assert_eq(select(1, amp_and_out(r)), "1")
+    for _ = 1, 3 do assert_nil(select(1, amp_and_out(step(doc, { headphones = true })))) end
+    assert_false(doc.audiocfg.headphones_en)
+  end)
+
+  it("the switch is refused on battery (the detection decides) and without the detection", function()
+    local r, e = device.set_headphones(hp_doc({ power = { connected = false } }), true)
+    assert_nil(r); assert_eq(e.code, "unavailable")
+    r, e = device.set_headphones(hp_doc({ power = { connected = true }, jack = false }), true)
+    assert_nil(r); assert_eq(e.code, "unavailable")
+  end)
+
   it("a cable change sets usb_mux and the reading after it is skipped", function()
     local power = require("services.device.power")
     local doc = hp_doc({ power = { connected = true } })

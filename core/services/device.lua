@@ -346,6 +346,26 @@ function device.on_knobs(doc, ev)
   return r
 end
 
+--- The page's "Sound to the headphones" switch, only while the charger is in. The charger reads as
+--- headphones on the detection line and keeps it there, so headphones added after it (a splitter)
+--- cannot be seen: the parent chooses. usb_mux goes to the headphones side with them (the Jooki
+--- does not charge meanwhile, docs/24) and back to the charger side without them.
+function device.set_headphones(doc, on)
+  if not has_jack(doc) then return nil, err("unavailable", "on", "no headphone detection") end
+  if not (doc.power or {}).connected then return nil, err("unavailable", "on", "only with the charger in") end
+  local a = copy(audiocfg_of(doc))
+  local mux = on and "1" or "0"
+  local cmds = { { kind = "files.write_text", path = "/sys/kernel/htdrv/usb_mux", text = mux } }
+  local st = { hp_int = { mux = mux } }
+  if a.headphones_en ~= on then
+    a.headphones_en = on
+    st.audiocfg = a
+    local after = copy(doc); after.audiocfg = a
+    switch_output(after, on, cmds)
+  end
+  return { state = st, commands = cmds }
+end
+
 -- ------------------------------------------------------------------ the time, from the page
 -- The Jooki has no clock of its own (no RTC): it takes the time from the Internet (ntpd). Away
 -- from the Internet (holiday Wi-Fi without Internet, a phone's hotspot) it starts in 1970, and

@@ -46,6 +46,9 @@ to the left while switching it on does that). Switch it off, then switch it on w
 - Use a phone charger of **1 A at most**, a clean port and a cable in good shape, and keep
   an eye on the Jooki while it charges (Jooki's own advice, May 2024).
 - The port is for charging **or** wired headphones, not both at once.
+- **With a splitter** (charger and headphones together): plug the **headphones first**, then
+  the charger. The Jooki takes a charger for headphones, so it can't see headphones added
+  after it: then use **Settings → Volume and headphones → Sound to the headphones**.
 - **Wired headphones** need a USB-C to jack adapter with **no chip inside** (a "passive" or
   "analog" one). Most adapters sold today have a small sound card inside: the Jooki can't use
   them, nor USB-C headphones. A quick test: an adapter that works on an iPhone 15 or a Mac has

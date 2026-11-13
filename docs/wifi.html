@@ -113,13 +113,15 @@
     <button class="btn ghost" id="again" type="button">Try another network</button>
   </div>
 
+  <div class="card bad" id="err" hidden><b id="etitle"></b><p id="etext" style="margin:.4em 0 0"></p></div>
+
+  <p class="tiny center" id="help" hidden>Still stuck? <a id="mailme" href="#">Email these details to Guillain</a>: what the Jooki answered, step by step (never your password). He reads every one.</p>
+
   <div id="knownbox" class="card" hidden>
     <b>Networks the Jooki remembers</b>
     <p class="tiny" style="margin-bottom:8px">It does not pick the strongest one: after a short cut it can move to another one it knows, even a far one, and stay there. At start it only looks at the networks before the first empty slot, and forgetting one can leave a gap: after forgetting any, give it the network next to it again (below), which fills the first empty slot. To keep only that one, forget them all, then give it that one. Reading and forgetting here do not take it off its Wi-Fi.</p>
     <div id="known"></div>
   </div>
-
-  <div class="card bad" id="err" hidden><b id="etitle"></b><p id="etext" style="margin:.4em 0 0"></p></div>
 
   <details>
     <summary>How it works, and what it cannot do</summary>
@@ -177,8 +179,8 @@
     // The Jooki serves one talker at a time: right after another one dropped (a tab closed),
     // connecting or the handshake can fail for a few seconds, so we try again for a while.
     for (var round = 0; ; round++) {
-      try { await link1(); return; }
-      catch (e) { try { device.gatt.disconnect(); } catch (x) {} if (round >= 8) throw e; await sleep(2500); }
+      try { await link1(); if (round) note('link made again after ' + round + ' tries'); return; }
+      catch (e) { if (!round || round >= 8) note('link failed: ' + errText(e)); try { device.gatt.disconnect(); } catch (x) {} if (round >= 8) throw e; await sleep(2500); }
     }
   }
   async function link1() {
@@ -202,6 +204,11 @@
     if (one(sub(sub(r, 10), 21), 1, 0) !== 0) throw new Error('session refused');
   }
   var TRACE = window.OJ_TRACE = [];   // every exchange, as hex, when the page is opened with #trace (support)
+  // What happened, in plain words, for the "Email these details" link (a parent far away, mail of
+  // 13/11/2026): never the password (only its length), never the bytes exchanged.
+  var LOG = window.OJ_LOG = [], T0 = Date.now();
+  function note(s) { LOG.push(((Date.now() - T0) / 1000).toFixed(1) + ' s  ' + s); if (LOG.length > 80) LOG.splice(1, 1); }
+  function errText(e) { return (e && e.name || 'Error') + ': ' + String(e && e.message || e).slice(0, 120); }
   function hex(a) { return Array.from(a, function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
   async function xfer(ch, bytes) {
     var buf = new Uint8Array(bytes);
@@ -271,35 +278,46 @@
         if (one(r, 1, 0) !== 0) throw new Error('refused');
         r = sub(decode(await xfer(chars.config, fv(1, 4).concat(fb(14, [])))), 15);
         if (one(r, 1, 0) !== 0) throw new Error('refused');
-        applied = true;
+        applied = true; note('the Jooki took the network');
         break;
-      } catch (e) { TRACE.push('retry set-up: ' + (e && e.message)); dropLink(); if (round >= 2) throw e; await sleep(2000); }
+      } catch (e) { note('sending the network failed: ' + errText(e)); TRACE.push('retry set-up: ' + (e && e.message)); dropLink(); if (round >= 2) throw e; await sleep(2000); }
     }
     // The status is the chip's last event: a failure is believed only once the attempt has had time
     // to run (3 s) and it is reported twice in a row, so a stale answer never ends a real attempt.
     // While the chip switches network, a Bluetooth read can fail or the link can drop for a moment:
     // that is not the verdict, so the polling carries on (and links again) unless it keeps failing.
-    var t0 = Date.now(), st = { state: 'connecting' }, failures = 0, errors = 0, limit = window.OJ_TIMEOUT || 45000;
+    var t0 = Date.now(), st = { state: 'connecting' }, failures = 0, errors = 0, limit = window.OJ_TIMEOUT || 45000, lastSaid = '';
     while (Date.now() - t0 < limit) {
       await sleep(1500);
       try { if (!have()) await link(); st = await status(); errors = 0; }
       catch (e) {
-        if (e && e.name === 'NotFoundError') throw e;      // the set-up service is gone: it will not come back (see below)
+        // link() already tried for about 20 s: the set-up service is gone for good (see the result below)
+        if (e && e.name === 'NotFoundError') { note('set-up service gone: ' + errText(e)); throw e; }
+        note('reading the answer failed: ' + errText(e));
         if (++errors >= 6) throw e; TRACE.push('retry ' + (e && e.message)); if (errors >= 2) dropLink(); continue;
       }
+      var said = st.state + (st.reason !== null && st.reason !== undefined ? ' (reason ' + st.reason + ')' : '');
+      if (said !== lastSaid) { note('the Jooki says: ' + said); lastSaid = said; }
       onstep(Math.round((Date.now() - t0) / 1000), st);
       if (st.state === 'connected' && st.ssid === ssid) return st;
       failures = st.state === 'failed' ? failures + 1 : 0;
       if (failures >= 2 && Date.now() - t0 >= 3000) return st;
     }
-    st.state = 'timeout'; return st;
+    st.state = 'timeout'; note('no verdict in ' + Math.round(limit / 1000) + ' s'); return st;
   }
 
   /* ---- the page */
   var chosen = null, nets = [];
   function show(id, on) { $(id).hidden = !on; }
-  function err(title, text) { $('etitle').textContent = title; $('etext').textContent = text || ''; show('err', true); }
-  function noerr() { show('err', false); }
+  function err(title, text) { $('etitle').textContent = title; $('etext').textContent = text || ''; show('err', true); note('shown: ' + title); offerHelp(true); }
+  function noerr() { show('err', false); offerHelp(false); }
+  // "Email these details": the plain log above, ready in the parent's own mail app
+  function offerHelp(on) {
+    show('help', on);
+    if (!on) return;
+    var body = 'What the Wi-Fi page saw (no password in it):\n\n' + LOG.join('\n') + '\n\n' + navigator.userAgent + '\n';
+    $('mailme').href = 'mailto:guillain@poulpe.us?subject=' + encodeURIComponent('OpenJooki Wi-Fi: the details') + '&body=' + encodeURIComponent(body);
+  }
   function bars(rssi) { return rssi >= -55 ? 4 : rssi >= -65 ? 3 : rssi >= -75 ? 2 : 1; }
   function words(rssi) { return rssi >= -65 ? 'good signal' : rssi >= -75 ? 'fair signal' : 'weak signal'; }
   function explain(e, chooser) {
@@ -356,8 +374,9 @@
     show('scanstart', false); show('scanrow', true);
     show('scanning', true); $('nets').innerHTML = ''; show('netnote', false); $('rescan').disabled = true; $('connect').disabled = true;
     for (var round = 0; ; round++) {
-      try { await link(); nets = await scanNetworks(); break; }
+      try { await link(); nets = await scanNetworks(); note('networks seen: ' + nets.length); break; }
       catch (e) {
+        note('looking for networks failed: ' + errText(e));
         TRACE.push('retry look: ' + (e && e.name) + ': ' + (e && e.message));
         if (round < 2 && (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(String(e && e.message || e)))) { dropLink(); await sleep(2000); continue; }
         nets = last || [];
@@ -377,6 +396,7 @@
     } catch (e) { var x = explain(e, true); if (x) err('No Jooki found', x); return; }
     device.addEventListener('gattserverdisconnected', function () { chars = {}; });
     $('who').textContent = '· ' + (device.name || 'Jooki');
+    note('found ' + (device.name || 'a Jooki'));
     show('step1', false); show('step2', true); show('result', false);
     chosen = null; $('pw').value = ''; $('connect').disabled = true;
     // first what it remembers (no set-up session: the Jooki stays on its Wi-Fi), then the parent chooses to look
@@ -395,6 +415,8 @@
     if (!chosen || busy) return;
     var ssid = chosen, pw = $('pw').disabled ? '' : $('pw').value;
     var net = nets.filter(function (n) { return n.ssid === ssid; })[0];
+    note('giving "' + ssid + '" (' + ssid.length + ' characters), password of ' + pw.length + ' characters, ' +
+         (net ? 'seen by the Jooki: signal ' + net.rssi + ' dBm, channel ' + net.channel + ', security ' + net.auth : 'typed by hand'));
     if (net && net.auth !== 0 && pw.length < 8) { err('Password too short', 'A Wi-Fi password has at least 8 characters.'); return; }
     noerr(); busy = true;
     show('step2', false); show('progress', true); $('ptitle').textContent = 'Sending the network to the Jooki…'; $('psub').textContent = 'It takes about ten seconds.';
@@ -409,11 +431,13 @@
       // after joining (wcm_prov.c), and keeps it after a failure. Not a failure, then: look in the box
       // (mail of 13/11/2026, a red "Not connected" said the opposite of its own text).
       st = applied && e && e.name === 'NotFoundError' ? { state: 'gone' } : { state: 'error', message: explain(e) };
+      note('stopped: ' + errText(e));
       TRACE.push('error ' + (e && e.name) + ': ' + (e && e.message));
     }
     busy = false;
     show('progress', false); show('result', true);
     var ok = st.state === 'connected', gone = st.state === 'gone';
+    note('result: ' + st.state); offerHelp(!ok);
     $('result').className = 'card ' + (ok ? 'ok' : gone ? '' : 'bad');
     $('rico').textContent = ok ? '✅' : gone ? '🔎' : '❌';
     show('openpage', ok);
@@ -426,7 +450,7 @@
       $('again').textContent = 'Give it another network';
     } else if (gone) {
       $('rtitle').textContent = 'Almost there: look in your internet box';
-      $('rtext').textContent = 'The Jooki took "' + ssid + '" and then stopped answering over Bluetooth: that is what it does once it has joined a network. Open your internet box\'s app or page and look in the connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If it is not there after a minute, switch the Jooki off and on, then try again.';
+      $('rtext').textContent = 'The Jooki took "' + ssid + '" and then stopped answering over Bluetooth: that is what it does once it has joined a network. Open your internet box\'s app or page and look in the connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If it is not there after a minute, the password was most likely wrong: switch the Jooki off and on, try again, and check the password with Show (capitals, spaces and symbols count).';
       $('again').textContent = 'Try again';
     } else {
       var why = st.state === 'failed' ? (st.reason === 0 ? 'The Jooki says the password is wrong. Check capitals, spaces and symbols, then try again: until then it stays off Wi-Fi.'

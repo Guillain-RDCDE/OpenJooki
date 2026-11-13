@@ -51,6 +51,7 @@ MOCK = r"""
         var c = decode(one(m, 12)); J.pending = { ssid: dec.decode(one(c, 1, new Uint8Array(0))), pw: dec.decode(one(c, 2, new Uint8Array(0))) }; return fv(1, 3).concat(fb(13, [])); }
       if (t === 4) { if (!J.session || !J.pending) return fv(1, 5).concat(fb(15, fv(1, 7)));
         if (J.goneAfterApply) { J.goneAfterApply = false; J.noService = true; device.gatt.connected = false; }
+        if (J.goneFor) { J.goneLeft = J.goneFor; J.goneFor = 0; J.noService = true; device.gatt.connected = false; }
         J.attempts.push(J.pending); J.session = false; J.state = 1; J.reason = null; J.connected = null; J.polls = 0; J.armed = J.pending; J.pending = null; return fv(1, 5).concat(fb(15, [])); }
       if (t === 0) { J.polls++;
         if (J.armed && J.polls >= 3) { var a = J.armed; J.armed = null;
@@ -79,7 +80,7 @@ MOCK = r"""
         var v = new Uint8Array(last); last = null; return new DataView(v.buffer); } };
   }
   var device = { name: J.name, addEventListener: function () {}, gatt: { connected: false,
-    connect: async function () { this.connected = true; return { getPrimaryService: async function (u) { if (J.noService) throw err('NotFoundError', 'No Services matching UUID ' + u + ' found in Device.'); if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
+    connect: async function () { if (J.goneLeft > 0 && --J.goneLeft === 0) J.noService = false; this.connected = true; return { getPrimaryService: async function (u) { if (J.noService) throw err('NotFoundError', 'No Services matching UUID ' + u + ' found in Device.'); if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
     disconnect: function () { this.connected = false; } } };
   var bt = { available: true,
     getAvailability: async function () { return bt.available; },
@@ -155,6 +156,7 @@ with sync_playwright() as p:
     check("W5 Enter sends exactly the chosen network and password", att == [{"ssid": "Home", "pw": "goodpassword"}], att)
     check("W5 a new session was opened before the set-up (handshake)", pg.evaluate("window.__jooki.sessions") >= 2, pg.evaluate("window.__jooki.sessions"))
     check("W5 success card names the network and offers the Jooki's page at its own name (not jooki.local)", "ok" in pg.locator("#result").get_attribute("class") and "Home" in pg.locator("#rtitle").inner_text() and pg.locator("#openpage").is_visible() and pg.locator("#openpage").get_attribute("href") == "http://jooki2-test01.local/" and "jooki2-test01.local" in pg.locator("#rtext").inner_text(), pg.locator("#openpage").get_attribute("href"))
+    check("W21 after a success, no 'email the details'", pg.locator("#help").is_hidden())
     check("W5 progress card shown the network while connecting", "Home" in pg.locator("#ptitle").inner_text(), pg.locator("#ptitle").inner_text())
     # W6 wrong password -> AuthError
     pg.click("#again"); pg.wait_for_selector("#step2:not([hidden])")
@@ -233,8 +235,28 @@ with sync_playwright() as p:
     check("W19 not a failure: no red card, no cross, a title that says to look in the box",
           "bad" not in pg.locator("#result").get_attribute("class") and pg.locator("#rico").inner_text() != "❌" and "look in your internet box" in pg.locator("#rtitle").inner_text(),
           (pg.locator("#result").get_attribute("class"), pg.locator("#rico").inner_text(), pg.locator("#rtitle").inner_text()))
-    check("W19 ... naming the network, the box and what to do if it is not there", '"Home"' in txt and "jooki" in txt and "off and on" in txt, txt)
+    check("W19 ... naming the network, the box and what to do if it is not there", '"Home"' in txt and "jooki" in txt and "off and on" in txt and "Show" in txt, txt)
     pg.evaluate("window.__jooki.noService = false")
+    # W21 after a failure: a link that emails what happened, in plain words, never the password
+    mail = pg.get_attribute("#mailme", "href") or ""
+    import urllib.parse
+    body = urllib.parse.unquote(mail.split("body=", 1)[-1])
+    check("W21 after a failure the page offers to email the details", pg.locator("#help").is_visible() and mail.startswith("mailto:guillain@poulpe.us?"), mail[:80])
+    check("W21 the details say what was given and what the Jooki answered", 'giving "Home"' in body and "password of 12 characters" in body and "the Jooki took the network" in body and "set-up service gone" in body, body)
+    check("W21 never the password itself", "goodpassword" not in mail and "goodpassword" not in body)
+    # W20 the set-up service goes for a few seconds after the network was given, then comes back with
+    # the chip's verdict (it restarts after a failure): the verdict is shown, not "Almost there"
+    pg.evaluate("window.__jooki.failMode = 'auth'")
+    pg.click("#again")
+    if pg.locator("#step1").is_visible(): pg.click("#find")
+    pg.wait_for_selector("#step2:not([hidden])")
+    if pg.locator("#scanbtn").is_visible(): pg.click("#scanbtn")
+    pg.evaluate("window.__jooki.goneFor = 2")
+    pg.click(".net[data-ssid='Home']"); pg.fill("#pw", "wrongpassword"); pg.click("#connect")
+    pg.wait_for_selector("#result:not([hidden])", timeout=90000)
+    txt = pg.locator("#rtext").inner_text()
+    check("W20 gone a moment then back: the real verdict (wrong password), not 'Almost there'",
+          "password is wrong" in txt and "look in your internet box" not in pg.locator("#rtitle").inner_text(), (pg.locator("#rtitle").inner_text(), txt))
     # W10 forget: cancelled, then confirmed
     before = pg.locator("[data-forget]").evaluate_all("els => els.map(e => e.getAttribute('data-forget'))")
     accept["v"] = False

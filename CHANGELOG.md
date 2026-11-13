@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.2 (13 November 2026) — Your own address
 - **Plays out loud on the charger.** Plugging in the charger while a song played could send the sound to headphones that were not there, so the Jooki went silent while it seemed to play. The headphone detection reads a charger as headphones, so with the charger in it no longer switches to headphones; headphones already playing still switch back to the speaker when they come out.
 - **Sound to the headphones.** With the charger in, Settings → Volume and headphones has a switch that sends the sound to wired headphones, for a splitter whose headphones were plugged in after the charger (the Jooki cannot see them then). With a splitter, plugging the headphones first still works on its own.
 - **Your own address for the page.** Some browsers cannot open `.local` names (Flatpak browsers on Linux, some Android phones), so a parent points a name of their own DNS at the Jooki, and the Jooki answered "bad host". Names ending in `.lan`, `.home`, `.home.arpa`, `.internal` or `.localdomain` now always work, and any other name can be added in *Settings → Advanced → Other addresses* (up to five, behind the parent code).

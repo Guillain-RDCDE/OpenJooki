@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.1:** the track knob can bring a playlist back to its start, and a tidier Settings page.
-2.5.0: German, all lights off, a Test button for the night volume, a random first song, and the page can turn the speaker down.
+**New in 2.5.2:** open the page with a name from your own DNS, and sound that stays on the speaker when the charger goes in.
+2.5.1: the track knob can bring a playlist back to its start, and a tidier Settings page.
 [All the changes](CHANGELOG.md)
 
 ---

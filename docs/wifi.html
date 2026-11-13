@@ -258,6 +258,7 @@
     var c = sub(s, 11);
     return { state: STATE[one(s, 2, 0)] || 'unknown', reason: one(s, 10, null), ssid: c[3] ? dec.decode(one(c, 3)) : null };
   }
+  var applied = false;   // the Jooki took the network: from then on, its set-up service ending is good news
   function dropLink() { try { if (device && device.gatt) device.gatt.disconnect(); } catch (e) {} chars = {}; }
   async function giveNetwork(ssid, pw, onstep) {
     var r;
@@ -270,6 +271,7 @@
         if (one(r, 1, 0) !== 0) throw new Error('refused');
         r = sub(decode(await xfer(chars.config, fv(1, 4).concat(fb(14, [])))), 15);
         if (one(r, 1, 0) !== 0) throw new Error('refused');
+        applied = true;
         break;
       } catch (e) { TRACE.push('retry set-up: ' + (e && e.message)); dropLink(); if (round >= 2) throw e; await sleep(2000); }
     }
@@ -281,7 +283,10 @@
     while (Date.now() - t0 < limit) {
       await sleep(1500);
       try { if (!have()) await link(); st = await status(); errors = 0; }
-      catch (e) { if (++errors >= 6) throw e; TRACE.push('retry ' + (e && e.message)); if (errors >= 2) dropLink(); continue; }
+      catch (e) {
+        if (e && e.name === 'NotFoundError') throw e;      // the set-up service is gone: it will not come back (see below)
+        if (++errors >= 6) throw e; TRACE.push('retry ' + (e && e.message)); if (errors >= 2) dropLink(); continue;
+      }
       onstep(Math.round((Date.now() - t0) / 1000), st);
       if (st.state === 'connected' && st.ssid === ssid) return st;
       failures = st.state === 'failed' ? failures + 1 : 0;
@@ -393,18 +398,24 @@
     if (net && net.auth !== 0 && pw.length < 8) { err('Password too short', 'A Wi-Fi password has at least 8 characters.'); return; }
     noerr(); busy = true;
     show('step2', false); show('progress', true); $('ptitle').textContent = 'Sending the network to the Jooki…'; $('psub').textContent = 'It takes about ten seconds.';
-    var st;
+    var st; applied = false;
     try {
       await link();
       st = await giveNetwork(ssid, pw, function (secs, s) {
         $('ptitle').textContent = 'The Jooki is connecting to "' + ssid + '"…'; $('psub').textContent = secs + ' s';
       });
-    } catch (e) { st = { state: 'error', message: explain(e) }; TRACE.push('error ' + (e && e.name) + ': ' + (e && e.message)); }
+    } catch (e) {
+      // The set-up service gone once the Jooki took the network: the factory chip ends it ten seconds
+      // after joining (wcm_prov.c), and keeps it after a failure. Not a failure, then: look in the box
+      // (mail of 13/11/2026, a red "Not connected" said the opposite of its own text).
+      st = applied && e && e.name === 'NotFoundError' ? { state: 'gone' } : { state: 'error', message: explain(e) };
+      TRACE.push('error ' + (e && e.name) + ': ' + (e && e.message));
+    }
     busy = false;
     show('progress', false); show('result', true);
-    var ok = st.state === 'connected';
-    $('result').className = 'card ' + (ok ? 'ok' : 'bad');
-    $('rico').textContent = ok ? '✅' : '❌';
+    var ok = st.state === 'connected', gone = st.state === 'gone';
+    $('result').className = 'card ' + (ok ? 'ok' : gone ? '' : 'bad');
+    $('rico').textContent = ok ? '✅' : gone ? '🔎' : '❌';
     show('openpage', ok);
     if (ok) {
       $('rtitle').textContent = 'Your Jooki is on "' + ssid + '"';
@@ -413,6 +424,10 @@
       $('openpage').href = 'http://' + host + '.local/';
       $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://' + host + '.local</code> (with the <code>http://</code>). If you gave your Jooki another name on its page, use that name instead; the address your box shows for it works too. The Jooki remembers this network from now on.';
       $('again').textContent = 'Give it another network';
+    } else if (gone) {
+      $('rtitle').textContent = 'Almost there: look in your internet box';
+      $('rtext').textContent = 'The Jooki took "' + ssid + '" and then stopped answering over Bluetooth: that is what it does once it has joined a network. Open your internet box\'s app or page and look in the connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If it is not there after a minute, switch the Jooki off and on, then try again.';
+      $('again').textContent = 'Try again';
     } else {
       var why = st.state === 'failed' ? (st.reason === 0 ? 'The Jooki says the password is wrong. Check capitals, spaces and symbols, then try again: until then it stays off Wi-Fi.'
                                         : st.reason === 1 ? 'The Jooki cannot find that network. Bring it closer to the box, and check the network is 2.4 GHz.'

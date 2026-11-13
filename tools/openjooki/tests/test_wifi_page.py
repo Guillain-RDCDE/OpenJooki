@@ -50,6 +50,7 @@ MOCK = r"""
       if (t === 2) { if (!J.session) return fv(1, 3).concat(fb(13, fv(1, 7)));    // InvalidSession
         var c = decode(one(m, 12)); J.pending = { ssid: dec.decode(one(c, 1, new Uint8Array(0))), pw: dec.decode(one(c, 2, new Uint8Array(0))) }; return fv(1, 3).concat(fb(13, [])); }
       if (t === 4) { if (!J.session || !J.pending) return fv(1, 5).concat(fb(15, fv(1, 7)));
+        if (J.goneAfterApply) { J.goneAfterApply = false; J.noService = true; device.gatt.connected = false; }
         J.attempts.push(J.pending); J.session = false; J.state = 1; J.reason = null; J.connected = null; J.polls = 0; J.armed = J.pending; J.pending = null; return fv(1, 5).concat(fb(15, [])); }
       if (t === 0) { J.polls++;
         if (J.armed && J.polls >= 3) { var a = J.armed; J.armed = null;
@@ -217,6 +218,22 @@ with sync_playwright() as p:
     txt = pg.locator("#rtext").inner_text()
     check("W15 no set-up service on a new link: the page says it may have joined and to look for jooki in the box",
           "joined your Wi-Fi" in txt and "jooki" in txt and "off and on" in txt and "went wrong" not in txt, txt)
+    pg.evaluate("window.__jooki.noService = false")
+    # W19 the set-up service ends right after the Jooki took the network (what the factory chip does
+    # once it has joined, mail of 13/11/2026): no red "Not connected", the page says to look in the box
+    pg.click("#again")
+    if pg.locator("#step1").is_visible(): pg.click("#find")      # the link ended with W15: find the Jooki again
+    pg.wait_for_selector("#step2:not([hidden])")
+    pg.evaluate("window.__jooki.goneAfterApply = true")
+    if pg.locator("#scanbtn").is_visible(): pg.click("#scanbtn")
+    pg.click(".net[data-ssid='Home']"); pg.fill("#pw", "goodpassword"); pg.click("#connect")
+    pg.wait_for_selector("#result:not([hidden])", timeout=60000)
+    txt = pg.locator("#rtext").inner_text()
+    check("W19 the network was given before the link ended", pg.evaluate("window.__jooki.attempts.slice(-1)[0]") == {"ssid": "Home", "pw": "goodpassword"})
+    check("W19 not a failure: no red card, no cross, a title that says to look in the box",
+          "bad" not in pg.locator("#result").get_attribute("class") and pg.locator("#rico").inner_text() != "❌" and "look in your internet box" in pg.locator("#rtitle").inner_text(),
+          (pg.locator("#result").get_attribute("class"), pg.locator("#rico").inner_text(), pg.locator("#rtitle").inner_text()))
+    check("W19 ... naming the network, the box and what to do if it is not there", '"Home"' in txt and "jooki" in txt and "off and on" in txt, txt)
     pg.evaluate("window.__jooki.noService = false")
     # W10 forget: cancelled, then confirmed
     before = pg.locator("[data-forget]").evaluate_all("els => els.map(e => e.getAttribute('data-forget'))")

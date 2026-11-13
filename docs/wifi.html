@@ -323,7 +323,7 @@
   function pwFor(n) {
     var open = n && n.auth === 0;
     $('pw').disabled = open; $('pw').placeholder = open ? 'no password (open network)' : 'the Wi-Fi password';
-    $('pwlabel').textContent = open ? 'Password (none)' : 'Password for ' + n.ssid;
+    $('pwlabel').textContent = open ? 'Password (none)' : n.ssid ? 'Password for ' + n.ssid : 'Password';
     if (!open) $('pw').focus();
   }
   async function renderKnown() {
@@ -381,7 +381,8 @@
   };
   $('scanbtn').onclick = function () { noerr(); doScan(); };
   $('rescan').onclick = function () { noerr(); doScan(); };
-  $('hiddenbtn').onclick = function () { show('hiddenrow', true); chosen = null; renderNets(); $('ssid').focus(); pwFor({ ssid: '', auth: 3 }); };
+  // a name already typed stays the choice (pressed twice, or after a failed look: mail of 13/11/2026)
+  $('hiddenbtn').onclick = function () { show('hiddenrow', true); chosen = $('ssid').value.trim() || null; renderNets(); pwFor({ ssid: chosen || '', auth: 3 }); if (!chosen) $('ssid').focus(); };
   $('ssid').oninput = function () { chosen = $('ssid').value.trim() || null; $('pwlabel').textContent = chosen ? 'Password for ' + chosen : 'Password'; renderNets(); };
   $('showpw').onclick = function () { var p = $('pw'); p.type = p.type === 'password' ? 'text' : 'password'; this.textContent = p.type === 'password' ? 'Show' : 'Hide'; };
   $('pw').onkeydown = function (e) { if (e.key === 'Enter' && !$('connect').disabled) $('connect').click(); };

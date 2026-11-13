@@ -4,7 +4,7 @@ Needs Playwright's Chromium only (no Bluetooth, no Jooki).      python3 test_wif
 
 Covers: no Web Bluetooth, find + scan (sorted, one per name, open network, empty name dropped),
 remembered networks, password guard, good password, wrong password (chip says AuthError), network
-not found, chip silent (timeout), a Bluetooth read failing once, the link dropping while looking for networks, the handshake before every set-up,
+not found, chip silent (timeout), a Bluetooth read failing once, the link dropping while looking for networks, a typed hidden name kept, the handshake before every set-up,
 forget (confirmed / cancelled), Bluetooth off."""
 import os, threading, http.server, functools
 from playwright.sync_api import sync_playwright
@@ -194,6 +194,20 @@ with sync_playwright() as p:
     check("W17 the earlier list, the choice and the password stay", pg.locator(".net").count() >= 3 and pg.input_value("#pw") == "goodpassword" and pg.locator("#connect").is_enabled())
     pg.click("#connect"); pg.wait_for_selector("#result:not([hidden])", timeout=20000)
     check("W17 ... and the network can still be given", "ok" in pg.locator("#result").get_attribute("class"), pg.locator("#rtext").inner_text())
+    # W18 a hidden network name typed, then "Hidden network" pressed again (mail of 13/11/2026): the name
+    # stays the choice, the password label says it, and the network can be given without any list
+    pg.click("#again"); pg.wait_for_selector("#step2:not([hidden])")
+    pg.click("#hiddenbtn"); pg.fill("#ssid", "Home"); pg.fill("#pw", "goodpassword")
+    check("W18 a typed name can be sent", pg.locator("#connect").is_enabled() and pg.locator("#pwlabel").inner_text() == "Password for Home", pg.locator("#pwlabel").inner_text())
+    pg.click("#hiddenbtn")
+    check("W18 pressed again: the name, the password and the button stay", pg.input_value("#ssid") == "Home" and pg.input_value("#pw") == "goodpassword"
+          and pg.locator("#connect").is_enabled() and pg.locator("#pwlabel").inner_text() == "Password for Home", (pg.input_value("#ssid"), pg.locator("#pwlabel").inner_text(), pg.locator("#connect").is_enabled()))
+    pg.click("#connect"); pg.wait_for_selector("#result:not([hidden])", timeout=20000)
+    check("W18 ... and the typed name is the one sent", "ok" in pg.locator("#result").get_attribute("class") and pg.evaluate("window.__jooki.attempts.slice(-1)[0]") == {"ssid": "Home", "pw": "goodpassword"},
+          pg.evaluate("window.__jooki.attempts.slice(-1)[0]"))
+    pg.click("#again"); pg.wait_for_selector("#step2:not([hidden])"); pg.click("#hiddenbtn"); pg.fill("#ssid", "")
+    pg.click("#hiddenbtn")
+    check("W18 no name typed: nothing to send, the label has no dangling 'for'", pg.locator("#connect").is_disabled() and pg.locator("#pwlabel").inner_text() == "Password", pg.locator("#pwlabel").inner_text())
     # W15 a new link finds no set-up service (the Jooki ends it once it has joined a network):
     # the page says where to look, never a bare "Something went wrong" (mail of 07/11/2026)
     pg.evaluate("window.__jooki.noService = true; document.querySelector('#again').click()")

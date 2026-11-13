@@ -5,7 +5,9 @@
 --   * mqtt_lan: MQTT exposed on the LAN for home automation (Home Assistant), with
 --     the per-Jooki password; a boot script rebuilds the broker config;
 --   * parent: whether a parent code is set (the code itself never reaches the page;
---     the gate that checks it is security.gate, asked by api.v1 and api.v2).
+--     the gate that checks it is security.gate, asked by api.v1 and api.v2);
+--   * web_names: the other names the page may be opened with (the owner's own DNS, #45);
+--     the web server's rebinding guard (adapters.httpd) accepts them as its own.
 local util = require("services.util")
 local security = {}
 local err = util.err
@@ -14,8 +16,9 @@ local SSH_SECONDS = 60 * 60           -- maintenance SSH lifetime: one hour
 local PARENT_FILE = "/data/openjooki/parent_code"
 local LAN_FLAG = "/data/openjooki/mqtt_lan"
 local KEYS_FILE = "/data/openjooki/authorized_keys"
+local NAMES_FILE = "/data/openjooki/web_names"
 -- what main reads at boot (handlers do no I/O): the boot event carries their content, see on_boot
-security.FILES = { parent = PARENT_FILE, lan = LAN_FLAG, keys = KEYS_FILE }
+security.FILES = { parent = PARENT_FILE, lan = LAN_FLAG, keys = KEYS_FILE, web_names = NAMES_FILE }
 
 --- An SSH public key on one line: its type, the base64 blob, an optional plain comment.
 --- The one definition: on_ssh_key checks the key, and adapters.shell checks it again before ssh_key_add.
@@ -148,6 +151,44 @@ function security.on_mqtt_lan(doc, ev)
     { kind = "log", level = "info", key = m.mqtt_lan and "security.mqtt_lan_on" or "security.mqtt_lan_off" } } }
 end
 
+-- ---------------------------------------------------------------- other names for the page (#45)
+-- A parent whose browsers cannot resolve .local names (a Flatpak browser on Linux, some Android
+-- phones) points a name of their own DNS at the Jooki. The rebinding guard of the web server
+-- refuses any name it does not know, so the owner lists theirs here (behind the parent code).
+local NAMES_MAX = 5
+
+--- A host name the guard can take: lower case, dot-separated labels of letters, digits and inner
+--- hyphens, at most 253 characters; nil for anything else (a port, a path, a space, an IP...).
+function security.web_name(s)
+  if type(s) ~= "string" then return nil end
+  s = s:gsub("^%s+", ""):gsub("%s+$", ""):lower():gsub("%.$", "")
+  if s == "" or #s > 253 or s:match("^[%d%.]+$") then return nil end
+  for label in (s .. "."):gmatch("([^.]*)%.") do
+    if #label == 0 or #label > 63 or not label:match("^[a-z0-9][a-z0-9%-]*$") or label:match("%-$") then return nil end
+  end
+  return s
+end
+
+--- { names = { ... } }: the whole list at once (an empty list forgets them all). One bad name
+--- refuses the lot, so the page never believes a name was saved when it was not.
+function security.on_web_names(doc, ev)
+  local list = ev.names
+  if type(list) ~= "table" or #list > NAMES_MAX then
+    return nil, err("invalid_argument", "names", "WEB_NAMES_INVALID")
+  end
+  local kept, seen = {}, {}
+  for _, raw in ipairs(list) do
+    local n = security.web_name(raw)
+    if not n then return nil, err("invalid_argument", "names", "WEB_NAMES_INVALID") end
+    if not seen[n] then seen[n] = true; kept[#kept + 1] = n end
+  end
+  local m = maint(doc); m.web_names = kept
+  local cmd = #kept > 0 and { kind = "files.write_text", path = NAMES_FILE, text = table.concat(kept, "\n") .. "\n" }
+                        or { kind = "files.remove", path = NAMES_FILE }
+  return { state = { maintenance = m }, commands = {
+    cmd, { kind = "log", level = "info", key = "security.web_names", fields = { n = #kept } } } }
+end
+
 -- ---------------------------------------------------------------- parent code
 local function is_code(s) return type(s) == "string" and s:match("^%d%d%d%d$") ~= nil end
 
@@ -185,7 +226,8 @@ end
 
 -- ---------------------------------------------------------------- boot
 --- boot: ev.security = { mqtt_lan = the LAN flag is present, authorized_keys = the keys file's
---- text (or nil), parent_code = the code file's text (or nil) }, read by main like the other files.
+--- text (or nil), parent_code = the code file's text (or nil), web_names = the names file's text
+--- (or nil) }, read by main like the other files.
 function security.on_boot(doc, ev)
   local s = (ev and ev.security) or {}
   local m = maint(doc)
@@ -201,6 +243,13 @@ function security.on_boot(doc, ev)
   local code = s.parent_code
   parent_code = code and code:match("^(%d%d%d%d)") or nil
   m.parent = parent_code ~= nil
+  -- the other names, one per line; a line that is not a name (edited by hand) is skipped
+  local names, seen = {}, {}
+  for line in (s.web_names or ""):gmatch("[^\n]+") do
+    local n = security.web_name(line)
+    if n and not seen[n] and #names < NAMES_MAX then seen[n] = true; names[#names + 1] = n end
+  end
+  m.web_names = names
   return { state = { maintenance = m } }
 end
 

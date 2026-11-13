@@ -5,7 +5,7 @@
     return { name: parts[0] || 'playlists', arg: parts[1] || null };
   }
   function go(hash) { if (location.hash !== hash) location.hash = hash; else render(); }
-  window.addEventListener('hashchange', function () { ui.sel = {}; ui.search = ''; ui.editTitle = null; window.scrollTo(0, 0); render(); });
+  window.addEventListener('hashchange', function () { ui.sel = {}; ui.search = ''; ui.editTitle = null; ui.addr = undefined; ui.addrBad = false; window.scrollTo(0, 0); render(); });
 
   /* ------------------------------------------------------------------ UI state */
   var ui = { search: '', sel: {}, editTitle: null, dragging: false };

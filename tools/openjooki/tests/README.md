@@ -40,6 +40,7 @@ python3 test_guard.py                          # oj-guard.sh under busybox: a co
 python3 test_ha_connect.py                     # Home Assistant connecting: a loaded song stays, a sound gives it back
 python3 test_page_steady.py                    # a position report redraws nothing, a real change does
 python3 test_random_playlist_ui.py             # repeated playlist Play, inherited overrides and audiobook positions
+python3 test_web_names_page.py                # other addresses (#45): own DNS names, refused then listed, in Chromium
 python3 test_random_spotify_bus.py             # confirmed mute, delayed metadata/shuffle, fresh starts and fast resume
 python3 test_spotify.py && python3 test_robustness.py && python3 test_loader.py
 python3 test_httpd.py && python3 test_clock.py && python3 test_wifi_page.py

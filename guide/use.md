@@ -274,7 +274,8 @@ version.
   change anything (delete a playlist, change the Wi-Fi, start an update). Forgotten? Turn
   the volume all the way down, then hold the track knob to the left (◀) for ten seconds.
 
-**Advanced** (*Home automation* and *Maintenance access*): for tinkerers. Leave them off.
+**Advanced** (*Home automation*, *Other addresses* and *Maintenance access*): for tinkerers. Leave them off.
+*Other addresses* is for a name from your own DNS (like `jooki.example.com`), for browsers that cannot open `.local` names.
 
 **Turn off the Jooki**, at the bottom: its button turns it back on.
 

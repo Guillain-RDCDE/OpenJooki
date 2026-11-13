@@ -3,8 +3,10 @@
 ## Next release
 - **Plays out loud on the charger.** Plugging in the charger while a song played could send the sound to headphones that were not there, so the Jooki went silent while it seemed to play. The headphone detection reads a charger as headphones, so with the charger in it no longer switches to headphones; headphones already playing still switch back to the speaker when they come out.
 - **Sound to the headphones.** With the charger in, Settings → Volume and headphones has a switch that sends the sound to wired headphones, for a splitter whose headphones were plugged in after the charger (the Jooki cannot see them then). With a splitter, plugging the headphones first still works on its own.
+- **Your own address for the page.** Some browsers cannot open `.local` names (Flatpak browsers on Linux, some Android phones), so a parent points a name of their own DNS at the Jooki, and the Jooki answered "bad host". Names ending in `.lan`, `.home`, `.home.arpa`, `.internal` or `.localdomain` now always work, and any other name can be added in *Settings → Advanced → Other addresses* (up to five, behind the parent code).
+- For the tinkerers: the web server's rebinding guard (`adapters.httpd`) still refuses every other domain. The list is the v1 command `OJ_WEB_NAMES {names}`, saved in `/data/openjooki/web_names`, published as `maintenance.web_names`. The page's size cap in CI goes from 288 to 296 KiB.
 
-Thanks to Sebastian Funk ([@sbfnk](https://github.com/sbfnk)), who found the silent charger and wrote its fix (#43, #44).
+Thanks to Sebastian Funk ([@sbfnk](https://github.com/sbfnk)), who found the silent charger and wrote its fix (#43, #44), and to Judd Maltin ([@newgoliath](https://github.com/newgoliath)), who asked for the addresses (#45).
 
 ## OpenJooki 2.5.1 (9 November 2026) — Back to the start
 - **Back to the start, from the Jooki itself.** A new choice for the track knob, in *Settings → Jooki buttons*: held to the left for three seconds, the playlist starts again from its first song, and an audiobook forgets its place. Short turns stay next and previous. Off by default (#40, thank you aosavi).

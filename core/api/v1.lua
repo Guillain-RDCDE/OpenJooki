@@ -260,6 +260,7 @@ H.OJ_SSH_ON = function(doc, _, ev) return security.on_ssh(doc, { on = true, wall
 H.OJ_SSH_OFF = function(doc) return security.on_ssh(doc, { on = false }) end
 H.OJ_SSH_KEY = function(doc, p) return security.on_ssh_key(doc, { key = p.key, clear = p.clear == true }) end
 H.OJ_MQTT_LAN = function(doc, p) return security.on_mqtt_lan(doc, { on = p.on == true }) end
+H.OJ_WEB_NAMES = function(doc, p) return security.on_web_names(doc, { names = p.names }) end
 H.OJ_PARENT_SET = function(doc, p) return security.on_parent_set(doc, { code = p.code, current = p.current }) end
 H.OJ_PARENT_CLEAR = function(doc, p) return security.on_parent_clear(doc, { current = p.current }) end
 
@@ -274,7 +275,7 @@ local PROTECTED = {
   OJ_VOLUME_TEST = true, SET_CFG = true, SET_TOY_SAFE = true, OJ_HEADPHONES = true, SET_WIFI = true, SHUTDOWN = true,
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
   OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
-  OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_AIRPLANE = true,
+  OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_WEB_NAMES = true, OJ_AIRPLANE = true,
   OJ_BT_CONNECT = true, OJ_BT_FORGET = true, OJ_SPOTIFY_FORGET = true,
 }
 v1.PROTECTED = PROTECTED

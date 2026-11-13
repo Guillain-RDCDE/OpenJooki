@@ -1,6 +1,8 @@
 """Security switches over the bus, against the real core (docs/adr/0007):
-SSH one-hour toggle, MQTT-on-the-LAN toggle, and the parent-code gate.
+SSH one-hour toggle, MQTT-on-the-LAN toggle, the other addresses of the page (#45), and the
+parent-code gate.
   python3 test_security_backend.py"""
+import http.client
 import bench as B
 R = B.Results(); check = R.check
 
@@ -19,6 +21,32 @@ R.expect("MQTT on the LAN: on", lambda: maint().get("mqtt_lan") is True, 5, main
 j.send("OJ_MQTT_LAN", {"on": False})
 R.expect("MQTT on the LAN: off", lambda: maint().get("mqtt_lan") is False, 5, maint)
 
+# --- other addresses for the page (#45): the core's own web server, over real HTTP ---
+def host_status(host):
+    c = http.client.HTTPConnection("127.0.0.1", B.HTTP_PORT, timeout=5)
+    try:
+        c.request("GET", "/", headers={"Host": host}); return c.getresponse().status
+    finally: c.close()
+REFUSED = 421
+check("no names listed at first start", maint().get("web_names") == [], maint())
+check("someone's domain is refused (DNS rebinding)", host_status("jooki.example.com") == REFUSED, host_status("jooki.example.com"))
+for h in ("jooki.lan", "jooki.home.arpa:8090", "jooki.internal", "jooki.local", "127.0.0.1:8090"):
+    check("a home-network name is taken: " + h, host_status(h) != REFUSED, host_status(h))
+j.send("OJ_WEB_NAMES", {"names": ["Jooki.Example.com", "kids-room"]})
+R.expect("other addresses saved, cleaned", lambda: maint().get("web_names") == ["jooki.example.com", "kids-room"], 5, maint)
+check("a listed name is taken at once", host_status("jooki.example.com:8090") != REFUSED and host_status("KIDS-ROOM") != REFUSED,
+      (host_status("jooki.example.com:8090"), host_status("KIDS-ROOM")))
+check("a name not listed is still refused", host_status("evil.example.com") == REFUSED and host_status("jooki.example.com.evil.com") == REFUSED)
+n = j.mark_errors()
+j.send("OJ_WEB_NAMES", {"names": ["ok.example.com", "evil.com:80"]}); j.barrier()
+check("one bad name refuses the lot, the list stays", maint().get("web_names") == ["jooki.example.com", "kids-room"] and j.errors_since(n), (maint(), j.errors_since(n)))
+j = B.restart(j); maint = lambda: j.maint
+R.expect("the list comes back after a restart", lambda: maint().get("web_names") == ["jooki.example.com", "kids-room"], 5, maint)
+check("and the name is still taken", host_status("jooki.example.com") != REFUSED, host_status("jooki.example.com"))
+j.send("OJ_WEB_NAMES", {"names": []})
+R.expect("an empty list forgets them", lambda: maint().get("web_names") == [], 5, maint)
+check("the forgotten name is refused again", host_status("jooki.example.com") == REFUSED, host_status("jooki.example.com"))
+
 # --- parent code gate (v1 messages and v2 commands alike) ---
 j.send("PLAYLIST_NEW", {"title": "Gate test"}); j.poll(lambda: j.pl_by_title("Gate test"), 5)
 pid = j.pl_by_title("Gate test")
@@ -29,6 +57,15 @@ check("v2 creates a playlist before the code is set", pid2 is not None and r.get
 
 j.send("OJ_PARENT_SET", {"code": "1234"})
 R.expect("parent code set: enabled", lambda: maint().get("parent") is True, 5, maint)
+
+n = j.mark_errors()
+j.send("OJ_WEB_NAMES", {"names": ["evil.example.com"]})
+refused = j.poll(lambda: any(isinstance(e, dict) and e.get("msg") == "PARENT_CODE_REQUIRED" for e in j.errors_since(n)), 5)
+check("other addresses need the parent code", refused and maint().get("web_names") == [], (refused, maint()))
+j.send("OJ_WEB_NAMES", {"names": ["jooki.example.com"], "code": "1234"})
+R.expect("with the code they are saved", lambda: maint().get("web_names") == ["jooki.example.com"], 5, maint)
+j.send("OJ_WEB_NAMES", {"names": [], "code": "1234"})
+R.expect("and forgotten", lambda: maint().get("web_names") == [], 5, maint)
 
 n = j.mark_errors()
 j.send("PLAYLIST_DELETE", {"playlistId": pid})

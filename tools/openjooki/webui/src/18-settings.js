@@ -30,7 +30,7 @@
   // the topic pages (#/settings/<topic>): the key of each one's title, and what draws it
   var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
-               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, maintenance: { title: 's_maint', page: maintPage },
+               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage },
                theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
@@ -99,8 +99,28 @@
     var m = obj(S.maintenance);
     return sGroup(null, [
         sRow({ icon: 'home', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
+        Array.isArray(m.web_names) ? sRow({ icon: 'globe', label: t('s_addr'), sub: t('s_addr_sub'), value: m.web_names.join(', ') || t('s_none'), href: '#/settings/addr', k: 'addrnav' }) : null,
         sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
     ]);
+  }
+  // Other names for this page (#45): the owner's own DNS names, which the Jooki's web server
+  // refuses unless they are listed here. One per line; checked here and again on the Jooki.
+  function addrPage() {
+    var m = obj(S.maintenance);
+    if (!Array.isArray(m.web_names)) return null;
+    if (ui.addr === undefined) ui.addr = m.web_names.join('\n');
+    function save() {
+      var names = ui.addr.split(/[\s,]+/).map(function (v) { return v.toLowerCase().replace(/^\w+:\/\//, '').replace(/[\/:].*$/, '').replace(/\.$/, ''); })
+        .filter(function (v) { return v; });
+      var bad = ui.addrBad = names.length > 5 || names.some(function (v) { return v.length > 253 || /^[\d.]+$/.test(v) || !/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(v); });
+      if (!bad && send('OJ_WEB_NAMES', { names: names })) { ui.addr = names.join('\n'); toast(t('saved')); }
+      render();
+    }
+    return sGroup(null, [h('div', { class: 'gpad' },
+      h('textarea', { class: 'input', rows: '3', 'data-k': 'addr', spellcheck: 'false', autocapitalize: 'none', autocomplete: 'off', 'aria-label': t('s_addr'), placeholder: 'jooki.example.com',
+        oninput: function (e) { ui.addr = e.target.value; } }, ui.addr),
+      ui.addrBad ? h('p', { class: 'small accent-text' }, t('addr_bad')) : null,
+      h('button', { class: 'btn primary', 'data-k': 'addrsave', style: 'margin-top:8px', onclick: save }, t('save')))], t('addr_help'));
   }
   function sect(title, rows) { return h('section', null, sGroup(title, rows)); }
   function viewSettings() {

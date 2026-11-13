@@ -158,6 +158,38 @@ describe("services.security", function()
     -- nothing on disk (a first start): everything off
     r = security.on_boot({}, { security = { mqtt_lan = false } })
     assert_false(r.state.maintenance.mqtt_lan); assert_false(r.state.maintenance.parent); assert_eq(r.state.maintenance.ssh_keys, 0)
+    assert_eq(r.state.maintenance.web_names, {})
+  end)
+
+  it("other names for the page (#45): a host name only, lower case, no port, no path, no IP", function()
+    for raw, want in pairs({ ["jooki.home.example.com"] = "jooki.home.example.com", ["  Jooki.Lan.  "] = "jooki.lan",
+                             ["jooki"] = "jooki", ["x-1.y2"] = "x-1.y2" }) do
+      assert_eq(security.web_name(raw), want, raw)
+    end
+    for _, bad in ipairs({ "", " ", "jooki.lan:8080", "http://jooki.lan", "jooki.lan/", "a b", "-a.lan", "a-.lan", "a..lan",
+                           "192.168.1.19", "a_b.lan", string.rep("a", 64) .. ".lan", string.rep("a.", 127) .. "lan" }) do
+      assert_nil(security.web_name(bad), bad)
+    end
+    assert_nil(security.web_name(nil)); assert_nil(security.web_name(5))
+  end)
+
+  it("other names for the page: saved as a whole, cleaned, at most five; one bad name refuses the lot", function()
+    local r = security.on_web_names({}, { names = { "Jooki.Home.Example.com", "jooki.home.example.com", "kids-room" } })
+    assert_eq(r.state.maintenance.web_names, { "jooki.home.example.com", "kids-room" })
+    local w = find(r.commands, "files.write_text")
+    assert_eq(w.path, security.FILES.web_names); assert_eq(w.text, "jooki.home.example.com\nkids-room\n")
+    -- an empty list forgets them (the file goes)
+    r = security.on_web_names({ maintenance = { web_names = { "a" }, parent = true } }, { names = {} })
+    assert_eq(r.state.maintenance.web_names, {}); assert_true(r.state.maintenance.parent)
+    assert_eq(find(r.commands, "files.remove").path, "/data/openjooki/web_names")
+    -- refused: a bad name, not a list, more than five
+    local _, e = security.on_web_names({}, { names = { "ok.lan", "evil.com:80" } })
+    assert_eq(e.message, "WEB_NAMES_INVALID")
+    assert_nil((security.on_web_names({}, { names = "jooki.lan" })))
+    assert_nil((security.on_web_names({}, { names = { "a", "b", "c", "d", "e", "f" } })))
+    -- boot: read back from the file, a hand-edited bad line skipped
+    r = security.on_boot({}, { security = { web_names = "jooki.home.example.com\nnot a name\n\nKIDS-ROOM\n" } })
+    assert_eq(r.state.maintenance.web_names, { "jooki.home.example.com", "kids-room" })
   end)
 end)
 
@@ -182,6 +214,7 @@ describe("api.v1 parent gate", function()
     assert_true(is_code_required(cmd("PLAYLIST_DELETE", { playlistId = "x" })))
     assert_true(is_code_required(cmd("OJ_SSH_ON", {})))
     assert_true(is_code_required(cmd("SET_WIFI", { ssid = "x" })))
+    assert_true(is_code_required(cmd("OJ_WEB_NAMES", { names = { "evil.example.com" } })))
   end)
 
   it("a protected command with the right code passes the gate", function()

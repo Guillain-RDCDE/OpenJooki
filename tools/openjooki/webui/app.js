@@ -197,7 +197,7 @@
     s_sound: 'Volume et casque', s_play: 'Lecture', s_buttons: 'Boutons du Jooki', s_links: 'Connexions', s_listen: 'Écoute', s_bt: 'Enceinte ou casque', hp_wired: 'Casque détecté', hp_wired_sub: 'Avec un adaptateur USB-C vers jack sans puce', hp_force: 'Son vers le casque', hp_force_sub: 'Le Jooki ne voit pas le casque pendant qu’il charge. Activé, il ne charge plus.', hp_yes: 'Oui', hp_no: 'Non', hp_boost: 'Casque plus fort', hp_boost_sub: 'Baissez le volume avant de mettre le casque', hp_boost_kids: 'Marche seulement sans le volume limité (mode enfant)', s_upnp: 'Jouer depuis d\'autres applis', s_upnp_sub: 'UPnP / DLNA, sur le Wi-Fi de la maison : BubbleUPnP, mconnect, un serveur de musique', s_none: 'Aucun', s_night_trip: 'Coucher et voyage',
     s_general: 'Général', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
     s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
-    s_home: 'Domotique', s_home_sub: 'Home Assistant', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
+    s_home: 'Domotique', s_home_sub: 'Home Assistant', s_addr: 'Autres adresses', s_addr_sub: 'Noms de votre propre DNS', addr_help: 'Pour ouvrir cette page avec un nom de votre propre DNS, un par ligne. Les noms en .local, .lan, .home ou .internal marchent toujours.', addr_bad: 'Jusqu\'à 5 noms, comme jooki.example.com', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
     disc_add: 'Ajouter des disques', disc_drop: 'Glisse ici les dossiers de tes disques : chaque dossier devient une playlist',
     disc_hint: function (k) { return 'Les FLAC et WAV sont convertis en MP3 ' + k + ' kbps sur ton ordinateur, avant l\'envoi.'; },
     converting: function (k) { return 'Conversion en MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'En attente (sera converti en MP3 ' + k + ' kbps)'; },
@@ -411,7 +411,7 @@
     s_sound: 'Volume and headphones', s_play: 'Playback', s_buttons: 'Jooki buttons', s_links: 'Connections', s_listen: 'Listening', s_bt: 'Speaker or headphones', hp_wired: 'Headphones detected', hp_wired_sub: 'With a USB-C to jack adapter that has no chip inside', hp_force: 'Sound to the headphones', hp_force_sub: 'The Jooki cannot see headphones while it charges. With this on, it does not charge.', hp_yes: 'Yes', hp_no: 'No', hp_boost: 'Louder headphones', hp_boost_sub: 'Turn the volume down before putting them on', hp_boost_kids: 'Only works with Limited volume (kids mode) off', s_upnp: 'Play from other apps', s_upnp_sub: 'UPnP / DLNA, from the home Wi-Fi: BubbleUPnP, mconnect, a music server', s_none: 'None', s_night_trip: 'Bedtime and travel',
     s_general: 'General', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
     s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
-    s_home: 'Home automation', s_home_sub: 'Home Assistant', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
+    s_home: 'Home automation', s_home_sub: 'Home Assistant', s_addr: 'Other addresses', s_addr_sub: 'Names from your own DNS', addr_help: 'To open this page with a name from your own DNS, one per line. Names ending in .local, .lan, .home or .internal always work.', addr_bad: 'Up to 5 names, like jooki.example.com', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
     disc_add: 'Add albums', disc_drop: 'Drop your album folders here: each folder becomes a playlist',
     disc_hint: function (k) { return 'FLAC and WAV files are turned into MP3 at ' + k + ' kbps on your computer, before they are sent.'; },
     converting: function (k) { return 'Converting to MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Waiting (will be converted to MP3 ' + k + ' kbps)'; },
@@ -534,7 +534,7 @@
     parent_label: 'Elterncode', parent_help: 'Ein vierstelliger Code schützt die Einstellungen vor Änderungen durch Kinder und Gäste (Wiedergabelisten löschen, WLAN, Updates).', parent_change: 'Code ändern', parent_prompt: 'Elterncode eingeben', parent_new: 'Vierstelliger Code', parent_cur: 'Bisheriger Code', parent_bad: 'Falscher Code', parent_reset: 'Code vergessen? Drehe die Lautstärke am Jooki ganz herunter. Halte dann das Titelrad 10 Sekunden nach links (◀).',
     flat_tok: 'Flacher Chip', thanks_tok: 'Danke-Chip', own_hint: 'Dieser Chip ist eine eigene Figur. Gib ihm einen Namen, ein Bild und eine Wiedergabeliste.', make_token: 'Zu einem echten Jooki-Chip machen', make_token_tip: 'Dann hält das Wegnehmen die Wiedergabe an, und er funktioniert zweimal hintereinander. Mit einem Android-Handy oder einer NFC-App.', flat_shared_hint: 'Flache Chips ohne eigene Wiedergabeliste starten diese hier.',
     lib_pick: 'Bild auswählen', lib_search_ph: 'Suchen: Katze, Rakete, Schlafen…', lib_loading: 'Bilder werden geladen…', lib_fail: 'Die Bilder konnten nicht geladen werden. Versuche es erneut.', lib_none: function (q) { return 'Kein Bild für „' + q + '“.'; }, lib_n: function (n) { return n + (n === 1 ? ' Bild' : ' Bilder'); }, lib_set: function (n) { return 'Bild ausgewählt: ' + n; },
-    s_sound: 'Lautstärke und Kopfhörer', s_play: 'Wiedergabe', s_buttons: 'Jooki-Tasten', s_links: 'Verbindungen', s_listen: 'Wiedergabe', s_bt: 'Lautsprecher oder Kopfhörer', hp_wired: 'Kopfhörer erkannt', hp_wired_sub: 'Mit einem USB-C-auf-Klinke-Adapter ohne eingebauten Chip', hp_force: 'Ton auf den Kopfhörer', hp_force_sub: 'Beim Laden erkennt der Jooki keinen Kopfhörer. Eingeschaltet lädt er nicht.', hp_yes: 'Ja', hp_no: 'Nein', hp_boost: 'Lautere Kopfhörer', hp_boost_sub: 'Vor dem Aufsetzen die Lautstärke herunterdrehen', hp_boost_kids: 'Funktioniert nur bei ausgeschaltetem Kindermodus', s_upnp: 'Aus anderen Apps abspielen', s_upnp_sub: 'UPnP / DLNA im heimischen WLAN: BubbleUPnP, mconnect, Musikserver', s_none: 'Keine', s_night_trip: 'Schlafenszeit und Reisen', s_general: 'Allgemein', s_advanced: 'Erweitert', s_on: 'Ein', s_off: 'Aus', s_uptodate: 'Aktuell', s_avail: function (v) { return v + ' verfügbar'; }, s_storage_free: 'frei', s_open: 'Offen', s_closed: 'Geschlossen', s_home: 'Hausautomation', s_home_sub: 'Home Assistant', s_maint: 'Wartungszugang', s_maint_sub: 'SSH für Technikinteressierte',
+    s_sound: 'Lautstärke und Kopfhörer', s_play: 'Wiedergabe', s_buttons: 'Jooki-Tasten', s_links: 'Verbindungen', s_listen: 'Wiedergabe', s_bt: 'Lautsprecher oder Kopfhörer', hp_wired: 'Kopfhörer erkannt', hp_wired_sub: 'Mit einem USB-C-auf-Klinke-Adapter ohne eingebauten Chip', hp_force: 'Ton auf den Kopfhörer', hp_force_sub: 'Beim Laden erkennt der Jooki keinen Kopfhörer. Eingeschaltet lädt er nicht.', hp_yes: 'Ja', hp_no: 'Nein', hp_boost: 'Lautere Kopfhörer', hp_boost_sub: 'Vor dem Aufsetzen die Lautstärke herunterdrehen', hp_boost_kids: 'Funktioniert nur bei ausgeschaltetem Kindermodus', s_upnp: 'Aus anderen Apps abspielen', s_upnp_sub: 'UPnP / DLNA im heimischen WLAN: BubbleUPnP, mconnect, Musikserver', s_none: 'Keine', s_night_trip: 'Schlafenszeit und Reisen', s_general: 'Allgemein', s_advanced: 'Erweitert', s_on: 'Ein', s_off: 'Aus', s_uptodate: 'Aktuell', s_avail: function (v) { return v + ' verfügbar'; }, s_storage_free: 'frei', s_open: 'Offen', s_closed: 'Geschlossen', s_home: 'Hausautomation', s_home_sub: 'Home Assistant', s_addr: 'Weitere Adressen', s_addr_sub: 'Namen aus deinem eigenen DNS', addr_help: 'Um diese Seite mit einem Namen aus deinem eigenen DNS zu öffnen, einer pro Zeile. Namen auf .local, .lan, .home oder .internal funktionieren immer.', addr_bad: 'Bis zu 5 Namen, z. B. jooki.example.com', s_maint: 'Wartungszugang', s_maint_sub: 'SSH für Technikinteressierte',
     disc_add: 'Alben hinzufügen', disc_drop: 'Albumordner hier ablegen: Jeder Ordner wird eine Wiedergabeliste', disc_hint: function (k) { return 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer in MP3 mit ' + k + ' kbps umgewandelt.'; }, converting: function (k) { return 'Wird in MP3 mit ' + k + ' kbps umgewandelt'; }, queued_conv: function (k) { return 'Wartet (Umwandlung in MP3 mit ' + k + ' kbps)'; }, up_conv_fail: 'Dieser Browser konnte die Datei nicht lesen (versuche Chrome oder Firefox auf einem Computer)', disc_progress: function (d, n) { return d + ' / ' + n + ' Titel'; }, disc_errors: function (n) { return n + (n === 1 ? ' Titel konnte' : ' Titel konnten') + ' nicht übertragen werden'; }, disc_created: function (n) { return 'Wiedergabeliste erstellt: ' + n; },
     story_rec: 'Geschichte aufnehmen', story_default: 'Meine Geschichte', story_got: function (n) { return 'Geschichte empfangen: ' + n; }, story_book: 'Eine Geschichte: Diese Wiedergabeliste ist jetzt ein Hörbuch', story_open: 'Geschichte öffnen', story_open_sub: 'Eine als Datei empfangene Geschichte', story_file_bad: 'Diese Datei ist keine Geschichte aus Jookistory', story_token_t: 'Welche Figur startet diese Geschichte?', story_token_help: 'Stelle sie jetzt auf den Jooki oder wähle sie unten aus.', token_live: 'Warte auf eine Figur auf dem Jooki…', token_seen: function (n) { return 'Figur erkannt: ' + n; }, later: 'Später', cover_set: function (n) { return 'Das Titelbild ist jetzt das Bild von ' + n; }, labels_btn: 'Etiketten drucken', labels_t: 'Etiketten für die Bücher', labels_size: 'Größe', print: 'Drucken', labels_help: 'Ein Etikett pro Chip. Drucken, ausschneiden und auf das jeweilige Buch über den NFC-Aufkleber kleben. Dann das geschlossene Buch auf den Jooki legen und ausprobieren.', labels_none: 'Noch kein eigener Chip. Lege zuerst einen flachen Chip oder NFC-Aufkleber auf den Jooki.',
     s_mp3: 'MP3-Qualität', s_mp3_sub: 'Für übertragene FLAC- und WAV-Dateien', s_mp3_192: '192 kbps — kleinste Dateien', s_mp3_256: '256 kbps — empfohlen', s_mp3_320: '320 kbps — höchste Qualität', s_mp3_foot: 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer oder Handy in MP3 umgewandelt. Ein Album braucht so etwa ein Drittel des Speicherplatzes. 256 kbps reichen für den Jooki und Bluetooth-Kopfhörer gut aus. Diese Auswahl gilt nur auf diesem Gerät.',
@@ -727,7 +727,7 @@
     s_sound: 'Volume en koptelefoon', s_play: 'Afspelen', s_buttons: 'Knoppen van de Jooki', s_links: 'Verbindingen', s_listen: 'Luisteren', s_bt: 'Speaker of koptelefoon', hp_wired: 'Koptelefoon gevonden', hp_wired_sub: 'Met een USB-C-naar-jack-adapter zonder chip', hp_force: 'Geluid naar de koptelefoon', hp_force_sub: 'Tijdens het laden ziet de Jooki geen koptelefoon. Aan: hij laadt dan niet.', hp_yes: 'Ja', hp_no: 'Nee', hp_boost: 'Luidere koptelefoon', hp_boost_sub: 'Zet het volume eerst lager voor je hem opzet', hp_boost_kids: 'Werkt alleen als Begrensd volume (kindermodus) uit staat', s_upnp: 'Afspelen vanuit andere apps', s_upnp_sub: 'UPnP / DLNA, via de wifi thuis: BubbleUPnP, mconnect, een muziekserver', s_none: 'Geen', s_night_trip: 'Bedtijd en reizen',
     s_general: 'Algemeen', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
     s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
-    s_home: 'Domotica', s_home_sub: 'Home Assistant', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
+    s_home: 'Domotica', s_home_sub: 'Home Assistant', s_addr: 'Andere adressen', s_addr_sub: 'Namen uit je eigen DNS', addr_help: 'Om deze pagina te openen met een naam uit je eigen DNS, één per regel. Namen op .local, .lan, .home of .internal werken altijd.', addr_bad: 'Maximaal 5 namen, zoals jooki.example.com', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
     disc_add: 'Albums toevoegen', disc_drop: 'Sleep de mappen van je albums hierheen: elke map wordt een afspeellijst',
     disc_hint: function (k) { return 'FLAC- en WAV-bestanden worden op je computer omgezet naar MP3 ' + k + ' kbps, voordat ze verstuurd worden.'; },
     converting: function (k) { return 'Omzetten naar MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Wachten (wordt omgezet naar MP3 ' + k + ' kbps)'; },
@@ -1968,7 +1968,7 @@
     return { name: parts[0] || 'playlists', arg: parts[1] || null };
   }
   function go(hash) { if (location.hash !== hash) location.hash = hash; else render(); }
-  window.addEventListener('hashchange', function () { ui.sel = {}; ui.search = ''; ui.editTitle = null; window.scrollTo(0, 0); render(); });
+  window.addEventListener('hashchange', function () { ui.sel = {}; ui.search = ''; ui.editTitle = null; ui.addr = undefined; ui.addrBad = false; window.scrollTo(0, 0); render(); });
 
   /* ------------------------------------------------------------------ UI state */
   var ui = { search: '', sel: {}, editTitle: null, dragging: false };
@@ -3040,7 +3040,7 @@
   // the topic pages (#/settings/<topic>): the key of each one's title, and what draws it
   var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
-               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, maintenance: { title: 's_maint', page: maintPage },
+               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage },
                theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
@@ -3109,8 +3109,28 @@
     var m = obj(S.maintenance);
     return sGroup(null, [
         sRow({ icon: 'home', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
+        Array.isArray(m.web_names) ? sRow({ icon: 'globe', label: t('s_addr'), sub: t('s_addr_sub'), value: m.web_names.join(', ') || t('s_none'), href: '#/settings/addr', k: 'addrnav' }) : null,
         sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
     ]);
+  }
+  // Other names for this page (#45): the owner's own DNS names, which the Jooki's web server
+  // refuses unless they are listed here. One per line; checked here and again on the Jooki.
+  function addrPage() {
+    var m = obj(S.maintenance);
+    if (!Array.isArray(m.web_names)) return null;
+    if (ui.addr === undefined) ui.addr = m.web_names.join('\n');
+    function save() {
+      var names = ui.addr.split(/[\s,]+/).map(function (v) { return v.toLowerCase().replace(/^\w+:\/\//, '').replace(/[\/:].*$/, '').replace(/\.$/, ''); })
+        .filter(function (v) { return v; });
+      var bad = ui.addrBad = names.length > 5 || names.some(function (v) { return v.length > 253 || /^[\d.]+$/.test(v) || !/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(v); });
+      if (!bad && send('OJ_WEB_NAMES', { names: names })) { ui.addr = names.join('\n'); toast(t('saved')); }
+      render();
+    }
+    return sGroup(null, [h('div', { class: 'gpad' },
+      h('textarea', { class: 'input', rows: '3', 'data-k': 'addr', spellcheck: 'false', autocapitalize: 'none', autocomplete: 'off', 'aria-label': t('s_addr'), placeholder: 'jooki.example.com',
+        oninput: function (e) { ui.addr = e.target.value; } }, ui.addr),
+      ui.addrBad ? h('p', { class: 'small accent-text' }, t('addr_bad')) : null,
+      h('button', { class: 'btn primary', 'data-k': 'addrsave', style: 'margin-top:8px', onclick: save }, t('save')))], t('addr_help'));
   }
   function sect(title, rows) { return h('section', null, sGroup(title, rows)); }
   function viewSettings() {

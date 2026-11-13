@@ -357,7 +357,10 @@ As built ([ADR-0007](adr/0007-security-model.md), complete since 2.1.0):
 - `web_ctrl` is not started any more, so its root execution (`/ll`) and
   `/cmd/*` are **gone**, not fenced. `adapters.httpd` serves the page's files
   and `POST /upload`, nothing else, and refuses a `Host` that is not the
-  Jooki's own name, a `.local` name, an IP address or localhost. A factory
+  Jooki's own name, a `.local` name, a name under a suffix kept for home
+  networks (`.lan`, `.home`, `.home.arpa`, `.internal`, `.localdomain`), an IP
+  address, localhost, or one of the five names the owner listed
+  (`OJ_WEB_NAMES`, `/data/openjooki/web_names`, #45). A factory
   Jooki's first install still goes through the factory image's `/ll`
   ([16-phone-install.md](16-phone-install.md)).
 - mosquitto: 1883 bound to `127.0.0.1` (the core and the daemons, anonymous);
@@ -427,7 +430,7 @@ says which are superseded and where one was built differently.
 | Contract | `apidoc.lua` output compared with `docs/api-v2.md` | CI job *core* |
 | Smoke and budgets | `core/spec/integration/smoke.py`: the built core boots, answers v2 (typed errors included), idle bus traffic ≤ 0.5 message/s, RSS < 6 MB on the bench; the build with `--max-kib 400` and a lean build `--without services.streaming` | CI job *core* |
 | Integration (the bench, `tools/openjooki/tests/`) | the built core with a fake audio engine, a real mosquitto and the page in Chromium, over v1: backend 48, bedtime 24, net 13, security backend 15, e2e (the page) 83, security (page) 6, spotify 37, robustness 14, loader, httpd 21, clock 10, the Wi-Fi page 28 | CI job *oracle* |
-| Hand-written files | one version number everywhere, `ruff` (undefined names, unused imports), `app.js` is what `webui/src` gives (`build.py --check`), the page parses and stays small (`app.js` ≤ 256 KiB, `app.css` ≤ 64 KiB), the shell scripts parse | CI job *checks* |
+| Hand-written files | one version number everywhere, `ruff` (undefined names, unused imports), `app.js` is what `webui/src` gives (`build.py --check`), the page parses and stays small (`app.js` ≤ 296 KiB, `app.css` ≤ 64 KiB), the shell scripts parse | CI job *checks* |
 | Endurance | `core/spec/integration/endurance.py`, 10 minutes: random tokens, transport, uploads, page commands, broker restarts, clock jumps; the core never died, no handler disabled, memory flat, library consistent | `nightly.yml` |
 | Device | A/B install on a real Jooki, by hand (not automated) | before a release |
 

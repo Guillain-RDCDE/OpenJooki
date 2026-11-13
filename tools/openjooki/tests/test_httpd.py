@@ -22,7 +22,7 @@ local httpd = require("adapters.httpd")
 local socket = require("socket")
 local port, docroot, uploads = tonumber(arg[1]), arg[2], arg[3]
 local h = httpd.new({ port = port, docroot = docroot, uploads_dir = uploads,
-  name = function() return "jooki" end,
+  name = function() return "jooki" end, names = function() return { "jooki.example.com" } end,
   log = function(k) io.stderr:write("LOG " .. tostring(k) .. "\n") end })
 local ok, err = h:start()
 if not ok then
@@ -224,6 +224,13 @@ def main():
         check("foreign Host -> 421", st == 421, st)
         st, _ = get("/", host="jooki.local")
         check(".local Host allowed", st == 200, st)
+        for host in ("jooki.lan", "jooki.home.arpa", "jooki.internal:8099"):
+            st, _ = get("/", host=host)
+            check("home-network Host allowed (#45): " + host, st == 200, st)
+        st, _ = get("/", host="jooki.example.com")
+        check("a Host the owner listed is allowed (#45)", st == 200, st)
+        st, _ = get("/", host="jooki.lan.evil.com")
+        check("a domain that only starts like a home name -> 421", st == 421, st)
 
         # HEAD: headers, no body
         st, body = get("/app.js", method="HEAD")

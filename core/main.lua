@@ -160,7 +160,8 @@ local function publisher(doc, keys)
 end
 
 -- our own web server: serves the page and /upload so web_ctrl (with /ll and /cmd) can stop (ADR-0007).
--- Its own name, for the rebinding guard, comes from the live state (net.name). Failure to bind (the
+-- Its own name, for the rebinding guard, comes from the live state (net.name), and so do the other
+-- names the owner listed (maintenance.web_names, #45). Failure to bind (the
 -- port still held by the core before this one, or not root on the bench) is not fatal: the core runs
 -- on and the server tries again by itself (httpd:tick). Without LuaSocket there is no server at all.
 local httpd = nil
@@ -171,6 +172,7 @@ if config.get("http_port") > 0 then
     docroot = config.get("web_public_dir"),
     uploads_dir = data_dir .. "/uploads",
     name = function() local d = state.doc(); return d.net and d.net.name end,
+    names = function() local d = state.doc(); return d.maintenance and d.maintenance.web_names end,
     log = function(key, fields) log.info(key, fields) end,
     on_upload = function(n) log.info("httpd.upload", { parts = n }) end,
     extra = function(method, path, headers, body) return upnp_net:http(state.doc(), method, path, headers, body, clock.now()) end,
@@ -238,7 +240,7 @@ local boot_event = {
   spotify_direct = files.exists(config.get("spotify_direct_file")),
   -- the security switches (services.security): the LAN flag, the maintenance keys, the parent code
   security = { mqtt_lan = files.exists(security.FILES.lan), authorized_keys = files.read_text(security.FILES.keys),
-               parent_code = files.read_text(security.FILES.parent) },
+               parent_code = files.read_text(security.FILES.parent), web_names = files.read_text(security.FILES.web_names) },
 }
 mark("files")
 loop.emit(boot_event)

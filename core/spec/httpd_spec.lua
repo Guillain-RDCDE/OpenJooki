@@ -57,6 +57,26 @@ describe("adapters.httpd — the rebinding guard (host_ok)", function()
     assert_false(httpd.new({}):host_ok("jooki"))                                                -- no name known: nothing bare passes
     assert_true(httpd.new({ name = function() return "jooki" end }):host_ok("JOOKI:80"))        -- the live name, as the state gives it
   end)
+
+  it("accepts the names kept for home networks: no one on the Internet can own them (#45)", function()
+    for _, ok in ipairs({ "jooki.lan", "JOOKI.LAN:80", "jooki.home", "jooki.home.arpa", "jooki.internal", "jooki.localdomain",
+                          "kids.house.lan", "jooki.lan." }) do
+      assert_true(h:host_ok(ok), ok)
+    end
+    for _, bad in ipairs({ "jooki.lan.evil.com", "evil-lan.com", "home.arpa.evil.com", "lan", "evil.homes" }) do
+      assert_false(h:host_ok(bad), bad)
+    end
+  end)
+
+  it("accepts the other names the owner listed, read live, and only those (#45)", function()
+    local listed = { "jooki.example.com" }
+    local g = httpd.new({ name = function() return "jooki" end, names = function() return listed end })
+    assert_true(g:host_ok("jooki.example.com")); assert_true(g:host_ok("Jooki.Example.com:80"))
+    assert_false(g:host_ok("evil.example.com")); assert_false(g:host_ok("jooki.example.com.evil.com"))
+    listed = {}
+    assert_false(g:host_ok("jooki.example.com"))                                                -- forgotten: refused at once
+    assert_false(httpd.new({ names = function() return nil end }):host_ok("jooki.example.com")) -- none set yet
+  end)
 end)
 
 describe("adapters.httpd — request head and routing, without a socket", function()

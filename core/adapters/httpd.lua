@@ -44,6 +44,7 @@ function httpd.new(opts)
     docroot = (opts.docroot or "/tmp/web_ctrl_dirs/public"):gsub("/$", ""),
     uploads_dir = (opts.uploads_dir or "/jooki/external/jooki/uploads"):gsub("/$", ""),
     name_fn = opts.name,                  -- function() -> the Jooki's own name (rebinding guard)
+    names_fn = opts.names,                -- function() -> the other names the owner listed (rebinding guard, #45)
     log = opts.log or function() end,
     on_upload = opts.on_upload,
     extra = opts.extra,                   -- function(method, path, headers, body) -> status, ctype, body, header lines | nil
@@ -123,15 +124,22 @@ local function file_size(path)
 end
 
 -- The rebinding guard: web_ctrl answered a foreign Host with 500. We accept only a Host that is
--- our own name, a *.local name, an IP literal, localhost, or empty -- never someone's domain.
+-- our own name, a *.local name, a name under a suffix kept for home networks (no one on the
+-- Internet can own one), an IP literal, localhost, a name the owner listed in the settings (their
+-- own DNS, #45), or empty -- never someone else's domain.
+local HOME_SUFFIXES = { "%.local$", "%.lan$", "%.home$", "%.home%.arpa$", "%.internal$", "%.localdomain$" }
 function httpd:host_ok(host)
   if not host or host == "" then return true end
-  host = host:gsub(":%d+$", ""):lower()
+  host = host:gsub(":%d+$", ""):lower():gsub("%.$", "")
   if host == "localhost" or host == "127.0.0.1" then return true end
   if host:match("^%d+%.%d+%.%d+%.%d+$") then return true end
-  if host:match("%.local$") then return true end
+  for _, suffix in ipairs(HOME_SUFFIXES) do if host:match(suffix) then return true end end
   local name = self.name_fn and self.name_fn()
   if name and host == tostring(name):lower() then return true end
+  local listed = self.names_fn and self.names_fn()
+  if type(listed) == "table" then
+    for _, n in ipairs(listed) do if host == tostring(n):lower() then return true end end
+  end
   return false
 end
 

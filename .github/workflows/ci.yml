@@ -33,7 +33,7 @@ jobs:
         run: python3 tools/openjooki/webui/build.py --check
       - name: Translations (keys, placeholders, German detection, characters, picture search)
         run: node tools/openjooki/tests/test_i18n.js
-      - name: The page parses and stays small (app.js <= 288 KiB, app.css <= 64 KiB)
+      - name: The page parses and stays small (app.js <= 296 KiB, app.css <= 64 KiB)
         run: |
           node --check tools/openjooki/webui/app.js && node --check tools/openjooki/webui/mp3-worker.js && node --check docs/mp3-worker.js
           for f in tools/openjooki/webui/src/*.js; do node --check "$f" || exit 1; done
@@ -42,7 +42,7 @@ jobs:
           node --check /tmp/sdcard-page.js
           python3 - <<'EOF'
           import os, sys
-          caps = {"tools/openjooki/webui/app.js": 288, "tools/openjooki/webui/app.css": 64}
+          caps = {"tools/openjooki/webui/app.js": 296, "tools/openjooki/webui/app.css": 64}
           bad = [(p, os.path.getsize(p) // 1024) for p, k in caps.items() if os.path.getsize(p) > k * 1024]
           print("sizes:", {p: "%d KiB" % (os.path.getsize(p) // 1024) for p in caps})
           sys.exit("over the cap: %r" % bad if bad else 0)
@@ -172,6 +172,9 @@ jobs:
       - name: Fresh random playlist Play in the browser
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_random_playlist_ui.py
+      - name: Other addresses for the page (#45), in the browser
+        if: ${{ !cancelled() }}
+        run: sudo -E python3 test_web_names_page.py
       - name: Spotify random startup and immediate resume over MQTT
         if: ${{ !cancelled() }}
         run: sudo -E python3 test_random_spotify_bus.py

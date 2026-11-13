@@ -24,7 +24,7 @@ with sync_playwright() as pw:
             return el.closest('.srow').querySelector('.lbl').getBoundingClientRect().width;
         }""", arg=key).json_value()
         R.check("readable narrow label " + key, width >= 180, width)
-    for route in ("settings", "settings/sound", "settings/play", "settings/buttons", "settings/advanced", "settings/language", "settings/night", "settings/bluetooth", "settings/wifi", "tokens", "library", "playlists"):
+    for route in ("settings", "settings/sound", "settings/play", "settings/buttons", "settings/advanced", "settings/addr", "settings/language", "settings/night", "settings/bluetooth", "settings/wifi", "tokens", "library", "playlists"):
         pg.goto(PAGE + "/#/" + route); pg.wait_for_selector("h1")
         R.check("narrow layout " + route, pg.evaluate("() => document.documentElement.scrollWidth <= innerWidth"))
     pg.goto(PAGE + "/#/tokens"); pg.wait_for_selector("[data-char='Jooki.Fox']")

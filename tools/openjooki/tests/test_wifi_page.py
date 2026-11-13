@@ -80,7 +80,7 @@ MOCK = r"""
         var v = new Uint8Array(last); last = null; return new DataView(v.buffer); } };
   }
   var device = { name: J.name, addEventListener: function () {}, gatt: { connected: false,
-    connect: async function () { if (J.goneLeft > 0 && --J.goneLeft === 0) J.noService = false; this.connected = true; return { getPrimaryService: async function (u) { if (J.noService) throw err('NotFoundError', 'No Services matching UUID ' + u + ' found in Device.'); if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
+    connect: async function () { if (J.goneLeft > 0 && --J.goneLeft === 0) J.noService = false; this.connected = true; return { getPrimaryService: async function (u) { if (J.noService || (J.noWcm && u === WCM)) throw err('NotFoundError', 'No Services matching UUID ' + u + ' found in Device.'); if (J.slowLink) await new Promise(function (r) { setTimeout(r, J.slowLink); }); if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
     disconnect: function () { this.connected = false; } } };
   var bt = { available: true,
     getAvailability: async function () { return bt.available; },
@@ -281,6 +281,20 @@ with sync_playwright() as p:
     pg3 = ctx.new_page(); pg3.add_init_script("navigator.bluetooth.available = false")
     pg3.goto(URL); pg3.wait_for_selector("#err:not([hidden])")
     check("W12 Bluetooth off is said plainly", "Bluetooth is off" in pg3.locator("#etitle").inner_text())
+    # W22 a Jooki without the list of remembered networks (a new one never set up with the old app,
+    # mail of 13/11/2026): networks are found and given all the same; the list is just not shown.
+    # A slow link: "Look for Wi-Fi networks" pressed while it is still being made waits for it.
+    pg4 = ctx.new_page(); pg4.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
+    pg4.add_init_script("window.addEventListener('DOMContentLoaded', function () { window.__jooki.noWcm = true; window.__jooki.slowLink = 1500; })")
+    pg4.goto(URL); pg4.click("#find"); pg4.click("#scanbtn")
+    pg4.wait_for_selector(".net[data-ssid='Home']", timeout=30000)
+    check("W22 no list service: networks found, no error, the list hidden", pg4.locator("#err").is_hidden() and pg4.locator("#knownbox").is_hidden(),
+          (pg4.locator("#etext").inner_text(), pg4.evaluate("window.OJ_LOG")))
+    pg4.click(".net[data-ssid='Home']"); pg4.fill("#pw", "goodpassword"); pg4.click("#connect")
+    pg4.wait_for_selector("#result:not([hidden])", timeout=30000)
+    check("W22 ... and the network is given: connected", "ok" in pg4.locator("#result").get_attribute("class") and pg4.evaluate("window.__jooki.connected") == "Home",
+          (pg4.locator("#rtext").inner_text(), pg4.evaluate("window.OJ_LOG")))
+    check("W22 the details say the list is missing, once", sum("no list of remembered networks" in l for l in pg4.evaluate("window.OJ_LOG")) == 1, pg4.evaluate("window.OJ_LOG"))
     check("W13 no page error", not errs, errs)
     b.close()
 R.finish()

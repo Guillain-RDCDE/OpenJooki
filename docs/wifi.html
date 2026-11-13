@@ -172,10 +172,17 @@
 
   /* ---- the link */
   var device = null, chars = {}, busy = false;
-  function have() { return !!(device && device.gatt && device.gatt.connected); }
-  async function link() {
-    if (have()) return;
-    if (!device) throw new Error('nodevice');
+  // linked = connected AND the set-up service found (a connection still being made is not a link:
+  // looking for networks then hit an empty table, mail of 13/11/2026)
+  function have() { return !!(device && device.gatt && device.gatt.connected && chars.config); }
+  var linking = null;   // one link at a time: a second caller waits for the one being made
+  function link() {
+    if (have()) return Promise.resolve();
+    if (!device) return Promise.reject(new Error('nodevice'));
+    if (!linking) linking = link0().then(function () { linking = null; }, function (e) { linking = null; throw e; });
+    return linking;
+  }
+  async function link0() {
     // The Jooki serves one talker at a time: right after another one dropped (a tab closed),
     // connecting or the handshake can fail for a few seconds, so we try again for a while.
     for (var round = 0; ; round++) {
@@ -184,11 +191,18 @@
     }
   }
   async function link1() {
-    var server = await device.gatt.connect();
-    var prov = await server.getPrimaryService(PROV), wcm = await server.getPrimaryService(WCM);
-    chars.scan = await prov.getCharacteristic(CH.scan); chars.session = await prov.getCharacteristic(CH.session);
-    chars.config = await prov.getCharacteristic(CH.config); chars.version = await prov.getCharacteristic(CH.version);
-    chars.list = await wcm.getCharacteristic(CH.list); chars.remove = await wcm.getCharacteristic(CH.remove);
+    var server = await device.gatt.connect(), c = {};
+    var prov = await server.getPrimaryService(PROV);
+    c.scan = await prov.getCharacteristic(CH.scan); c.session = await prov.getCharacteristic(CH.session);
+    c.config = await prov.getCharacteristic(CH.config); c.version = await prov.getCharacteristic(CH.version);
+    // The list of remembered networks (Muuselabs' own service) is not on every Jooki: a new one never
+    // set up with the old app has only the set-up service (mail of 13/11/2026). Giving a network needs
+    // only that one; without the list, the page just does not show it.
+    try {
+      var wcm = await server.getPrimaryService(WCM);
+      c.list = await wcm.getCharacteristic(CH.list); c.remove = await wcm.getCharacteristic(CH.remove);
+    } catch (e) { if (!noList) note('no list of remembered networks on this Jooki: ' + errText(e)); noList = true; }
+    chars = c;
     // No set-up session here: opening one makes the Wi-Fi chip leave its network until it is given
     // one (seen on a Jooki on 29/09/2026). The list and "forget" need none; looking for networks and
     // giving one open it themselves (handshake), when the parent asked for it.
@@ -349,7 +363,9 @@
     $('pwlabel').textContent = open ? 'Password (none)' : n.ssid ? 'Password for ' + n.ssid : 'Password';
     if (!open) $('pw').focus();
   }
+  var noList = false;
   async function renderKnown() {
+    if (!chars.list) { show('knownbox', false); return; }
     try {
       var list = await knownNetworks(), box = $('known'); box.innerHTML = '';
       list.forEach(function (ssid) {

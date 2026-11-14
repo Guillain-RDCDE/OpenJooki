@@ -54,7 +54,7 @@
     volume_test_failed: 'Der Testton konnte nicht abgespielt werden. Versuche es erneut.',
     volume_test_unavailable: 'Dieser Lautstärketest ist gerade nicht verfügbar.',
     toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
-    toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
+    kids_cap_help: 'Niedriger stellen, damit der Jooki im Kindermodus leiser bleibt, auch wenn der Drehknopf ganz aufgedreht ist. 100 % ist die übliche Kinderlautstärke.', toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
     random_start: 'Mit einem zufälligen Titel starten',
     random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',

@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## Next release
+- **A kids volume you choose.** *Settings → Volume and headphones → Maximum volume in kids mode* is now there on every Jooki, not only on a new sound-chip firmware. Turn it down and the Jooki stays quieter in kids mode, even with the knob all the way up; **Test** plays a short tone at that level. 100 % (the default) is the usual kids level, so nothing changes until a parent moves it. It can only make kids mode quieter, not louder (#10).
+- For the tinkerers: `audiocfg.kids_cap` (0-100, default 100), set by `SET_CFG` / `device.set_config` behind the parent code. Without `volume_api` 2 it caps the volume like the night maximum, under the dial (`docs/30`); with API 2, `toy_safe_maxvol` stays in charge.
+
 ## OpenJooki 2.5.2 (13 November 2026) — Your own address
 - **Plays out loud on the charger.** Plugging in the charger while a song played could send the sound to headphones that were not there, so the Jooki went silent while it seemed to play. The headphone detection reads a charger as headphones, so with the charger in it no longer switches to headphones; headphones already playing still switch back to the speaker when they come out.
 - **Sound to the headphones.** With the charger in, Settings → Volume and headphones has a switch that sends the sound to wired headphones, for a splitter whose headphones were plugged in after the charger (the Jooki cannot see them then). With a splitter, plugging the headphones first still works on its own.

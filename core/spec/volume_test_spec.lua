@@ -91,13 +91,23 @@ describe("settings volume auditions", function()
     local r = test.on_muted(d)
     assert_eq(find(r, "host.volume").mixer, 70)
   end)
+  it("auditions the stock kids limit under the dial, 100 when never set", function()
+    local d = doc(); d.device.volume_api = 0; d.volume_int.knob = 70; d.audiocfg.kids_cap = 25
+    apply(d, test.on_request(d, { target = "kids" }))
+    local r = apply(d, test.on_muted(d))
+    assert_eq(d.volume_test.percent, 25); assert_eq(find(r, "host.volume").mixer, 55)
+    assert_eq(d.audiocfg.volume, 15)
+    d = doc(); d.device.volume_api = 0; d.volume_int.knob = 70
+    apply(d, test.on_request(d, { target = "kids" })); apply(d, test.on_muted(d))
+    assert_eq(d.volume_test.percent, 70)
+  end)
   it("stock wired headphones are not capped by the speaker dial", function()
     local d = doc(); d.device.volume_api = 0; d.audiocfg.headphones_en = true
     apply(d, test.on_request(d, { target = "night" })); apply(d, test.on_muted(d))
     assert_eq(d.volume_test.percent, 40)
   end)
   it("rejects unavailable kids tests, mute, starting music and concurrent requests", function()
-    for _, change in ipairs({ function(d) d.device.volume_api = 0 end, function(d) d.device.toy_safe = false end,
+    for _, change in ipairs({ function(d) d.device.toy_safe = false end, function(d) d.device.volume_api = 0; d.device.toy_safe = false end,
       function(d) d.upnp = { muted = true } end, function(d) d.playback.state = "starting" end,
       function(d) d.playback_int = { sys = { name = "warning" } } end,
       function(d) d.streaming_int = { random_start = {} } end }) do

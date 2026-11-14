@@ -82,7 +82,7 @@
     volume_test_muted: 'Réactivez d’abord le son du Jooki.',
     volume_test_failed: 'Le son de test n’a pas pu être joué. Veuillez réessayer.',
     volume_test_unavailable: 'Ce test de volume est indisponible pour le moment.',
-    toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
+    toy_safe_maxvol: 'Volume maximal en mode enfant', kids_cap_help: 'Baissez-le pour que le Jooki reste plus doux en mode enfant, même molette à fond. 100 % = le niveau enfant habituel.', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
     random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
     lights_off: 'Éteindre toutes les lumières en permanence',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Éteints pendant les heures définies, rallumés ensuite.',
@@ -296,7 +296,7 @@
     volume_test_muted: 'Unmute the Jooki first.',
     volume_test_failed: 'The test tone could not play. Please try again.',
     volume_test_unavailable: 'This volume test is currently unavailable.',
-    toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
+    toy_safe_maxvol: 'Maximum volume in kids mode', kids_cap_help: 'Turn it down to keep the Jooki quieter in kids mode, even with the knob all the way up. 100 % is the usual kids level.', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
     random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Off during the scheduled hours, back on afterwards.',
@@ -494,7 +494,7 @@
     volume_test_failed: 'Der Testton konnte nicht abgespielt werden. Versuche es erneut.',
     volume_test_unavailable: 'Dieser Lautstärketest ist gerade nicht verfügbar.',
     toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
-    toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
+    kids_cap_help: 'Niedriger stellen, damit der Jooki im Kindermodus leiser bleibt, auch wenn der Drehknopf ganz aufgedreht ist. 100 % ist die übliche Kinderlautstärke.', toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
     random_start: 'Mit einem zufälligen Titel starten',
     random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
     pl_settings: function (v) { return 'Wie in den Einstellungen (' + v + ')'; }, rep_all: 'Alle Titel', rep_one: 'Diesen Titel', modes_sub: 'Für Wiedergabelisten ohne eigene Auswahl', back15: '15 Sekunden zurück', fwd15: '15 Sekunden vor',
@@ -612,7 +612,7 @@
     volume_test_muted: 'Zet eerst het geluid van de Jooki weer aan.',
     volume_test_failed: 'De testtoon kon niet worden afgespeeld. Probeer het opnieuw.',
     volume_test_unavailable: 'Deze volumetest is momenteel niet beschikbaar.',
-    toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
+    toy_safe_maxvol: 'Maximumvolume in kindermodus', kids_cap_help: 'Zet hem lager zodat de Jooki in kindermodus zachter blijft, ook met de knop helemaal open. 100 % is het gewone kinderniveau.', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
     random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Uit tijdens de ingestelde uren, daarna weer aan.',
@@ -3062,16 +3062,23 @@
       h('span', { class: 'small muted grow', role: 'status', 'aria-live': 'polite' },
         here && typeof v.percent === 'number' ? t('volume_test_level', v.percent) : t('volume_test_help')));
   }
+  // The kids maximum: on the global scale with the new sound-chip firmware (toy_safe_maxvol), else a
+  // ceiling under the chip's own kids level, like the night maximum (kids_cap, 100 = factory level).
+  function kidsMaxRow(d, cfg) {
+    var k = d.volume_api === 2 ? 'toy_safe_maxvol' : 'kids_cap', v = cfg[k];
+    if (typeof v !== 'number') return null;
+    return sRow({ col: true, label: t('toy_safe_maxvol'), sub: t(k === 'kids_cap' ? 'kids_cap_help' : 'toy_safe_maxvol_help'),
+      right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
+        h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(v), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': k === 'kids_cap' ? 'kidscap' : 'toysafemax',
+          oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
+          onchange: function (e) { var c = {}; c[k] = Number(e.target.value); send('SET_CFG', c); } }), h('output', null, v + ' %')), volumeTestControl('kids', !d.toy_safe)) });
+  }
   // the topics behind the short page
   function soundPage() {
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
         sRow({ icon: 'vol', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
-          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
-            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
-              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
-              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
+        kidsMaxRow(d, cfg),
         // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
         // on the charger the detection sees the charger, not headphones added after it: the parent chooses
         d.core && S.power.connected ? sRow({ icon: 'vol', label: t('hp_force'), sub: t('hp_force_sub'), sw: true, on: !!cfg.headphones_en, k: 'hpforce', onchange: function (e) { send('OJ_HEADPHONES', { on: e.target.checked }); } })

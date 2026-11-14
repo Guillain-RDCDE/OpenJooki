@@ -70,7 +70,7 @@
     volume_test_muted: 'Zet eerst het geluid van de Jooki weer aan.',
     volume_test_failed: 'De testtoon kon niet worden afgespeeld. Probeer het opnieuw.',
     volume_test_unavailable: 'Deze volumetest is momenteel niet beschikbaar.',
-    toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
+    toy_safe_maxvol: 'Maximumvolume in kindermodus', kids_cap_help: 'Zet hem lager zodat de Jooki in kindermodus zachter blijft, ook met de knop helemaal open. 100 % is het gewone kinderniveau.', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
     random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Uit tijdens de ingestelde uren, daarna weer aan.',

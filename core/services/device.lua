@@ -46,6 +46,11 @@ function device.effective_volume(doc, requested)
   -- Its percentages cannot also be capped on the new global scale.
   if (doc.device or {}).volume_api == 2 and (doc.device or {}).toy_safe ~= false then
     v = math.min(v, (doc.audiocfg or {}).toy_safe_maxvol or DEFAULT_KIDS_MAX)
+  elseif (doc.device or {}).toy_safe ~= false then
+    -- On today's firmware the kids limit lowers the sound under the chip's own kids level, like the
+    -- night maximum (docs/30). 100 = the factory kids level, unchanged.
+    local cap = (doc.audiocfg or {}).kids_cap
+    if type(cap) == "number" and cap < 100 and v > cap then v = cap end
   end
   if lim.maxvol and lim.maxvol < 100 and v > lim.maxvol then v = lim.maxvol end
   if lim.fade and lim.fade < 1 then v = math.floor(v * lim.fade + 0.5) end
@@ -83,6 +88,8 @@ local function audiocfg_of(doc)
   a.upnp = a.upnp == true
   local max = a.toy_safe_maxvol
   a.toy_safe_maxvol = type(max) == "number" and max >= 0 and max <= 100 and max % 1 == 0 and max or DEFAULT_KIDS_MAX
+  local cap = a.kids_cap
+  a.kids_cap = type(cap) == "number" and cap >= 0 and cap <= 100 and cap % 1 == 0 and cap or 100
   a.lights_off = a.lights_off == true
   a.repeat_mode = a.repeat_mode or 1
   return a
@@ -140,6 +147,12 @@ function device.update_config(doc, changes, opts)
       return nil, err("invalid_argument", "toy_safe_maxvol", "expected an integer from 0 to 100")
     end
   end
+  if changes.kids_cap ~= nil then
+    local v = changes.kids_cap
+    if type(v) ~= "number" or v < 0 or v > 100 or v % 1 ~= 0 then
+      return nil, err("invalid_argument", "kids_cap", "expected an integer from 0 to 100")
+    end
+  end
   if changes.lights_off ~= nil and type(changes.lights_off) ~= "boolean" then
     return nil, err("invalid_argument", "lights_off", "expected a boolean")
   end
@@ -169,6 +182,10 @@ function device.update_config(doc, changes, opts)
     cmds[#cmds + 1] = emit("volume.apply", {})
   end
   if changes.toy_safe_maxvol ~= nil then a.toy_safe_maxvol_global = true end
+  if changes.kids_cap ~= nil and changes.kids_cap ~= a.kids_cap then
+    a.kids_cap = changes.kids_cap
+    cmds[#cmds + 1] = emit("volume.apply", {})
+  end
   if changes.lights_off ~= nil and changes.lights_off ~= a.lights_off then
     a.lights_off = changes.lights_off
     cmds[#cmds + 1] = emit("lights.apply", {})
@@ -541,7 +558,7 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
-                                              upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
+                                              upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, kids_cap = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }
 S.clock = { type = "object", required = { "utc" }, properties = { utc = { type = "integer" } }, additionalProperties = false }

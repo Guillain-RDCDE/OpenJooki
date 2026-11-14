@@ -198,7 +198,16 @@ with sync_playwright() as pw:
     volume_api=0
     j.c.publish("/j/esp32/input/knobs/state",json.dumps({"volume":knob,"hp_state":0,"volume_api":0}))
     pg.wait_for_function("() => !document.querySelector('[data-k=toysafemax]')")
-    R.check("legacy firmware does not offer the limit",pg.locator("[data-k=toysafemax]").count()==0)
+    R.check("legacy firmware does not offer the global-scale limit",pg.locator("[data-k=toysafemax]").count()==0)
+    pg.wait_for_selector("[data-k=kidscap]")
+    R.check("legacy firmware offers the kids limit under the chip's level, 100 by default",
+            pg.input_value("[data-k=kidscap]")=="100" and pg.get_attribute("[data-k=kidscap]","aria-label")=="Maximum volume in kids mode")
+    pg.locator("[data-k=kidscap]").fill("10")
+    pg.locator("[data-k=kidscap]").dispatch_event("change")
+    j.wait_state("audio.config.kids_cap",10)
+    R.expect("legacy kids limit lowers the speaker under the dial at once",lambda:last_alsa()==100-(knob-10))
+    j.send("SET_CFG",{"kids_cap":100})
+    R.expect("100 gives back the dial",lambda:last_alsa()==100)
     R.check("narrow layout",pg.evaluate("() => document.documentElement.scrollWidth <= innerWidth"))
     R.check("no browser errors",not errors,errors)
     browser.close()

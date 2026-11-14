@@ -211,6 +211,11 @@ Payload schema:
     "hp_boost": {
       "type": "boolean"
     },
+    "kids_cap": {
+      "maximum": 100,
+      "minimum": 0,
+      "type": "integer"
+    },
     "knob_mode": {
       "enum": ["song", "both", "wind", "start"],
       "type": "string"

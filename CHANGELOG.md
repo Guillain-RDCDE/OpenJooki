@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.3 (14 November 2026) — A volume in between
 - **A volume between kids mode and full.** Kids mode too quiet, and too loud without it? Turn kids mode off: *Settings → Volume and headphones → Maximum volume* appears just below. The knob won't go above it, on the speaker and on headphones. 100 % (the default) is no limit, so nothing changes until a parent moves it (#10).
 - For the tinkerers: `audiocfg.max_volume` (0-100, default 100), set by `SET_CFG` / `device.set_config` behind the parent code. It caps the volume while kids mode is off, like the night maximum, under the dial (`docs/30`).
 

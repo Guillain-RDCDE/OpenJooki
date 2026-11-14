@@ -70,7 +70,7 @@
     volume_test_muted: 'Unmute the Jooki first.',
     volume_test_failed: 'The test tone could not play. Please try again.',
     volume_test_unavailable: 'This volume test is currently unavailable.',
-    toy_safe_maxvol: 'Maximum volume in kids mode', kids_cap_help: 'Turn it down to keep the Jooki quieter in kids mode, even with the knob all the way up. 100 % is the usual kids level.', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
+    max_volume: 'Maximum volume', max_volume_help: 'The knob won\'t go above this. 100 % = no limit.', toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
     random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Off during the scheduled hours, back on afterwards.',

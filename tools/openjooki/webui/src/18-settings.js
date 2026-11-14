@@ -52,23 +52,22 @@
       h('span', { class: 'small muted grow', role: 'status', 'aria-live': 'polite' },
         here && typeof v.percent === 'number' ? t('volume_test_level', v.percent) : t('volume_test_help')));
   }
-  // The kids maximum: on the global scale with the new sound-chip firmware (toy_safe_maxvol), else a
-  // ceiling under the chip's own kids level, like the night maximum (kids_cap, 100 = factory level).
-  function kidsMaxRow(d, cfg) {
-    var k = d.volume_api === 2 ? 'toy_safe_maxvol' : 'kids_cap', v = cfg[k];
-    if (typeof v !== 'number') return null;
-    return sRow({ col: true, label: t('toy_safe_maxvol'), sub: t(k === 'kids_cap' ? 'kids_cap_help' : 'toy_safe_maxvol_help'),
-      right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
-        h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(v), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': k === 'kids_cap' ? 'kidscap' : 'toysafemax',
-          oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
-          onchange: function (e) { var c = {}; c[k] = Number(e.target.value); send('SET_CFG', c); } }), h('output', null, v + ' %')), volumeTestControl('kids', !d.toy_safe)) });
-  }
   // the topics behind the short page
   function soundPage() {
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
         sRow({ icon: 'vol', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
-        kidsMaxRow(d, cfg),
+        // kids mode off: a ceiling between kids mode and full volume, the knob stops there (#10)
+        !d.toy_safe && typeof cfg.max_volume === 'number' ? sRow({ col: true, label: t('max_volume'), sub: t('max_volume_help'),
+          right: h('div', { class: 'row', style: 'width:100%' },
+            h('input', { class: 'range grow', type: 'range', min: '10', max: '100', step: '5', value: String(cfg.max_volume), 'aria-label': t('max_volume'), 'data-k': 'maxvolume',
+              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
+              onchange: function (e) { send('SET_CFG', { max_volume: Number(e.target.value) }); } }), h('output', null, cfg.max_volume + ' %')) }) : null,
+        typeof cfg.toy_safe_maxvol === 'number' && d.volume_api === 2 ? sRow({ col: true, label: t('toy_safe_maxvol'), sub: t('toy_safe_maxvol_help'),
+          right: h('div', { style: 'width:100%' }, h('div', { class: 'row' },
+            h('input', { class: 'range grow', type: 'range', min: '0', max: '100', step: '1', value: String(cfg.toy_safe_maxvol), disabled: !d.toy_safe ? 'disabled' : null, 'aria-label': t('toy_safe_maxvol'), 'data-k': 'toysafemax',
+              oninput: function (e) { e.target.nextSibling.textContent = e.target.value + ' %'; },
+              onchange: function (e) { send('SET_CFG', { toy_safe_maxvol: Number(e.target.value) }); } }), h('output', null, cfg.toy_safe_maxvol + ' %')), volumeTestControl('kids', !d.toy_safe)) }) : null,
         // wired headphones through the USB-C port: what the Jooki sees, to try an adapter
         // on the charger the detection sees the charger, not headphones added after it: the parent chooses
         d.core && S.power.connected ? sRow({ icon: 'vol', label: t('hp_force'), sub: t('hp_force_sub'), sw: true, on: !!cfg.headphones_en, k: 'hpforce', onchange: function (e) { send('OJ_HEADPHONES', { on: e.target.checked }); } })

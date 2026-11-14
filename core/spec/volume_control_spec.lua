@@ -131,45 +131,43 @@ describe("parent maximum", function()
   end)
 end)
 
-describe("kids limit on today's firmware (kids_cap)", function()
-  local function stock() local d = doc(); d.device.volume_api = nil; d.audiocfg.toy_safe_maxvol = 56; return d end
-  it("changes nothing until a parent sets it: 100 is the factory kids level", function()
-    local d = stock()
-    assert_eq(device.audiocfg_of(d).kids_cap, 100)
+describe("maximum volume with kids mode off (max_volume, #10)", function()
+  local function off(api) local d = doc(); d.device.volume_api = api; d.device.toy_safe = false; return d end
+  it("changes nothing until a parent sets it: 100 is no limit", function()
+    local d = off(nil)
+    assert_eq(device.audiocfg_of(d).max_volume, 100)
     assert_eq(device.effective_volume(d, 100), 100)
-    d.audiocfg.kids_cap = 100
+    d.audiocfg.max_volume = 100
     assert_eq(device.effective_volume(d, 100), 100)
   end)
-  it("caps in kids mode only, the lower of kids and night wins, the requested volume is kept", function()
-    local d = stock(); d.audiocfg.kids_cap = 30
-    assert_eq(device.effective_volume(d, 80), 30); assert_eq(device.effective_volume(d, 20), 20)
-    d.limits = { maxvol = 25, fade = 1 }; assert_eq(device.effective_volume(d, 80), 25)
-    d.limits = { maxvol = 50, fade = 1 }; assert_eq(device.effective_volume(d, 80), 30)
-    d.limits = { maxvol = 100, fade = 1 }; d.device.toy_safe = false; assert_eq(device.effective_volume(d, 80), 80)
-    d = stock(); d.audiocfg.kids_cap = 30; d.volume_int = { knob = 90 }
-    local r = device.set_volume(d, 90)
-    assert_eq(r.state.audiocfg.volume, 90)
-    local c = has(r, "host.volume"); assert_eq(c.percent, 30); assert_eq(c.mixer, 40)
+  it("caps with kids mode off only, the night maximum still wins when lower, the requested volume is kept", function()
+    for _, api in ipairs({ false, 2 }) do
+      local d = off(api or nil); d.audiocfg.max_volume = 70
+      assert_eq(device.effective_volume(d, 100), 70); assert_eq(device.effective_volume(d, 50), 50)
+      d.limits = { maxvol = 40, fade = 1 }; assert_eq(device.effective_volume(d, 100), 40)
+      d.limits = { maxvol = 100, fade = 1 }; d.device.toy_safe = true
+      assert_eq(device.effective_volume(d, 100), api == 2 and 35 or 100)
+    end
+    local d = off(nil); d.audiocfg.max_volume = 70; d.volume_int = { knob = 100 }
+    local r = device.set_volume(d, 100)
+    assert_eq(r.state.audiocfg.volume, 100)
+    local c = has(r, "host.volume"); assert_eq(c.percent, 70); assert_eq(c.mixer, 70)
     d.audiocfg.headphones_en = true
-    c = has(device.set_volume(d, 90), "host.volume"); assert_eq(c.percent, 30); assert_eq(c.mixer, 30)
-  end)
-  it("leaves the global-scale maximum alone with the new firmware", function()
-    local d = doc(); d.audiocfg.kids_cap = 10
-    assert_eq(device.effective_volume(d, 80), 35)
+    c = has(device.set_volume(d, 100), "host.volume"); assert_eq(c.percent, 70); assert_eq(c.mixer, 70)
   end)
   it("is saved and applied at once from both interfaces, invalid values write nothing", function()
-    local d = stock()
-    local r = device.update_config(d, { kids_cap = 40 })
-    assert_eq(r.state.audiocfg.kids_cap, 40); assert_true(has(r, "emit") ~= nil)
-    assert_eq(has(r, "files.write").doc.kids_cap, 40)
-    r = v1.on_cmd(d, { name = "SET_CFG", raw = json.encode({ kids_cap = 0 }) })
-    assert_eq(r.state.audiocfg.kids_cap, 0)
+    local d = off(nil)
+    local r = device.update_config(d, { max_volume = 60 })
+    assert_eq(r.state.audiocfg.max_volume, 60); assert_true(has(r, "emit") ~= nil)
+    assert_eq(has(r, "files.write").doc.max_volume, 60)
+    r = v1.on_cmd(d, { name = "SET_CFG", raw = json.encode({ max_volume = 0 }) })
+    assert_eq(r.state.audiocfg.max_volume, 0)
     for _, v in ipairs({ -1, 101, 2.5, "35", false, {} }) do
-      local p = { kids_cap = v }
+      local p = { max_volume = v }
       assert_false(schema.validate(p, device.schemas.config))
-      local rr, e = device.update_config(d, p); assert_nil(rr); assert_eq(e.field, "kids_cap")
+      local rr, e = device.update_config(d, p); assert_nil(rr); assert_eq(e.field, "max_volume")
     end
-    for _, v in ipairs({ 0, 35, 100 }) do assert_true(schema.validate({ kids_cap = v }, device.schemas.config)) end
+    for _, v in ipairs({ 0, 35, 100 }) do assert_true(schema.validate({ max_volume = v }, device.schemas.config)) end
   end)
 end)
 

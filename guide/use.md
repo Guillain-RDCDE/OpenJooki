@@ -222,10 +222,8 @@ version.
 <img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version, then a short list of subjects: Volume and headphones, Playback, Jooki buttons, Night mode">
 
 **Listening**
-- *Volume and headphones*: **Limited volume (kids mode)**.
-- **Maximum volume in kids mode**: slide it down so the Jooki stays quieter in kids mode, even
-  with the knob all the way up. **Test** plays a short tone at that level. 100 % is the usual
-  kids level.
+- *Volume and headphones*: **Limited volume (kids mode)**. Too quiet with it, too loud without?
+  Turn it off and set **Maximum volume** just below: the knob won't go above it.
 - **Headphones detected**: **Yes** when wired headphones are plugged in. They need a USB-C to
   jack adapter with no chip inside ([which one](lights-and-battery.md#charging)).
 - **Sound to the headphones** (shown while the charger is in): the Jooki can't see headphones

@@ -113,11 +113,10 @@ function test.on_request(doc, p)
       or (doc.playback or {}).state == "starting" then return nil, err("conflict", "", "VOLUME_TEST_BUSY") end
   if (doc.upnp or {}).muted then return nil, err("conflict", "", "VOLUME_TEST_MUTED") end
   local a, d = doc.audiocfg or {}, doc.device or {}
-  if p.target == "kids" and d.toy_safe == false then
+  if p.target == "kids" and (d.volume_api ~= 2 or d.toy_safe == false) then
     return nil, err("unavailable", "target", "VOLUME_TEST_UNAVAILABLE")
   end
-  local kids = d.volume_api == 2 and a.toy_safe_maxvol or (type(a.kids_cap) == "number" and a.kids_cap or 100)
-  local requested = p.target == "kids" and kids or ((doc.bedtime or {}).cfg or {}).maxvol
+  local requested = p.target == "kids" and a.toy_safe_maxvol or ((doc.bedtime or {}).cfg or {}).maxvol
   if type(requested) ~= "number" then return nil, err("unavailable", "target", "VOLUME_TEST_UNAVAILABLE") end
   local prior = doc.volume_test_int or {}
   local v = { active = true, id = (prior.id or 0) + 1, target = p.target, requested = requested,

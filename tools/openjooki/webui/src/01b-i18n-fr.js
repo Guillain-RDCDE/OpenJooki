@@ -70,7 +70,7 @@
     volume_test_muted: 'Réactivez d’abord le son du Jooki.',
     volume_test_failed: 'Le son de test n’a pas pu être joué. Veuillez réessayer.',
     volume_test_unavailable: 'Ce test de volume est indisponible pour le moment.',
-    toy_safe_maxvol: 'Volume maximal en mode enfant', kids_cap_help: 'Baissez-le pour que le Jooki reste plus doux en mode enfant, même molette à fond. 100 % = le niveau enfant habituel.', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
+    max_volume: 'Volume maximal', max_volume_help: 'La molette ne dépassera pas ce niveau. 100 % = pas de limite.', toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
     random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
     lights_off: 'Éteindre toutes les lumières en permanence',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Éteints pendant les heures définies, rallumés ensuite.',

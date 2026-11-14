@@ -17,11 +17,10 @@ never raise it above the dial: mixer level = `100 - (dial - volume)`, 0 for sile
   is not playing at. Wired headphones have no such ceiling: their level is the volume.
 - An unchanged dial report leaves a saved request alone; moving the dial takes over.
 - With `volume_api == 2` the ESP32 applies the volume and the mixer stays at 100.
-- Without `volume_api == 2` the kids slider sets `kids_cap` (0-100, default 100 = the factory
-  kids level, nothing changes). In kids mode it caps the volume like the night maximum, so the
-  dial cannot go above it: the chip's fixed kids attenuation stays, and the cap can only make
-  kids mode quieter. Its **Test** button plays the tone at `kids_cap`, under the dial. With
-  `volume_api == 2` the slider is `toy_safe_maxvol` on the global scale below.
+- The kids slider below only shows with `volume_api == 2`.
+- With kids mode off, `max_volume` (0-100, default 100 = no limit, #10) caps the volume like the
+  night maximum, on any firmware: the dial cannot go above it. The page shows its slider only
+  while kids mode is off; the lower of it and the night maximum wins.
 
 ## One global scale
 

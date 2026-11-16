@@ -6,7 +6,7 @@ A short turn stays next / previous; the other knob choices are untouched; with t
 down the same hold stays the parent-code gesture (10 s).
   python3 test_knob_start.py
 """
-import json, time
+import time
 import bench as B
 
 R = B.Results(); check = R.check
@@ -72,8 +72,11 @@ check("held to the right: one start", len(spy.payloads("/j/audio/out/play", n)) 
 
 # --- an audiobook forgets its place
 play_at(book, 2)
-j.c.publish("/j/audio/input/position", json.dumps({"id": 7, "pos": 90000}))
-j.wait_state("audio.playback.position_ms", pred=lambda v: v and v > 0)
+# A real seek, so the engine itself goes on from 90 s: a position published by hand was overwritten by
+# the engine's next tick (~4 s into the chapter) when that tick came before the pause (red CI, 15-16/11).
+# 91 s can only be a tick counted after the seek: every older report of the engine arrived before it.
+j.send("SEEK", {"position_ms": 90000})
+j.wait_state("audio.playback.position_ms", pred=lambda v: v and v >= 91000)
 j.send("DO_PAUSE", {}); j.wait_state("audio.playback.state", "PAUSED")
 j.send("DO_PLAY", {}); j.wait_state("audio.playback.state", "PLAYING")
 R.expect("audiobook: its place was saved first", lambda: (j.state.get("bedtime") or {}).get("resume", {}).get(book, {}).get("pos", 0) > 5000, 3, lambda: j.state.get("bedtime"))

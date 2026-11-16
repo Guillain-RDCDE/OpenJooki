@@ -35,6 +35,7 @@
   #wclock{font-size:2.6em;font-weight:800;color:var(--accent);margin:.05em 0;font-variant-numeric:tabular-nums}
   #wsub{color:var(--fg);font-size:1em;margin:.6em 0 0}
   .wnote{color:var(--muted);font-size:.85em;margin-top:.6em}
+  .wnote a{color:var(--accent)}
   .wwarn{display:inline-block;margin-top:14px;background:rgba(242,107,33,.12);border-radius:10px;padding:9px 14px;font-weight:700;color:var(--accent);font-size:.95em}
   #wdone{display:none;font-size:3em;line-height:1;margin:6px auto 10px}
 </style>
@@ -89,6 +90,7 @@
     <a class="btn ghost" id="wlog" href="#" target="_blank" rel="noopener">See what my Jooki is doing</a>
     <p class="wnote">A small <code>ok</code> tab opened: that's your Jooki saying yes, you can close it. The button above shows the install as it goes; its last line says where it is. On a weak Wi-Fi the download takes longer: put the Jooki next to your internet box.</p>
     <span class="wwarn" id="wwarn">⚡ Keep it plugged in &mdash; don't unplug</span>
+    <p class="wnote" id="help">Stuck? <a id="mailme" href="#">Email these details to Guillain</a>: what this page did, ready in your mail app. Paste in what <b>See what my Jooki is doing</b> shows, then send. He reads every one.</p>
   </div>
 
   <footer>Made by a parent for the Jooki&nbsp;2 &middot; not affiliated with the original maker<br><a href="sdcard.html" style="color:inherit">Out of room? A bigger SD card · Jooki dead? A new card</a> · <a href="wifi.html" style="color:inherit">Lost its Wi-Fi?</a></footer>
@@ -110,6 +112,20 @@
       wtitle=document.getElementById('wtitle'), wsub=document.getElementById('wsub'),
       wspin=document.getElementById('wspin'), wdone=document.getElementById('wdone'),
       wwarn=document.getElementById('wwarn');
+
+  // What this page did, in plain words, for the "Email these details" link (an install that fails far
+  // away, 16/11/2026). The page is https and the Jooki http: it cannot read the Jooki's own log, so the
+  // mail asks the parent to paste in what openjooki-status.txt shows.
+  var LOG=window.OJ_LOG=[], T0=Date.now();
+  function note(s){LOG.push(((Date.now()-T0)/1000).toFixed(1)+' s  '+s); if(LOG.length>80)LOG.splice(1,1); document.getElementById('mailme').href=mailHref();}
+  function mailHref(){
+    var body='What the install page did:\n\n'+LOG.join('\n')+'\n\n'+navigator.userAgent+
+      '\n\nWhat "See what my Jooki is doing" shows (paste it below, or say what you see if nothing opens):\n\n';
+    return 'mailto:guillain@poulpe.us?subject='+encodeURIComponent('OpenJooki install: the details')+'&body='+encodeURIComponent(body);
+  }
+  note('page opened '+new Date().toISOString());
+  document.getElementById('mailme').addEventListener('click',function(){this.href=mailHref();});
+  document.getElementById('wlog').addEventListener('click',function(){note('opened See what my Jooki is doing');});
 
   function normIP(s){return (s||'').trim().replace(/[,\s]+/g,'.').replace(/\.+/g,'.').replace(/^\.|\.$/g,'');}
   try{
@@ -151,6 +167,7 @@
       left--;
       if(left<=0){
         clearInterval(timer);
+        note('waiting time over');
         wspin.style.display='none'; wdone.style.display='block'; wwarn.style.display='none';
         wtitle.textContent='Your Jooki should be back';
         wclock.style.display='none';
@@ -167,20 +184,26 @@
   function fire(){
     var url="http://"+normIP(ip.value)+"/ll?action="+encodeURIComponent(C[cur]);
     document.getElementById('wlog').href="http://"+normIP(ip.value)+"/openjooki-status.txt";
-    var w=null, opened=Date.now();
-    try{ w=window.open(url,'ojll'); }catch(e){}
+    var w=null, opened=Date.now(), back=false;
+    note('install started for the Jooki at '+normIP(ip.value));
+    try{ w=window.open(url,'ojll'); }catch(e){ note('the ok tab could not open: '+(e&&e.name||'error')); }
     try{ window.focus(); }catch(e){}
     startWait();
     // The tab is closed only once the person comes back here, and never in its first seconds: closed at
     // once, the command never reached a slow Jooki (seen on a Jooki on a weak Wi-Fi, October 2026).
-    function closeNow(){ if(Date.now()-opened<5000) return; try{ if(w && !w.closed) w.close(); }catch(e){} }
+    function closeNow(){
+      if(Date.now()-opened<5000) return;
+      if(!back){ back=true; note('back on this page'+(w? (w.closed? ', the ok tab was already closed' : ', the ok tab still open: closed now') : '')); }
+      try{ if(w && !w.closed) w.close(); }catch(e){}
+    }
     window.addEventListener('focus', closeNow);
     document.addEventListener('visibilitychange', function(){ if(!document.hidden) closeNow(); });
     // popup blocked? fall back to a normal new-tab link so the command still fires
     if(!w){
+      note('the ok tab was blocked: opened as a plain link instead');
       var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
       document.body.appendChild(a); a.click();
-    }
+    } else note('the ok tab opened');
   }
   cgo.addEventListener('click', function(){ confirmBox.hidden=true; fire(); });
 </script>

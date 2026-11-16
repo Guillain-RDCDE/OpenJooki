@@ -4,6 +4,9 @@
 - **A volume between kids mode and full.** Kids mode too quiet, and too loud without it? Turn kids mode off: *Settings → Volume and headphones → Maximum volume* appears just below. The knob won't go above it, on the speaker and on headphones. 100 % (the default) is no limit, so nothing changes until a parent moves it (#10).
 - For the tinkerers: `audiocfg.max_volume` (0-100, default 100), set by `SET_CFG` / `device.set_config` behind the parent code. It caps the volume while kids mode is off, like the night maximum, under the dial (`docs/30`).
 
+## Install page (16 November 2026)
+- **Stuck during the install?** The [install page](https://guillain-rdcde.github.io/OpenJooki/) now has an *Email these details to Guillain* link under the wait. It opens a mail with what the page did (the Jooki's address, whether the small `ok` tab opened, the times). Paste in what *See what my Jooki is doing* shows, then send.
+
 ## OpenJooki 2.5.2 (13 November 2026) — Your own address
 - **Plays out loud on the charger.** Plugging in the charger while a song played could send the sound to headphones that were not there, so the Jooki went silent while it seemed to play. The headphone detection reads a charger as headphones, so with the charger in it no longer switches to headphones; headphones already playing still switch back to the speaker when they come out.
 - **Sound to the headphones.** With the charger in, Settings → Volume and headphones has a switch that sends the sound to wired headphones, for a splitter whose headphones were plugged in after the charger (the Jooki cannot see them then). With a splitter, plugging the headphones first still works on its own.

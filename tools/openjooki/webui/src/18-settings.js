@@ -56,7 +56,8 @@
   function soundPage() {
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
-        sRow({ icon: 'vol', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
+        // kids mode is the factory's fixed limit on today's firmware: the way to one's own is said here (#10)
+        sRow({ icon: 'vol', label: t('toy_safe'), sub: d.volume_api === 2 ? null : t('toy_safe_sub'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
         // kids mode off: a ceiling between kids mode and full volume, the knob stops there (#10)
         !d.toy_safe && typeof cfg.max_volume === 'number' ? sRow({ col: true, label: t('max_volume'), sub: t('max_volume_help'),
           right: h('div', { class: 'row', style: 'width:100%' },
@@ -98,7 +99,10 @@
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
         d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
-            ['song', 'start', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null
+            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode === 'start' ? 'song' : cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null,
+        // and held left, back to the start (#40): its own switch, off with 'wind' (there the hold winds)
+        d.core && typeof cfg.knob_restart === 'boolean' ? sRow({ icon: 'knob', label: t('knob_restart'), sub: t(cfg.knob_mode === 'wind' ? 'knob_restart_wind' : 'knob_restart_sub'), sw: true,
+          on: cfg.knob_restart && cfg.knob_mode !== 'wind', disabled: cfg.knob_mode === 'wind', k: 'knobrestart', onchange: function (e) { send('SET_CFG', { knob_restart: e.target.checked }); } }) : null
     ]);
   }
   function advPage() {

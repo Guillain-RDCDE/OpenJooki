@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""The track knob's "back to the start" choice (#40), against the real core and the real buttons' tick.
+"""The track knob's "back to the start" switch (#40), against the real core and the real buttons' tick.
 
 Held to the left for 3 s: the first song of the playlist, and an audiobook forgets its saved place.
-A short turn stays next / previous; the other knob choices are untouched; with the volume all the way
+A short turn stays next / previous; with "both" halfway still winds; "wind" never restarts; with the volume all the way
 down the same hold stays the parent-code gesture (10 s).
   python3 test_knob_start.py
 """
@@ -43,10 +43,11 @@ music = j.newpl("Songs", SONGS)
 book = j.newpl("Book", SONGS, audiobook=True)
 j.send("SET_VOL", {"vol": "40"}); j.barrier()
 
-# --- the choice is refused until it exists, then kept
-j.send("SET_CFG", {"knob_mode": "start"})
-j.wait_state("audio.config.knob_mode", "start")
-check("the choice is saved", j.state["audio"]["config"]["knob_mode"] == "start")
+# --- its own switch (#40), off by default, then kept
+check("off by default", j.state["audio"]["config"].get("knob_restart") is False, j.state["audio"]["config"])
+j.send("SET_CFG", {"knob_restart": True})
+j.wait_state("audio.config.knob_restart", True)
+check("the switch is saved, the knob stays on songs", j.state["audio"]["config"].get("knob_mode", "song") == "song", j.state["audio"]["config"])
 
 # --- held 3 s: back to the first song
 play_at(music, 3)
@@ -96,22 +97,35 @@ B.quiet(0.5, "the release")
 check("volume at zero: no jump to the start", now_index() != 1, now_index())
 j.send("SET_VOL", {"vol": "40"}); j.barrier()
 
-# --- the other choices do not have it
-j.send("SET_CFG", {"knob_mode": "song"}); j.wait_state("audio.config.knob_mode", "song")
+# --- with 'both': halfway still winds, held left still goes back to the start
+j.send("SET_CFG", {"knob_mode": "both"}); j.wait_state("audio.config.knob_mode", "both")
+play_at(music, 2)
+n = spy.mark()
+hold("fwd", 1.3)   # wound once at 1 s
+check("'both' + the switch: halfway winds", len(spy.payloads("/j/audio/out/skip_sec", n)) >= 1 and spy.payloads("/j/audio/out/play", n) == [], spy.since(n))
+play_at(music, 3)
+hold("prev", 3.5)
+R.expect("'both' + the switch: held left, the first song", lambda: now_index() == 1, 3, lambda: now_index())
+
+# --- switched off: the original Jooki
+j.send("SET_CFG", {"knob_mode": "song", "knob_restart": False}); j.wait_state("audio.config.knob_restart", False)
 play_at(music, 3)
 hold("prev", 3.5)
 R.expect("as the original Jooki: previous song on release", lambda: now_index() == 2, 3, lambda: now_index())
+j.send("SET_CFG", {"knob_restart": True}); j.wait_state("audio.config.knob_restart", True)
 j.send("SET_CFG", {"knob_mode": "wind"}); j.wait_state("audio.config.knob_mode", "wind")
 play_at(music, 2)
 n = spy.mark()
 hold("prev", 3.5)
-check("'wind': it winds, never restarts", spy.payloads("/j/audio/out/play", n) == [] and len(spy.payloads("/j/audio/out/skip_sec", n)) >= 1, spy.since(n))
+check("'wind', even with the switch on: it winds, never restarts", spy.payloads("/j/audio/out/play", n) == [] and len(spy.payloads("/j/audio/out/skip_sec", n)) >= 1, spy.since(n))
 j.send("SET_CFG", {"knob_mode": "song"}); j.barrier()
 
 # --- nothing loaded: nothing happens
 j.close()
 j = B.boot()
-j.send("SET_CFG", {"knob_mode": "start"}); j.wait_state("audio.config.knob_mode", "start")
+# 2.5.1-2.5.3's "start" (an older page) is read as songs + the switch
+j.send("SET_CFG", {"knob_mode": "start"}); j.wait_state("audio.config.knob_restart", True)
+check("the old 'start' becomes songs + the switch", j.state["audio"]["config"]["knob_mode"] == "song", j.state["audio"]["config"])
 n = spy.mark()
 hold("prev", 3.5)
 check("nothing loaded: no sound", spy.payloads("/j/audio/out/play", n) == [], spy.since(n))

@@ -72,8 +72,8 @@
     heart_shutdown_help: 'À l’arrêt : trois brefs clignotements rouges, sans son.',
     heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_press_sub5: 'Tenu 5 secondes, il éteint le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture',
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
-    knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_start: 'Morceaux, tenue à gauche : au début', knob_both: 'Les deux (mi-course : avancer)', knob_wind: 'Avancer / reculer',
-    toy_safe: 'Volume limité (mode enfant)',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
+    knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Morceaux, et mi-course : avancer', knob_restart: 'Tenue à gauche 3 s : retour au début', knob_restart_sub: 'Un petit coup reste le morceau précédent. Un livre audio oublie où il en était.', knob_restart_wind: 'Pas avec « Avancer / reculer » : tenir la molette fait avancer.', knob_wind: 'Avancer / reculer',
+    toy_safe: 'Volume limité (mode enfant)', toy_safe_sub: 'Limite fixée en usine. Trop bas ? Coupe-le et choisis ton propre maximum.',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     volume_test: 'Tester',
     volume_testing: 'Test en cours…',
     volume_test_help: 'Un son court sur le Jooki. Les autres limites de volume actives restent appliquées.',
@@ -82,7 +82,7 @@
     volume_test_muted: 'Réactivez d’abord le son du Jooki.',
     volume_test_failed: 'Le son de test n’a pas pu être joué. Veuillez réessayer.',
     volume_test_unavailable: 'Ce test de volume est indisponible pour le moment.',
-    max_volume: 'Volume maximal', max_volume_help: 'La molette ne dépassera pas ce niveau. 100 % = pas de limite.', toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
+    max_volume: 'Volume maximal', max_volume_help: 'Ta limite à toi, haut-parleur et casque : la molette ne dépassera pas ce niveau. 100 % = pas de limite.', toy_safe_maxvol: 'Volume maximal en mode enfant', toy_safe_maxvol_help: 'Remplace la limite d’usine fixe. Même échelle globale que le mode nuit ; la plus petite limite s’applique. Le volume demandé reste mémorisé.',
     random_start: 'Commencer par un morceau au hasard', random_start_help: 'Pour les playlists musicales sur le Jooki, y compris Spotify. Les livres audio gardent leur position.',
     lights_off: 'Éteindre toutes les lumières en permanence',
     night_lights_off: 'Éteindre toutes les lumières la nuit', night_lights_off_help: 'Éteints pendant les heures définies, rallumés ensuite.',
@@ -286,8 +286,8 @@
     heart_shutdown_help: 'Power off: three short red flashes, no sound.',
     heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_press_sub5: 'Held 5 seconds, it switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play',
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
-    knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_start: 'Songs, held left: back to the start', knob_both: 'Both (halfway winds)', knob_wind: 'Wind the song',
-    toy_safe: 'Limited volume (kids mode)',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
+    knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Songs, and halfway winds', knob_restart: 'Held left 3 s: back to the start', knob_restart_sub: 'Short turns stay next and previous. An audiobook forgets its place.', knob_restart_wind: 'Not with “Wind the song”: holding the knob winds.', knob_wind: 'Wind the song',
+    toy_safe: 'Limited volume (kids mode)', toy_safe_sub: 'Fixed by the factory. Too quiet? Turn it off and choose your own maximum.',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
     volume_test: 'Test',
     volume_testing: 'Testing…',
     volume_test_help: 'A short tone on the Jooki. Other active volume limits still apply.',
@@ -296,7 +296,7 @@
     volume_test_muted: 'Unmute the Jooki first.',
     volume_test_failed: 'The test tone could not play. Please try again.',
     volume_test_unavailable: 'This volume test is currently unavailable.',
-    max_volume: 'Maximum volume', max_volume_help: 'The knob won\'t go above this. 100 % = no limit.', toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
+    max_volume: 'Maximum volume', max_volume_help: 'Your own limit, speaker and headphones: the knob won’t go above it. 100 % = no limit.', toy_safe_maxvol: 'Maximum volume in kids mode', toy_safe_maxvol_help: 'Replaces the fixed factory limit. Uses the same global volume scale as night mode; the lower ceiling wins. The requested volume is kept.',
     random_start: 'Start with a random song', random_start_help: 'For music playlists, including Spotify. Audiobooks keep their place.',
     lights_off: 'Turn off all lights permanently',
     night_lights_off: 'Turn off all lights at night', night_lights_off_help: 'Off during the scheduled hours, back on afterwards.',
@@ -483,8 +483,8 @@
     heart_shutdown_help: 'Beim Ausschalten: dreimal kurz rot blinken, ohne Ton.',
     heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe',
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
-    knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_start: 'Titel, links halten: zum Anfang', knob_both: 'Beides (halb drehen zum Spulen)', knob_wind: 'Im Titel spulen',
-    toy_safe: 'Begrenzte Lautstärke (Kindermodus)', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
+    knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Titel, und halb drehen zum Spulen', knob_restart: 'Links halten 3 s: zurück zum Anfang', knob_restart_sub: 'Kurz drehen bleibt nächster / vorheriger Titel. Ein Hörbuch vergisst seine Stelle.', knob_restart_wind: 'Nicht mit „Im Titel spulen“: Halten spult.', knob_wind: 'Im Titel spulen',
+    toy_safe: 'Begrenzte Lautstärke (Kindermodus)', toy_safe_sub: 'Vom Werk fest eingestellt. Zu leise? Ausschalten und eine eigene Grenze wählen.', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
     volume_test: 'Testen',
     volume_testing: 'Test läuft…',
     volume_test_help: 'Kurzer Ton auf dem Jooki. Weitere aktive Lautstärkegrenzen gelten weiter.',
@@ -493,7 +493,7 @@
     volume_test_muted: 'Hebe zuerst die Stummschaltung auf.',
     volume_test_failed: 'Der Testton konnte nicht abgespielt werden. Versuche es erneut.',
     volume_test_unavailable: 'Dieser Lautstärketest ist gerade nicht verfügbar.',
-    max_volume: 'Maximale Lautstärke', max_volume_help: 'Der Drehknopf geht nicht darüber. 100 % = keine Grenze.', toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
+    max_volume: 'Maximale Lautstärke', max_volume_help: 'Eine eigene Grenze, für Lautsprecher und Kopfhörer: Der Drehknopf geht nicht darüber. 100 % = keine Grenze.', toy_safe_maxvol: 'Maximale Lautstärke im Kindermodus',
     toy_safe_maxvol_help: 'Ersetzt die feste Werksbegrenzung. Wie im Nachtmodus gilt die globale Lautstärkeskala; die kleinere Grenze zählt. Die Wunschlautstärke bleibt gespeichert.',
     random_start: 'Mit einem zufälligen Titel starten',
     random_start_help: 'Für Musiklisten, auch von Spotify. Hörbücher behalten ihre Fortsetzung.',
@@ -602,8 +602,8 @@
     heart_shutdown_help: 'Uitschakelen: driemaal kort rood knipperen, zonder geluid.',
     heart_press: 'Kort op het hart drukken', heart_press_sub: 'Twee seconden ingedrukt zet het de Jooki nog steeds uit', heart_press_sub5: 'Vijf seconden ingedrukt zet het de Jooki uit', heart_none: 'Niets', heart_next: 'Volgend nummer', heart_pause: 'Pauze / afspelen',
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
-    knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_start: 'Nummers, links vasthouden: begin', knob_both: 'Allebei (halverwege: spoelen)', knob_wind: 'Spoelen in het nummer',
-    toy_safe: 'Begrensd volume (kindermodus)',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
+    knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Nummers, en halverwege: spoelen', knob_restart: 'Links vasthouden 3 s: terug naar het begin', knob_restart_sub: 'Kort draaien blijft volgend / vorig nummer. Een luisterboek vergeet waar het was.', knob_restart_wind: 'Niet met „Spoelen in het nummer”: vasthouden spoelt.', knob_wind: 'Spoelen in het nummer',
+    toy_safe: 'Begrensd volume (kindermodus)', toy_safe_sub: 'Vaste fabriekslimiet. Te zacht? Zet hem uit en kies je eigen maximum.',shuffle: 'Willekeurig', repeat: 'Herhalen', repeat_one: 'Dit nummer herhalen', pl_settings: function (v) { return 'Zoals in Instellingen (' + v + ')'; }, rep_all: 'Alle nummers', rep_one: 'Dit nummer', modes_sub: 'Voor afspeellijsten zonder eigen keuze', back15: '15 seconden terug', fwd15: '15 seconden vooruit',
     volume_test: 'Testen',
     volume_testing: 'Bezig met testen…',
     volume_test_help: 'Een korte toon op de Jooki. Andere actieve volumegrenzen blijven gelden.',
@@ -612,7 +612,7 @@
     volume_test_muted: 'Zet eerst het geluid van de Jooki weer aan.',
     volume_test_failed: 'De testtoon kon niet worden afgespeeld. Probeer het opnieuw.',
     volume_test_unavailable: 'Deze volumetest is momenteel niet beschikbaar.',
-    max_volume: 'Maximumvolume', max_volume_help: 'De knop gaat hier niet boven. 100 % = geen grens.', toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
+    max_volume: 'Maximumvolume', max_volume_help: 'Je eigen grens, voor luidspreker en koptelefoon: de knop gaat hier niet boven. 100 % = geen grens.', toy_safe_maxvol: 'Maximumvolume in kindermodus', toy_safe_maxvol_help: 'Vervangt de vaste fabriekslimiet. Dezelfde globale volumeschaal als de nachtmodus; de laagste grens geldt. Het gevraagde volume blijft bewaard.',
     random_start: 'Met een willekeurig nummer beginnen', random_start_help: 'Voor muziekafspeellijsten, ook Spotify. Luisterboeken bewaren hun positie.',
     lights_off: 'Alle lampjes altijd uit',
     night_lights_off: 'Alle lampjes ’s nachts uit', night_lights_off_help: 'Uit tijdens de ingestelde uren, daarna weer aan.',
@@ -3066,7 +3066,8 @@
   function soundPage() {
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
-        sRow({ icon: 'vol', label: t('toy_safe'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
+        // kids mode is the factory's fixed limit on today's firmware: the way to one's own is said here (#10)
+        sRow({ icon: 'vol', label: t('toy_safe'), sub: d.volume_api === 2 ? null : t('toy_safe_sub'), sw: true, on: d.toy_safe, k: 'toysafe', onchange: function (e) { send('SET_TOY_SAFE', { enable: e.target.checked }); } }),
         // kids mode off: a ceiling between kids mode and full volume, the knob stops there (#10)
         !d.toy_safe && typeof cfg.max_volume === 'number' ? sRow({ col: true, label: t('max_volume'), sub: t('max_volume_help'),
           right: h('div', { class: 'row', style: 'width:100%' },
@@ -3108,7 +3109,10 @@
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
         d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
-            ['song', 'start', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null
+            ['song', 'both', 'wind'].map(function (v) { return h('option', { value: v, selected: (cfg.knob_mode === 'start' ? 'song' : cfg.knob_mode || 'song') === v ? 'selected' : null }, t('knob_' + v)); })) }) : null,
+        // and held left, back to the start (#40): its own switch, off with 'wind' (there the hold winds)
+        d.core && typeof cfg.knob_restart === 'boolean' ? sRow({ icon: 'knob', label: t('knob_restart'), sub: t(cfg.knob_mode === 'wind' ? 'knob_restart_wind' : 'knob_restart_sub'), sw: true,
+          on: cfg.knob_restart && cfg.knob_mode !== 'wind', disabled: cfg.knob_mode === 'wind', k: 'knobrestart', onchange: function (e) { send('SET_CFG', { knob_restart: e.target.checked }); } }) : null
     ]);
   }
   function advPage() {

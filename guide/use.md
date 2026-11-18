@@ -222,8 +222,9 @@ version.
 <img src="../docs/img/shots/phone-settings.webp" width="260" alt="Settings on a phone: the Jooki's name and Rename, battery, storage, version, then a short list of subjects: Volume and headphones, Playback, Jooki buttons, Night mode">
 
 **Listening**
-- *Volume and headphones*: **Limited volume (kids mode)**. Too quiet with it, too loud without?
-  Turn it off and set **Maximum volume** just below: the knob won't go above it.
+- *Volume and headphones*: **Limited volume (kids mode)**. Its limit is fixed by the factory.
+  Too quiet with it, too loud without? Turn it off and set **Maximum volume** just below: your
+  own limit, on the speaker and the headphones, the knob won't go above it.
 - **Headphones detected**: **Yes** when wired headphones are plugged in. They need a USB-C to
   jack adapter with no chip inside ([which one](lights-and-battery.md#charging)).
 - **Sound to the headphones** (shown while the charger is in): the Jooki can't see headphones
@@ -239,11 +240,13 @@ version.
 - **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
   Held two seconds, the heart still switches the Jooki off; five seconds when its short press
   does something, so a small child pressing a bit too long does not switch it off.
-- **The track knob**: **Next / previous song** (as before), **Both (halfway winds)**: held
+- **The track knob**: **Next / previous song** (as before), **Songs, and halfway winds**: held
   halfway, it winds the song, turned all the way it changes the song, or **Wind the song**:
-  the knob only winds, and the heart can change the song. Or **Songs, held left: back to the
-  start**: as before, and held to the left for three seconds, the playlist starts again from its
-  first song; an audiobook forgets its place. A child can do it without the page.
+  the knob only winds, and the heart can change the song.
+- **Held left 3 s: back to the start**: with the first two, the knob held to the left for three
+  seconds starts the playlist again from its first song; an audiobook forgets its place. Short
+  turns stay next and previous. A child can do it without the page. Greyed with *Wind the song*,
+  where holding the knob winds.
 
 **Bedtime and travel**
 - **Night mode**: see *Bedtime* above.

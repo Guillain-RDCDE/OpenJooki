@@ -7,7 +7,7 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, hp_boost, upnp, toy_safe_maxvol }
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, knob_restart, hp_boost, upnp, toy_safe_maxvol }
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
 --   state.volume_int = { knob, pending, skipped } (physical position and ordered volume acknowledgments; private)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
@@ -85,6 +85,12 @@ local function audiocfg_of(doc)
   a.random_start = a.random_start == true
   a.continue_on_token_removal = a.continue_on_token_removal == true
   a.hp_boost = a.hp_boost == true
+  -- the knob held left: back to the start (#40). 2.5.1-2.5.3 saved it as the mode "start".
+  if a.knob_mode == "start" then
+    a.knob_mode = "song"
+    if a.knob_restart == nil then a.knob_restart = true end
+  end
+  a.knob_restart = a.knob_restart == true
   a.upnp = a.upnp == true
   local max = a.toy_safe_maxvol
   a.toy_safe_maxvol = type(max) == "number" and max >= 0 and max <= 100 and max % 1 == 0 and max or DEFAULT_KIDS_MAX
@@ -167,8 +173,11 @@ function device.update_config(doc, changes, opts)
   end
   -- the heart's short press (services.device.buttons); an unknown value keeps the current one
   if HEART_PRESS[changes.heart_press] then a.heart_press = changes.heart_press end
-  -- and the track knob's (song / both / wind), the same way
-  if KNOB_MODE[changes.knob_mode] then a.knob_mode = changes.knob_mode end
+  -- and the track knob's (song / both / wind), the same way; "start" (2.5.1-2.5.3) = song + held left
+  if changes.knob_mode == "start" then a.knob_mode, a.knob_restart = "song", true
+  elseif KNOB_MODE[changes.knob_mode] then a.knob_mode = changes.knob_mode end
+  -- the knob held left: back to the start (#40), its own switch; only a real boolean
+  if type(changes.knob_restart) == "boolean" then a.knob_restart = changes.knob_restart end
   local cmds = { { kind = "files.write", path = audiocfg_path(doc), doc = a, version = 1 } }
   -- louder headphones (util.hp_gain): only a real boolean, applied at once (kids mode still wins)
   if type(changes.hp_boost) == "boolean" and changes.hp_boost ~= audiocfg_of(doc).hp_boost then
@@ -556,7 +565,7 @@ local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, random_start = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
-                                              knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } },
+                                              knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } }, knob_restart = { type = "boolean" },
                                               continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
                                               upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, max_volume = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }

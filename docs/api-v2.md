@@ -215,6 +215,9 @@ Payload schema:
       "enum": ["song", "both", "wind", "start"],
       "type": "string"
     },
+    "knob_restart": {
+      "type": "boolean"
+    },
     "lights_off": {
       "type": "boolean"
     },

@@ -139,6 +139,25 @@ describe("services.device.buttons — presses and long presses", function()
     same(kinds(buttons.on_button(doc, { button = "next", down = false, now = 4 })), { "emit playback.next", "timer.cancel" })
   end)
 
+  it("its own switch (#40): held left 3 s -> back to the start with 'song' or 'both', never with 'wind'", function()
+    for _, mode in ipairs({ "nil", "song", "both" }) do
+      local doc = doc_with({ audiocfg = { volume = 40, knob_mode = mode ~= "nil" and mode or nil, knob_restart = true }, activity = { buttons = { prev = 0 } } })
+      assert_nil(buttons.on_tick(doc, { now = 2.5 }), mode)
+      same(kinds(buttons.on_tick(doc, { now = 3 })), { "emit playback.restart", "timer.cancel" })
+      doc.activity = { buttons = { prev = 0 } }
+      same(kinds(buttons.on_button(doc, { button = "prev", down = false, now = 1 })), { "emit playback.prev", "timer.cancel" })
+    end
+    -- switched off: the hold does nothing more than the original Jooki
+    local doc = doc_with({ audiocfg = { volume = 40, knob_mode = "both", knob_restart = false }, activity = { buttons = { prev = 0 } } })
+    assert_nil(buttons.on_tick(doc, { now = 4 }))
+    -- 'wind' keeps its hold to wind, even with the switch left on
+    doc = doc_with({ audiocfg = { volume = 40, knob_mode = "wind", knob_restart = true }, activity = { buttons = { prev = 0 } } })
+    same(kinds(buttons.on_tick(doc, { now = 4 })), { "emit playback.skip_request" })
+    -- 'both' with the switch: halfway still winds
+    doc = doc_with({ audiocfg = { volume = 40, knob_mode = "both", knob_restart = true }, activity = { buttons = { rew = 0 } } })
+    assert_eq(buttons.on_tick(doc, { now = 4 }).commands[1].event.seconds, -10)
+  end)
+
   it("'start' with the volume all the way down: the hold stays the parent-code gesture", function()
     local doc = doc_with({ audiocfg = { volume = 0, knob_mode = "start" }, activity = { buttons = { prev = 0 } } })
     assert_nil(buttons.on_tick(doc, { now = 3 }))

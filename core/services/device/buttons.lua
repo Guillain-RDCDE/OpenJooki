@@ -27,8 +27,10 @@ local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
 --          do_fwd / do_rev were never written)
 --   "both": halfway (fwd / rew, knobs_ctrl.c's zones between the centre and next / prev) winds the track
 --   "wind": the knob only winds, halfway or all the way (the heart can change the song)
---   "start": as "song", and held to the left for RESTART_HOLD_S: back to the start of the playlist,
---          an audiobook forgets its place (#40: the children do it themselves, without the page)
+-- And its own switch (audiocfg.knob_restart, #40), with "song" or "both": held to the left (all the
+-- way) for RESTART_HOLD_S, back to the start of the playlist, an audiobook forgets its place (the
+-- children do it themselves, without the page). Off in "wind", where that hold winds. 2.5.1 to 2.5.3
+-- stored it as a fourth mode, "start" (= "song" + the switch): still read that way here.
 -- Winding: after SEEK_HOLD_S held, SEEK_STEP_S at every tick. A turn all the way crosses the halfway
 -- zone in a blink, so it never winds there. In "wind", a short turn all the way winds once.
 local SEEK_HOLD_S, SEEK_STEP_S = 1, 10
@@ -37,6 +39,10 @@ local WINDERS = { song = {}, start = {}, both = { fwd = 1, rew = -1 }, wind = { 
 local function knob_mode(doc)
   local m = (doc.audiocfg or {}).knob_mode
   return WINDERS[m] and m or "song"
+end
+local function knob_restart(doc)
+  local a = doc.audiocfg or {}
+  return a.knob_mode == "start" or (a.knob_restart == true and knob_mode(doc) ~= "wind")
 end
 -- A short press on the heart (held 2 s it switches the Jooki off) does what the parents chose in
 -- Settings (audiocfg.heart_press): nothing, the next track, or pause / play.
@@ -144,7 +150,7 @@ function buttons.on_tick(doc, ev)
   local reset = act.buttons.prev and act.buttons.next and now - math.max(act.buttons.prev, act.buttons.next) >= LONG_RESET_S
   reset = reset or (act.buttons.prev and quiet and now - act.buttons.prev >= LONG_RESET_S)
   -- with the volume all the way down, this hold is the parent-code gesture above: it keeps going
-  if not quiet and knob_mode(doc) == "start" and act.buttons.prev and now - act.buttons.prev >= RESTART_HOLD_S then
+  if not quiet and knob_restart(doc) and act.buttons.prev and now - act.buttons.prev >= RESTART_HOLD_S then
     a2.buttons.prev = nil; changed = true   -- the release that follows does nothing
     cmds[#cmds + 1] = emit("playback.restart", { now = now })
   end

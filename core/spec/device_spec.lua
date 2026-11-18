@@ -237,6 +237,27 @@ describe("services.device — volume chain", function()
     r = device.update_config(doc, { knob_mode = "spin" })
     assert_eq(r.state.audiocfg.knob_mode, "wind")
   end)
+
+  it("held left, back to the start (#40): its own switch; 2.5.1-2.5.3's mode 'start' becomes 'song' + the switch", function()
+    local doc = doc_with()
+    assert_false(device.audiocfg_of(doc).knob_restart)
+    local r = device.update_config(doc, { knob_restart = true })
+    assert_true(r.state.audiocfg.knob_restart); assert_true(find(r, "files.write").doc.knob_restart)
+    doc.audiocfg = r.state.audiocfg
+    r = device.update_config(doc, { knob_mode = "both" })
+    assert_eq(r.state.audiocfg.knob_mode, "both"); assert_true(r.state.audiocfg.knob_restart)
+    doc.audiocfg = r.state.audiocfg
+    r = device.update_config(doc, { knob_restart = "yes" })
+    assert_true(r.state.audiocfg.knob_restart)
+    -- the old value, saved by 2.5.1-2.5.3 or sent by an older page
+    local old = device.audiocfg_of({ audiocfg = { knob_mode = "start" } })
+    assert_eq(old.knob_mode, "song"); assert_true(old.knob_restart)
+    r = device.update_config(doc_with(), { knob_mode = "start" })
+    assert_eq(r.state.audiocfg.knob_mode, "song"); assert_true(r.state.audiocfg.knob_restart)
+    local schema = require("api.schema")
+    assert_true(schema.validate({ knob_restart = true }, device.schemas.config))
+    assert_false(schema.validate({ knob_restart = 1 }, device.schemas.config))
+  end)
 end)
 
 describe("services.device — audio output / amplifier", function()

@@ -1,5 +1,10 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.5.4 (18 November 2026) — Back to the start, and winding too
+- **Back to the start is now its own switch.** *Settings → Jooki buttons → Held left 3 s: back to the start*. It works with *Next / previous song* and with winding halfway, so a child can wind a song and also start an audiobook over. It is greyed with *Wind the song*, where holding the knob winds. Jookis set to the old choice keep it, nothing to redo (#40, thank you aosavi).
+- **Plainer names.** The knob's *Both (halfway winds)* is now *Songs, and halfway winds*. Kids mode says that its limit is fixed by the factory, and how to choose your own: turn it off and set *Maximum volume*, for the speaker and the headphones (#10).
+- For the tinkerers: `audiocfg.knob_restart` (boolean, default off), set by `SET_CFG` / `device.set_config`. The mode `start` of 2.5.1-2.5.3 is still accepted and read as `song` + `knob_restart`.
+
 ## OpenJooki 2.5.3 (14 November 2026) — A volume in between
 - **A volume between kids mode and full.** Kids mode too quiet, and too loud without it? Turn kids mode off: *Settings → Volume and headphones → Maximum volume* appears just below. The knob won't go above it, on the speaker and on headphones. 100 % (the default) is no limit, so nothing changes until a parent moves it (#10).
 - For the tinkerers: `audiocfg.max_volume` (0-100, default 100), set by `SET_CFG` / `device.set_config` behind the parent code. It caps the volume while kids mode is off, like the night maximum, under the dial (`docs/30`).

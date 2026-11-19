@@ -165,6 +165,13 @@ H.PLAYLIST_UPDATE = function(doc, p)
     end
     return library.ops.playlist_update(l, args)
   end)
+  -- the songs keep playing where they now are: the player's places in the list follow them (#46)
+  local was = doc.library and doc.library.playlists[pl.id]
+  local now = r and r.state.library.playlists[pl.id]
+  if r and pl.tracks ~= nil and was and now then
+    local moved = playback.on_tracks_moved(doc, pl.id, was.tracks, now)
+    if moved then r.state.playback, r.state.playback_int = moved.playback, moved.playback_int end
+  end
   return r, err, { "db", "device" }
 end
 H.PLAYLIST_ADD_UPLOAD = function(doc, p)

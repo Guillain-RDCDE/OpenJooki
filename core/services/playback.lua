@@ -293,6 +293,45 @@ function playback.on_resume(doc, ev)
   return nil
 end
 
+--- A playlist's tracks were re-ordered (or some taken out): its songs keep playing, so the player's
+--- places in it (index, queue position, last played, memoised shuffle) follow them to their new
+--- positions (#46). `old` is the track-id list before, `p` the playlist after. Returns { playback,
+--- playback_int } to merge, or nil when this playlist is not the player's business.
+function playback.on_tracks_moved(doc, playlist_id, old, p)
+  local pb = pb_of(doc)
+  local new = p.tracks
+  local where = {}
+  for i = #new, 1, -1 do where[new[i]] = i end
+  local touched = false
+  local now = pb.now
+  if now and now.playlist == playlist_id and now.track and where[now.track] then
+    now.index = where[now.track]
+    touched = true
+  end
+  if pb.last[playlist_id] then
+    local moved = where[old[pb.last[playlist_id]]]
+    if moved then pb.last[playlist_id] = moved; touched = true end
+  end
+  local q = pb.shuffle[playlist_id]
+  if q then
+    local remapped, whole = {}, #q == #new
+    for pos, i in ipairs(q) do
+      remapped[pos] = where[old[i]]
+      whole = whole and remapped[pos] ~= nil
+    end
+    -- a song taken out (or one put in) is a different queue: it is drawn again on the next start
+    pb.shuffle[playlist_id] = whole and remapped or nil
+    touched = true
+  end
+  if not touched then return nil end
+  if now and now.playlist == playlist_id and now.track and where[now.track] then
+    local order = queue_for(doc, pb, playlist_id, p)
+    now.queue_pos = index_of(order, now.index) or now.queue_pos
+    now.has_next, now.has_prev = now.queue_pos < #order, now.queue_pos > 1
+  end
+  return st(pb)
+end
+
 function playback.on_toggle(doc, ev)
   if is_playing(doc) then return playback.on_pause(doc, ev) end
   return playback.on_resume(doc, ev)

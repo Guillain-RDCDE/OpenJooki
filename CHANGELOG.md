@@ -1,5 +1,11 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.5.6 (19 November 2026) — Off when nobody plays
+- **A page left open no longer keeps the Jooki on.** Paused from the app with its page still open in a background tab, the Jooki never switched itself off: the tab checks its connection every couple of minutes, and each check counted as someone using the Jooki. Now only what a person does counts, so it switches off after 15 minutes as it should (#47).
+- For the tinkerers: `services.device.power` no longer counts `GET_STATE`, `OJ_TIME` and v2 `state.get` as activity (`power.on_command`); every other command still does.
+
+Thanks again to [@fredicious](https://github.com/fredicious), who tracked it down on his Jooki and wrote the fix (#49).
+
 ## OpenJooki 2.5.5 (19 November 2026) — Moving songs around
 - **Moving songs keeps the right one lit.** After moving a song in a playlist while it played, the page could show another song as playing. The playing song now stays marked where it went, and next and previous follow the new order (#46).
 - For the tinkerers: `PLAYLIST_UPDATE` with new `tracks` remaps the player's places in that list by track id (`playback.on_tracks_moved`: `now.index`, `now.queue_pos`, `last`, the shuffle). A song taken out or put in draws the shuffle again.

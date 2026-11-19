@@ -22,6 +22,10 @@
       })
       .catch(cont);
   }
+  function busyInBackground() {
+    return upd.state === 'running' || upd.state === 'rebooting'
+      || uploads.some(function (u) { return /^(queued|converting|uploading|processing)$/.test(u.status); });
+  }
   function connect() {
     clearTimeout(retryTimer);
     if (client) { try { client.onclose = function () {}; client.close(); } catch (e) {} }
@@ -42,6 +46,11 @@
       online = false;
       uploads.forEach(function (u) { if (u.status === 'processing') u.lost = true; });
       if (was || !everOnline) render();
+      // A tab in the background: the browser runs its timers once a minute, the pings come too late
+      // and the Jooki drops the connection. Connecting again from there every couple of minutes kept
+      // the Jooki awake (#47): wait until the tab is in front again (checkAlive), unless an update or
+      // an upload needs following.
+      if (document.hidden && everOnline && !busyInBackground()) return;
       retryTimer = setTimeout(connect, retryDelay);
       retryDelay = Math.min(retryDelay * 1.6, 8000);
     };

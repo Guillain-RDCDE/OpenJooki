@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## Next release
+- **A page in a background tab stays quiet.** Left behind another tab, the Jooki's page was connecting again every couple of minutes. Now it waits until you come back to it, then connects at once. Only an update or an upload in progress keeps it connecting in the background (#47).
+- For the tinkerers: a hidden tab's timers run once a minute, so its MQTT pings came too late and the broker dropped it. `05-connection.js` no longer schedules a reconnection while `document.hidden`; `checkAlive` reconnects on `visibilitychange`. New bench suite `test_hidden_tab.py`.
+
 ## OpenJooki 2.5.6 (19 November 2026) — Off when nobody plays
 - **A page left open no longer keeps the Jooki on.** Paused from the app with its page still open in a background tab, the Jooki never switched itself off: the tab checks its connection every couple of minutes, and each check counted as someone using the Jooki. Now only what a person does counts, so it switches off after 15 minutes as it should (#47).
 - For the tinkerers: `services.device.power` no longer counts `GET_STATE`, `OJ_TIME` and v2 `state.get` as activity (`power.on_command`); every other command still does.

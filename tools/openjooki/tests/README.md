@@ -39,6 +39,7 @@ python3 test_knob_start.py                     # the knob held left: back to the
 python3 test_guard.py                          # oj-guard.sh under busybox: a core that does not answer, back to the other partition, never in a loop
 python3 test_ha_connect.py                     # Home Assistant connecting: a loaded song stays, a sound gives it back
 python3 test_page_steady.py                    # a position report redraws nothing, a real change does
+python3 test_hidden_tab.py                     # a page in a background tab does not connect again by itself (#47); back in front it does
 python3 test_random_playlist_ui.py             # repeated playlist Play, inherited overrides and audiobook positions
 python3 test_web_names_page.py                # other addresses (#45): own DNS names, refused then listed, in Chromium
 python3 test_random_spotify_bus.py             # confirmed mute, delayed metadata/shuffle, fresh starts and fast resume

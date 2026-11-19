@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.4:** back to the start with the track knob is its own switch, and works with winding too (#40).
-2.5.3: a maximum volume with kids mode off, between kids mode and full volume (#10).
+**New in 2.5.5:** moving a song in a playlist keeps the playing one lit.
+2.5.4: back to the start with the track knob is its own switch, and works with winding too (#40).
 [All the changes](CHANGELOG.md)
 
 ---

@@ -1,5 +1,11 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.5.5 (19 November 2026) — Moving songs around
+- **Moving songs keeps the right one lit.** After moving a song in a playlist while it played, the page could show another song as playing. The playing song now stays marked where it went, and next and previous follow the new order (#46).
+- For the tinkerers: `PLAYLIST_UPDATE` with new `tracks` remaps the player's places in that list by track id (`playback.on_tracks_moved`: `now.index`, `now.queue_pos`, `last`, the shuffle). A song taken out or put in draws the shuffle again.
+
+Thanks to [@fredicious](https://github.com/fredicious), who found it and wrote the fix (#48).
+
 ## OpenJooki 2.5.4 (18 November 2026) — Back to the start, and winding too
 - **Back to the start is now its own switch.** *Settings → Jooki buttons → Held left 3 s: back to the start*. It works with *Next / previous song* and with winding halfway, so a child can wind a song and also start an audiobook over. It is greyed with *Wind the song*, where holding the knob winds. Jookis set to the old choice keep it, nothing to redo (#40, thank you aosavi).
 - **Plainer names.** The knob's *Both (halfway winds)* is now *Songs, and halfway winds*. Kids mode says that its limit is fixed by the factory, and how to choose your own: turn it off and set *Maximum volume*, for the speaker and the headphones (#10).

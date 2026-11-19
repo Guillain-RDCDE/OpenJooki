@@ -130,6 +130,22 @@ function power.on_activity(doc, ev)
   return { state = { activity = a2 } }
 end
 
+-- What a page sends by itself, whoever holds the Jooki: asking for the state and giving the time, at
+-- every (re)connection, a few minutes apart for as long as the page is open (#47). Counting them as
+-- activity kept a Jooki paused from the app awake for ever, the page still open in a tab.
+local PASSIVE = { GET_STATE = true, OJ_TIME = true, ["state.get"] = true }
+
+--- A command from a page (v1) or an app (v2): activity, unless it only reads or gives the time.
+function power.on_command(doc, ev)
+  local name = ev.name
+  if name == nil and ev.type == "api.cmd" then
+    local ok, msg = pcall(require("vendor.json").decode, ev.raw or "")
+    name = ok and type(msg) == "table" and msg.type or nil
+  end
+  if PASSIVE[name] then return nil end
+  return power.on_activity(doc, ev)
+end
+
 -- ------------------------------------------------------------------ power off
 local POWEROFF_FRAME_S = 0.15
 function power.on_off_request(doc, ev)
@@ -219,7 +235,8 @@ function power.install(api, dispatch)
   dispatch.on("power.off_request", "device.power", power.on_off_request)
   dispatch.on("shutdown.request", "device.power", power.on_shutdown_request)
   dispatch.on("host.terminating", "device.power", function(doc) return power.on_shutdown_request(doc, { reason = "signal" }) end)
-  for _, t in ipairs({ "nfc.tag", "api.cmd", "v1.cmd", "playback.request" }) do dispatch.on(t, "device.power", power.on_activity) end
+  for _, t in ipairs({ "nfc.tag", "playback.request" }) do dispatch.on(t, "device.power", power.on_activity) end
+  for _, t in ipairs({ "api.cmd", "v1.cmd" }) do dispatch.on(t, "device.power", power.on_command) end
   api.command("device.power_off", nil,function(doc, _, ev) return power.on_off_request(doc, { reason = "page", now = ev.now }) end)
 end
 

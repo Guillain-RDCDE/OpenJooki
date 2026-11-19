@@ -125,3 +125,30 @@ describe("services.device.power — boot", function()
     assert_nil(power.on_boot(doc_with(), { now = 5 }).state.power.connected)
   end)
 end)
+
+describe("services.device.power — an open page does not keep the Jooki awake (#47)", function()
+  local function cmd(type_, name, raw) return { type = type_, name = name, raw = raw, now = 500 } end
+
+  it("a page asking for the state or sending the time is not someone using the Jooki", function()
+    local doc = doc_with({ activity = { last = 100 } })
+    assert_nil(power.on_command(doc, cmd("v1.cmd", "GET_STATE", "{}")))
+    assert_nil(power.on_command(doc, cmd("v1.cmd", "OJ_TIME", '{"utc":1795116745}')))
+    assert_nil(power.on_command(doc, cmd("api.cmd", nil, '{"id":"1","type":"state.get"}')))
+  end)
+
+  it("any other command still counts: a pause from the app, a v2 command", function()
+    local doc = doc_with({ activity = { last = 100 } })
+    assert_eq(power.on_command(doc, cmd("v1.cmd", "DO_PAUSE", "{}")).state.activity.last, 500)
+    assert_eq(power.on_command(doc, cmd("api.cmd", nil, '{"id":"1","type":"playback.pause"}')).state.activity.last, 500)
+    assert_eq(power.on_command(doc, cmd("api.cmd", nil, "not json")).state.activity.last, 500)
+  end)
+
+  it("a page polling every two minutes no longer holds the 15 minute power-off back", function()
+    local doc = doc_with({ activity = { last = 100 }, playback = { state = "paused" }, power = { connected = false } })
+    for t = 220, 1000, 120 do
+      local r = power.on_command(doc, cmd("v1.cmd", "GET_STATE", "{}"))
+      assert_nil(r)
+    end
+    assert_true(has(power.on_inactivity(doc, { now = 1001 }), "emit"))
+  end)
+end)

@@ -176,6 +176,7 @@ if config.get("http_port") > 0 then
     log = function(key, fields) log.info(key, fields) end,
     on_upload = function(n) log.info("httpd.upload", { parts = n }) end,
     extra = function(method, path, headers, body) return upnp_net:http(state.doc(), method, path, headers, body, clock.now()) end,
+    relay_dir = config.get("relay_dir") ~= "" and config.get("relay_dir") or nil,
   })
   local ok, err = httpd:start()
   if not ok then

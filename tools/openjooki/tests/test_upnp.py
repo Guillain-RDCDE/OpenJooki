@@ -12,7 +12,7 @@ The bench's Jooki has the address 10.0.0.2 (setup.sh): the descriptions say it, 
 127.0.0.1.
   python3 test_upnp.py
 """
-import http.client, http.server, json, re, socket, threading, time
+import http.client, http.server, json, os, re, socket, ssl, subprocess, tempfile, threading, time, urllib.error, urllib.request
 import xml.etree.ElementTree as ET
 import bench as B
 
@@ -110,6 +110,34 @@ def last_change(path):
         return {x.tag.split("}")[-1]: x.get("val") for x in ET.fromstring(lc).iter() if x.get("val") is not None}
     return {}
 
+
+# --- an https song server of our own (U15, #50): its certificate is the only one the core's curl trusts
+TLS = tempfile.mkdtemp(prefix="oj-upnp-tls-")
+subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "2", "-subj", "/CN=127.0.0.1",
+                "-addext", "subjectAltName=IP:127.0.0.1", "-keyout", TLS + "/key.pem", "-out", TLS + "/cert.pem"],
+               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+os.environ["CURL_CA_BUNDLE"] = TLS + "/cert.pem"          # handed down to the core, then to its curl
+TUNE = os.urandom(700 * 1024)
+
+
+class Tls(http.server.BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+    def do_GET(s):
+        if s.path == "/go":                                  # a CDN that redirects first
+            s.send_response(302); s.send_header("Location", "/tune.flac"); s.send_header("Content-Length", "0"); s.end_headers(); return
+        if s.path != "/tune.flac":
+            s.send_response(404); s.send_header("Content-Length", "0"); s.end_headers(); return
+        s.send_response(200); s.send_header("Content-Type", "audio/flac"); s.send_header("Content-Length", str(len(TUNE))); s.end_headers()
+        for i in range(0, len(TUNE), 64 * 1024):            # slowly: the player reads while it comes
+            s.wfile.write(TUNE[i:i + 64 * 1024]); s.wfile.flush(); time.sleep(0.15)
+    def log_message(s, *a): pass
+
+
+tls_srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Tls)
+ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); ctx.load_cert_chain(TLS + "/cert.pem", TLS + "/key.pem")
+tls_srv.socket = ctx.wrap_socket(tls_srv.socket, server_side=True)
+TLS_PORT = tls_srv.server_address[1]
+threading.Thread(target=tls_srv.serve_forever, daemon=True).start()
 
 j = B.boot(seed=True)
 audio_out = B.Spy("/j/audio/out/#", name="upnp-audio")
@@ -252,10 +280,47 @@ R.expect("U11 the new song plays at once", lambda: j.np.get("uri") == SONG2 and 
 j.c.publish("/j/audio/input/error", json.dumps({"id": 7}))
 R.expect("U11b a player error: STOPPED, the event says it", lambda: state() == "STOPPED" and last_change("/avt").get("TransportState") == "STOPPED", 5,
          lambda: (state(), last_change("/avt")))
-check("U11b https is refused at once (no TLS in the Jooki's player)",
-      avt("SetAVTransportURI", ("CurrentURI", "https://cdn.example/a.flac"), ("CurrentURIMetaData", ""))[2] == 714)
 avt("Play", ("Speed", "1"))
 R.expect("U11b Play again after the error", lambda: state() == "PLAYING", 5, state)
+
+# --- U15 https (TIDAL, Qobuz...): curl fetches it, the player reads it from the Jooki's own web server (#50)
+HSONG = "https://127.0.0.1:%d/go" % TLS_PORT
+n = audio_out.mark()
+st, out, code = avt("SetAVTransportURI", ("CurrentURI", HSONG), ("CurrentURIMetaData", ""))
+check("U15 an https song is taken", st == 200 and code is None, (st, out, code))
+R.expect("U15 it plays at once, from the Jooki itself (127.0.0.1, /relay/)",
+         lambda: any(t == "/j/audio/out/play" and re.match(r"^7\thttp://127\.0\.0\.1:%d/relay/\d+$" % HTTP, p) for t, p in audio_out.since(n)), 5,
+         lambda: audio_out.since(n))
+relay = next(p.split("\t", 1)[1] for t, p in audio_out.since(n) if t == "/j/audio/out/play")
+R.expect("U15 the app and the page still see its own address", lambda: avt("GetMediaInfo")[1].get("CurrentURI") == HSONG and j.np.get("uri") == HSONG, 5,
+         lambda: (avt("GetMediaInfo")[1].get("CurrentURI"), j.np.get("uri")))
+t0 = time.time()
+with urllib.request.urlopen(relay, timeout=30) as resp:     # what the player does: read it all, while curl still fetches
+    first = resp.read(1024); took_first = time.time() - t0
+    got = first + resp.read()
+    head_len, head_type = resp.headers.get("Content-Length"), resp.headers.get("Content-Type")
+check("U15 the player gets the song whole, after the redirect", got == TUNE, (len(got), len(TUNE)))
+check("U15 with its length and type", head_len == str(len(TUNE)) and head_type == "audio/flac", (head_len, head_type))
+check("U15 the first bytes come before the whole song is there (about 1.6 s)", took_first < 1.0, took_first)
+rq = urllib.request.Request(relay, headers={"Range": "bytes=500000-"})
+with urllib.request.urlopen(rq, timeout=10) as resp:
+    part, cr, part_st = resp.read(), resp.headers.get("Content-Range"), resp.status
+check("U15 a seek (a range) gets the rest from there", part_st == 206 and part == TUNE[500000:] and cr == "bytes 500000-%d/%d" % (len(TUNE) - 1, len(TUNE)), (part_st, cr, len(part)))
+n = audio_out.mark()
+avt("SetAVTransportURI", ("CurrentURI", "https://127.0.0.1:%d/nothing.flac" % TLS_PORT), ("CurrentURIMetaData", ""))
+R.expect("U15 a song its server refuses: the player is told it is not there (502)",
+         lambda: any(t == "/j/audio/out/play" for t, p in audio_out.since(n)), 5, lambda: audio_out.since(n))
+bad = next(p.split("\t", 1)[1] for t, p in audio_out.since(n) if t == "/j/audio/out/play")
+try:
+    urllib.request.urlopen(bad, timeout=40); bad_st = 200
+except urllib.error.HTTPError as e:
+    bad_st = e.code
+check("U15 ... 502", bad_st == 502, bad_st)
+check("U15 one song on the card at a time", len([f for f in os.listdir("/jooki/external/oj-relay") if re.match(r"^r-\d+$", f)]) == 1,
+      os.listdir("/jooki/external/oj-relay"))
+avt("SetAVTransportURI", ("CurrentURI", SONG2), ("CurrentURIMetaData", ""))
+avt("Play", ("Speed", "1"))                                  # stopped or playing, it plays now
+R.expect("U15 back to an http song", lambda: j.np.get("uri") == SONG2 and state() == "PLAYING" and j.pb == "PLAYING", 5, lambda: (j.np, state(), j.pb))
 
 # --- U12 Stop, unsubscribe, then off
 check("U12 Stop", avt("Stop")[0] == 200)

@@ -18,6 +18,12 @@ local function is_update_url(s)
           or s:match("^http://127%.0%.0%.1:%d+/")) ~= nil
 end
 shell.is_update_url = is_update_url
+-- the relay (#50): a whole number, and an https address with nothing a shell or curl could read as more
+local function is_relay_id(n) return type(n) == "number" and n % 1 == 0 and n >= 1 and n <= 1000000000 end
+local function is_relay_url(s)
+  return type(s) == "string" and #s <= 2048 and s:match("^https://[%w%[]") ~= nil and not s:find("[%c%s'\"\\`]")
+end
+shell.is_relay_url = is_relay_url
 
 -- name -> { argv = function(args) -> list | nil, err ; background = bool }
 shell.ACTIONS = {
@@ -137,6 +143,28 @@ S="$1"; L="$2"; U="$3"; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updatin
 if curl -fsSL --max-time 60 "$U" -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> "$S"; fi
 rm -f /tmp/oj-updating]], "update_start", a.status, a.link, a.url } end, background = true },
   df             = { argv = function(a) if not is_path(a.dir) then return nil, "bad path" end return { "df", "-k", a.dir } end },
+  -- a song an app sent over https (#50): the player has no TLS, curl has. curl writes it to the music
+  -- card as it comes, and the web server hands it to the player over http while it grows
+  -- (adapters.httpd /relay/). One at a time: the one before is stopped and removed.
+  relay_start    = { argv = function(a)
+    if not is_path(a.dir) or not is_relay_id(a.id) or not is_relay_url(a.url) then return nil, "bad relay" end
+    if type(a.max_bytes) ~= "number" or a.max_bytes < 1 or a.max_bytes % 1 ~= 0 then return nil, "bad relay" end
+    return { "sh", "-c", [=[
+D="$1"; F="$1/r-$2"; U="$3"; M="$4"
+mkdir -p "$D" || exit 1
+for p in "$D"/r-*.pid; do
+  C=$(cat "$p" 2>/dev/null)
+  case "$C" in ''|*[!0-9]*) ;; *) tr '\000' ' ' < "/proc/$C/cmdline" 2>/dev/null | grep -q '^curl ' && kill "$C" 2>/dev/null ;; esac
+done
+rm -f "$D"/r-*
+: > "$F"
+(
+  curl -sSL --fail --proto =https --proto-redir =https --connect-timeout 15 --max-filesize "$M" -D "$F.h" -o "$F" "$U" </dev/null >/dev/null 2>"$F.err" &
+  C=$!; echo "$C" > "$F.pid"
+  wait "$C"; echo "$?" > "$F.end"; rm -f "$F.pid"
+) </dev/null >/dev/null 2>&1 &
+exit 0]=], "relay_start", a.dir, tostring(a.id), a.url, string.format("%d", a.max_bytes) }
+  end, background = true },
   -- the logs the original system piled up (docs/20): the Papertrail queue and the never-rotated file, once at boot;
   -- and the Wi-Fi chip's dumps of its network slots (name and password in hex), which syslog-ng.conf now drops:
   -- rewritten in place (cat >), as syslog-ng keeps today's file open

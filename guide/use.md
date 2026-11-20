@@ -209,8 +209,9 @@ Apps on your phone, or a music server at home, can send music to the Jooki over 
   name). For example **BubbleUPnP** on Android, **mconnect** on iPhone, or your NAS's music app.
 - **TIDAL, Qobuz**: through an app that can send them to other speakers (BubbleUPnP and mconnect
   can). TIDAL's own app cannot: TIDAL keeps that for the speakers of its partner brands.
-- **What it plays**: MP3, FLAC, Ogg and WAV. Not AAC: most apps convert by themselves. The app
-  must send plain `http://` addresses: the Jooki cannot open `https://` ones.
+- **What it plays**: MP3, FLAC, Ogg and WAV. Not AAC: most apps convert by themselves.
+  Secure `https://` songs work too: the Jooki first fetches them onto its card, a few seconds
+  before the music starts.
 - **One sound at a time**: put a token on and it takes over; press play in the app to take it back.
   The heart button, the page and the volume work as usual.
 

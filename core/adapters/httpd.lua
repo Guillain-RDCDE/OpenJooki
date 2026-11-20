@@ -4,6 +4,8 @@
 -- /upnp/, handed whole to opts.extra (adapters.upnp: the UPnP player's descriptions, its SOAP
 -- control and its event subscriptions, #29), with a small body (64 KiB at most). The realtime channel
 -- stays on the MQTT WebSocket (port 8000, mosquitto); this server is only files + upload.
+-- And /relay/<n>, to the player on this Jooki only (127.0.0.1): an https song an app sent (#50), that
+-- curl writes to the card (adapters.shell relay_start) and that is handed over while it grows.
 --
 --   local h = require("adapters.httpd").new({ port=80, docroot=..., uploads_dir=..., name=fn, log=fn })
 --   h:start()                    -> true | nil, err   (bind + listen; nil if LuaSocket is missing)
@@ -35,6 +37,8 @@ local MAX_HEAD = 16 * 1024               -- a request head over this is refused
 local MAX_UPLOAD = 200 * 1024 * 1024     -- an upload body over this is refused
 local MAX_SMALL_BODY = 64 * 1024          -- a /upnp/ request body over this is refused
 local CONN_TIMEOUT = 30                   -- a connection idle this long is dropped
+local RELAY_HEAD_WAIT = 30                -- /relay/: the song's server has this long to answer
+local RELAY_TIMEOUT = 3600                -- /relay/: the player reads as it plays, a paused one reads nothing
 local MAX_CONNS = 24
 
 function httpd.new(opts)
@@ -48,6 +52,7 @@ function httpd.new(opts)
     log = opts.log or function() end,
     on_upload = opts.on_upload,
     extra = opts.extra,                   -- function(method, path, headers, body) -> status, ctype, body, header lines | nil
+    relay_dir = opts.relay_dir,           -- curl's folder for /relay/ (nil = no /relay/)
     server = nil, conns = {}, socket_lib = nil,
   }, httpd)
 end
@@ -145,13 +150,10 @@ end
 
 -- Build the response head (a string). Body is either `body` (string) or streamed from `file`.
 local function head(status, ctype, len, extra, cache)
-  local lines = {
-    "HTTP/1.1 " .. status,
-    "Content-Type: " .. ctype,
-    "Content-Length: " .. tostring(len),
-    "Connection: close",
-    cache or "Cache-Control: no-cache",
-  }
+  local lines = { "HTTP/1.1 " .. status, "Content-Type: " .. ctype }
+  if len then lines[#lines + 1] = "Content-Length: " .. tostring(len) end   -- nil: a /relay/ song of unknown size
+  lines[#lines + 1] = "Connection: close"
+  lines[#lines + 1] = cache or "Cache-Control: no-cache"
   for _, l in ipairs(extra or {}) do lines[#lines + 1] = l end
   return table.concat(lines, "\r\n") .. "\r\n\r\n"
 end
@@ -182,6 +184,8 @@ function httpd:route(c)
     return respond_text(c, "421 Misdirected Request", "bad host", "text/plain")
   end
   if self.extra and c.path:gsub("%?.*$", ""):sub(1, 6) == "/upnp/" then return self:begin_extra(c) end
+  local rid = c.path:match("^/relay/(%d+)$")
+  if rid and #rid <= 10 and self.relay_dir and (c.method == "GET" or c.method == "HEAD") then return self:begin_relay(c, rid, c.last or 0) end
   if c.method == "GET" or c.method == "HEAD" then
     local path = safe_path(self.docroot, c.path)
     if not path then return respond_text(c, "400 Bad Request", "bad path", "text/plain") end
@@ -320,6 +324,114 @@ function httpd:finish_upload(c)
   return respond_text(c, "200 OK", "OK", "text/plain")
 end
 
+-- ---- /relay/<n>: an https song curl is fetching to the card (#50) ------------------
+local function read_all(path)
+  local f = io.open(path, "rb")
+  if not f then return nil end
+  local d = f:read("*a"); f:close()
+  return d
+end
+
+--- curl's -D file: the last complete answer (redirects come first) -> status code, length, type
+local function relay_answer(hdr)
+  local code, len, ctype
+  local pos = 1
+  while true do
+    local e = hdr:find("\r\n\r\n", pos, true)
+    if not e then break end
+    local block = hdr:sub(pos, e - 1); pos = e + 4
+    local n = tonumber(block:match("^HTTP/[%d%.]+ (%d%d%d)"))
+    if n then
+      code, len, ctype = n, nil, nil
+      for k, v in block:gmatch("\r\n([%w%-]+):%s*([^\r\n]*)") do
+        k = k:lower()
+        if k == "content-length" then len = tonumber(v) elseif k == "content-type" then ctype = v end
+      end
+    end
+  end
+  return code, len, ctype
+end
+httpd._relay_answer = relay_answer   -- tests only
+
+-- only the player on this Jooki: never a phone on the Wi-Fi
+function httpd:begin_relay(c, id, now)
+  local peer = c.sock.getpeername and c.sock:getpeername()
+  if peer ~= "127.0.0.1" then return respond_text(c, "404 Not Found", "not found", "text/plain") end
+  c.relay = { base = self.relay_dir .. "/r-" .. id, t0 = now }
+  c.phase = "relay_wait"
+  return self:relay_ready(c, now)
+end
+
+local function relay_fail(c, now, status, text, extra)
+  c.relay, c.last = nil, now   -- now an ordinary answer: its own clock starts
+  return respond_text(c, status, text, "text/plain", extra)
+end
+
+--- Waiting for the song's server: once it has answered, the head (with the range the player asked for)
+function httpd.relay_ready(_, c, now)   -- a method (self:relay_ready), self unused
+  local r = c.relay
+  local ended = file_size(r.base .. ".end") ~= nil
+  local code, len, ctype = relay_answer(read_all(r.base .. ".h") or "")
+  if not code or (code >= 300 and code < 400) or code < 200 then
+    if ended or now - r.t0 > RELAY_HEAD_WAIT then return relay_fail(c, now, "502 Bad Gateway", "the song's server did not answer") end
+    return
+  end
+  if code >= 300 then return relay_fail(c, now, "502 Bad Gateway", "the song's server said " .. code) end
+  local from, to = (c.headers["range"] or ""):match("^bytes=(%d+)%-(%d*)$")
+  from, to = tonumber(from), tonumber(to)
+  local status, length, extra = "200 OK", len, {}
+  if len then extra[#extra + 1] = "Accept-Ranges: bytes" end
+  if from and len then
+    if from >= len then return relay_fail(c, now, "416 Range Not Satisfiable", "", { "Content-Range: bytes */" .. len }) end
+    to = math.min(to or (len - 1), len - 1)
+    status, length = "206 Partial Content", to - from + 1
+    extra[#extra + 1] = string.format("Content-Range: bytes %d-%d/%d", from, to, len)
+  else
+    from, to = 0, len and (len - 1) or nil
+  end
+  c.out = head(status, ctype or "application/octet-stream", length, extra)
+  c.out_off, c.out_file = 1, nil
+  r.off, r.to, r.done = from, to, c.method == "HEAD"
+  c.phase, c.last = "resp", now
+end
+
+--- The next piece the card has; none yet: wait for curl (tick), all of it: done
+function httpd:relay_send(c)
+  local r = c.relay
+  if r.to and r.off > r.to then return self:close_conn(c) end
+  local ended = file_size(r.base .. ".end") ~= nil   -- before the size: curl may write its last bytes in between
+  local size = file_size(r.base)
+  if not size then return self:close_conn(c) end      -- removed: another song took its place
+  local want = size - r.off
+  if r.to then want = math.min(want, r.to - r.off + 1) end
+  if want <= 0 then
+    if ended then return self:close_conn(c) end
+    c.phase = "relay_starved"; return
+  end
+  if not r.f then
+    r.f = io.open(r.base, "rb")
+    if not r.f then return self:close_conn(c) end
+  end
+  r.f:seek("set", r.off)
+  local chunk = r.f:read(math.min(want, READ_CHUNK))
+  if not chunk or #chunk == 0 then c.phase = "relay_starved"; return end
+  local i, serr, last = c.sock:send(chunk)
+  if serr == "closed" then return self:close_conn(c) end
+  local sent = i or last or 0
+  r.off = r.off + #chunk
+  if sent < #chunk then c.out = chunk:sub(sent + 1); c.out_off = 1 end
+end
+
+--- each turn: an answer may have come, or more of the song
+function httpd:relay_tick(c, now)
+  if c.phase == "relay_wait" then return self:relay_ready(c, now) end
+  if c.phase == "relay_starved" then
+    local r = c.relay
+    local size = file_size(r.base)
+    if not size or size > r.off or file_size(r.base .. ".end") then c.phase = "resp" end
+  end
+end
+
 -- ---- connection lifecycle ---------------------------------------------------
 function httpd:accept(now)
   while true do
@@ -343,6 +455,7 @@ end
 function httpd:close_conn(c)
   if c.up and c.up.file then pcall(function() c.up.file:close() end) end
   if c.out_file then pcall(function() c.out_file:close() end) end
+  if c.relay and c.relay.f then pcall(function() c.relay.f:close() end) end
   pcall(function() c.sock:close() end)
   self.conns[c.sock] = nil
 end
@@ -392,6 +505,7 @@ function httpd:on_writable(c, now)
     elseif serr == "closed" then return self:close_conn(c) end
     if c.out_off <= #c.out then return end   -- more head to send next time
   end
+  if c.relay and not c.relay.done then return self:relay_send(c) end
   if c.out_file then
     local chunk = c.out_file:read(READ_CHUNK)
     if not chunk then c.out_file:close(); c.out_file = nil; return self:close_conn(c) end
@@ -439,7 +553,8 @@ function httpd:tick(now)
     if self:start() then self.retry_at, self.retry_s = nil, nil else self:retry_later(now) end
   end
   for _, c in pairs(self.conns) do
-    if now - (c.last or now) > CONN_TIMEOUT then self:close_conn(c) end
+    if c.relay then self:relay_tick(c, now) end
+    if self.conns[c.sock] and now - (c.last or now) > (c.relay and RELAY_TIMEOUT or CONN_TIMEOUT) then self:close_conn(c) end
   end
 end
 

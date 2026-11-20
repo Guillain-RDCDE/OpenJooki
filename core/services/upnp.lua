@@ -494,10 +494,16 @@ function upnp.request(doc, key, action, args)
   if action == "GetCurrentTransportActions" then return out({ { "Actions", upnp.transport_actions(doc) } }) end
   if action == "SetAVTransportURI" then
     local uri = tostring(args.CurrentURI or ""):gsub("^%s+", ""):gsub("%s+$", "")
-    -- http only: the Jooki's player has no TLS (no GIO TLS module in the image), an https song
-    -- would never start; refused at once, the app can say it (or send it through its own proxy)
-    if uri:match("^https://") then return fault(714, "Illegal MIME-type: https is not supported, http only") end
-    if not uri:match("^http://[%w%[]") or #uri > 2048 or uri:find("[%c ]") then return fault(714, "Illegal MIME-type") end
+    -- The Jooki's player has no TLS (no GIO TLS module in the image): an https song (TIDAL, Qobuz...)
+    -- goes through curl and our web server (services.playback.play_uri, #50). Without a relay folder
+    -- it is refused at once, the app can say it (or send it through its own proxy).
+    local relay = doc.config and doc.config.relay_dir
+    if uri:match("^https://") and not (type(relay) == "string" and relay ~= "") then
+      return fault(714, "Illegal MIME-type: https is not supported, http only")
+    end
+    if not uri:match("^https?://[%w%[]") or #uri > 2048 or uri:find("[%c ]") then return fault(714, "Illegal MIME-type") end
+    -- what curl gets (adapters.shell relay_start checks it again): nothing a shell could read as more
+    if uri:match("^https://") and uri:find("[%s'\"\\`]") then return fault(714, "Illegal MIME-type") end
     local info = upnp.didl_info(args.CurrentURIMetaData)
     if not upnp.mime_ok(info.mime) then return fault(714, "Illegal MIME-type") end
     local r = out({})

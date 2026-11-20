@@ -2,6 +2,8 @@
 
 ## Next release
 - **A page in a background tab stays quiet.** Left behind another tab, the Jooki's page was connecting again every couple of minutes. Now it waits until you come back to it, then connects at once. Only an update or an upload in progress keeps it connecting in the background (#47).
+- **TIDAL and Qobuz from an app.** *Play from other apps* now takes secure (`https://`) songs too, which is what TIDAL and Qobuz send through BubbleUPnP or mconnect. Until now the Jooki refused them: its player cannot open them. The Jooki now fetches the song onto its card and plays it as it comes, seeks included (#50).
+- For the tinkerers (https): curl fetches the song to `relay_dir` (`/jooki/external/oj-relay`, one song at a time, `relay_max_mb` 600), and `adapters.httpd` serves it to the player on `127.0.0.1` at `/relay/<n>` while it grows, with ranges. Without `relay_dir`, https is refused (714) as before. New bench step U15 (`test_upnp.py`, a real https server, redirect, range, 502).
 - For the tinkerers: a hidden tab's timers run once a minute, so its MQTT pings came too late and the broker dropped it. `05-connection.js` no longer schedules a reconnection while `document.hidden`; `checkAlive` reconnects on `visibilitychange`. New bench suite `test_hidden_tab.py`.
 
 ## OpenJooki 2.5.6 (19 November 2026) — Off when nobody plays

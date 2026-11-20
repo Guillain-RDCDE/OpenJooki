@@ -26,7 +26,7 @@ local volume_test = require("services.device.volume_test")
 local MUSIC, SOUND = 7, 3
 local BACK_PAUSE, BACK_TIMER, MIN_BACK = resume_rules.BACK_PAUSE, resume_rules.BACK_TIMER, resume_rules.MIN_BACK
 local AUDIO_OUT = "/j/audio/out/"
-local INT = { song_replaced = true, last = true, shuffle = true, seed = true, sys = true, resume_dirty = true }   -- the playback_int keys
+local INT = { song_replaced = true, last = true, shuffle = true, seed = true, sys = true, resume_dirty = true, relay_seq = true }   -- the playback_int keys
 
 local copy, emit, is_playing = util.copy, util.emit, util.is_playing
 local queue_for, index_of, modes = queue.queue_for, queue.index_of, queue.modes
@@ -184,7 +184,7 @@ function playback.load_song_again(pb, cmds)
   pb.sys = nil   -- "play" ends a sound still going, and the engine may not report it
   pb.state = "starting"
   pb.resume_ms = (pb.now.service ~= "STREAM" and position > 0) and position or nil
-  cmds[#cmds + 1] = cmd_audio("play", MUSIC, pb.now.uri)
+  cmds[#cmds + 1] = cmd_audio("play", MUSIC, pb.now.relay_uri or pb.now.uri)
   cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
 end
 
@@ -240,12 +240,26 @@ function playback.play_uri(doc, uri, info)
     cmds[#cmds + 1] = cmd_audio("stop", MUSIC)
   end
   pb.song_replaced = nil
-  pb.now = { service = "UPNP", uri = uri, title = info.title, artist = info.artist, album = info.album,
-             image = info.image, duration_ms = math.floor(tonumber(info.duration_ms) or 0),
+  -- https (#50): the player has no TLS. curl fetches the song and our web server hands it over as it
+  -- comes (adapters.httpd /relay/); the same song again (a resume) reuses what is already there.
+  local engine_uri = uri
+  if uri:match("^https://") then
+    local was = pb.now and pb.now.service == "UPNP" and pb.now.uri == uri and pb.now.relay_uri
+    if was then engine_uri = was
+    else
+      local cfg = doc.config or {}
+      pb.relay_seq = (tonumber(pb.relay_seq) or 0) % 1000000000 + 1
+      engine_uri = string.format("http://127.0.0.1:%d/relay/%d", tonumber(cfg.http_port) or 80, pb.relay_seq)
+      cmds[#cmds + 1] = { kind = "shell", action = "relay_start", args = { dir = cfg.relay_dir, id = pb.relay_seq, url = uri,
+                          max_bytes = math.floor((tonumber(cfg.relay_max_mb) or 600) * 1048576) } }
+    end
+  end
+  pb.now = { service = "UPNP", uri = uri, relay_uri = engine_uri ~= uri and engine_uri or nil, title = info.title, artist = info.artist,
+             album = info.album, image = info.image, duration_ms = math.floor(tonumber(info.duration_ms) or 0),
              has_next = false, has_prev = false, source = info.album }
   pb.state, pb.position_ms, pb.resume_ms = "starting", 0, nil
   pb.paused_by, pb.paused_at = nil, nil
-  cmds[#cmds + 1] = cmd_audio("play", MUSIC, uri)
+  cmds[#cmds + 1] = cmd_audio("play", MUSIC, engine_uri)
   cmds[#cmds + 1] = emit("playback.changed", { state = "starting" })
   return { state = st(pb), commands = cmds }
 end

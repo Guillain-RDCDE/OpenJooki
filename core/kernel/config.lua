@@ -31,6 +31,10 @@ config.defaults = {
   -- /cmd) can stop (ADR-0007). 0 = off (the bench smoke, or to fall back to web_ctrl).
   http_port = 80,
   web_public_dir = "/tmp/web_ctrl_dirs/public",   -- what web_ctrl served, rebuilt at boot
+  -- an https song from an app (#50): the player has no TLS, so curl fetches it to this folder on the
+  -- music card and the web server above hands it to the player over http (/relay/). "" = refused.
+  relay_dir = "/jooki/external/oj-relay",
+  relay_max_mb = 600,                         -- one song bigger than this is cut there
   -- Wired headphones through the USB-C port (a passive USB-C to jack adapter, no chip in it). The
   -- detection follows Muuselabs' player.lua (services.device): usb_mux pulls the line up on battery,
   -- two readings in a row decide. false = never leave the speaker. Bluetooth is separate.

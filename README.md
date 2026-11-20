@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.7:** secure songs from apps like BubbleUPnP (TIDAL, Qobuz) now play; a page in a background tab stays quiet.
-2.5.6: a page left open in a tab no longer keeps the Jooki on.
+**New in 2.5.8:** why a Jooki stays on the far access point of a mesh, and what helps.
+2.5.7: secure songs from apps like BubbleUPnP (TIDAL, Qobuz) now play; a page in a background tab stays quiet.
 [All the changes](CHANGELOG.md)
 
 ---

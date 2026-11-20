@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.6:** a page left open in a tab no longer keeps the Jooki on.
-2.5.5: moving a song in a playlist keeps the playing one lit.
+**New in 2.5.7:** secure songs from apps like BubbleUPnP (TIDAL, Qobuz) now play; a page in a background tab stays quiet.
+2.5.6: a page left open in a tab no longer keeps the Jooki on.
 [All the changes](CHANGELOG.md)
 
 ---

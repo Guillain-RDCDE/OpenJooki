@@ -30,7 +30,8 @@ SHA-256 `819293ee47d1b42439e50ad4d7f8f6180a6feabf2ff28595dbc45c2cc33706fc`.
 `wifi-roaming.patch` (applied after it) makes every Wi-Fi connection join the strongest
 access point and moves to a stronger access point of the same network on a weak link
 (mesh networks, [docs/20](../../docs/20-network-health.md)); `test_wifi.py`, run by
-`test.py`, exercises its actual bodies. It has never run on a Jooki.
+`test.py`, exercises its actual bodies. It has never run on a Jooki; [docs/32](../../docs/32-wifi-chip-trial.md)
+puts it on trial without opening the Jooki (`oj-esp32-trial`).
 Source trees, toolchains and binaries stay under ignored `build/` or outside Git.
 
 ## Contract

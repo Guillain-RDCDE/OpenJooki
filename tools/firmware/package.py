@@ -70,7 +70,7 @@ def package(build, output):
         if value not in allowed.get(key, set()): raise ValueError("unexpected flasher flag")
     if set(flags[::2]) != set(allowed): raise ValueError("duplicate flasher flag")
     argv = list(flags)
-    files = {"VERSION.txt": b"OpenJooki global SetVolume protocol 2\n", "esp32/flasher_args.json": args_bytes}
+    files = {"VERSION.txt": b"OpenJooki global SetVolume protocol 2, Wi-Fi roaming\n", "esp32/flasher_args.json": args_bytes}
     for offset, name in sorted(args["flash_files"].items(), key=lambda pair: int(pair[0], 0)):
         if name.startswith("/") or ".." in Path(name).parts: raise ValueError("unsafe flash filename")
         argv.extend([offset, name])

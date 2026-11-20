@@ -225,9 +225,9 @@ legacy `net/sta/connect` bypasses WCM's state machine. So it is fixed in the chi
 `wcm_nvs_set_last_connected_ap_idx`) against a fake driver, with AddressSanitizer and
 UndefinedBehaviorSanitizer. It fails on the original sources (saved channel; the write at
 `[-1]`, caught by UBSan) and when a failed move does not fall back. The complete firmware
-builds with the public SDK. **It has never run on a Jooki**: like the volume firmware (docs/30),
-installing it means writing the chip's flash, with a recovery that needs the Jooki open
-(UART). Not distributed (decision of 08/11/2026: no ESP32 flashing in families' Jookis).
+builds with the public SDK. **It has never run on a Jooki.** The Jooki can write it, and write
+the original back, by itself without being opened (`oj-esp32-trial`, docs/32); it is tried on our
+own Jooki first. Not offered to families (decision of 08/11/2026).
 
 What helps meanwhile (guide/questions.md): switch the Jooki off and on where it lives (at start
 it skips access points under -76 dBm), and keep it on the charger so the watchdog can act.

@@ -3,6 +3,7 @@
 ## Next release
 - **Mesh Wi-Fi explained.** With several access points under one name (a mesh, repeaters), the Jooki stays on the far one: its Wi-Fi chip never changes access point while connected, and reconnects to the first one it hears. *Questions* says what helps (#51).
 - For the tinkerers: `tools/firmware/wifi-roaming.patch` fixes it in the chip's firmware (every connection joins the strongest access point; under -70 dBm it moves to one at least 8 dB stronger), with `test_wifi.py`. Like the volume firmware it is not installed by updates and has never run on a Jooki (docs/20).
+- For the tinkerers: `oj-esp32-trial` puts a chip firmware on trial without opening the Jooki: written at the next start by the Jooki's own installer, judged on the chip and the Wi-Fi, and the original written back by itself on any failure, power cut or early restart (docs/32). It does nothing unless asked.
 
 ## OpenJooki 2.5.7 (20 November 2026) — TIDAL and Qobuz, through your apps
 - **A page in a background tab stays quiet.** Left behind another tab, the Jooki's page was connecting again every couple of minutes. Now it waits until you come back to it, then connects at once. Only an update or an upload in progress keeps it connecting in the background (#47).

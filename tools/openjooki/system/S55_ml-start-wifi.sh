@@ -11,6 +11,7 @@
 #  - the chip gets 30 s to answer instead of 10 (a slow start is not a broken chip);
 #  - a slow or failed chip no longer writes the "factory mode" flag, which stayed for good.
 #    It is logged instead; the core retries the chip's set-up by itself.
+# And one addition: a chip firmware on trial is written or undone here (oj-esp32-trial, docs/32).
 
 ESP32_MMC_DEV=mmc1
 
@@ -119,6 +120,12 @@ if [ ! -e /data/mode/ESP32_FIRMWARE_LOADED ]; then
   program_firmware
 fi
 
+# OpenJooki: a chip firmware on trial is written, judged or undone here, with the same installer
+# and before the logger uses the serial line (oj-esp32-trial, docs/32). Without a trial: nothing.
+if [ -x /jooki/bin/oj-esp32-trial ]; then
+  /jooki/bin/oj-esp32-trial boot
+fi
+
 start_logger
 logger -s "logger PID: $LOGGER_PID"
 
@@ -137,6 +144,7 @@ if [ $rv -eq 4 ]; then
     kill ${LOGGER_PID} &
   fi
   program_firmware
+  [ -x /jooki/bin/oj-esp32-trial ] && /jooki/bin/oj-esp32-trial stock-back
   start_logger
 elif [ $rv -gt 0 ]; then
   logger -s "error loading ESP32 driver (OpenJooki: no factory mode flag; the core retries the chip)"

@@ -45,8 +45,8 @@ stronger one, and when it connects again it takes the first access point of that
 not the strongest. That is in the chip's own firmware, which an OpenJooki update cannot change.
 What helps: switch the Jooki off and on where it lives, so it starts next to a near access point;
 keep it on the charger, so OpenJooki can restart it after ten minutes without Wi-Fi. A fix for
-the chip is written ([docs/20](../docs/20-network-health.md)), but installing it means opening
-the Jooki, so updates do not include it.
+the chip is written ([docs/20](../docs/20-network-health.md)); it is being tried on our own Jooki
+first, so updates do not install it.
 
 **It only gets on the Wi-Fi after I use the Wi-Fi page.**
 After every start the side dots stay orange until you give it a network on the

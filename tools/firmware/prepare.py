@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the pinned public Jooki 2 sources and apply OpenJooki's additive volume protocol.
+"""Fetch the pinned public Jooki 2 sources and apply OpenJooki's additive volume protocol and Wi-Fi roaming.
 No device access. --public-sdk ports to the pinned public ESP-IDF 4.4.3 release.
 """
 import argparse
@@ -46,7 +46,7 @@ def prepare(archive, out, sdk=False, port=False):
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     root = out / "jooki-archive-20261026"
-    inputs = [HERE / "volume.patch"]
+    inputs = [HERE / "volume.patch", HERE / "wifi-roaming.patch"]
     if port: inputs += [HERE / "sdk-port.patch", HERE / "port/sdio_tx.h", HERE / "esp-idf-v4.4.3.patch", HERE / "esp-adf-public-build.patch"]
     patch_digest = hashlib.sha256(b"".join(p.read_bytes() for p in inputs)).hexdigest()
     marker = root / ".openjooki-volume-patch"
@@ -58,6 +58,8 @@ def prepare(archive, out, sdk=False, port=False):
         run("git", "init", "-q", root)
         run("git", "apply", "--check", HERE / "volume.patch", cwd=root)
         run("git", "apply", HERE / "volume.patch", cwd=root)
+        run("git", "apply", "--check", HERE / "wifi-roaming.patch", cwd=root)
+        run("git", "apply", HERE / "wifi-roaming.patch", cwd=root)
         if port:
             run("git", "apply", "--check", HERE / "sdk-port.patch", cwd=root)
             run("git", "apply", HERE / "sdk-port.patch", cwd=root)
@@ -78,7 +80,8 @@ def prepare(archive, out, sdk=False, port=False):
         # Reconstruct ADF from the archive's patches. IDF either uses the original
         # manifest for comparison, or our reviewed patch on the pinned public release.
         # Keep Espressif's bundled esptool and the explicitly pinned DSP gitlink.
-        patches = [HERE / "esp-idf-v4.4.3.patch"] if port and name == "esp-idf" else sorted((root / "patches" / name).glob("*.patch"))
+        # The archive was packed on a Mac: skip its AppleDouble "._" companions.
+        patches = [HERE / "esp-idf-v4.4.3.patch"] if port and name == "esp-idf" else sorted(p for p in (root / "patches" / name).glob("*.patch") if not p.name.startswith("._"))
         for patch in patches:
             run("git", "apply", "--index", "--whitespace=nowarn", "--exclude=" + exclude, patch, cwd=repo)
         if port and name == "esp-adf": run("git", "apply", "--index", HERE / "esp-adf-public-build.patch", cwd=repo)

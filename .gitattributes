@@ -12,3 +12,4 @@ tools/openjooki/system/* text eol=lf
 *.cmd -text
 # the Mac app launchers: always LF (bash)
 **/*.app/Contents/MacOS/* text eol=lf
+*.patch text eol=lf

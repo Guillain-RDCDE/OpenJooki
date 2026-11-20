@@ -27,6 +27,10 @@ and the physical recovery evidence and remaining device checks.
 The source is the [official archive](https://jooki.com/jooki-archive-20261026.tgz),
 SHA-256 `819293ee47d1b42439e50ad4d7f8f6180a6feabf2ff28595dbc45c2cc33706fc`.
 `volume.patch` contains the source changes, including both protocol endpoints.
+`wifi-roaming.patch` (applied after it) makes every Wi-Fi connection join the strongest
+access point and moves to a stronger access point of the same network on a weak link
+(mesh networks, [docs/20](../../docs/20-network-health.md)); `test_wifi.py`, run by
+`test.py`, exercises its actual bodies. It has never run on a Jooki.
 Source trees, toolchains and binaries stay under ignored `build/` or outside Git.
 
 ## Contract

@@ -183,6 +183,55 @@ browser searches the web or tries https.
   syslog-ng keeps today's file open). Checked on our Jooki's own logs: 26 lines gone, none
   left; `test_net.py` N1 with the chip's real lines.
 
+## One name, several access points (mesh, #51, 20/11/2026)
+
+A family with a FRITZ!Box mesh (several access points, one network name) had to reconnect
+their Jooki by hand whenever it lost the access point it was on. Read in the chip's sources
+(Muuselabs' archive, `esp32-code/jooki_v2/main/wcm_sta.c` and `wcm_nvs.c`):
+
+- **The chip remembers the channel of its last connection** (`WCM_NVS: saving N on channel C
+  as last connection`) and every later connection to that network uses it: with a channel,
+  `wcm_sta_connect_to_AP` sets `WIFI_FAST_SCAN`. ESP-IDF then joins the **first** access point
+  of that name it hears, starting on that channel, and ignores `WIFI_CONNECT_AP_BY_SIGNAL`
+  (ESP-IDF's Wi-Fi guide: only an all-channel scan sorts by signal). The minimum of -76 dBm
+  still applies. The comment just above the code says "connect to the one having the best
+  signal": that only held for the very first connection, before a channel was saved.
+- **While connected it never moves**, however weak the link: there is no roaming, and
+  802.11k/v (`rm_enabled`, `btm_enabled`), which a mesh uses to steer devices, is off.
+- **After a cut** the network is marked "non-working", tried again every 60 s, and after 15
+  rounds (about 15 minutes) the chip starts Bluetooth provisioning and stops trying: the
+  Jooki then waits for a network over Bluetooth. OpenJooki's watchdog restarts it after ten
+  minutes offline, but only on the charger and when nothing plays.
+- Clearing the last connection (`wcm_nvs_set_last_connected_ap_idx(-1, 0)`, after every
+  failed round) also writes one byte before the list of networks (`connected_aps[-1]`).
+
+Linux cannot change any of this: `esp32_cmd` and `esp32_ctrl` expose no command that sets the
+channel, the scan method or the access point, `disconnect` is refused under WCM, and the
+legacy `net/sta/connect` bypasses WCM's state machine. So it is fixed in the chip's firmware,
+`tools/firmware/wifi-roaming.patch`, applied by `prepare.py` on top of the volume patch:
+
+- every connection scans all channels and joins the strongest access point of the network
+  (the saved channel is no longer used);
+- roaming: every 15 s a task looks at the link; under -70 dBm it scans for its own network
+  (an active scan, at most once a minute) and moves to another access point of that name at
+  least 8 dB stronger and above -76 dBm. It leaves the current one and joins the new one
+  directly (BSSID and channel set); that disconnection is not counted as a failure. If the
+  move cannot start, or the new access point does not answer, the usual reconnection takes
+  over;
+- the write before the list is gone.
+
+`tools/firmware/test_wifi.py` (run by `test.py`, so by CI) compiles the patched bodies
+(`wcm_sta_roam_pick`, `wcm_sta_roam_check`, `wcm_sta_roam_connect`, the Wi-Fi event handler,
+`wcm_nvs_set_last_connected_ap_idx`) against a fake driver, with AddressSanitizer and
+UndefinedBehaviorSanitizer. It fails on the original sources (saved channel; the write at
+`[-1]`, caught by UBSan) and when a failed move does not fall back. The complete firmware
+builds with the public SDK. **It has never run on a Jooki**: like the volume firmware (docs/30),
+installing it means writing the chip's flash, with a recovery that needs the Jooki open
+(UART). Not distributed (decision of 08/11/2026: no ESP32 flashing in families' Jookis).
+
+What helps meanwhile (guide/questions.md): switch the Jooki off and on where it lives (at start
+it skips access points under -76 dBm), and keep it on the charger so the watchdog can act.
+
 ## Tests
 
 - `tests/test_net.py` (13): log cleanup, Wi-Fi state, access point without log

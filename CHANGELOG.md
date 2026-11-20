@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Mesh Wi-Fi explained.** With several access points under one name (a mesh, repeaters), the Jooki stays on the far one: its Wi-Fi chip never changes access point while connected, and reconnects to the first one it hears. *Questions* says what helps (#51).
+- For the tinkerers: `tools/firmware/wifi-roaming.patch` fixes it in the chip's firmware (every connection joins the strongest access point; under -70 dBm it moves to one at least 8 dB stronger), with `test_wifi.py`. Like the volume firmware it is not installed by updates and has never run on a Jooki (docs/20).
+
 ## OpenJooki 2.5.7 (20 November 2026) — TIDAL and Qobuz, through your apps
 - **A page in a background tab stays quiet.** Left behind another tab, the Jooki's page was connecting again every couple of minutes. Now it waits until you come back to it, then connects at once. Only an update or an upload in progress keeps it connecting in the background (#47).
 - **TIDAL and Qobuz from an app.** *Play from other apps* now takes secure (`https://`) songs too, which is what TIDAL and Qobuz send through BubbleUPnP or mconnect. Until now the Jooki refused them: its player cannot open them. The Jooki now fetches the song onto its card and plays it as it comes, seeks included (#50).

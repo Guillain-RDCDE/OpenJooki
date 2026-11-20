@@ -39,6 +39,15 @@ it knows and stay there. Keep only the Wi-Fi next to it: on the
 **Forget** every network in *Networks the Jooki remembers*, then give it the Wi-Fi next to it
 again. Forgetting does not cut its Wi-Fi.
 
+**Our mesh (or repeaters) has one Wi-Fi name, and the Jooki stays on the far access point.**
+The Jooki's Wi-Fi chip never moves to another access point while it is connected, even a much
+stronger one, and when it connects again it takes the first access point of that name it hears,
+not the strongest. That is in the chip's own firmware, which an OpenJooki update cannot change.
+What helps: switch the Jooki off and on where it lives, so it starts next to a near access point;
+keep it on the charger, so OpenJooki can restart it after ten minutes without Wi-Fi. A fix for
+the chip is written ([docs/20](../docs/20-network-health.md)), but installing it means opening
+the Jooki, so updates do not include it.
+
 **It only gets on the Wi-Fi after I use the Wi-Fi page.**
 After every start the side dots stay orange until you give it a network on the
 [Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html). At start the Jooki only

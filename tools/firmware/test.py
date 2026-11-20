@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tarfile
 import tempfile
 from prepare import checked_download, ARCHIVE_URL, ARCHIVE_SHA256
@@ -40,5 +41,7 @@ def main():
         run("protoc-c", "-I" + str(proto), "--c_out=" + str(out), proto / "esp_hosted_config.proto")
         run("cc", "-D_DEFAULT_SOURCE", "-ffunction-sections", "-fdata-sections", "-Wl,--gc-sections", "-fsanitize=address,undefined", "-g", "-I" + str(ctrl), "-I" + str(out), HERE / "tests/protocol.c", ctrl / "commands.c", out / "esp_hosted_config.pb-c.c", "-lprotobuf-c", "-o", out / "protocol")
         run(out / "protocol")
+    # Wi-Fi roaming (wifi-roaming.patch), run here so that the existing CI step covers it
+    run(sys.executable, HERE / "test_wifi.py", source)
 
 if __name__ == "__main__": main()

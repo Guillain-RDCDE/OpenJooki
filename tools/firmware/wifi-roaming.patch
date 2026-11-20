@@ -1,0 +1,212 @@
+diff --git a/esp32-code/jooki_v2/main/wcm_nvs.c b/esp32-code/jooki_v2/main/wcm_nvs.c
+index 8b4aca0..818d7ed 100644
+--- a/esp32-code/jooki_v2/main/wcm_nvs.c
++++ b/esp32-code/jooki_v2/main/wcm_nvs.c
+@@ -485,7 +485,10 @@ void wcm_nvs_set_last_connected_ap_idx(int index_, int channel_) {
+ 
+     if (update) {
+         wcm_nvs.lastConnectedApIdx = new_idx;
+-        wcm_nvs.connected_aps[new_idx].channel = channel_;
++        /* OpenJooki: "no last connection" (-1) wrote before the array */
++        if (new_idx >= 0) {
++            wcm_nvs.connected_aps[new_idx].channel = channel_;
++        }
+         LOG_INFO(LOG_TAG_WCM_NVS, "saving %d on channel %d as last connection [%d]",
+                  wcm_nvs.lastConnectedApIdx, channel_, index_);
+         if (!wcm_nvs_save_db()) {
+diff --git a/esp32-code/jooki_v2/main/wcm_sta.c b/esp32-code/jooki_v2/main/wcm_sta.c
+index ada135b..2380423 100644
+--- a/esp32-code/jooki_v2/main/wcm_sta.c
++++ b/esp32-code/jooki_v2/main/wcm_sta.c
+@@ -51,6 +51,18 @@
+ #define WCM_STA_MAXIMUM_CONSECUTIVE_RECONNECTIONS_ATTEMPTS                     \
+     15 // Will last about 15 minutes
+ 
++/** OpenJooki roaming: several access points can share one network name (mesh,
++ * repeaters). The link is looked at every WCM_STA_ROAM_CHECK_MS; below
++ * WCM_STA_ROAM_RSSI the station scans for its own network (at most once per
++ * WCM_STA_ROAM_SCAN_MS) and moves to another access point of that network
++ * that is at least WCM_STA_ROAM_MARGIN dB stronger. */
++#define WCM_STA_ROAM_CHECK_MS 15000
++#define WCM_STA_ROAM_SCAN_MS 60000
++#define WCM_STA_ROAM_RSSI -70
++#define WCM_STA_ROAM_MARGIN 8
++#define WCM_STA_ROAM_STACK 3072
++#define WCM_STA_ROAM_PRIO 4
++
+ // types
+ 
+ // stt_machine:events
+@@ -210,6 +222,12 @@ static WcmStaConnectionState _connectionStates
+     [JK_MAX_STA_CONF_CNT]; // All states will be initialized to the value 0,
+                            // which is WCM_STA_CONNECTION_STATE_NEVER_TRIED
+ 
++/** OpenJooki roaming: set while the station leaves its access point on purpose
++ * to join _roamBssid on _roamChannel; that disconnection is not a failure. */
++static volatile bool _roaming = false;
++static uint8_t _roamBssid[6];
++static uint8_t _roamChannel;
++
+ // log
+ static const char TAG_WCM_STA[] = "WCM_STA";
+ 
+@@ -266,18 +284,18 @@ static bool wcm_sta_connect_to_AP(int wifiConfigurationIndex) {
+     cfg = calloc(1, sizeof(wifi_config_t));
+     memcpy(cfg->sta.ssid, pointerWifiConfiguration->ssid, sizeof(cfg->sta.ssid));
+     memcpy(cfg->sta.password, pointerWifiConfiguration->password, sizeof(cfg->sta.password));
+-    cfg->sta.channel = pointerWifiConfiguration->channel;
++    /* OpenJooki: the channel saved at the last connection is no longer used.
++     * With it, the station did a fast scan, which joins the first access point
++     * of the network it hears on that channel and ignores sort_method: in a
++     * mesh it went back to the far access point instead of the near one. */
++    cfg->sta.channel = 0;
+ 
+     /* retrieve the options for this connection */
+     wcm_nvs_get_wifi_options(wifiConfigurationIndex, &opts);
+ 
+     // If several access points advertise the same SSID, connect to the one
+     // having the best signal
+-    if(cfg->sta.channel == 0) {
+-        cfg->sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
+-    } else {
+-        cfg->sta.scan_method = WIFI_FAST_SCAN;
+-    }
++    cfg->sta.scan_method = WIFI_ALL_CHANNEL_SCAN;
+     cfg->sta.sort_method = WIFI_CONNECT_AP_BY_SIGNAL;
+     cfg->sta.threshold.rssi = WCM_CONNECT_MINIMUM_RSSI;
+     cfg->sta.threshold.authmode = WCM_CONNECT_MINIMUM_AUT;
+@@ -583,10 +601,119 @@ static void wcmStaTimerReconnectionCallback(void __attribute__((unused)) *
+     wcm_sta_push_event(eReconnect, true); // Next state will be eConnecting
+ }
+ 
++/** OpenJooki roaming: among scanned access points, the one to move to.
++ * @return its index in records, or -1 to stay on the current access point
++ * (link good enough, or nothing of the same network clearly stronger). */
++static int wcm_sta_roam_pick(int8_t currentRssi, const uint8_t *currentBssid,
++                             const uint8_t *ssid, const wifi_ap_record_t *records,
++                             int count) {
++    int i, best = -1;
++    int bestRssi = currentRssi + WCM_STA_ROAM_MARGIN - 1;
++
++    if (currentRssi >= WCM_STA_ROAM_RSSI) {
++        return -1;
++    }
++    for (i = 0; i < count; i++) {
++        if (memcmp(records[i].bssid, currentBssid, sizeof(records[i].bssid)) == 0 ||
++            strncmp((const char *)records[i].ssid, (const char *)ssid,
++                    sizeof(records[i].ssid)) != 0 ||
++            records[i].rssi < WCM_CONNECT_MINIMUM_RSSI) {
++            continue;
++        }
++        if (records[i].rssi > bestRssi) {
++            bestRssi = records[i].rssi;
++            best = i;
++        }
++    }
++    return best;
++}
++
++/** OpenJooki roaming: join the access point chosen by wcm_sta_roam_check(),
++ * once the station has left the previous one. */
++static bool wcm_sta_roam_connect(void) {
++    wifi_config_t cfg;
++
++    if (esp_wifi_get_config(WIFI_IF_STA, &cfg) != ESP_OK) {
++        return false;
++    }
++    memcpy(cfg.sta.bssid, _roamBssid, sizeof(cfg.sta.bssid));
++    cfg.sta.bssid_set = true;
++    cfg.sta.channel = _roamChannel;
++    if (esp_wifi_set_config(WIFI_IF_STA, &cfg) != ESP_OK) {
++        return false;
++    }
++    return esp_wifi_connect() == ESP_OK;
++}
++
++/** OpenJooki roaming: on a weak link, look for a stronger access point of the
++ * same network and leave the current one for it.
++ * @return how long to wait before the next check, in milliseconds. */
++static uint32_t wcm_sta_roam_check(void) {
++    static wifi_ap_record_t
++        accessPointRecords[WCM_STA_MAXIMUM_SCAN_RESULTS_COUNT];
++    wifi_ap_record_t current;
++    wifi_scan_config_t scanConf = {0};
++    uint16_t count = WCM_STA_MAXIMUM_SCAN_RESULTS_COUNT;
++    int best;
++
++    if (_state != sConnected || !_isCurrentlyConnected || _roaming ||
++        esp_wifi_sta_get_ap_info(&current) != ESP_OK ||
++        current.rssi >= WCM_STA_ROAM_RSSI) {
++        return WCM_STA_ROAM_CHECK_MS;
++    }
++
++    scanConf.ssid = current.ssid;
++    scanConf.scan_type = WIFI_SCAN_TYPE_ACTIVE;
++    if (esp_wifi_scan_start(&scanConf, true) != ESP_OK ||
++        esp_wifi_scan_get_ap_records(&count, accessPointRecords) != ESP_OK) {
++        return WCM_STA_ROAM_SCAN_MS;
++    }
++    best = wcm_sta_roam_pick(current.rssi, current.bssid, current.ssid,
++                             accessPointRecords, count);
++    if (best < 0 || _state != sConnected || !_isCurrentlyConnected) {
++        return WCM_STA_ROAM_SCAN_MS;
++    }
++
++    LOG_INFO(LOG_TAG_WCM_STA,
++             "Roaming from ..:%02x:%02x (RSSI = %d) to ..:%02x:%02x (RSSI = "
++             "%d, channel = %d).",
++             current.bssid[4], current.bssid[5], current.rssi,
++             accessPointRecords[best].bssid[4],
++             accessPointRecords[best].bssid[5],
++             accessPointRecords[best].rssi, accessPointRecords[best].primary);
++    memcpy(_roamBssid, accessPointRecords[best].bssid, sizeof(_roamBssid));
++    _roamChannel = accessPointRecords[best].primary;
++    _roaming = true;
++    if (esp_wifi_disconnect() != ESP_OK) {
++        _roaming = false;
++    }
++    return WCM_STA_ROAM_SCAN_MS;
++}
++
++static void task_wcm_roam_func(__unused void *param_) {
++    uint32_t waitMs = WCM_STA_ROAM_CHECK_MS;
++    while (1) {
++        vTaskDelay(pdMS_TO_TICKS(waitMs));
++        waitMs = wcm_sta_roam_check();
++    }
++}
++
+ // event handler for station connect/disconnect to/from AP
+ static void wcm_sta_station_event_handler(void *arg,
+                                           esp_event_base_t event_base,
+                                           int32_t event_id, void *event_data) {
++    if ((event_base == WIFI_EVENT) &&
++        (event_id == WIFI_EVENT_STA_DISCONNECTED) && _roaming) {
++        // OpenJooki roaming: this station left its access point on purpose
++        _roaming = false;
++        esp_wifi_internal_reg_rxcb(ESP_IF_WIFI_STA, NULL);
++        _isCurrentlyConnected = false;
++        if (wcm_sta_roam_connect()) {
++            return;
++        }
++        LOG_WARNING(LOG_TAG_WCM_STA, "Roaming failed, reconnecting.");
++        // continue as for any lost connection
++    }
+     if ((event_base == WIFI_EVENT) &&
+         (event_id == WIFI_EVENT_STA_DISCONNECTED)) {
+         wifi_event_sta_disconnected_t *disconnected =
+@@ -1042,6 +1169,14 @@ bool wcm_sta_init(void) {
+         goto exit;
+     }
+ 
++    // OpenJooki roaming; without it the station keeps working as before
++    if (pdPASS != xTaskCreatePinnedToCore(task_wcm_roam_func, "wcm_sta_roam",
++                                          WCM_STA_ROAM_STACK, NULL,
++                                          WCM_STA_ROAM_PRIO, NULL,
++                                          TASK_WCM_STA_CORE)) {
++        ESP_LOGE(TAG_WCM_STA, "wcm_sta_init:roaming task FAILED");
++    }
++
+     _state = sIdle;
+     if (true == wcm_sta_push_event(eInit, true)) {
+         ret = true;

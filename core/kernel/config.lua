@@ -63,6 +63,8 @@ config.defaults = {
   -- The bench points both at its own web server (adapters.shell only accepts GitHub or 127.0.0.1).
   update_manifest_url = "https://github.com/Guillain-RDCDE/OpenJooki/releases/latest/download/version.json",
   update_script_url = "https://guillain-rdcde.github.io/OpenJooki/o.sh",
+  -- the Wi-Fi chip firmware on trial (docs/32): its package, pinned by its SHA-256 in oj-esp32-trial
+  chip_package_url = "https://github.com/Guillain-RDCDE/OpenJooki/releases/download/esp32-wifi/openjooki-esp32-494de242.tgz",
 }
 
 local current = {}

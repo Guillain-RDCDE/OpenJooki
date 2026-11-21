@@ -199,6 +199,14 @@
     s_general: 'Général', s_advanced: 'Avancé', s_on: 'Activé', s_off: 'Désactivé',
     s_uptodate: 'À jour', s_avail: function (v) { return v + ' dispo'; }, s_storage_free: 'libres', s_open: 'Ouvert', s_closed: 'Fermé',
     s_home: 'Domotique', s_home_sub: 'Home Assistant', s_addr: 'Autres adresses', s_addr_sub: 'Noms de votre propre DNS', addr_help: 'Pour ouvrir cette page avec un nom de votre propre DNS, un par ligne. Les noms en .local, .lan, .home ou .internal marchent toujours.', addr_bad: 'Jusqu\'à 5 noms, comme jooki.example.com', s_maint: 'Accès de maintenance', s_maint_sub: 'SSH, pour les bricoleurs',
+    s_chip: 'Wi-Fi à plusieurs bornes', s_chip_sub: 'Une nouvelle version de la puce Wi-Fi, à l’essai',
+    chip_intro: 'Plusieurs bornes Wi-Fi du même nom à la maison (un réseau maillé, des répéteurs) ? Le Jooki a tendance à rester sur la plus lointaine. La nouvelle version de sa puce Wi-Fi passe toute seule sur la plus proche.',
+    chip_safe: 'C’est un essai, environ 15 minutes. Si la puce ou le Wi-Fi ne va pas, le Jooki remet tout seul la version d’origine. Laisse-le sur son chargeur et sur le Wi-Fi pendant ce temps : il redémarre tout seul, une ou deux fois.',
+    chip_orig: 'Version d’origine', chip_trying: 'Essai de la nouvelle version…', chip_new: 'Nouvelle version en service', chip_going_back: 'Retour à la version d’origine…',
+    chip_failed: 'La version d’origine n’a pas pu être remise. Écris-nous sur GitHub, on t’aide.', chip_damaged: 'Un fichier était abîmé : rien n’a été changé.',
+    chip_dl: 'Téléchargement…', chip_check: 'Vérification que tout est prêt…', chip_restart: 'Le Jooki redémarre. Laisse-le allumé : cette page revient toute seule dans quelques minutes.',
+    chip_refused: 'Pas maintenant, rien n’a été changé :', chip_unavailable: 'Ce Jooki ne peut pas le faire.',
+    chip_try: 'Essayer la nouvelle version', chip_try_sure: 'Oui, essayer', chip_back: 'Revenir à la version d’origine',
     disc_add: 'Ajouter des disques', disc_drop: 'Glisse ici les dossiers de tes disques : chaque dossier devient une playlist',
     disc_hint: function (k) { return 'Les FLAC et WAV sont convertis en MP3 ' + k + ' kbps sur ton ordinateur, avant l\'envoi.'; },
     converting: function (k) { return 'Conversion en MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'En attente (sera converti en MP3 ' + k + ' kbps)'; },
@@ -414,6 +422,14 @@
     s_general: 'General', s_advanced: 'Advanced', s_on: 'On', s_off: 'Off',
     s_uptodate: 'Up to date', s_avail: function (v) { return v + ' available'; }, s_storage_free: 'free', s_open: 'Open', s_closed: 'Closed',
     s_home: 'Home automation', s_home_sub: 'Home Assistant', s_addr: 'Other addresses', s_addr_sub: 'Names from your own DNS', addr_help: 'To open this page with a name from your own DNS, one per line. Names ending in .local, .lan, .home or .internal always work.', addr_bad: 'Up to 5 names, like jooki.example.com', s_maint: 'Maintenance access', s_maint_sub: 'SSH, for tinkerers',
+    s_chip: 'Wi-Fi with several access points', s_chip_sub: 'A new version of the Wi-Fi chip, on trial',
+    chip_intro: 'Several Wi-Fi access points with the same name at home (a mesh, repeaters)? The Jooki tends to stay on the far one. The new version of its Wi-Fi chip moves to the nearest one by itself.',
+    chip_safe: 'It is a trial, about 15 minutes. If the chip or the Wi-Fi is not right, the Jooki goes back to the original version by itself. Leave it on its charger and on the Wi-Fi meanwhile: it restarts by itself, once or twice.',
+    chip_orig: 'Original version', chip_trying: 'Trying the new version…', chip_new: 'New version in use', chip_going_back: 'Going back to the original version…',
+    chip_failed: 'The original version could not be put back. Tell us on GitHub, we will help.', chip_damaged: 'A file was damaged: nothing was changed.',
+    chip_dl: 'Downloading…', chip_check: 'Checking that everything is ready…', chip_restart: 'The Jooki restarts. Leave it on: this page comes back by itself in a few minutes.',
+    chip_refused: 'Not now, nothing was changed:', chip_unavailable: 'This Jooki cannot do it.',
+    chip_try: 'Try the new version', chip_try_sure: 'Yes, try it', chip_back: 'Go back to the original version',
     disc_add: 'Add albums', disc_drop: 'Drop your album folders here: each folder becomes a playlist',
     disc_hint: function (k) { return 'FLAC and WAV files are turned into MP3 at ' + k + ' kbps on your computer, before they are sent.'; },
     converting: function (k) { return 'Converting to MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Waiting (will be converted to MP3 ' + k + ' kbps)'; },
@@ -541,6 +557,14 @@
     disc_add: 'Alben hinzufügen', disc_drop: 'Albumordner hier ablegen: Jeder Ordner wird eine Wiedergabeliste', disc_hint: function (k) { return 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer in MP3 mit ' + k + ' kbps umgewandelt.'; }, converting: function (k) { return 'Wird in MP3 mit ' + k + ' kbps umgewandelt'; }, queued_conv: function (k) { return 'Wartet (Umwandlung in MP3 mit ' + k + ' kbps)'; }, up_conv_fail: 'Dieser Browser konnte die Datei nicht lesen (versuche Chrome oder Firefox auf einem Computer)', disc_progress: function (d, n) { return d + ' / ' + n + ' Titel'; }, disc_errors: function (n) { return n + (n === 1 ? ' Titel konnte' : ' Titel konnten') + ' nicht übertragen werden'; }, disc_created: function (n) { return 'Wiedergabeliste erstellt: ' + n; },
     story_rec: 'Geschichte aufnehmen', story_default: 'Meine Geschichte', story_got: function (n) { return 'Geschichte empfangen: ' + n; }, story_book: 'Eine Geschichte: Diese Wiedergabeliste ist jetzt ein Hörbuch', story_open: 'Geschichte öffnen', story_open_sub: 'Eine als Datei empfangene Geschichte', story_file_bad: 'Diese Datei ist keine Geschichte aus Jookistory', story_token_t: 'Welche Figur startet diese Geschichte?', story_token_help: 'Stelle sie jetzt auf den Jooki oder wähle sie unten aus.', token_live: 'Warte auf eine Figur auf dem Jooki…', token_seen: function (n) { return 'Figur erkannt: ' + n; }, later: 'Später', cover_set: function (n) { return 'Das Titelbild ist jetzt das Bild von ' + n; }, labels_btn: 'Etiketten drucken', labels_t: 'Etiketten für die Bücher', labels_size: 'Größe', print: 'Drucken', labels_help: 'Ein Etikett pro Chip. Drucken, ausschneiden und auf das jeweilige Buch über den NFC-Aufkleber kleben. Dann das geschlossene Buch auf den Jooki legen und ausprobieren.', labels_none: 'Noch kein eigener Chip. Lege zuerst einen flachen Chip oder NFC-Aufkleber auf den Jooki.',
     s_mp3: 'MP3-Qualität', s_mp3_sub: 'Für übertragene FLAC- und WAV-Dateien', s_mp3_192: '192 kbps — kleinste Dateien', s_mp3_256: '256 kbps — empfohlen', s_mp3_320: '320 kbps — höchste Qualität', s_mp3_foot: 'FLAC- und WAV-Dateien werden vor der Übertragung auf deinem Computer oder Handy in MP3 umgewandelt. Ein Album braucht so etwa ein Drittel des Speicherplatzes. 256 kbps reichen für den Jooki und Bluetooth-Kopfhörer gut aus. Diese Auswahl gilt nur auf diesem Gerät.',
+    s_chip: 'WLAN mit mehreren Zugangspunkten', s_chip_sub: 'Eine neue Version des WLAN-Chips, zum Ausprobieren',
+    chip_intro: 'Mehrere WLAN-Zugangspunkte mit demselben Namen zu Hause (Mesh, Repeater)? Der Jooki bleibt gern beim entfernten. Die neue Version seines WLAN-Chips wechselt von selbst zum nächsten.',
+    chip_safe: 'Es ist ein Test, etwa 15 Minuten. Wenn der Chip oder das WLAN nicht stimmt, kehrt der Jooki von selbst zur ursprünglichen Version zurück. Lassen Sie ihn so lange am Ladegerät und im WLAN: Er startet von selbst ein- oder zweimal neu.',
+    chip_orig: 'Ursprüngliche Version', chip_trying: 'Neue Version wird getestet…', chip_new: 'Neue Version in Betrieb', chip_going_back: 'Zurück zur ursprünglichen Version…',
+    chip_failed: 'Die ursprüngliche Version konnte nicht zurückgespielt werden. Schreiben Sie uns auf GitHub, wir helfen.', chip_damaged: 'Eine Datei war beschädigt: Nichts wurde geändert.',
+    chip_dl: 'Wird heruntergeladen…', chip_check: 'Prüfen, ob alles bereit ist…', chip_restart: 'Der Jooki startet neu. Lassen Sie ihn an: Diese Seite kommt in ein paar Minuten von selbst zurück.',
+    chip_refused: 'Jetzt nicht, nichts wurde geändert:', chip_unavailable: 'Dieser Jooki kann das nicht.',
+    chip_try: 'Neue Version ausprobieren', chip_try_sure: 'Ja, ausprobieren', chip_back: 'Zurück zur ursprünglichen Version',
     s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
   };
   T.nl = {
@@ -732,6 +756,14 @@
     s_general: 'Algemeen', s_advanced: 'Geavanceerd', s_on: 'Aan', s_off: 'Uit',
     s_uptodate: 'Bijgewerkt', s_avail: function (v) { return v + ' beschikbaar'; }, s_storage_free: 'vrij', s_open: 'Open', s_closed: 'Dicht',
     s_home: 'Domotica', s_home_sub: 'Home Assistant', s_addr: 'Andere adressen', s_addr_sub: 'Namen uit je eigen DNS', addr_help: 'Om deze pagina te openen met een naam uit je eigen DNS, één per regel. Namen op .local, .lan, .home of .internal werken altijd.', addr_bad: 'Maximaal 5 namen, zoals jooki.example.com', s_maint: 'Onderhoudstoegang', s_maint_sub: 'SSH, voor knutselaars',
+    s_chip: 'Wifi met meerdere toegangspunten', s_chip_sub: 'Een nieuwe versie van de wifichip, om te proberen',
+    chip_intro: 'Meerdere wifi-toegangspunten met dezelfde naam thuis (mesh, repeaters)? De Jooki blijft graag bij de verste. De nieuwe versie van zijn wifichip gaat vanzelf naar de dichtstbijzijnde.',
+    chip_safe: 'Het is een proef, ongeveer 15 minuten. Als de chip of de wifi niet goed is, zet de Jooki vanzelf de oorspronkelijke versie terug. Laat hem intussen aan de oplader en op de wifi: hij start vanzelf een of twee keer opnieuw.',
+    chip_orig: 'Oorspronkelijke versie', chip_trying: 'Nieuwe versie wordt geprobeerd…', chip_new: 'Nieuwe versie in gebruik', chip_going_back: 'Terug naar de oorspronkelijke versie…',
+    chip_failed: 'De oorspronkelijke versie kon niet worden teruggezet. Schrijf ons op GitHub, we helpen je.', chip_damaged: 'Een bestand was beschadigd: er is niets veranderd.',
+    chip_dl: 'Downloaden…', chip_check: 'Controleren of alles klaar is…', chip_restart: 'De Jooki start opnieuw. Laat hem aan: deze pagina komt over een paar minuten vanzelf terug.',
+    chip_refused: 'Nu niet, er is niets veranderd:', chip_unavailable: 'Deze Jooki kan dat niet.',
+    chip_try: 'Nieuwe versie proberen', chip_try_sure: 'Ja, proberen', chip_back: 'Terug naar de oorspronkelijke versie',
     disc_add: 'Albums toevoegen', disc_drop: 'Sleep de mappen van je albums hierheen: elke map wordt een afspeellijst',
     disc_hint: function (k) { return 'FLAC- en WAV-bestanden worden op je computer omgezet naar MP3 ' + k + ' kbps, voordat ze verstuurd worden.'; },
     converting: function (k) { return 'Omzetten naar MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Wachten (wordt omgezet naar MP3 ' + k + ' kbps)'; },
@@ -3053,7 +3085,7 @@
   // the topic pages (#/settings/<topic>): the key of each one's title, and what draws it
   var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
-               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage },
+               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage }, chip: { title: 's_chip', page: chipPage },
                theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
@@ -3135,7 +3167,9 @@
     return sGroup(null, [
         sRow({ icon: 'home', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
         Array.isArray(m.web_names) ? sRow({ icon: 'globe', label: t('s_addr'), sub: t('s_addr_sub'), value: m.web_names.join(', ') || t('s_none'), href: '#/settings/addr', k: 'addrnav' }) : null,
-        sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
+        sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' }),
+        // the Wi-Fi chip firmware on trial, for homes with several access points of one name (docs/32)
+        m.chip_trial ? sRow({ icon: 'wifi', label: t('s_chip'), sub: t('s_chip_sub'), href: '#/settings/chip', k: 'chipnav' }) : null
     ]);
   }
   // Other names for this page (#45): the owner's own DNS names, which the Jooki's web server
@@ -3357,6 +3391,52 @@
         } }, t('ssh_key_add')),
         Number(m.ssh_keys) ? h('button', { class: 'btn ghost', 'data-k': 'sshkeyclear', onclick: function () { send('OJ_SSH_KEY', { clear: true }); } }, t('ssh_key_clear')) : null))],
       t('ssh_key_help')));
+    return out;
+  }
+  // The Wi-Fi chip firmware on trial (docs/32): the Jooki answers in /oj-chip.txt ("state: ...",
+  // "step: ...", then what the checks said), read every 3 s while this page is open.
+  var chip = { polling: false, state: null, step: null, lines: [], sure: false };
+  // coming back to the page: ask again (the answer on file may be from before a restart)
+  window.addEventListener('hashchange', function () { if (location.hash === '#/settings/chip') chip.fresh = true; });
+  function chipRead(txt) {
+    if (!txt) return;
+    var m = /^state: *(\S+)/m.exec(txt), s = /^step: *(\S+)/m.exec(txt);
+    chip.state = m ? m[1] : chip.state; chip.step = s ? s[1] : chip.step;
+    chip.lines = txt.split('\n').filter(function (l) { return /^NOT OK/.test(l); }).map(function (l) { return l.replace(/^NOT OK\s+/, ''); });
+  }
+  // asking where it stands is harmless: quietly, and without taking the place of a command that waits for the parent code
+  function chipAsk() { if (client && online) client.publish('/j/web/input/OJ_CHIP_STATUS', '{}'); }
+  function chipPoll() {
+    if (location.hash !== '#/settings/chip') { chip.polling = false; return; }
+    getText('/oj-chip.txt', function (txt) {
+      // nothing yet, or the Jooki has restarted (the file was in its memory): ask again, now and then
+      if (!txt && Date.now() - (chip.asked || 0) > 15000) { chip.asked = Date.now(); chipAsk(); }
+      chipRead(txt); render(); setTimeout(chipPoll, 3000);
+    });
+  }
+  function chipPage() {
+    if (!obj(S.maintenance).chip_trial) return null;
+    if (!chip.polling || chip.fresh) {
+      chip.fresh = false; chip.sure = false; chip.state = chip.step = null; chip.lines = []; chip.asked = Date.now(); chipAsk();
+      if (!chip.polling) { chip.polling = true; setTimeout(chipPoll, 1500); }
+    }
+    var st = chip.state, step = chip.step, busy = step === 'downloading' || step === 'checking' || step === 'restarting';
+    var label = { none: 'chip_orig', restored: 'chip_orig', staged: 'chip_trying', flashing: 'chip_trying', trying: 'chip_trying',
+                  accepted: 'chip_new', restore: 'chip_going_back', restoring: 'chip_going_back', 'restore-failed': 'chip_failed', 'failed-damaged': 'chip_damaged' }[st];
+    var rows = [sRow({ icon: 'wifi', label: label ? t(label) : '…', k: 'chipstate' })];
+    var note = step === 'downloading' ? t('chip_dl') : step === 'checking' ? t('chip_check') : step === 'restarting' ? t('chip_restart')
+             : step === 'unavailable' ? t('chip_unavailable') : null;
+    var out = [h('p', { class: 'gpad small' }, t('chip_intro')), h('p', { class: 'gpad small muted' }, t('chip_safe')), sGroup(null, rows, note)];
+    if (step === 'refused' && chip.lines.length) out.push(h('div', { class: 'gpad', 'data-k': 'chiprefused' }, h('p', { class: 'small accent-text' }, t('chip_refused')),
+      h('ul', { class: 'small' }, chip.lines.map(function (l) { return h('li', null, l); }))));
+    var canTry = !busy && step !== 'unavailable' && (st === 'none' || st === 'restored' || st === 'failed-damaged');
+    var canBack = !busy && (st === 'accepted' || st === 'restore-failed' || st === 'staged');
+    var btns = [];
+    if (canTry && !chip.sure) btns.push(h('button', { class: 'btn primary', 'data-k': 'chiptry', onclick: function () { chip.sure = true; render(); } }, t('chip_try')));
+    if (canTry && chip.sure) btns.push(h('button', { class: 'btn primary', 'data-k': 'chiptrysure', onclick: function () { chip.sure = false; chip.step = 'downloading'; chip.lines = []; send('OJ_CHIP_TRY', {}); render(); } }, t('chip_try_sure')),
+      h('button', { class: 'btn ghost', 'data-k': 'chipcancel', onclick: function () { chip.sure = false; render(); } }, t('cancel')));
+    if (canBack) btns.push(h('button', { class: 'btn ghost', 'data-k': 'chipback', onclick: function () { chip.step = 'restarting'; send('OJ_CHIP_BACK', {}); render(); } }, t('chip_back')));
+    if (btns.length) out.push(h('div', { class: 'row gpad', style: 'gap:8px;flex-wrap:wrap' }, btns));
     return out;
   }
   // Ask for the parent code when the Jooki refuses a protected action, then retry it.

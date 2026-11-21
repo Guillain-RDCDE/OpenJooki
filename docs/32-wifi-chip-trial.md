@@ -1,7 +1,26 @@
 # A Wi-Fi chip firmware on trial, without opening the Jooki
 
-Status, 20/11/2026: ready for a first trial on our own Jooki. Never run on a real Jooki yet.
-Families are not offered it (decision of 08/11/2026); a page button comes only after that trial.
+Status, 21/11/2026: tried on our own Jooki (see the end): the way back, rehearsed first, then the
+new firmware, accepted by the Jooki itself, sound, knob, tokens and Bluetooth fine. Not yet on a
+mesh (ours has none). Offered as a trial in the page, *Settings → Advanced → Wi-Fi with several
+access points* (OpenJooki 2.5.10), to the families with a mesh who asked (#51).
+
+## From the page
+
+The row shows only with a core that has it (`maintenance.chip_trial`). The page says what it is
+for and that the Jooki comes back by itself, shows where the trial stands (original version,
+trying, new version in use, going back), and offers *Try the new version* (two taps) or *Go back
+to the original version*. Both are behind the parent code (`OJ_CHIP_TRY`, `OJ_CHIP_BACK`; v2
+`chip.try`, `chip.back`); asking where it stands is not (`OJ_CHIP_STATUS`, `chip.status`).
+
+The core's shell action `chip_trial` does the rest in the background and writes its answer to
+`/oj-chip.txt` (`state:`, `step:`, then the lines of the checks), read by the page every 3 s:
+trying downloads the package from the GitHub pre-release `esp32-wifi`
+(`chip_package_url`), hands it to `oj-esp32-trial install` (which checks its SHA-256 and
+everything else), and restarts the Jooki only when the trial is staged; a refusal or a failed
+download is said on the page and changes nothing. Going back is `oj-esp32-trial uninstall` and a
+restart. Tested by `tools/openjooki/tests/test_chip_page.py` (real core and page, the tool and
+the restart as stand-ins, the package from the bench's server).
 
 The new firmware is the chip fix for mesh networks (docs/20, `tools/firmware/wifi-roaming.patch`,
 on top of the volume firmware of docs/30-31). This page is about putting it on a Jooki and taking
@@ -91,3 +110,12 @@ On the charger, on the Wi-Fi, OpenJooki with this script (2.5.8 or later), maint
 
 If the Jooki ends with no Wi-Fi and no sound after all that (`restore-failed`): open it and
 restore over the serial line (docs/31, recovery).
+
+### Done on 21/11/2026
+
+`check` all ok on our Jooki (2.5.9, its installer identical to the bench's). The way back first,
+on its own: `restore` asked, restart: the original firmware written back in 37 s, the chip and the
+Wi-Fi back, the flag set again. Then `install` and a restart: the new firmware written in 37 s,
+`accepted` by the Jooki about 3 minutes after the Wi-Fi was back; `esp32_cmd get_device_info`
+says `app_version=0x020C-oj-volume2`. Sound, knob, tokens and Bluetooth headphones fine. The
+page's volume works as before (the original Linux controller does not pass the volume API 2 on).

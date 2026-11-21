@@ -142,6 +142,31 @@ if curl -fsSL --max-time 30 "$U" -o "$O.tmp"; then mv "$O.tmp" "$O"; else echo '
 S="$1"; L="$2"; U="$3"; [ -e /tmp/oj-updating ] && exit 0; touch /tmp/oj-updating; : > "$S"; ln -sf "$S" "$L"
 if curl -fsSL --max-time 60 "$U" -o /tmp/oj-o.sh; then sh /tmp/oj-o.sh; else echo '[openjooki] ERROR: cannot reach GitHub - nothing changed' >> "$S"; fi
 rm -f /tmp/oj-updating]], "update_start", a.status, a.link, a.url } end, background = true },
+  -- the Wi-Fi chip firmware on trial (docs/32): oj-esp32-trial does the checks and the writing (at the
+  -- next start); this only fetches the package, asks it, says where it stands in OUT, and restarts
+  chip_trial     = { argv = function(a) if not is_path(a.out) then return nil, "bad path" end
+                             if a.op ~= "status" and a.op ~= "try" and a.op ~= "back" then return nil, "bad op" end
+                             if a.op == "try" and not is_update_url(a.url) then return nil, "bad url" end
+                             return { "sh", "-c", [[
+O="$1"; OP="$2"; U="$3"; T=${OJ_CHIP_TOOL:-/jooki/bin/oj-esp32-trial}; R=${OJ_CHIP_REBOOT:-reboot}; P=${OJ_CHIP_PKG:-/data/openjooki/esp32-candidate.tgz}; M=/tmp/oj-chip.out
+st() { "$T" status 2>/dev/null | head -n 1 | sed 's/^state: //'; }
+put() { { echo "state: $(st)"; echo "step: $1"; if [ -f "$M" ]; then cat "$M"; fi; } > "$O.tmp" && mv -f "$O.tmp" "$O"; }
+if [ ! -x "$T" ]; then printf 'state: none\nstep: unavailable\n' > "$O"; exit 0; fi
+case "$OP" in
+  status) [ -e /tmp/oj-chip-busy ] || rm -f "$M"; [ -e /tmp/oj-chip-busy ] || put idle ;;
+  try)
+    [ -e /tmp/oj-chip-busy ] && exit 0; touch /tmp/oj-chip-busy; rm -f "$M"; put downloading
+    if curl -fsSL --max-time 300 "$U" -o "$P.part" && mv -f "$P.part" "$P"; then
+      put checking; "$T" install "$P" > "$M" 2>&1
+      if [ "$(st)" = staged ]; then put restarting; rm -f /tmp/oj-chip-busy; sync; sleep 3; $R; exit 0; fi
+      put refused
+    else rm -f "$P.part"; echo "NOT OK  the Jooki could not download the new firmware" > "$M"; put refused; fi
+    rm -f /tmp/oj-chip-busy ;;
+  back)
+    [ -e /tmp/oj-chip-busy ] && exit 0; rm -f "$M"; "$T" uninstall > "$M" 2>&1
+    if [ "$(st)" = restore ]; then put restarting; sync; sleep 3; $R; exit 0; fi
+    put idle ;;
+esac]], "chip_trial", a.out, a.op, a.url or "" } end, background = true },
   df             = { argv = function(a) if not is_path(a.dir) then return nil, "bad path" end return { "df", "-k", a.dir } end },
   -- a song an app sent over https (#50): the player has no TLS, curl has. curl writes it to the music
   -- card as it comes, and the web server hands it to the player over http while it grows

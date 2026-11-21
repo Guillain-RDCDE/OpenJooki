@@ -22,11 +22,28 @@ function update.on_start(doc)
                         { kind = "log", level = "info", key = "update.start" } } }
 end
 
+-- The Wi-Fi chip firmware on trial (docs/32): a background shell action asks oj-esp32-trial and
+-- writes its answer to /oj-chip.txt for the page (the state, then the step: idle, downloading,
+-- checking, restarting, refused, unavailable). Trying downloads the package from GitHub; trying
+-- and going back restart the Jooki, which writes the chip at the start.
+local function chip(op)
+  return function(doc)
+    return { commands = { { kind = "shell", action = "chip_trial",
+                            args = { op = op, out = public(doc) .. "/oj-chip.txt", url = cfg(doc, "chip_package_url") } },
+                          { kind = "log", level = "info", key = "update.chip_" .. op } } }
+  end
+end
+update.on_chip_status, update.on_chip_try, update.on_chip_back = chip("status"), chip("try"), chip("back")
+
 function update.install(api, dispatch)
   dispatch.on("update.check", "update", update.on_check)
   dispatch.on("update.start", "update", update.on_start)
   api.command("update.check", nil, update.on_check)
   api.command("update.start", nil, update.on_start)
+  for _, op in ipairs({ "status", "try", "back" }) do
+    dispatch.on("chip." .. op, "update", update["on_chip_" .. op])
+    api.command("chip." .. op, nil, update["on_chip_" .. op])
+  end
 end
 
 return update

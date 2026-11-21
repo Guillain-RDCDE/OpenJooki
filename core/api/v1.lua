@@ -254,6 +254,10 @@ end
 H.OJ_UPDATE_CHECK = function() return { commands = { util.emit("update.check") } } end
 H.OJ_SET_NAME = function(doc, p) return device.on_set_name(doc, p.name) end
 H.OJ_UPDATE_START = function() return { commands = { util.emit("update.start") } } end
+-- the Wi-Fi chip firmware on trial (docs/32): its state, try it, go back to the original
+H.OJ_CHIP_STATUS = function() return { commands = { util.emit("chip.status") } } end
+H.OJ_CHIP_TRY = function() return { commands = { util.emit("chip.try") } } end
+H.OJ_CHIP_BACK = function() return { commands = { util.emit("chip.back") } } end
 -- airplane mode from the page, always bounded (minutes, and at most until the next start)
 H.OJ_AIRPLANE = function(doc, p, ev) return device.on_airplane(doc, { minutes = p.minutes, cancel = p.cancel == true }, ev) end
 -- 5 s of rainbow on the lights, just for fun (left open: it changes nothing)
@@ -281,7 +285,7 @@ local PROTECTED = {
   PLAYLIST_DELETE = true, PLAYLIST_UPDATE = true, TOKEN_EDIT = true, TOKEN_DELETE = true, TOKEN_SET_IMAGE = true,
   OJ_VOLUME_TEST = true, SET_CFG = true, SET_TOY_SAFE = true, OJ_HEADPHONES = true, SET_WIFI = true, SHUTDOWN = true,
   DEEZER_GET_PLAYLISTS = true, SET_CFG_DEEZER = true, OJ_BEDTIME_SET = true,
-  OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_SET_NAME = true,
+  OJ_UPDATE_CHECK = true, OJ_UPDATE_START = true, OJ_CHIP_TRY = true, OJ_CHIP_BACK = true, OJ_SET_NAME = true,
   OJ_SSH_ON = true, OJ_SSH_OFF = true, OJ_SSH_KEY = true, OJ_MQTT_LAN = true, OJ_WEB_NAMES = true, OJ_AIRPLANE = true,
   OJ_BT_CONNECT = true, OJ_BT_FORGET = true, OJ_SPOTIFY_FORGET = true,
 }

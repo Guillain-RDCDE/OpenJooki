@@ -45,7 +45,7 @@ security.PROTECTED_V2 = {
   ["token.edit"] = true, ["token.forget"] = true,
   ["device.test_volume"] = true, ["device.set_config"] = true, ["device.toy_safe"] = true, ["device.set_wifi"] = true,
   ["device.power_off"] = true, ["device.set_name"] = true, ["device.airplane"] = true,
-  ["bedtime.set"] = true, ["update.check"] = true, ["update.start"] = true,
+  ["bedtime.set"] = true, ["update.check"] = true, ["update.start"] = true, ["chip.try"] = true, ["chip.back"] = true,
   ["spotify.new_playlist"] = true, ["spotify.forget_account"] = true, ["deezer.get_playlists"] = true, ["deezer.set_config"] = true,
 }
 
@@ -250,6 +250,8 @@ function security.on_boot(doc, ev)
     if n and not seen[n] and #names < NAMES_MAX then seen[n] = true; names[#names + 1] = n end
   end
   m.web_names = names
+  -- the page can put a Wi-Fi chip firmware on trial (services.update, docs/32)
+  m.chip_trial = true
   return { state = { maintenance = m } }
 end
 

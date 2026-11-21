@@ -30,7 +30,7 @@
   // the topic pages (#/settings/<topic>): the key of each one's title, and what draws it
   var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
-               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage },
+               parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage }, chip: { title: 's_chip', page: chipPage },
                theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
@@ -112,7 +112,9 @@
     return sGroup(null, [
         sRow({ icon: 'home', label: t('s_home'), sub: t('s_home_sub'), value: m.mqtt_lan ? t('s_on') : t('s_off'), href: '#/settings/home', k: 'homenav' }),
         Array.isArray(m.web_names) ? sRow({ icon: 'globe', label: t('s_addr'), sub: t('s_addr_sub'), value: m.web_names.join(', ') || t('s_none'), href: '#/settings/addr', k: 'addrnav' }) : null,
-        sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' })
+        sRow({ icon: 'wrench', label: t('s_maint'), sub: t('s_maint_sub'), value: m.ssh ? t('s_open') : t('s_closed'), href: '#/settings/maintenance', k: 'maintnav' }),
+        // the Wi-Fi chip firmware on trial, for homes with several access points of one name (docs/32)
+        m.chip_trial ? sRow({ icon: 'wifi', label: t('s_chip'), sub: t('s_chip_sub'), href: '#/settings/chip', k: 'chipnav' }) : null
     ]);
   }
   // Other names for this page (#45): the owner's own DNS names, which the Jooki's web server
@@ -334,6 +336,52 @@
         } }, t('ssh_key_add')),
         Number(m.ssh_keys) ? h('button', { class: 'btn ghost', 'data-k': 'sshkeyclear', onclick: function () { send('OJ_SSH_KEY', { clear: true }); } }, t('ssh_key_clear')) : null))],
       t('ssh_key_help')));
+    return out;
+  }
+  // The Wi-Fi chip firmware on trial (docs/32): the Jooki answers in /oj-chip.txt ("state: ...",
+  // "step: ...", then what the checks said), read every 3 s while this page is open.
+  var chip = { polling: false, state: null, step: null, lines: [], sure: false };
+  // coming back to the page: ask again (the answer on file may be from before a restart)
+  window.addEventListener('hashchange', function () { if (location.hash === '#/settings/chip') chip.fresh = true; });
+  function chipRead(txt) {
+    if (!txt) return;
+    var m = /^state: *(\S+)/m.exec(txt), s = /^step: *(\S+)/m.exec(txt);
+    chip.state = m ? m[1] : chip.state; chip.step = s ? s[1] : chip.step;
+    chip.lines = txt.split('\n').filter(function (l) { return /^NOT OK/.test(l); }).map(function (l) { return l.replace(/^NOT OK\s+/, ''); });
+  }
+  // asking where it stands is harmless: quietly, and without taking the place of a command that waits for the parent code
+  function chipAsk() { if (client && online) client.publish('/j/web/input/OJ_CHIP_STATUS', '{}'); }
+  function chipPoll() {
+    if (location.hash !== '#/settings/chip') { chip.polling = false; return; }
+    getText('/oj-chip.txt', function (txt) {
+      // nothing yet, or the Jooki has restarted (the file was in its memory): ask again, now and then
+      if (!txt && Date.now() - (chip.asked || 0) > 15000) { chip.asked = Date.now(); chipAsk(); }
+      chipRead(txt); render(); setTimeout(chipPoll, 3000);
+    });
+  }
+  function chipPage() {
+    if (!obj(S.maintenance).chip_trial) return null;
+    if (!chip.polling || chip.fresh) {
+      chip.fresh = false; chip.sure = false; chip.state = chip.step = null; chip.lines = []; chip.asked = Date.now(); chipAsk();
+      if (!chip.polling) { chip.polling = true; setTimeout(chipPoll, 1500); }
+    }
+    var st = chip.state, step = chip.step, busy = step === 'downloading' || step === 'checking' || step === 'restarting';
+    var label = { none: 'chip_orig', restored: 'chip_orig', staged: 'chip_trying', flashing: 'chip_trying', trying: 'chip_trying',
+                  accepted: 'chip_new', restore: 'chip_going_back', restoring: 'chip_going_back', 'restore-failed': 'chip_failed', 'failed-damaged': 'chip_damaged' }[st];
+    var rows = [sRow({ icon: 'wifi', label: label ? t(label) : '…', k: 'chipstate' })];
+    var note = step === 'downloading' ? t('chip_dl') : step === 'checking' ? t('chip_check') : step === 'restarting' ? t('chip_restart')
+             : step === 'unavailable' ? t('chip_unavailable') : null;
+    var out = [h('p', { class: 'gpad small' }, t('chip_intro')), h('p', { class: 'gpad small muted' }, t('chip_safe')), sGroup(null, rows, note)];
+    if (step === 'refused' && chip.lines.length) out.push(h('div', { class: 'gpad', 'data-k': 'chiprefused' }, h('p', { class: 'small accent-text' }, t('chip_refused')),
+      h('ul', { class: 'small' }, chip.lines.map(function (l) { return h('li', null, l); }))));
+    var canTry = !busy && step !== 'unavailable' && (st === 'none' || st === 'restored' || st === 'failed-damaged');
+    var canBack = !busy && (st === 'accepted' || st === 'restore-failed' || st === 'staged');
+    var btns = [];
+    if (canTry && !chip.sure) btns.push(h('button', { class: 'btn primary', 'data-k': 'chiptry', onclick: function () { chip.sure = true; render(); } }, t('chip_try')));
+    if (canTry && chip.sure) btns.push(h('button', { class: 'btn primary', 'data-k': 'chiptrysure', onclick: function () { chip.sure = false; chip.step = 'downloading'; chip.lines = []; send('OJ_CHIP_TRY', {}); render(); } }, t('chip_try_sure')),
+      h('button', { class: 'btn ghost', 'data-k': 'chipcancel', onclick: function () { chip.sure = false; render(); } }, t('cancel')));
+    if (canBack) btns.push(h('button', { class: 'btn ghost', 'data-k': 'chipback', onclick: function () { chip.step = 'restarting'; send('OJ_CHIP_BACK', {}); render(); } }, t('chip_back')));
+    if (btns.length) out.push(h('div', { class: 'row gpad', style: 'gap:8px;flex-wrap:wrap' }, btns));
     return out;
   }
   // Ask for the parent code when the Jooki refuses a protected action, then retry it.

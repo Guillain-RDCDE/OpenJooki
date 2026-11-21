@@ -19,7 +19,7 @@ The v1 contract (`/j/web/input/*`, `/j/web/output/*`) is still served, by `core/
 
 `device`, `health`, `library` {playlists, tracks, tokens}, `playback` {state, position_ms, now}, `audiocfg`, `volume_test` {active, target, percent, error}, `resume`, `bedtime` {cfg, night, sleep}, `limits`, `net`, `bluetooth`, `power`, `nfc`, `userMessages`, `spotify`, `deezer`, `flags`, `maintenance` {ssh, ssh_until, ssh_keys, mqtt_lan, parent}, `net_watch`. (Private sub-trees — `config`, `system`, `activity`, every `*_int` — are not published.)
 
-## Commands (39)
+## Commands (42)
 
 ### `bedtime.set`
 
@@ -90,6 +90,24 @@ Payload schema:
   "type": "object"
 }
 ```
+
+### `chip.back`
+
+
+
+No payload.
+
+### `chip.status`
+
+
+
+No payload.
+
+### `chip.try`
+
+
+
+No payload.
 
 ### `core.ping`
 

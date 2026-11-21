@@ -62,5 +62,38 @@ describe("services.update", function()
     assert_eq(on["update.start"], { module = "update", fn = update.on_start })
     assert_eq(cmds["update.check"].fn, update.on_check); assert_nil(cmds["update.check"].schema)
     assert_eq(cmds["update.start"].fn, update.on_start); assert_nil(cmds["update.start"].schema)
+    for _, op in ipairs({ "status", "try", "back" }) do
+      assert_eq(on["chip." .. op], { module = "update", fn = update["on_chip_" .. op] })
+      assert_eq(cmds["chip." .. op].fn, update["on_chip_" .. op])
+    end
+  end)
+
+  it("the Wi-Fi chip on trial (docs/32): the answer file for the page, the package address, the shell's checks", function()
+    local d = { config = { web_public_dir = "/tmp/web_ctrl_dirs/public", chip_package_url = "http://127.0.0.1:8090/oj-test/chip.tgz" } }
+    for _, op in ipairs({ "status", "try", "back" }) do
+      local r = update["on_chip_" .. op](d)
+      local sh = find(r, "shell", "action", "chip_trial")
+      assert_eq(sh.args, { op = op, out = "/tmp/web_ctrl_dirs/public/oj-chip.txt", url = "http://127.0.0.1:8090/oj-test/chip.tgz" })
+      assert_true(find(r, "log", "key", "update.chip_" .. op) ~= nil)
+      local argv = shell._argv("chip_trial", sh.args)
+      assert_eq(argv[1], "sh"); assert_eq(argv[#argv - 2], sh.args.out); assert_eq(argv[#argv - 1], op); assert_eq(argv[#argv], sh.args.url)
+    end
+    -- trying fetches only from an allowed address; status and going back fetch nothing
+    assert_nil(shell._argv("chip_trial", { op = "try", out = "/tmp/x", url = "https://example.com/chip.tgz" }))
+    assert_nil(shell._argv("chip_trial", { op = "try", out = "/tmp/x" }))
+    assert_true(shell._argv("chip_trial", { op = "status", out = "/tmp/x" }) ~= nil)
+    assert_true(shell._argv("chip_trial", { op = "back", out = "/tmp/x" }) ~= nil)
+    assert_nil(shell._argv("chip_trial", { op = "rm -rf", out = "/tmp/x" }))
+    assert_nil(shell._argv("chip_trial", { op = "status", out = "relative" }))
+    assert_nil(shell._argv("chip_trial", { op = "status", out = "/tmp/'x" }))
+    -- the real Jooki's package address (kernel.config) passes, and names the pinned package
+    local url = require("kernel.config").defaults.chip_package_url
+    assert_true(shell._argv("chip_trial", { op = "try", out = "/tmp/x", url = url }) ~= nil)
+    assert_match(url, "494de242")
+  end)
+
+  it("trying and going back are behind the parent code; asking where it stands is not", function()
+    local sec = require("services.security")
+    assert_true(sec.PROTECTED_V2["chip.try"]); assert_true(sec.PROTECTED_V2["chip.back"]); assert_nil(sec.PROTECTED_V2["chip.status"])
   end)
 end)

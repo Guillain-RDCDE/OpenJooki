@@ -73,7 +73,9 @@
   }
   // parent code (docs/adr/0007): remembered once per device, sent with every command;
   // the Jooki only checks it on the actions it protects. Playing music never needs it.
+  // the parent code: kept for this visit only, unless the parent chose to have this device remember it (#53)
   var parentCode = lsGet('oj.parent') || '';
+  function rememberCode(code, keep) { parentCode = code || ''; lsSet('oj.parent', keep ? parentCode : ''); }
   var pendingCmd = null;
   function send(type, payload) {
     lastCmd = Date.now();

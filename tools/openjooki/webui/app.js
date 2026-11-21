@@ -187,6 +187,8 @@
     parent_label: 'Code parent', parent_help: 'Un code à 4 chiffres empêche enfants et invités de changer les réglages (supprimer une playlist, le Wi-Fi, lancer une mise à jour).',
     parent_change: 'Changer le code',
     parent_prompt: 'Entre le code parent', parent_new: 'Code à 4 chiffres', parent_cur: 'Code actuel', parent_bad: 'Code incorrect',
+    parent_remember: 'Se souvenir du code sur ce téléphone ou cet ordinateur', parent_needed: 'Rien n’a été changé : il faut le code parent',
+    parent_remembered: 'Ce téléphone ou cet ordinateur retient le code', parent_forget: 'Ici, le code n’est jamais demandé. Touche pour l’oublier.', parent_forgotten: 'Oublié ici : le code sera demandé à nouveau',
     parent_reset: 'Code oublié ? Sur le Jooki, baisse le volume à fond, puis tiens la molette de piste à gauche (◀) pendant 10 secondes.',
     flat_tok: 'Jeton plat', thanks_tok: 'Jeton Merci',
     own_hint: 'Ce jeton est un personnage à lui tout seul : donne-lui un nom, une image et sa playlist.',
@@ -207,6 +209,7 @@
     chip_dl: 'Téléchargement…', chip_check: 'Vérification que tout est prêt…', chip_restart: 'Le Jooki redémarre. Laisse-le allumé : cette page revient toute seule dans quelques minutes.',
     chip_refused: 'Pas maintenant, rien n’a été changé :', chip_unavailable: 'Ce Jooki ne peut pas le faire.',
     chip_try: 'Essayer la nouvelle version', chip_try_sure: 'Oui, essayer', chip_back: 'Revenir à la version d’origine',
+    chip_newer: 'Une version plus récente est prête : tu peux l’essayer de la même façon',
     disc_add: 'Ajouter des disques', disc_drop: 'Glisse ici les dossiers de tes disques : chaque dossier devient une playlist',
     disc_hint: function (k) { return 'Les FLAC et WAV sont convertis en MP3 ' + k + ' kbps sur ton ordinateur, avant l\'envoi.'; },
     converting: function (k) { return 'Conversion en MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'En attente (sera converti en MP3 ' + k + ' kbps)'; },
@@ -410,6 +413,8 @@
     parent_label: 'Parent code', parent_help: 'A 4-digit code stops children and guests from changing settings (deleting a playlist, Wi-Fi, starting an update).',
     parent_change: 'Change the code',
     parent_prompt: 'Enter the parent code', parent_new: '4-digit code', parent_cur: 'Current code', parent_bad: 'Wrong code',
+    parent_remember: 'Remember the code on this phone or computer', parent_needed: 'Nothing was changed: this needs the parent code',
+    parent_remembered: 'This phone or computer remembers the code', parent_forget: 'The code is never asked here. Tap to forget it.', parent_forgotten: 'Forgotten here: the code will be asked again',
     parent_reset: 'Forgot the code? On the Jooki, turn the volume all the way down, then hold the track knob to the left (◀) for 10 seconds.',
     flat_tok: 'Flat token', thanks_tok: 'Thank-you token',
     own_hint: 'This token is a character of its own: give it a name, a picture and its playlist.',
@@ -430,6 +435,7 @@
     chip_dl: 'Downloading…', chip_check: 'Checking that everything is ready…', chip_restart: 'The Jooki restarts. Leave it on: this page comes back by itself in a few minutes.',
     chip_refused: 'Not now, nothing was changed:', chip_unavailable: 'This Jooki cannot do it.',
     chip_try: 'Try the new version', chip_try_sure: 'Yes, try it', chip_back: 'Go back to the original version',
+    chip_newer: 'A newer version is ready: you can try it the same way',
     disc_add: 'Add albums', disc_drop: 'Drop your album folders here: each folder becomes a playlist',
     disc_hint: function (k) { return 'FLAC and WAV files are turned into MP3 at ' + k + ' kbps on your computer, before they are sent.'; },
     converting: function (k) { return 'Converting to MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Waiting (will be converted to MP3 ' + k + ' kbps)'; },
@@ -551,6 +557,8 @@
     ssh_label: 'Wartungszugang (SSH)', ssh_help: 'Für Technikinteressierte. Schaltet sich nach einer Stunde aus.', ssh_key_l: 'Öffentlicher SSH-Schlüssel', ssh_key_help: 'Füge deinen öffentlichen Schlüssel ein (eine Zeile, die mit ssh-ed25519 oder ssh-rsa beginnt). Der Jooki behält ihn auch nach Updates.', ssh_key_add: 'Schlüssel hinzufügen', ssh_key_clear: 'Schlüssel vergessen', ssh_key_added: 'Schlüssel hinzugefügt', ssh_keys_n: function (n) { return n ? n + ' Schlüssel gespeichert' : 'Kein Schlüssel gespeichert'; }, err_ssh_key: 'Das ist kein öffentlicher SSH-Schlüssel (eine Zeile mit ssh-ed25519… oder ssh-rsa…).', err_ssh_closed: 'Öffne zuerst den Wartungszugang.',
     mqtt_label: 'Hausautomation (MQTT im Netzwerk)', mqtt_help: 'Für Home Assistant. Standardmäßig ausgeschaltet.', mqtt_host_l: 'Host', mqtt_port_l: 'Port', mqtt_user_l: 'Benutzer', mqtt_pass_l: 'Passwort',
     parent_label: 'Elterncode', parent_help: 'Ein vierstelliger Code schützt die Einstellungen vor Änderungen durch Kinder und Gäste (Wiedergabelisten löschen, WLAN, Updates).', parent_change: 'Code ändern', parent_prompt: 'Elterncode eingeben', parent_new: 'Vierstelliger Code', parent_cur: 'Bisheriger Code', parent_bad: 'Falscher Code', parent_reset: 'Code vergessen? Drehe die Lautstärke am Jooki ganz herunter. Halte dann das Titelrad 10 Sekunden nach links (◀).',
+    parent_remember: 'Code auf diesem Telefon oder Computer merken', parent_needed: 'Nichts wurde geändert: Dafür braucht es den Elterncode',
+    parent_remembered: 'Dieses Telefon oder dieser Computer kennt den Code', parent_forget: 'Hier wird der Code nie abgefragt. Tippen, um ihn zu vergessen.', parent_forgotten: 'Hier vergessen: Der Code wird wieder abgefragt',
     flat_tok: 'Flacher Chip', thanks_tok: 'Danke-Chip', own_hint: 'Dieser Chip ist eine eigene Figur. Gib ihm einen Namen, ein Bild und eine Wiedergabeliste.', make_token: 'Zu einem echten Jooki-Chip machen', make_token_tip: 'Dann hält das Wegnehmen die Wiedergabe an, und er funktioniert zweimal hintereinander. Mit einem Android-Handy oder einer NFC-App.', flat_shared_hint: 'Flache Chips ohne eigene Wiedergabeliste starten diese hier.',
     lib_pick: 'Bild auswählen', lib_search_ph: 'Suchen: Katze, Rakete, Schlafen…', lib_loading: 'Bilder werden geladen…', lib_fail: 'Die Bilder konnten nicht geladen werden. Versuche es erneut.', lib_none: function (q) { return 'Kein Bild für „' + q + '“.'; }, lib_n: function (n) { return n + (n === 1 ? ' Bild' : ' Bilder'); }, lib_set: function (n) { return 'Bild ausgewählt: ' + n; },
     s_sound: 'Lautstärke und Kopfhörer', s_play: 'Wiedergabe', s_buttons: 'Jooki-Tasten', s_links: 'Verbindungen', s_listen: 'Wiedergabe', s_bt: 'Lautsprecher oder Kopfhörer', hp_wired: 'Kopfhörer erkannt', hp_wired_sub: 'Mit einem USB-C-auf-Klinke-Adapter ohne eingebauten Chip', hp_force: 'Ton auf den Kopfhörer', hp_force_sub: 'Beim Laden erkennt der Jooki keinen Kopfhörer. Eingeschaltet lädt er nicht.', hp_yes: 'Ja', hp_no: 'Nein', hp_boost: 'Lautere Kopfhörer', hp_boost_sub: 'Vor dem Aufsetzen die Lautstärke herunterdrehen', hp_boost_kids: 'Funktioniert nur bei ausgeschaltetem Kindermodus', s_upnp: 'Aus anderen Apps abspielen', s_upnp_sub: 'UPnP / DLNA im heimischen WLAN: BubbleUPnP, mconnect, Musikserver', s_none: 'Keine', s_night_trip: 'Schlafenszeit und Reisen', s_general: 'Allgemein', s_advanced: 'Erweitert', s_on: 'Ein', s_off: 'Aus', s_uptodate: 'Aktuell', s_avail: function (v) { return v + ' verfügbar'; }, s_storage_free: 'frei', s_open: 'Offen', s_closed: 'Geschlossen', s_home: 'Hausautomation', s_home_sub: 'Home Assistant', s_addr: 'Weitere Adressen', s_addr_sub: 'Namen aus deinem eigenen DNS', addr_help: 'Um diese Seite mit einem Namen aus deinem eigenen DNS zu öffnen, einer pro Zeile. Namen auf .local, .lan, .home oder .internal funktionieren immer.', addr_bad: 'Bis zu 5 Namen, z. B. jooki.example.com', s_maint: 'Wartungszugang', s_maint_sub: 'SSH für Technikinteressierte',
@@ -565,6 +573,7 @@
     chip_dl: 'Wird heruntergeladen…', chip_check: 'Prüfen, ob alles bereit ist…', chip_restart: 'Der Jooki startet neu. Lassen Sie ihn an: Diese Seite kommt in ein paar Minuten von selbst zurück.',
     chip_refused: 'Jetzt nicht, nichts wurde geändert:', chip_unavailable: 'Dieser Jooki kann das nicht.',
     chip_try: 'Neue Version ausprobieren', chip_try_sure: 'Ja, ausprobieren', chip_back: 'Zurück zur ursprünglichen Version',
+    chip_newer: 'Eine neuere Version ist bereit: Sie können sie genauso ausprobieren',
     s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
   };
   T.nl = {
@@ -744,6 +753,8 @@
     parent_label: 'Oudercode', parent_help: 'Een 4-cijferige code voorkomt dat kinderen en gasten instellingen wijzigen (afspeellijst verwijderen, wifi, een update starten).',
     parent_change: 'Code wijzigen',
     parent_prompt: 'Voer de oudercode in', parent_new: '4-cijferige code', parent_cur: 'Huidige code', parent_bad: 'Onjuiste code',
+    parent_remember: 'De code onthouden op deze telefoon of computer', parent_needed: 'Er is niets veranderd: hiervoor is de oudercode nodig',
+    parent_remembered: 'Deze telefoon of computer onthoudt de code', parent_forget: 'Hier wordt de code nooit gevraagd. Tik om hem te vergeten.', parent_forgotten: 'Hier vergeten: de code wordt weer gevraagd',
     parent_reset: 'Code vergeten? Zet op de Jooki het volume helemaal laag en houd dan de nummerknop 10 seconden naar links (◀).',
     flat_tok: 'Plat figuurtje', thanks_tok: 'Bedankt-figuurtje',
     own_hint: 'Dit figuurtje is een personage op zich: geef het een naam, een plaatje en een afspeellijst.',
@@ -764,6 +775,7 @@
     chip_dl: 'Downloaden…', chip_check: 'Controleren of alles klaar is…', chip_restart: 'De Jooki start opnieuw. Laat hem aan: deze pagina komt over een paar minuten vanzelf terug.',
     chip_refused: 'Nu niet, er is niets veranderd:', chip_unavailable: 'Deze Jooki kan dat niet.',
     chip_try: 'Nieuwe versie proberen', chip_try_sure: 'Ja, proberen', chip_back: 'Terug naar de oorspronkelijke versie',
+    chip_newer: 'Er is een nieuwere versie: je kunt die op dezelfde manier proberen',
     disc_add: 'Albums toevoegen', disc_drop: 'Sleep de mappen van je albums hierheen: elke map wordt een afspeellijst',
     disc_hint: function (k) { return 'FLAC- en WAV-bestanden worden op je computer omgezet naar MP3 ' + k + ' kbps, voordat ze verstuurd worden.'; },
     converting: function (k) { return 'Omzetten naar MP3 ' + k + ' kbps'; }, queued_conv: function (k) { return 'Wachten (wordt omgezet naar MP3 ' + k + ' kbps)'; },
@@ -1126,7 +1138,9 @@
   }
   // parent code (docs/adr/0007): remembered once per device, sent with every command;
   // the Jooki only checks it on the actions it protects. Playing music never needs it.
+  // the parent code: kept for this visit only, unless the parent chose to have this device remember it (#53)
   var parentCode = lsGet('oj.parent') || '';
+  function rememberCode(code, keep) { parentCode = code || ''; lsSet('oj.parent', keep ? parentCode : ''); }
   var pendingCmd = null;
   function send(type, payload) {
     lastCmd = Date.now();
@@ -3352,6 +3366,9 @@
     var rows = [sRow({ icon: 'lock', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
       onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })];
     if (m.parent) rows.push(sRow({ label: t('parent_change'), k: 'pchange', onclick: function () { parentModal('change'); } }));
+    // this device remembers the code (#53): it never asks here, so say it, and let the parent forget it here
+    if (m.parent && lsGet('oj.parent')) rows.push(sRow({ label: t('parent_remembered'), sub: t('parent_forget'), k: 'pforget',
+      onclick: function () { rememberCode('', false); toast(t('parent_forgotten')); render(); } }));
     return sGroup(null, rows, [t('parent_help'), m.parent ? ' ' + t('parent_reset') : null]);
   }
   function homePage() {
@@ -3401,7 +3418,8 @@
   function chipRead(txt) {
     if (!txt) return;
     var m = /^state: *(\S+)/m.exec(txt), s = /^step: *(\S+)/m.exec(txt);
-    chip.state = m ? m[1] : chip.state; chip.step = s ? s[1] : chip.step;
+    var v = /^version: *(\S+)/m.exec(txt);
+    chip.state = m ? m[1] : chip.state; chip.step = s ? s[1] : chip.step; chip.newer = !!(v && v[1] === 'older');
     chip.lines = txt.split('\n').filter(function (l) { return /^NOT OK/.test(l); }).map(function (l) { return l.replace(/^NOT OK\s+/, ''); });
   }
   // asking where it stands is harmless: quietly, and without taking the place of a command that waits for the parent code
@@ -3423,13 +3441,15 @@
     var st = chip.state, step = chip.step, busy = step === 'downloading' || step === 'checking' || step === 'restarting';
     var label = { none: 'chip_orig', restored: 'chip_orig', staged: 'chip_trying', flashing: 'chip_trying', trying: 'chip_trying',
                   accepted: 'chip_new', restore: 'chip_going_back', restoring: 'chip_going_back', 'restore-failed': 'chip_failed', 'failed-damaged': 'chip_damaged' }[st];
-    var rows = [sRow({ icon: 'wifi', label: label ? t(label) : '…', k: 'chipstate' })];
+    // a newer version than the one on trial comes with this OpenJooki: it can be put on trial the same way
+    var newer = st === 'accepted' && chip.newer;
+    var rows = [sRow({ icon: 'wifi', label: label ? t(label) : '…', sub: newer ? t('chip_newer') : null, k: 'chipstate' })];
     var note = step === 'downloading' ? t('chip_dl') : step === 'checking' ? t('chip_check') : step === 'restarting' ? t('chip_restart')
              : step === 'unavailable' ? t('chip_unavailable') : null;
     var out = [h('p', { class: 'gpad small' }, t('chip_intro')), h('p', { class: 'gpad small muted' }, t('chip_safe')), sGroup(null, rows, note)];
     if (step === 'refused' && chip.lines.length) out.push(h('div', { class: 'gpad', 'data-k': 'chiprefused' }, h('p', { class: 'small accent-text' }, t('chip_refused')),
       h('ul', { class: 'small' }, chip.lines.map(function (l) { return h('li', null, l); }))));
-    var canTry = !busy && step !== 'unavailable' && (st === 'none' || st === 'restored' || st === 'failed-damaged');
+    var canTry = !busy && step !== 'unavailable' && (st === 'none' || st === 'restored' || st === 'failed-damaged' || newer);
     var canBack = !busy && (st === 'accepted' || st === 'restore-failed' || st === 'staged');
     var btns = [];
     if (canTry && !chip.sure) btns.push(h('button', { class: 'btn primary', 'data-k': 'chiptry', onclick: function () { chip.sure = true; render(); } }, t('chip_try')));
@@ -3440,14 +3460,21 @@
     return out;
   }
   // Ask for the parent code when the Jooki refuses a protected action, then retry it.
+  // Remembering it on this device is the parent's choice, off unless ticked (#53). Closed without
+  // the code: nothing was changed, said so, and the page shows the Jooki's real settings again.
   function askParent(bad) {
-    var code = '';
-    function submit() { if (!/^\d{4}$/.test(code)) return; parentCode = code; lsSet('oj.parent', code); closeModal();
+    var code = '', keep = false, done = false;
+    function submit() { if (!/^\d{4}$/.test(code)) return; done = true; rememberCode(code, keep); closeModal();
       if (pendingCmd) { var pc = pendingCmd; pc.payload.code = code; send(pc.type, pc.payload); } }
-    openModal({ autofocus: 'pask', render: function () {
+    openModal({ autofocus: 'pask', onclose: function () {
+      if (done) return;
+      pendingCmd = null; toast(t('parent_needed'), 'error'); render();
+    }, render: function () {
       return [h('h3', null, t('parent_prompt')),
         codeInput(t('parent_label'), 'pask', code, function (v) { code = v; }, submit),
         bad ? h('p', { class: 'small accent-text' }, t('parent_bad')) : null,
+        h('label', { class: 'row small', style: 'gap:8px;margin:8px 0' }, h('input', { type: 'checkbox', 'data-k': 'premember', checked: keep,
+          onchange: function (e) { keep = e.target.checked; } }), t('parent_remember')),
         h('p', { class: 'small muted' }, t('parent_reset')),
         modalFoot(t('save'), submit)];
     } });
@@ -3458,11 +3485,12 @@
     function submit() {
       if (mode === 'off') {
         if (!/^\d{4}$/.test(cur)) { bad = true; renderModal(); return; }
-        send('OJ_PARENT_CLEAR', { current: cur }); closeModal(); return;
+        send('OJ_PARENT_CLEAR', { current: cur }); rememberCode('', false); closeModal(); return;
       }
       if (!/^\d{4}$/.test(next) || (mode === 'change' && !/^\d{4}$/.test(cur))) { bad = true; renderModal(); return; }
       send('OJ_PARENT_SET', mode === 'change' ? { code: next, current: cur } : { code: next });
-      parentCode = next; lsSet('oj.parent', next); closeModal();
+      // for this visit; a device that remembered the old code remembers the new one
+      rememberCode(next, !!lsGet('oj.parent')); closeModal();
     }
     openModal({ autofocus: (mode === 'set') ? 'pnew' : 'pcur', render: function () {
       var rows = [h('h3', null, t('parent_label'))];

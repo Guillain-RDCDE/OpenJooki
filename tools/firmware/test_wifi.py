@@ -39,5 +39,13 @@ def main():
                         "-fsanitize=address,undefined", "-fno-sanitize-recover=all", "-I" + str(out),
                         str(HERE / "tests/wifi.c"), "-o", str(out / "wifi")], check=True)
         subprocess.run([str(out / "wifi")], check=True)
+        # the start (wcm.c): a gap in the network list no longer hides the home network
+        wcm = (main / "wcm.c").read_text()
+        (out / "wifi_start.inc").write_text(function(wcm, "static bool wcm_is_fallback_network(") +
+                                            function(wcm, "static bool wcm_start(void) {"))
+        subprocess.run(["cc", "-std=c99", "-D_DEFAULT_SOURCE", "-Wall", "-Wextra", "-Werror", "-g",
+                        "-fsanitize=address,undefined", "-fno-sanitize-recover=all", "-I" + str(out),
+                        str(HERE / "tests/wifi_start.c"), "-o", str(out / "wifi_start")], check=True)
+        subprocess.run([str(out / "wifi_start")], check=True)
 
 if __name__ == "__main__": main()

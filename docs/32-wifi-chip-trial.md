@@ -22,6 +22,13 @@ download is said on the page and changes nothing. Going back is `oj-esp32-trial 
 restart. Tested by `tools/openjooki/tests/test_chip_page.py` (real core and page, the tool and
 the restart as stand-ins, the package from the bench's server).
 
+**A newer package.** Each OpenJooki carries the SHA-256 of one package. When a trial is accepted
+with an older one (2.5.10 pinned `494de242…`, 2.5.11 pins `d87df74a…`, which also reads the whole
+network list at start), `oj-esp32-trial status` says `version: older`; the page then says a newer
+version is ready and offers *Try the new version* next to *Go back*. It is put on trial exactly
+like the first one (written at the next start, judged, the original back on any failure). Both
+packages stay on the `esp32-wifi` pre-release, so a Jooki still on 2.5.10 keeps working.
+
 The new firmware is the chip fix for mesh networks (docs/20, `tools/firmware/wifi-roaming.patch`,
 on top of the volume firmware of docs/30-31). This page is about putting it on a Jooki and taking
 it off again, by the Jooki itself.

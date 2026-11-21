@@ -41,7 +41,7 @@ STABLE_S=${OJ_ESP_STABLE_S:-120}
 STEP=${OJ_ESP_STEP:-10}
 MIN_FREE_KB=8192
 # tools/firmware: public SDK port + volume.patch + wifi-roaming.patch, package.py (reproducible)
-CANDIDATE=494de2427059ed158428acd140a4afa5649e4306c48b54495f8f7574872f2a5a
+CANDIDATE=d87df74a66a06ef2a53aafdb4c68a32bd4710d0b68de4b1544d76bb5f907a289
 # the original package of the Jookis checked so far (firmware 0x020C, API 0x0204)
 STOCK=7af7a71f682aa410a43fe2c091094380abd449cc33ef5eb4efe0ccd1e2ed8c53
 API=0x0204
@@ -190,7 +190,12 @@ case "${1:-}" in
   check) check "${2:-}" ;;
   install) install_pkg "${2:-}" ;;
   uninstall) uninstall ;;
-  status) echo "state: $(state)"; [ -f "$LOG" ] && tail -n 20 "$LOG" ;;
+  status) echo "state: $(state)"
+    # an accepted trial of an older package than the one this system carries: a newer one is ready
+    if [ "$(state)" = accepted ]; then
+      if [ "$(sha "$CAND")" = "$CANDIDATE" ]; then echo "version: current"; else echo "version: older"; fi
+    fi
+    [ -f "$LOG" ] && tail -n 20 "$LOG" ;;
   boot) boot ;;
   stock-back) [ "$(state)" = trying ] && { set_state restored; say "S55 wrote the original firmware back (API mismatch)"; } ; exit 0 ;;
   *) echo "usage: oj-esp32-trial check|install <package> | uninstall | status"; exit 2 ;;

@@ -184,6 +184,31 @@ check("accepted: the next starts leave it alone", j.installs() == ["candidate"] 
 check("the log tells the story", "accepted" in j.read("data/openjooki/esp32/log") and "accepted" in j.read("syslog"))
 r = j.run("check", j.cand)
 check("accepted: another trial may be checked", "no trial in progress (accepted)" in r.stdout, r.stdout)
+r = j.run("status")
+check("accepted, the package this system carries: status says the version is current", "version: current" in r.stdout, r.stdout)
+j.done()
+
+# an accepted trial of an older package (an OpenJooki update carries a newer one): said, and put on trial the same way
+j = Jooki(); j.staged(); j.set(alive=False, wifi=False); j.run("boot"); time.sleep(1); j.set(alive=True, wifi=True)
+check("older: first trial accepted", j.wait_state("accepted", "restore") == "accepted")
+j.write("data/mode/ESP32_FIRMWARE_LOADED", "")   # as S55 sets it again after the first trial
+j.write("data/openjooki/esp32/candidate.tgz", "the package of an older OpenJooki")
+r = j.run("status")
+check("older: status says a newer version is ready", "version: older" in r.stdout and r.stdout.startswith("state: accepted"), r.stdout)
+r = j.run("install", j.cand)
+check("older: the newer one is staged over it", r.returncode == 0 and j.state() == "staged"
+      and j.sha(j.path("data/openjooki/esp32/candidate.tgz")) == j.sha(j.cand), r.stdout)
+j.run("boot")
+check("older: written at the next start, judged again", j.installs() == ["candidate", "candidate"] and j.state() == "trying", (j.installs(), j.state()))
+s = j.wait_state("accepted", "restore")
+check("older: the newer one accepted, its version current", s == "accepted" and "version: current" in j.run("status").stdout, s)
+j.done()
+j = Jooki(); j.staged()
+r = j.run("status")
+check("no version line unless a trial is accepted", "version:" not in r.stdout, r.stdout)
+j.done()
+j = Jooki(); j.staged(); j.set(alive=False, wifi=False); j.run("boot"); time.sleep(1); j.set(alive=True, wifi=True)
+j.wait_state("accepted", "restore")
 
 # back to the original firmware, by hand
 r = j.run("uninstall")

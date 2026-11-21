@@ -1,3 +1,45 @@
+diff --git a/esp32-code/jooki_v2/main/wcm.c b/esp32-code/jooki_v2/main/wcm.c
+index ea08d2a..dc099d3 100644
+--- a/esp32-code/jooki_v2/main/wcm.c
++++ b/esp32-code/jooki_v2/main/wcm.c
+@@ -44,18 +44,27 @@ static bool wcm_start(void) {
+     wcm_wifi_config_t *pointerWifiConfiguration;
+     bool have_fallback_network = false;
+     bool start_prov = false;
++    /* OpenJooki: every slot is read. The original stopped at the first empty
++     * slot: a network forgotten before the home one left a gap, the home one
++     * was never seen at start, and the Jooki waited for a Bluetooth set-up at
++     * every start (re-adding the home network rewrites its slot, after the
++     * gap, so it only lasted until the next start). */
++    int configured = 0, fallbackIndex = -1;
+ 
+     // Is the access point configuration database empty ?
+     for (i = 0; i < JK_MAX_STA_CONF_CNT; i++) {
+         pointerWifiConfiguration = wcm_nvs_get_wifi_config(i);
+         if (pointerWifiConfiguration->ssid[0] == 0) {
+-            break; /* first empty one */
++            continue; /* an empty slot, maybe before a configured one */
+         }
++        configured++;
+         /* is this the fallback network? */
+         if(wcm_is_fallback_network(pointerWifiConfiguration)) {
+             have_fallback_network = true;
++            fallbackIndex = i;
+         }
+     }
++    i = configured;
+ 
+     /* check if there is only one network and it is the fallback network */
+     if (have_fallback_network && i == 1) {
+@@ -63,7 +72,7 @@ static bool wcm_start(void) {
+         /* aside from the fallback network, there are no networks configured
+          * scan for the fallback network and only if it is not present start
+          * provisioning */
+-        pointerWifiConfiguration = wcm_nvs_get_wifi_config(0);
++        pointerWifiConfiguration = wcm_nvs_get_wifi_config(fallbackIndex);
+         wifi_ap_record_t pointerAccessPointRecord;
+ 
+         int cnt =
 diff --git a/esp32-code/jooki_v2/main/wcm_nvs.c b/esp32-code/jooki_v2/main/wcm_nvs.c
 index 8b4aca0..818d7ed 100644
 --- a/esp32-code/jooki_v2/main/wcm_nvs.c

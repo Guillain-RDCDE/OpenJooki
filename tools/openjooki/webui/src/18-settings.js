@@ -297,6 +297,9 @@
     var rows = [sRow({ icon: 'lock', label: t('parent_label'), sw: true, on: m.parent, k: 'parent',
       onchange: function (e) { e.target.checked = !!m.parent; parentModal(m.parent ? 'off' : 'set'); } })];
     if (m.parent) rows.push(sRow({ label: t('parent_change'), k: 'pchange', onclick: function () { parentModal('change'); } }));
+    // this device remembers the code (#53): it never asks here, so say it, and let the parent forget it here
+    if (m.parent && lsGet('oj.parent')) rows.push(sRow({ label: t('parent_remembered'), sub: t('parent_forget'), k: 'pforget',
+      onclick: function () { rememberCode('', false); toast(t('parent_forgotten')); render(); } }));
     return sGroup(null, rows, [t('parent_help'), m.parent ? ' ' + t('parent_reset') : null]);
   }
   function homePage() {
@@ -346,7 +349,8 @@
   function chipRead(txt) {
     if (!txt) return;
     var m = /^state: *(\S+)/m.exec(txt), s = /^step: *(\S+)/m.exec(txt);
-    chip.state = m ? m[1] : chip.state; chip.step = s ? s[1] : chip.step;
+    var v = /^version: *(\S+)/m.exec(txt);
+    chip.state = m ? m[1] : chip.state; chip.step = s ? s[1] : chip.step; chip.newer = !!(v && v[1] === 'older');
     chip.lines = txt.split('\n').filter(function (l) { return /^NOT OK/.test(l); }).map(function (l) { return l.replace(/^NOT OK\s+/, ''); });
   }
   // asking where it stands is harmless: quietly, and without taking the place of a command that waits for the parent code
@@ -368,13 +372,15 @@
     var st = chip.state, step = chip.step, busy = step === 'downloading' || step === 'checking' || step === 'restarting';
     var label = { none: 'chip_orig', restored: 'chip_orig', staged: 'chip_trying', flashing: 'chip_trying', trying: 'chip_trying',
                   accepted: 'chip_new', restore: 'chip_going_back', restoring: 'chip_going_back', 'restore-failed': 'chip_failed', 'failed-damaged': 'chip_damaged' }[st];
-    var rows = [sRow({ icon: 'wifi', label: label ? t(label) : '…', k: 'chipstate' })];
+    // a newer version than the one on trial comes with this OpenJooki: it can be put on trial the same way
+    var newer = st === 'accepted' && chip.newer;
+    var rows = [sRow({ icon: 'wifi', label: label ? t(label) : '…', sub: newer ? t('chip_newer') : null, k: 'chipstate' })];
     var note = step === 'downloading' ? t('chip_dl') : step === 'checking' ? t('chip_check') : step === 'restarting' ? t('chip_restart')
              : step === 'unavailable' ? t('chip_unavailable') : null;
     var out = [h('p', { class: 'gpad small' }, t('chip_intro')), h('p', { class: 'gpad small muted' }, t('chip_safe')), sGroup(null, rows, note)];
     if (step === 'refused' && chip.lines.length) out.push(h('div', { class: 'gpad', 'data-k': 'chiprefused' }, h('p', { class: 'small accent-text' }, t('chip_refused')),
       h('ul', { class: 'small' }, chip.lines.map(function (l) { return h('li', null, l); }))));
-    var canTry = !busy && step !== 'unavailable' && (st === 'none' || st === 'restored' || st === 'failed-damaged');
+    var canTry = !busy && step !== 'unavailable' && (st === 'none' || st === 'restored' || st === 'failed-damaged' || newer);
     var canBack = !busy && (st === 'accepted' || st === 'restore-failed' || st === 'staged');
     var btns = [];
     if (canTry && !chip.sure) btns.push(h('button', { class: 'btn primary', 'data-k': 'chiptry', onclick: function () { chip.sure = true; render(); } }, t('chip_try')));
@@ -385,14 +391,21 @@
     return out;
   }
   // Ask for the parent code when the Jooki refuses a protected action, then retry it.
+  // Remembering it on this device is the parent's choice, off unless ticked (#53). Closed without
+  // the code: nothing was changed, said so, and the page shows the Jooki's real settings again.
   function askParent(bad) {
-    var code = '';
-    function submit() { if (!/^\d{4}$/.test(code)) return; parentCode = code; lsSet('oj.parent', code); closeModal();
+    var code = '', keep = false, done = false;
+    function submit() { if (!/^\d{4}$/.test(code)) return; done = true; rememberCode(code, keep); closeModal();
       if (pendingCmd) { var pc = pendingCmd; pc.payload.code = code; send(pc.type, pc.payload); } }
-    openModal({ autofocus: 'pask', render: function () {
+    openModal({ autofocus: 'pask', onclose: function () {
+      if (done) return;
+      pendingCmd = null; toast(t('parent_needed'), 'error'); render();
+    }, render: function () {
       return [h('h3', null, t('parent_prompt')),
         codeInput(t('parent_label'), 'pask', code, function (v) { code = v; }, submit),
         bad ? h('p', { class: 'small accent-text' }, t('parent_bad')) : null,
+        h('label', { class: 'row small', style: 'gap:8px;margin:8px 0' }, h('input', { type: 'checkbox', 'data-k': 'premember', checked: keep,
+          onchange: function (e) { keep = e.target.checked; } }), t('parent_remember')),
         h('p', { class: 'small muted' }, t('parent_reset')),
         modalFoot(t('save'), submit)];
     } });
@@ -403,11 +416,12 @@
     function submit() {
       if (mode === 'off') {
         if (!/^\d{4}$/.test(cur)) { bad = true; renderModal(); return; }
-        send('OJ_PARENT_CLEAR', { current: cur }); closeModal(); return;
+        send('OJ_PARENT_CLEAR', { current: cur }); rememberCode('', false); closeModal(); return;
       }
       if (!/^\d{4}$/.test(next) || (mode === 'change' && !/^\d{4}$/.test(cur))) { bad = true; renderModal(); return; }
       send('OJ_PARENT_SET', mode === 'change' ? { code: next, current: cur } : { code: next });
-      parentCode = next; lsSet('oj.parent', next); closeModal();
+      // for this visit; a device that remembered the old code remembers the new one
+      rememberCode(next, !!lsGet('oj.parent')); closeModal();
     }
     openModal({ autofocus: (mode === 'set') ? 'pnew' : 'pcur', render: function () {
       var rows = [h('h3', null, t('parent_label'))];

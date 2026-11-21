@@ -218,7 +218,14 @@ legacy `net/sta/connect` bypasses WCM's state machine. So it is fixed in the chi
   directly (BSSID and channel set); that disconnection is not counted as a failure. If the
   move cannot start, or the new access point does not answer, the usual reconnection takes
   over;
-- the write before the list is gone.
+- the write before the list is gone;
+- at start every slot of the list is read (21/11/2026, #51): the original `wcm_start` stopped at the
+  first empty slot (see *The first empty slot* above), so a network forgotten before the home one
+  hid it at every start, and giving the home network again over Bluetooth rewrote its own slot,
+  after the gap: it worked until the next start. Now the gap is skipped; "only the factory network"
+  means it is the only network in the list, wherever it sits. `tests/wifi_start.c` (the actual
+  `wcm_start`, run by `test_wifi.py`) fails on the original. Package `d87df74a…` (2.5.11); the
+  first one, `494de242…` (2.5.10), had roaming without this.
 
 `tools/firmware/test_wifi.py` (run by `test.py`, so by CI) compiles the patched bodies
 (`wcm_sta_roam_pick`, `wcm_sta_roam_check`, `wcm_sta_roam_connect`, the Wi-Fi event handler,

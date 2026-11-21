@@ -89,7 +89,7 @@ describe("services.update", function()
     -- the real Jooki's package address (kernel.config) passes, and names the pinned package
     local url = require("kernel.config").defaults.chip_package_url
     assert_true(shell._argv("chip_trial", { op = "try", out = "/tmp/x", url = url }) ~= nil)
-    assert_match(url, "494de242")
+    assert_match(url, "d87df74a")
   end)
 
   it("trying and going back are behind the parent code; asking where it stands is not", function()

@@ -50,10 +50,18 @@ first, so updates do not install it.
 
 **It only gets on the Wi-Fi after I use the Wi-Fi page.**
 After every start the side dots stay orange until you give it a network on the
-[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html). At start the Jooki only
-looks at the networks before the first empty slot, and OpenJooki 2.0.9 to 2.4.2 forgot
-Muuselabs' own network, which sat in the first slot. On the Wi-Fi page, **Forget** every network,
-then give it your Wi-Fi once more: it then finds it by itself at every start.
+[Wi-Fi page](https://guillain-rdcde.github.io/OpenJooki/wifi.html). At start the Jooki's Wi-Fi
+chip only looks at the networks before the first empty place in its list: a network forgotten
+before yours leaves a hole, and OpenJooki 2.0.9 to 2.4.2 forgot Muuselabs' own network, which sat
+in the first place. Giving your Wi-Fi again only rewrites its place, after the hole, so it works
+until the next start. On the Wi-Fi page, **Forget** every network, then give it your Wi-Fi once
+more: it then finds it by itself at every start. The new version of the Wi-Fi chip (*Settings →
+Advanced → Wi-Fi with several access points*) reads the whole list, holes or not.
+
+**The page never asks for the parent code on this phone.**
+This phone or computer remembers the code: someone ticked *Remember the code* when typing it.
+*Settings → Parent code* says so, and one tap there forgets it. Elsewhere the page asks once per
+visit. Closing the question changes nothing.
 
 **On holiday, night mode does nothing.**
 Without the Internet the Jooki does not know the time. Open its page once from your phone:

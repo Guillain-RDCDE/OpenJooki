@@ -150,7 +150,7 @@ rm -f /tmp/oj-updating]], "update_start", a.status, a.link, a.url } end, backgro
                              return { "sh", "-c", [[
 O="$1"; OP="$2"; U="$3"; T=${OJ_CHIP_TOOL:-/jooki/bin/oj-esp32-trial}; R=${OJ_CHIP_REBOOT:-reboot}; P=${OJ_CHIP_PKG:-/data/openjooki/esp32-candidate.tgz}; M=/tmp/oj-chip.out
 st() { "$T" status 2>/dev/null | head -n 1 | sed 's/^state: //'; }
-put() { { echo "state: $(st)"; echo "step: $1"; if [ -f "$M" ]; then cat "$M"; fi; } > "$O.tmp" && mv -f "$O.tmp" "$O"; }
+put() { { "$T" status 2>/dev/null | grep -E '^(state|version): '; echo "step: $1"; if [ -f "$M" ]; then cat "$M"; fi; } > "$O.tmp" && mv -f "$O.tmp" "$O"; }
 if [ ! -x "$T" ]; then printf 'state: none\nstep: unavailable\n' > "$O"; exit 0; fi
 case "$OP" in
   status) [ -e /tmp/oj-chip-busy ] || rm -f "$M"; [ -e /tmp/oj-chip-busy ] || put idle ;;

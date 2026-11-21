@@ -21,7 +21,7 @@ TOOL = F / 'oj-esp32-trial'
 TOOL.write_text('''#!/bin/sh
 D=%s
 case "$1" in
-  status) echo "state: $(cat $D/state 2>/dev/null || echo none)" ;;
+  status) echo "state: $(cat $D/state 2>/dev/null || echo none)"; [ -f $D/version ] && echo "version: $(cat $D/version)"; echo "2026-11-21 log line" ;;
   install) cp "$2" $D/installed.tgz
     if [ "$(cat $D/mode)" = refuse ]; then echo "ok      no trial in progress (none)"; echo "NOT OK  the chip does not answer now"; echo "Nothing changed."; exit 1; fi
     echo staged > $D/state; echo "Ready. Restart the Jooki" ;;
@@ -38,7 +38,7 @@ config = B.core_config({'chip_package_url': 'http://127.0.0.1:%d/oj-test-chip.tg
 
 def fake(state='none', mode='ok'):
     (F / 'state').write_text(state + '\n'); (F / 'mode').write_text(mode + '\n')
-    for n in ('rebooted', 'installed.tgz', 'candidate.tgz'): (F / n).unlink(missing_ok=True)
+    for n in ('rebooted', 'installed.tgz', 'candidate.tgz', 'version'): (F / n).unlink(missing_ok=True)
 
 
 fake()
@@ -83,6 +83,18 @@ with sync_playwright() as pw:
     R.check('no trying again while in use', pg.locator('[data-k=chiptry]').count() == 0)
     pg.click('[data-k=chipback]')
     R.expect('going back restarts the Jooki', lambda: (F / 'rebooted').exists() and (F / 'state').read_text().strip() == 'restore', 15)
+
+    # a newer version than the one on trial (this OpenJooki carries a newer package): offered the same way
+    fake('accepted'); (F / 'version').write_text('older\n')
+    open_chip()
+    R.expect('a newer version is said', lambda: 'A newer version is ready' in text(), 10, text)
+    R.check('... and both trying it and going back are offered', pg.locator('[data-k=chiptry]').count() == 1 and pg.locator('[data-k=chipback]').count() == 1)
+    pg.click('[data-k=chiptry]'); pg.click('[data-k=chiptrysure]')
+    R.expect('the newer version: downloaded, given to the tool, the Jooki restarts', lambda: (F / 'rebooted').exists() and (F / 'installed.tgz').exists(), 20)
+    fake('accepted'); (F / 'version').write_text('current\n')
+    open_chip()
+    R.expect('the current version: no trying again', lambda: 'New version in use' in text() and pg.locator('[data-k=chiptry]').count() == 0
+             and 'newer version' not in text(), 10, text)
 
     # a refusal: said, nothing changed, no restart
     fake('none', 'refuse')

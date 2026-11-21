@@ -1,5 +1,10 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The Wi-Fi back at every start.** A Jooki that only found its Wi-Fi after it was given again over Bluetooth, at every start: a network forgotten before yours left a hole in the Wi-Fi chip's list, and the chip stopped reading there. The newer version of the chip in *Settings → Advanced → Wi-Fi with several access points* reads the whole list; a Jooki already trying the first version is offered the newer one. Without it, forgetting every network and giving yours again still works (*Questions*) (#51, thank you scheuerbauer).
+- **The parent code, clearer.** The page remembers the code on a phone or computer only when you tick *Remember the code*; otherwise it asks once per visit. *Settings → Parent code* says when this device remembers it, and forgets it in one tap. Closing the question changes nothing and says so (#53, thank you scheuerbauer).
+- For the tinkerers: `wifi-roaming.patch` also makes `wcm_start` skip empty slots (package `d87df74a…`, `tests/wifi_start.c`); `oj-esp32-trial status` says `version: older` when an accepted trial runs an older package. The page keeps the parent code in `localStorage` (`oj.parent`) only when asked. New bench suite `test_parent_page.py`.
+
 ## OpenJooki 2.5.10 (21 November 2026) — Wi-Fi with several access points, to try
 - **Wi-Fi with several access points, to try.** At home with several Wi-Fi access points under one name (a mesh, repeaters), the Jooki tends to stay on the far one. *Settings → Advanced → Wi-Fi with several access points* puts a new version of its Wi-Fi chip on trial, which moves to the nearest one by itself. It takes about 15 minutes on the charger, and if the chip or the Wi-Fi is not right the Jooki goes back to its original version by itself. Going back is one tap too (#51).
 - For the tinkerers: the page asks the core (`OJ_CHIP_STATUS` / `OJ_CHIP_TRY` / `OJ_CHIP_BACK`, v2 `chip.*`, the last two behind the parent code); the shell action `chip_trial` downloads the package from the `esp32-wifi` pre-release, hands it to `oj-esp32-trial` and restarts the Jooki; the answer is in `/oj-chip.txt` (docs/32). New bench suite `test_chip_page.py`.

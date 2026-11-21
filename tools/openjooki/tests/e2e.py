@@ -352,7 +352,8 @@ with sync_playwright() as p:
     check("E12 the track knob is the original Jooki's by default", pg.input_value("[data-k=knobmode]") == "song", pg.input_value("[data-k=knobmode]"))
     pg.select_option("[data-k=knobmode]", "wind")
     R.expect("E12 the track knob's choice is made in Settings (issue #11)", lambda: J.get("audio.config.knob_mode") == "wind", 5, lambda: J.get("audio.config"))
-    check("E12 'wind': the back-to-the-start switch is off and greyed (issue #40)", pg.is_disabled("[data-k=knobrestart]") and not pg.is_checked("[data-k=knobrestart]"))
+    # the page redraws from the Jooki's state a moment after it changes: wait for it, do not look at once
+    R.expect("E12 'wind': the back-to-the-start switch is off and greyed (issue #40)", lambda: pg.is_disabled("[data-k=knobrestart]") and not pg.is_checked("[data-k=knobrestart]"), 5)
     pg.select_option("[data-k=knobmode]", "song"); J.wait(lambda: J.get("audio.config.knob_mode") == "song")
     check("E12 three choices for the knob, 'both' named plainly (issue #40)", pg.locator("[data-k=knobmode] option").count() == 3 and pg.locator("[data-k=knobmode] option[value=start]").count() == 0)
     pg.wait_for_selector("[data-k=knobrestart]:not([disabled])")

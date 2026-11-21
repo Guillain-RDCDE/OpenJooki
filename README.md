@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.9:** an option to switch the Jooki off when the token is taken off.
-2.5.8: why a Jooki stays on the far access point of a mesh, and what helps.
+**New in 2.5.10:** homes with several Wi-Fi access points of one name can try a new version of the Wi-Fi chip, from Settings.
+2.5.9: an option to switch the Jooki off when the token is taken off.
 [All the changes](CHANGELOG.md)
 
 ---

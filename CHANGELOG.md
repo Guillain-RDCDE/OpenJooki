@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.10 (21 November 2026) — Wi-Fi with several access points, to try
 - **Wi-Fi with several access points, to try.** At home with several Wi-Fi access points under one name (a mesh, repeaters), the Jooki tends to stay on the far one. *Settings → Advanced → Wi-Fi with several access points* puts a new version of its Wi-Fi chip on trial, which moves to the nearest one by itself. It takes about 15 minutes on the charger, and if the chip or the Wi-Fi is not right the Jooki goes back to its original version by itself. Going back is one tap too (#51).
 - For the tinkerers: the page asks the core (`OJ_CHIP_STATUS` / `OJ_CHIP_TRY` / `OJ_CHIP_BACK`, v2 `chip.*`, the last two behind the parent code); the shell action `chip_trial` downloads the package from the `esp32-wifi` pre-release, hands it to `oj-esp32-trial` and restarts the Jooki; the answer is in `/oj-chip.txt` (docs/32). New bench suite `test_chip_page.py`.
 

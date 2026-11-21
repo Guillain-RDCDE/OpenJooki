@@ -84,6 +84,8 @@
         sRow({ icon: 'play', label: t('random_start'), sub: t('random_start_help'), sw: true, on: cfg.random_start, k: 'randomstart', onchange: function (e) { send('SET_CFG', { random_start: e.target.checked }); } }),
         sRow({ icon: 'repeat', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
+        // switch off once the token is taken off and nothing plays (#52)
+        typeof cfg.off_on_token_removal === 'boolean' ? sRow({ icon: 'power', label: t('off_token'), sub: t('off_token_sub'), sw: true, on: cfg.off_on_token_removal, k: 'offtoken', onchange: function (e) { send('SET_CFG', { off_on_token_removal: e.target.checked }); } }) : null,
         canConvert() ? sRow({ icon: 'note', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
         // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
         d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null

@@ -122,6 +122,16 @@ function power.on_inactivity(doc, ev)
   return nil
 end
 
+--- The token was taken off token_off_s ago with "switch off" on (#52, services.tokens): off, unless a
+--- token is back, something plays (a page, an app, "keep playing" on), or the switch was turned off since.
+function power.on_token_off(doc)
+  if doc.flags and doc.flags.STAY_ON then return nil end
+  if (doc.nfc or {}).tagId or util.is_playing(doc) or (doc.poweroff_int or {}).step then return nil end
+  if not volume().audiocfg_of(doc).off_on_token_removal then return nil end
+  return { commands = { { kind = "log", level = "info", key = "device.token_off" },
+                        emit("power.off_request", { reason = "token" }) } }
+end
+
 --- Anything the child or a page does keeps the Jooki awake.
 function power.on_activity(doc, ev)
   local a2 = activity_of(doc)
@@ -214,6 +224,7 @@ end
 local TIMERS = {
   ["device.inactivity"] = power.on_inactivity,
   ["device.poweroff"] = power.on_off_frame,
+  ["device.token_off"] = power.on_token_off,
 }
 power.TIMERS = TIMERS
 

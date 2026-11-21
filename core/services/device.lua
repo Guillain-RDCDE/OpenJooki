@@ -84,6 +84,8 @@ local function audiocfg_of(doc)
   a.shuffle_mode = a.shuffle_mode == true
   a.random_start = a.random_start == true
   a.continue_on_token_removal = a.continue_on_token_removal == true
+  -- switch off a while after the token is taken off, when nothing plays then (#52)
+  a.off_on_token_removal = a.off_on_token_removal == true
   a.hp_boost = a.hp_boost == true
   -- the knob held left: back to the start (#40). 2.5.1-2.5.3 saved it as the mode "start".
   if a.knob_mode == "start" then
@@ -166,6 +168,7 @@ function device.update_config(doc, changes, opts)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
   if changes.random_start ~= nil then a.random_start = changes.random_start end
   if type(changes.continue_on_token_removal) == "boolean" then a.continue_on_token_removal = changes.continue_on_token_removal end
+  if type(changes.off_on_token_removal) == "boolean" then a.off_on_token_removal = changes.off_on_token_removal end
   if changes.repeat_mode ~= nil then
     local m = changes.repeat_mode
     if m == true then m = 1 elseif m == false then m = 0 end
@@ -566,7 +569,7 @@ S.volume = { type = "object", required = { "percent" }, properties = { percent =
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, random_start = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
                                               heart_press = { type = "string", enum = { "none", "next", "pause" } },
                                               knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } }, knob_restart = { type = "boolean" },
-                                              continue_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
+                                              continue_on_token_removal = { type = "boolean" }, off_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
                                               upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, max_volume = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }

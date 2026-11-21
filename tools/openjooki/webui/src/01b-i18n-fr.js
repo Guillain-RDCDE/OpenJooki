@@ -60,6 +60,7 @@
     heart_shutdown_help: 'À l’arrêt : trois brefs clignotements rouges, sans son.',
     heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_press_sub5: 'Tenu 5 secondes, il éteint le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture',
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
+    off_token: 'S’éteindre quand le jeton est retiré', off_token_sub: 'Après 15 secondes, si rien ne joue et qu’aucun jeton n’est remis',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Morceaux, et mi-course : avancer', knob_restart: 'Tenue à gauche 3 s : retour au début', knob_restart_sub: 'Un petit coup reste le morceau précédent. Un livre audio oublie où il en était.', knob_restart_wind: 'Pas avec « Avancer / reculer » : tenir la molette fait avancer.', knob_wind: 'Avancer / reculer',
     toy_safe: 'Volume limité (mode enfant)', toy_safe_sub: 'Limite fixée en usine. Trop bas ? Coupe-le et choisis ton propre maximum.',shuffle: 'Aléatoire', repeat: 'Répéter', repeat_one: 'Répéter ce morceau', pl_settings: function (v) { return 'Comme dans les Réglages (' + v + ')'; }, rep_all: 'Tous les morceaux', rep_one: 'Ce morceau', modes_sub: 'Pour les playlists sans choix à elles', back15: 'Reculer de 15 secondes', fwd15: 'Avancer de 15 secondes',
     volume_test: 'Tester',

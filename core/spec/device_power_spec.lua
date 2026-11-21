@@ -90,6 +90,28 @@ describe("services.device.power — battery, cable, inactivity", function()
     assert_eq(power.on_inactivity(doc, { now = 2000 }).state.activity.last, 2000)
   end)
 
+  it("switch off when the token is taken off (#52): only with the switch on, no token back, nothing playing", function()
+    local on = { volume = 40, off_on_token_removal = true }
+    local doc = doc_with({ audiocfg = on, power = { connected = true } })
+    local r = power.on_token_off(doc)
+    assert_eq(find(r, "emit").event.type, "power.off_request"); assert_eq(find(r, "emit").event.reason, "token")
+    assert_true(has(r, "log", "key", "device.token_off"))
+    -- on the charger too: the parent asked for it
+    assert_eq(power.on_timer(doc, { name = "device.token_off" }).commands[2].event.type, "power.off_request")
+    doc.nfc = { starId = "Jooki.Fox", tagId = "04" }
+    assert_nil(power.on_token_off(doc))                       -- a token is back
+    doc.nfc = {}; doc.playback = { state = "playing" }
+    assert_nil(power.on_token_off(doc))                       -- something plays (a page, "keep playing")
+    doc.playback = nil; doc.audiocfg = { volume = 40, off_on_token_removal = false }
+    assert_nil(power.on_token_off(doc))                       -- the switch was turned off since
+    doc.audiocfg = { volume = 40 }
+    assert_nil(power.on_token_off(doc))                       -- never set: off by default
+    doc.audiocfg = on; doc.flags = { STAY_ON = true }
+    assert_nil(power.on_token_off(doc))
+    doc.flags = {}; doc.poweroff_int = { step = 2 }
+    assert_nil(power.on_token_off(doc))                       -- already switching off
+  end)
+
   it("manual power off: silent blink cue, then save, lights, quit, poweroff, kernel shutdown", function()
     local doc = doc_with()
     local r = power.on_off_request(doc, { reason = "button" })

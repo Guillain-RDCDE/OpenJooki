@@ -49,6 +49,7 @@ config.defaults = {
   -- power (from the original program, docs/22 §3.6)
   inactivity_warn_s = 14 * 60,
   inactivity_off_s = 15 * 60,
+  token_off_s = 15,                           -- the token taken off, with "switch off" on: off after this (#52)
   battery_warn_percent = 20,
   battery_off_percent = 10,
   battery_off_mv = 3500,   -- shut down cleanly before the Holtek's hard cut at ~3.40 V (services.device.power)

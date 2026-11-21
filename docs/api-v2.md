@@ -226,6 +226,9 @@ Payload schema:
       "minimum": 0,
       "type": "integer"
     },
+    "off_on_token_removal": {
+      "type": "boolean"
+    },
     "random_start": {
       "type": "boolean"
     },

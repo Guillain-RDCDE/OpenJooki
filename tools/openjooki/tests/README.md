@@ -38,6 +38,7 @@ python3 test_mqtt_lan.py                      # S57_oj-security.sh, real mosquit
 python3 test_knob_start.py                     # the knob held left: back to the start, an audiobook forgets its place, short turns unchanged
 python3 test_guard.py                          # oj-guard.sh under busybox: a core that does not answer, back to the other partition, never in a loop
 python3 test_esp32_trial.py                    # oj-esp32-trial.sh under busybox: a chip firmware written at the start, judged, the original back on any failure (not in CI yet)
+sudo -E python3 test_token_off.py              # switch off when the token is taken off (#52): off by default, after token_off_s, not with a token back (not in CI yet)
 sudo OJ_ROOTFS=rootfs.img OJ_CANDIDATE=pkg.tgz bash device_esp32_trial.sh   # the same inside the Jooki's own system and its whole S55 (qemu-mipsel, bench only)
 python3 test_ha_connect.py                     # Home Assistant connecting: a loaded song stays, a sound gives it back
 python3 test_page_steady.py                    # a position report redraws nothing, a real change does

@@ -53,6 +53,12 @@ function tokens.own_star(star, uid)
   return star, nil
 end
 
+-- a token back on the Jooki: no switching off for the one taken off before (#52)
+local function with_token_back(result)
+  result.commands[#result.commands + 1] = { kind = "timer.cancel", name = "device.token_off" }
+  return result
+end
+
 function tokens.on_tag(doc, ev)
   if ev.bad then return { commands = { { kind = "log", level = "warn", key = "tokens.bad_tag", fields = { raw = tostring(ev.raw) } } } } end
   local star, shared
@@ -65,7 +71,7 @@ function tokens.on_tag(doc, ev)
   end
   if is_system(star) then
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "system.tag", name = star, uid = ev.uid } }
-    return result
+    return with_token_back(result)
   end
   -- learn the token (seen count, character), persist tokens.json
   -- a sticker written as a genuine token keeps its playlist (library.ops.retag): playlists saved too
@@ -90,7 +96,7 @@ function tokens.on_tag(doc, ev)
     result.commands[#result.commands + 1] = { kind = "log", level = "info", key = "tokens.no_playlist", fields = { star = star } }
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "system.event", name = "Evt.Character.Detect.Empty" } }
   end
-  return result
+  return with_token_back(result)
 end
 
 function tokens.on_removed(doc)
@@ -101,6 +107,12 @@ function tokens.on_removed(doc)
   end
   if not (doc.audiocfg and doc.audiocfg.continue_on_token_removal == true) then
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "playback.pause_request", source = "token" } }
+  end
+  -- switch off when the token is taken off (#52): a while later, if no token is back and nothing
+  -- plays then (services.device.power, timer device.token_off)
+  if doc.audiocfg and doc.audiocfg.off_on_token_removal == true then
+    local c = doc.config or {}
+    result.commands[#result.commands + 1] = { kind = "timer.once", name = "device.token_off", seconds = c.token_off_s or 15 }
   end
   return result
 end

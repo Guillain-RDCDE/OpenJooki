@@ -138,6 +138,26 @@ describe("services.tokens", function()
     assert_eq(emitted(tokens.on_removed(doc), "playback.pause_request").source, "token")
   end)
 
+  it("switch off when the token is taken off (#52): a timer when on, cancelled by a token put back", function()
+    local function timer(r, kind)
+      for _, c in ipairs(r.commands) do if c.kind == kind and c.name == "device.token_off" then return c end end
+    end
+    local doc = { nfc = { starId = "Jooki.Fox", tagId = "04" }, audiocfg = {} }
+    assert_nil(timer(tokens.on_removed(doc), "timer.once"))             -- off by default
+    doc.audiocfg.off_on_token_removal = true
+    local t = timer(tokens.on_removed(doc), "timer.once")
+    assert_eq(t.seconds, 15)
+    doc.config = { token_off_s = 3 }
+    assert_eq(timer(tokens.on_removed(doc), "timer.once").seconds, 3)
+    -- the music still stops as before (the switch-off comes after the pause)
+    assert_eq(emitted(tokens.on_removed(doc), "playback.pause_request").source, "token")
+    -- any token put back cancels it: a character, a system tag, a foreign tag
+    local d2 = doc_with({ user_1 = { title = "P", star = "Jooki.Black.Dragon", tracks = {} } })
+    assert_true(timer(tokens.on_tag(d2, { type = "nfc.tag", uid = "04000000B00001", star_code = 262 }), "timer.cancel") ~= nil)
+    assert_true(timer(tokens.on_tag(d2, { type = "nfc.tag", uid = "04000000B00002", star_code = 773 }), "timer.cancel") ~= nil)
+    assert_true(timer(tokens.on_tag(d2, { type = "nfc.tag", uid = "0400AA", foreign = true }), "timer.cancel") ~= nil)
+  end)
+
   it("a picture for a token: the upload moves to artwork/, the token keeps its address with a cache key", function()
     local doc = doc_with({}, { ["046158B2661290"] = { starId = "tag.046158B2661290", seen = 2 } })
     local r = tokens.on_set_image(doc, { tagId = "046158B2661290", uploadId = "4242" })

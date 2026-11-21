@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.9 (21 November 2026) — Off when the token comes off
 - **Off when the token comes off.** A new switch, *Settings → Playback → Switch off when the token is removed*: 15 seconds after the token is taken off, the Jooki switches itself off, unless a token is put back or something plays. Off unless you turn it on (#52, thank you Totaalgeflipt).
 - For the tinkerers: `audiocfg.off_on_token_removal` (boolean, default off), set by `SET_CFG` / `device.set_config`; the delay is `token_off_s` (15). New bench suite `test_token_off.py`.
 

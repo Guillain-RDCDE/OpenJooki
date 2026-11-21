@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.8:** why a Jooki stays on the far access point of a mesh, and what helps.
-2.5.7: secure songs from apps like BubbleUPnP (TIDAL, Qobuz) now play; a page in a background tab stays quiet.
+**New in 2.5.9:** an option to switch the Jooki off when the token is taken off.
+2.5.8: why a Jooki stays on the far access point of a mesh, and what helps.
 [All the changes](CHANGELOG.md)
 
 ---

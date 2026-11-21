@@ -45,6 +45,23 @@ with sync_playwright() as p:
     R.expect("the core took the positions", lambda: j.state["audio"]["playback"]["position_ms"] >= pos - 1000)
     redraws = pg.evaluate("() => window.__redraws")
     check("8 positions do not redraw the player", redraws <= 1, redraws)
+
+    # the sleep timer's countdown, every second (at night the timer starts by itself with the music, so
+    # the check above failed only when the bench ran at night): drawn by the player's timer, not by a redraw
+    j.send("OJ_SLEEP", {"minutes": 30})
+    j.wait(lambda: (j.state.get("bedtime") or {}).get("sleep"), what="sleep timer on")
+    R.expect("the countdown is shown", lambda: pg.evaluate("() => !!document.querySelector('[data-sleep-short]')"), 5)
+    time.sleep(4)          # the page's own redraw for the new timer, and the "just after a command" window
+    pg.evaluate("() => { window.__bar = document.querySelector('.player'); window.__redraws = 0; }")
+    before = pg.inner_text("[data-sleep-short]")
+    for _ in range(8):
+        pos += 1000
+        j.c.publish("/j/audio/input/position", json.dumps({"id": 7, "pos": pos}))
+        time.sleep(0.5)
+    check("4 s of countdown and positions do not redraw the player", pg.evaluate("() => window.__redraws") <= 1, pg.evaluate("() => window.__redraws"))
+    R.expect("... and the countdown still moves", lambda: pg.inner_text("[data-sleep-short]") != before, 3)
+    j.send("OJ_SLEEP", {"cancel": True})
+    R.expect("cancelling the timer is drawn", lambda: pg.evaluate("() => !document.querySelector('[data-sleep-short]')"), 5)
     R.expect("the progress bar still moves", lambda: pg.evaluate(width) not in ("", "0%"), 3)
 
     # real changes are drawn: pause changes the button, a new song the title

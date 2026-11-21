@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.5.11';
+  var VERSION = '2.5.10';
 
   /* ------------------------------------------------------------------ i18n */
   // One table per language (fr, en, nl, de): the same keys in each, checked by the bench.
@@ -1208,8 +1208,21 @@
   // Just after a command from this page it is drawn anyway: a refused change must go back on screen.
   function nothingNew(data) {
     if (!data || Date.now() - lastCmd < 3000) return false;
-    var same = function (a, b) { return JSON.stringify(a) === JSON.stringify(b); };
+    // the Jooki's keys come in any order (a Lua table has none): compare them sorted; an empty table
+    // comes as [] where the page keeps {} (S.bedtime.resume): the same thing
+    var canon = function (v) {
+      if (Array.isArray(v)) return v.length ? v.map(canon) : {};
+      if (!v || typeof v !== 'object') return v;
+      var o = {};
+      Object.keys(v).sort().forEach(function (k) { o[k] = canon(v[k]); });
+      return o;
+    };
+    var same = function (a, b) { return JSON.stringify(canon(a)) === JSON.stringify(canon(b)); };
+    // the sleep timer's countdown comes every second too (at night the timer starts by itself):
+    // the player's timer shows it, from the time it came (sleepStamp)
+    var noCountdown = function (k, v) { return k === 'remaining' ? undefined : v; };
     return Object.keys(data).every(function (k) {
+      if (k === 'bedtime') return JSON.stringify(canon(data[k]), noCountdown) === JSON.stringify(canon(S[k]), noCountdown);
       if (k !== 'audio') return same(data[k], S[k]);
       return Object.keys(obj(data.audio)).every(function (a) {
         if (a === 'playback') return obj(data.audio.playback).state === S.audio.playback.state;

@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.11:** the Wi-Fi comes back at every start with the newer Wi-Fi chip version; a clearer parent code.
-2.5.10: homes with several Wi-Fi access points of one name can try a new version of the Wi-Fi chip, from Settings.
+**New in 2.5.12:** the player no longer flickers while the bedtime sleep timer runs.
+2.5.11: the Wi-Fi comes back at every start with the newer Wi-Fi chip version; a clearer parent code.
 [All the changes](CHANGELOG.md)
 
 ---

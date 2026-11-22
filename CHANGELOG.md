@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.12 (22 November 2026) — A still player at bedtime
 - **A still player at bedtime.** While the sleep timer ran (at night it starts by itself with the music), the page redrew the whole player every second, so it flickered. Now only the countdown moves.
 - For the tinkerers: the page compares the Jooki's parts with sorted keys and `[]` equal to `{}` (a Lua table has no key order, and an empty one comes as `[]`), and takes the countdown alone (`bedtime.sleep.remaining`) as nothing new. `test_page_steady.py` starts a sleep timer itself, so it no longer depends on the time it runs (it failed the nightly runs, at night). The endurance memory check looks at growth during the run (under 10 %) with a 9 MiB ceiling.
 

@@ -7,7 +7,8 @@
 --   services.device.radio     toy-safe, the radios, airplane mode and its boot restore, the system tags
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
---   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, knob_restart, hp_boost, upnp, toy_safe_maxvol }
+--   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, knob_restart, hp_boost, upnp, toy_safe_maxvol,
+--                     max_volume, lights_off, party_s, colours = { ring?, dots?, token?, start?, off? } }
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
 --   state.volume_int = { knob, pending, skipped } (physical position and ordered volume acknowledgments; private)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
@@ -21,6 +22,7 @@ local buttons = require("services.device.buttons")
 local volume_test = require("services.device.volume_test")
 local device = {}
 local DEFAULT_KIDS_MAX = 56 -- factory speaker ceiling on the shared 0–100 curve
+local PARTY_MAX_S = 3600     -- the Christmas tree: at most an hour by the clock (0 = until it is stopped)
 
 local copy, emit, err = util.copy, util.emit, util.err
 local function cfg(doc, key, default)
@@ -99,6 +101,14 @@ local function audiocfg_of(doc)
   local cap = a.max_volume
   a.max_volume = type(cap) == "number" and cap >= 0 and cap <= 100 and cap % 1 == 0 and cap or 100
   a.lights_off = a.lights_off == true
+  -- the Christmas tree's length (0 = until stopped) and the parents' colours (#54, services.device.lights)
+  local ps = a.party_s
+  a.party_s = type(ps) == "number" and ps >= 0 and ps <= PARTY_MAX_S and ps % 1 == 0 and ps or lights.PARTY_S
+  local cols = {}
+  for _, k in ipairs(lights.COLOUR_KEYS) do
+    if lights.rgb((a.colours or {})[k]) then cols[k] = a.colours[k]:lower() end
+  end
+  a.colours = cols
   a.repeat_mode = a.repeat_mode or 1
   return a
 end
@@ -132,7 +142,7 @@ end
 set_volume = volume_test.wrap(set_volume)
 device.set_volume = set_volume
 
-local HEART_PRESS = { none = true, next = true, pause = true }
+local HEART_PRESS = { none = true, next = true, pause = true, party = true }
 local KNOB_MODE = { song = true, both = true, wind = true, start = true }
 
 -- Shuffle and repeat arrive three ways: v2 device.set_config (schema-checked: a boolean and an integer
@@ -163,6 +173,22 @@ function device.update_config(doc, changes, opts)
   end
   if changes.lights_off ~= nil and type(changes.lights_off) ~= "boolean" then
     return nil, err("invalid_argument", "lights_off", "expected a boolean")
+  end
+  if changes.party_s ~= nil then
+    local v = changes.party_s
+    if type(v) ~= "number" or v < 0 or v > PARTY_MAX_S or v % 1 ~= 0 then
+      return nil, err("invalid_argument", "party_s", "expected an integer from 0 to " .. PARTY_MAX_S)
+    end
+  end
+  -- colours: { key = "#rrggbb" } to choose one, false or "" to give it back to the Jooki
+  if changes.colours ~= nil then
+    if type(changes.colours) ~= "table" then return nil, err("invalid_argument", "colours", "expected an object") end
+    for k, v in pairs(changes.colours) do
+      local known = false
+      for _, n in ipairs(lights.COLOUR_KEYS) do if n == k then known = true end end
+      if not known then return nil, err("invalid_argument", "colours", "unknown light " .. tostring(k)) end
+      if not (v == false or v == "" or lights.rgb(v)) then return nil, err("invalid_argument", "colours", "expected #rrggbb for " .. k) end
+    end
   end
   local a = audiocfg_of(doc)
   if changes.shuffle_mode ~= nil then a.shuffle_mode = changes.shuffle_mode == true end
@@ -201,6 +227,11 @@ function device.update_config(doc, changes, opts)
   if changes.lights_off ~= nil and changes.lights_off ~= a.lights_off then
     a.lights_off = changes.lights_off
     cmds[#cmds + 1] = emit("lights.apply", {})
+  end
+  if changes.party_s ~= nil then a.party_s = changes.party_s end
+  if changes.colours ~= nil then
+    for k, v in pairs(changes.colours) do a.colours[k] = lights.rgb(v) and v:lower() or nil end
+    cmds[#cmds + 1] = emit("lights.refresh", {})   -- seen at once
   end
   if not (opts and opts.silent) then
     cmds[#cmds + 1] = emit("audiocfg.changed", { shuffle_mode = changes.shuffle_mode, repeat_mode = changes.repeat_mode })
@@ -564,10 +595,13 @@ device.on_off_request, device.on_shutdown_request = power.on_off_request, power.
 device.on_toy_safe, device.on_radio, device.on_airplane, device.on_airplane_end = radio.on_toy_safe, radio.on_radio, radio.on_airplane, radio.on_airplane_end
 device.on_button, device.on_tick = buttons.on_button, buttons.on_tick
 
+local S_COLOURS = { type = "object", additionalProperties = false, properties = {} }
+for _, k in ipairs(lights.COLOUR_KEYS) do S_COLOURS.properties[k] = { type = { "string", "boolean" }, maxLength = 7 } end
 local S = {}
 S.volume = { type = "object", required = { "percent" }, properties = { percent = { type = "integer", minimum = 0, maximum = 100 } }, additionalProperties = false }
 S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }, random_start = { type = "boolean" }, repeat_mode = { type = "integer", minimum = 0, maximum = 2 },
-                                              heart_press = { type = "string", enum = { "none", "next", "pause" } },
+                                              heart_press = { type = "string", enum = { "none", "next", "pause", "party" } },
+                                              party_s = { type = "integer", minimum = 0, maximum = PARTY_MAX_S }, colours = S_COLOURS,
                                               knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } }, knob_restart = { type = "boolean" },
                                               continue_on_token_removal = { type = "boolean" }, off_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
                                               upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, max_volume = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }

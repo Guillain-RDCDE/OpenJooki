@@ -18,7 +18,7 @@ local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
 local LONG_CIRCLE_BUSY_S = 5
 local function long_circle_s(doc)
   local hp = (doc.audiocfg or {}).heart_press
-  return (hp == "next" or hp == "pause") and LONG_CIRCLE_BUSY_S or LONG_CIRCLE_S
+  return (hp == "next" or hp == "pause" or hp == "party") and LONG_CIRCLE_BUSY_S or LONG_CIRCLE_S
 end
 local RESET_MAX_VOLUME = 5   -- the volume wheel all the way down (it reads 0-100) for the parent-code gesture
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
@@ -45,9 +45,11 @@ local function knob_restart(doc)
   return a.knob_mode == "start" or (a.knob_restart == true and knob_mode(doc) ~= "wind")
 end
 -- A short press on the heart (held 2 s it switches the Jooki off) does what the parents chose in
--- Settings (audiocfg.heart_press): nothing, the next track, or pause / play.
+-- Settings (audiocfg.heart_press): nothing, the next track, pause / play, or the Christmas tree (#54:
+-- a press starts it, another stops it; services.device.lights).
 local HEART = { next = function() return emit("playback.next", {}) end,
-                pause = function(now) return emit("playback.toggle_request", { source = "button", now = now }) end }
+                pause = function(now) return emit("playback.toggle_request", { source = "button", now = now }) end,
+                party = function() return emit("lights.party", {}) end }
 
 local function activity_of(doc)
   local a = copy(doc.activity or {})

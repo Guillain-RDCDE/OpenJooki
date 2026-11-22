@@ -9,16 +9,21 @@
 | heart orange (closer to yellow, it can look greenish) | battery low: plug it in |
 | heart blinking red | battery very low: plug it in now |
 | heart orange or red **on the charger** | the battery does not charge: probably worn, see *Charging* below |
-| ring off while music plays | a token is playing: normal |
-| both side dots white | on the Wi-Fi |
+| ring off while music plays | a token is playing: normal (unless the playlist has its own *Lights while it plays*) |
+| both side dots white (or the colour you chose) | on the Wi-Fi |
 | side dots glowing orange, left then right | looking for the Wi-Fi, for about a minute after switching on |
 | **both side dots orange** | no Wi-Fi. Tokens and music still work. See *No Wi-Fi* below |
-| side dots light blue | a token was recognised, or a phone opened the page |
+| side dots light blue (or the colour you chose) | a token was recognised, or a phone opened the page |
 | side dots yellow, one pulse | a warning: battery under 20 %, airplane mode on, kids mode switched on or off, or it will switch off in a minute |
 | side dots red, two pulses | an error: empty playlist, memory card full, or Spotify could not play |
-| three red flashes, no sound, then everything off, the heart still lit until the end (10 to 15 seconds) | switching off (heart held two seconds, five if its short press does something, or 15 minutes unused on battery, or battery very low) |
+| three red flashes (or the colour you chose), no sound, then everything off, the heart still lit until the end (10 to 15 seconds) | switching off (heart held two seconds, five if its short press does something, or 15 minutes unused on battery, or battery very low) |
 | ring and side dots off | night mode |
-| every colour, for 5 seconds | the *Christmas tree* button of the page: just for fun |
+| every colour on the ring and the side dots | the *Christmas tree*: from the page, or the heart if you gave it the tree. As long as you chose (5 seconds unless you change it) |
+| the ring in one colour, glowing, or going round the colours, while music plays | that playlist's own *Lights while it plays* |
+
+The white of the ring, of the side dots and of the start-up blinks, the light blue of a token
+and the red of switching off can be your own colours: *Settings → Lights → Christmas tree and
+colours*. The warnings (orange, yellow, red pulses) always keep theirs.
 
 ## No Wi-Fi (both side dots orange)
 

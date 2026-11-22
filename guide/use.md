@@ -52,6 +52,14 @@ a token starts its playlist on a random song; put the same token back and the so
 goes on in its order. Choose **On**, **Off** or **As in Settings** in the playlist. It works for
 Spotify playlists too. Audiobooks keep their place.
 
+### Lights, playlist by playlist
+
+In a playlist, **Lights while it plays** gives it its own lights: **One colour** (the ring stays
+that colour), **Breathing** (the ring glows slowly in that colour), **Rainbow** (the ring goes
+slowly round all the colours) or **Christmas tree** (the ring and the side dots, the whole time).
+For the first two, tap the round colour next to it to choose the colour. **Usual** (the
+default) keeps the Jooki's own lights. Paused, the usual lights come back; at night they are dimmed.
+
 ### Audiobooks
 
 Switch **Audiobook** on in a playlist: it always resumes where it stopped, and is never
@@ -238,7 +246,8 @@ version.
 - **Play from other apps**: lets apps on your Wi-Fi send music to the Jooki
   ([UPnP / DLNA](#from-other-apps-upnp--dlna)). Off until you switch it on.
 - *Jooki buttons*:
-- **Short press on the heart**: **Nothing** (as before), **Next song**, or **Pause / play**.
+- **Short press on the heart**: **Nothing** (as before), **Next song**, **Pause / play**, or
+  **Christmas tree (press again to stop)**: children start and stop it themselves.
   Held two seconds, the heart still switches the Jooki off; five seconds when its short press
   does something, so a small child pressing a bit too long does not switch it off.
 - **The track knob**: **Next / previous song** (as before), **Songs, and halfway winds**: held
@@ -259,6 +268,17 @@ version.
   by itself; tokens and music work the whole time. Meanwhile, this page cannot reach it:
   that's expected.
 
+**Lights**
+- **Christmas tree**: just for fun, all the colours of the lights. Tap again to stop it.
+- **Christmas tree and colours**:
+  - **How long**: 5 s (as before), 30 s, 1 min, 5 min, 15 min, or **Until stopped**.
+  - **The heart starts and stops it**: opens *Jooki buttons*, to give it to the heart.
+  - **Colours of the lights**: the **Ring, when nothing plays**, the **Side dots, Wi-Fi
+    connected**, **A token put on**, **Switching on** and **Switching off** can each have their
+    own colour: tap the round colour to choose one, **Usual** to give the Jooki's own back.
+    The warnings keep their colours (orange without Wi-Fi, red or yellow blinks), so they
+    always mean the same thing.
+
 **Connections**
 - **Speaker or headphones** (Bluetooth): put them in pairing mode, then **Search** →
   **Connect**. The sound goes to the speaker, and comes back to the Jooki when you switch
@@ -272,7 +292,6 @@ version.
 - **Language**: English, Français, Nederlands or Deutsch. The page picks your phone's language by
   itself.
 - **Appearance**: Automatic (like the phone), Light or Dark.
-- **Christmas tree**: just for fun, all the colours of the lights for 5 seconds.
 
 **Parents**
 - **Parent code**: a 4-digit code so that children and guests can play music but not

@@ -1,7 +1,9 @@
 -- services.device.lights: the Jooki's lights (1.x language, 1.3 dimming).
 -- The ring and the two side dots: idle / playing ring, Wi-Fi dots, the start-up "waiting for
--- Wi-Fi" chase, the event pulses (lights.event) and the Christmas tree. Pure: it reacts to events
--- owns state.device.party and private driver verification, startup-cue state.
+-- Wi-Fi" chase, the event pulses (lights.event), the Christmas tree and a playlist's own lights.
+-- Pure: it reacts to events; owns state.device.party and private driver verification, startup-cue state.
+-- The parents may give the everyday lights their own colours (audiocfg.colours, #54); the warnings
+-- (orange Wi-Fi, red and yellow pulses) keep theirs, so they always mean the same thing.
 -- Colours sent are not kept (the simulator reads them off the bus). Installed by services.device
 -- (the facade), which re-exports its handlers.
 local util = require("services.util")
@@ -42,10 +44,33 @@ end
 local function set(doc, group, colour) return { kind = "bus.publish", topic = LED .. "set_raw", payload = group .. "," .. table.concat(dimmed(doc, colour), ",") } end
 local function pulse(doc, group, colour, n) return { kind = "bus.publish", topic = LED .. "pulse_raw", payload = group .. "," .. table.concat(dimmed(doc, colour), ",") .. "," .. (n or 1) .. ",500,0.5" } end
 
+-- ------------------------------------------------------------------ the parents' colours (#54)
+-- audiocfg.colours = { ring?, dots?, token?, start?, off? }, each "#rrggbb" (the page's colour picker);
+-- a missing one keeps the Jooki's own. ring: the ring when nothing plays; dots: the side dots with
+-- the Wi-Fi; token: a token put on, a song starting, a phone opening the page; start: the white blinks at start-up; off: the
+-- red flashes when it switches off.
+local DEFAULT = { ring = COLOURS.WHITE, dots = COLOURS.WHITE, token = COLOURS.LIGHTBLUE, start = COLOURS.WHITE, off = COLOURS.RED }
+lights.COLOUR_KEYS = { "ring", "dots", "token", "start", "off" }
+
+--- "#rrggbb" -> { r, g, b } on the lights' 0-200 scale, or nil.
+local function rgb(hex)
+  if type(hex) ~= "string" or not hex:match("^#%x%x%x%x%x%x$") then return nil end
+  local out = {}
+  for i = 1, 3 do out[i] = math.floor(tonumber(hex:sub(2 * i, 2 * i + 1), 16) * 200 / 255 + 0.5) end
+  return out
+end
+lights.rgb = rgb
+
+--- The colour the parents chose for `key`, or the Jooki's own.
+local function colour(doc, key)
+  return rgb(((doc.audiocfg or {}).colours or {})[key]) or DEFAULT[key]
+end
+lights.colour = colour
+
 local function wifi_lights(doc)
   local w = doc.net or {}
   local assoc, ip = w.connected, (w.ip and w.ip ~= "")
-  return { set(doc, "PREV", assoc and COLOURS.WHITE or COLOURS.ORANGE), set(doc, "NEXT", ip and COLOURS.WHITE or COLOURS.ORANGE) }
+  return { set(doc, "PREV", assoc and colour(doc, "dots") or COLOURS.ORANGE), set(doc, "NEXT", ip and colour(doc, "dots") or COLOURS.ORANGE) }
 end
 
 -- While the Jooki waits for its Wi-Fi at start-up, the two side dots are orange. Both at once and
@@ -93,14 +118,20 @@ function lights.on_lights_refresh(doc)
   if lights.off(doc) then return { commands = {} } end
   local pb = doc.playback or {}
   local cmds = {}
-  if (doc.device or {}).party then return { commands = cmds } end   -- the Christmas tree owns the lights for 5 s
+  if (doc.device or {}).party then return { commands = cmds } end   -- the Christmas tree owns the lights while it runs
   if pb.state == "starting" then
-    cmds[#cmds + 1] = set(doc, "PREV", COLOURS.LIGHTBLUE); cmds[#cmds + 1] = set(doc, "NEXT", COLOURS.LIGHTBLUE)
+    local c = colour(doc, "token")
+    cmds[#cmds + 1] = set(doc, "PREV", c); cmds[#cmds + 1] = set(doc, "NEXT", c)
     return { commands = cmds }
   end
-  local ring = COLOURS.WHITE
+  -- the playing playlist's own lights (#54): its first frame now, the next ones on device.pl_anim
+  local fx = lights.playlist_fx(doc)
+  if fx then for _, c in ipairs(lights.fx_frame(doc, fx, 0)) do cmds[#cmds + 1] = c end end
+  if fx and fx.fx ~= "colour" then cmds[#cmds + 1] = { kind = "timer.every", name = "device.pl_anim", seconds = lights.FX_FRAME_S } end
+  local ring = colour(doc, "ring")
   if pb.state == "playing" and doc.nfc and doc.nfc.tagId then ring = COLOURS.BLACK end   -- 1.x: the ring goes off while a token plays
-  cmds[#cmds + 1] = set(doc, "RING", ring)
+  if not fx then cmds[#cmds + 1] = set(doc, "RING", ring) end
+  if fx and fx.fx == "tree" then return { commands = cmds } end   -- the tree has the side dots too
   -- while the start-up chase owns the side dots, leave them to it (it paints PREV/NEXT itself)
   if not wifi_waiting(doc) then
     for _, c in ipairs(wifi_lights(doc)) do cmds[#cmds + 1] = c end
@@ -145,9 +176,9 @@ function lights.on_net_status(doc, ev)
 end
 
 local EVENT_LIGHTS = {
-  ["Evt.Character.Detect"] = function(doc) return { set(doc, "PREV", COLOURS.LIGHTBLUE), set(doc, "NEXT", COLOURS.LIGHTBLUE) } end,
+  ["Evt.Character.Detect"] = function(doc) return { set(doc, "PREV", colour(doc, "token")), set(doc, "NEXT", colour(doc, "token")) } end,
   ["Evt.Character.Write"] = function(doc) return { pulse(doc, "PREV", COLOURS.GREEN, 8), pulse(doc, "NEXT", COLOURS.GREEN, 8) } end,
-  ["Evt.Mobile.connect"] = function(doc) return { pulse(doc, "PREV", COLOURS.LIGHTBLUE, 1), pulse(doc, "NEXT", COLOURS.LIGHTBLUE, 1) } end,
+  ["Evt.Mobile.connect"] = function(doc) return { pulse(doc, "PREV", colour(doc, "token"), 1), pulse(doc, "NEXT", colour(doc, "token"), 1) } end,
 }
 local ERROR_EVENTS = { ["Evt.Character.Detect.Empty"] = true, ["Evt.Disk.FullError"] = true, ["Evt.Spotify.PlayError"] = true,
                        ["Evt.Spotify.NoLoginError"] = true, ["Evt.Deezer.PlayError"] = true, ["Evt.Deezer.NoLoginError"] = true }
@@ -164,10 +195,13 @@ function lights.on_lights_event(doc, ev)
 end
 
 -- ------------------------------------------------------------------ the Christmas tree (just for fun)
--- A button in Settings: for 5 s the ring and the two side dots run through the colour wheel, each
--- at a different place on it, then everything goes back to its real state. The heart stays the
+-- The page's button, or the heart when the parents chose it (audiocfg.heart_press = "party", #54):
+-- the ring and the two side dots run through the colour wheel, each at a different place on it, then
+-- everything goes back to its real state. As long as the parents chose (audiocfg.party_s: 5 s by
+-- default, 0 = until it is stopped); the same button or the heart again stops it. The heart stays the
 -- light controller's (docs/24 §1). Night mode's dimming applies, so it never lights up a bedroom.
 local PARTY_S, PARTY_FRAME_S, PARTY_STEP = 5, 0.12, 47   -- 47° a frame: the colours jump, they do not slide
+lights.PARTY_S = PARTY_S
 
 --- A fully saturated colour at `deg` on the colour wheel, 0-200 like the rest of the lights.
 local function wheel(deg)
@@ -178,13 +212,21 @@ local function wheel(deg)
 end
 lights.wheel = wheel
 
+--- How long the tree lasts, in seconds (0 = until it is stopped).
+function lights.party_s(doc)
+  local v = (doc.audiocfg or {}).party_s
+  return type(v) == "number" and v >= 0 and v % 1 == 0 and v or PARTY_S
+end
+
+--- Start the tree, or stop it when it runs (the same button, the same heart).
 function lights.on_party(doc)
   if lights.off(doc) then return {} end
-  if (doc.device or {}).party then return {} end
+  if (doc.device or {}).party then return lights.on_party_end(doc) end
   local d = copy(doc.device or {}); d.party = true
-  return { state = { device = d }, commands = {
-    { kind = "timer.every", name = "device.party", seconds = PARTY_FRAME_S },
-    { kind = "timer.once", name = "device.party_end", seconds = PARTY_S } } }
+  local cmds = { { kind = "timer.every", name = "device.party", seconds = PARTY_FRAME_S } }
+  local secs = lights.party_s(doc)
+  if secs > 0 then cmds[2] = { kind = "timer.once", name = "device.party_end", seconds = secs } end
+  return { state = { device = d }, commands = cmds }
 end
 
 function lights.on_party_frame(doc, ev)
@@ -194,6 +236,52 @@ function lights.on_party_frame(doc, ev)
   return { commands = { set(doc, "RING", wheel(deg)), set(doc, "PREV", wheel(deg + 120)), set(doc, "NEXT", wheel(deg + 240)) } }
 end
 
+-- ------------------------------------------------------------------ a playlist's own lights (#54)
+-- playlists[id].lights = { fx = "colour" | "breathe" | "rainbow" | "tree", colour = "#rrggbb" } (services.library),
+-- shown while that playlist plays (not paused). colour: the ring stays that colour; breathe: it glows
+-- slowly in that colour; rainbow: it goes slowly round the colour wheel; tree: the Christmas tree,
+-- side dots included. A frame every FX_FRAME_S, only while one of the last three plays.
+lights.FX_FRAME_S = 0.25
+local BREATHE_S, RAINBOW_DEG = 3, 8   -- a breath every 3 s; the rainbow goes round in about 11 s
+
+--- The playing playlist's lights, or nil.
+function lights.playlist_fx(doc)
+  local pb = doc.playback or {}
+  if pb.state ~= "playing" then return nil end
+  local id = (pb.now or {}).playlist
+  local p = id and ((doc.library or {}).playlists or {})[id]
+  local l = p and p.lights
+  if type(l) ~= "table" then return nil end
+  if l.fx == "colour" or l.fx == "breathe" then return rgb(l.colour) and l or nil end
+  if l.fx == "rainbow" or l.fx == "tree" then return l end
+  return nil
+end
+
+--- The commands of one frame of `fx` at time `now`.
+function lights.fx_frame(doc, fx, now)
+  local n = math.floor((now or 0) / lights.FX_FRAME_S + 0.5)
+  if fx.fx == "colour" then return { set(doc, "RING", rgb(fx.colour)) } end
+  if fx.fx == "breathe" then
+    local k = 0.15 + 0.85 * (0.5 - 0.5 * math.cos(2 * math.pi * n * lights.FX_FRAME_S / BREATHE_S))
+    local c = rgb(fx.colour)
+    local out = {}
+    for i = 1, 3 do out[i] = math.floor(c[i] * k + 0.5) end
+    return { set(doc, "RING", out) }
+  end
+  if fx.fx == "rainbow" then return { set(doc, "RING", wheel(n * RAINBOW_DEG)) } end
+  local deg = n * PARTY_STEP
+  return { set(doc, "RING", wheel(deg)), set(doc, "PREV", wheel(deg + 120)), set(doc, "NEXT", wheel(deg + 240)) }
+end
+
+--- device.pl_anim: the next frame, or the end of the timer when nothing moves any more (paused,
+--- another playlist, lights off). The Christmas tree, while it runs, keeps the lights.
+function lights.on_pl_anim(doc, ev)
+  local fx = lights.playlist_fx(doc)
+  if lights.off(doc) or not fx or fx.fx == "colour" then return { commands = { { kind = "timer.cancel", name = "device.pl_anim" } } } end
+  if (doc.device or {}).party then return nil end
+  return { commands = lights.fx_frame(doc, fx, ev.now) }
+end
+
 function lights.on_party_end(doc)
   local d = copy(doc.device or {}); d.party = nil
   local after = {}
@@ -201,6 +289,7 @@ function lights.on_party_end(doc)
   after.device = d
   local r = lights.on_lights_refresh(after)
   table.insert(r.commands, 1, { kind = "timer.cancel", name = "device.party" })
+  table.insert(r.commands, 2, { kind = "timer.cancel", name = "device.party_end" })   -- stopped before its time
   r.state = { device = d }
   return r
 end
@@ -222,14 +311,14 @@ function lights.on_apply(doc)
   local shutdown = doc.poweroff_int or {}
   local flashing = shutdown.step ~= nil or boot.phase == "blinking"
   local step = shutdown.step or boot.step or 0
-  local colour = shutdown.step and COLOURS.RED or COLOURS.WHITE
+  local flash = colour(doc, shutdown.step and "off" or "start")
   local enabled = flashing and step % 2 == 1 or not off
   local d = copy(doc.device or {}); d.party = nil
   local cmds = {
     { kind = "timer.cancel", name = "device.party" }, { kind = "timer.cancel", name = "device.party_end" },
     { kind = "timer.cancel", name = "device.wifi_anim" },
     -- A set cancels the controller's ongoing pulses too. The global gate remains authoritative.
-    { kind = "bus.publish", topic = LED .. "set_raw", payload = flashing and enabled and ("ALL," .. table.concat(dimmed(doc, colour), ",")) or "ALL,0,0,0" },
+    { kind = "bus.publish", topic = LED .. "set_raw", payload = flashing and enabled and ("ALL," .. table.concat(dimmed(doc, flash), ",")) or "ALL,0,0,0" },
     driver_write(enabled and 8 or 0), verify_timer(),
   }
   -- bus.up also changes state.device in the facade. Clear party in the next turn so
@@ -324,6 +413,7 @@ local TIMERS = {
   ["device.wifi_anim"] = lights.on_wifi_anim,
   ["device.party"] = lights.on_party_frame,
   ["device.party_end"] = lights.on_party_end,
+  ["device.pl_anim"] = lights.on_pl_anim,
   ["device.lights_verify"] = lights.on_verify,
   ["device.lights_boot"] = lights.on_boot_frame,
 }
@@ -341,6 +431,8 @@ function lights.install(api, dispatch)
   dispatch.on("bus.up", "device.lights", lights.on_apply)
   dispatch.on("lights.apply", "device.lights", lights.on_preference)
   dispatch.on("lights.cancel_party", "device.lights", lights.on_party_end)
+  dispatch.on("lights.party", "device.lights", lights.on_party)              -- the heart (#54)
+  dispatch.on("lights.refresh", "device.lights", lights.on_lights_refresh)   -- new colours, a playlist's lights
   dispatch.on("lights.register", "device.lights", lights.on_register)
   dispatch.on("power.plugged", "device.lights", lights.on_power)
   dispatch.on("power.charging", "device.lights", lights.on_power)

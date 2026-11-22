@@ -1,4 +1,10 @@
   T.de = {
+    s_lights: 'Lichter', s_lights_set: 'Weihnachtsbaum und Farben', s_lights_set_sub: 'Wie lange, mit dem Herz, die Farben der Lichter',
+    party_stop: 'Weihnachtsbaum stoppen', party_always: 'Bis man ihn stoppt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
+    party_len: 'Wie lange', party_heart: 'Das Herz startet und stoppt ihn', party_foot: 'Kinder können ihn mit einem Druck auf das Herz selbst starten und stoppen: unter Jooki-Tasten Weihnachtsbaum wählen. Nachts ist er gedimmt.',
+    colours: 'Farben der Lichter', col_ring: 'Ring, wenn nichts spielt', col_dots: 'Seitenpunkte, WLAN verbunden', col_token: 'Eine Figur aufgesetzt', col_start: 'Einschalten', col_off: 'Ausschalten',
+    col_usual: 'Die eigene Farbe des Jooki', col_back: 'Wie immer', colours_foot: 'Warnungen behalten ihre Farben: Orange ohne WLAN, rotes oder gelbes Blinken.',
+    pl_lights: 'Lichter beim Abspielen', pl_colour: 'Farbe', fx_none: 'Wie immer', fx_colour: 'Eine Farbe', fx_breathe: 'Atmen', fx_rainbow: 'Regenbogen', fx_tree: 'Weihnachtsbaum',
     playlists: 'Wiedergabelisten', tokens: 'Figuren', library: 'Mediathek', settings: 'Einstellungen',
     connecting: 'Verbindung zum Jooki wird hergestellt…', connected: 'Verbunden', offline: 'Offline',
     offline_long: 'Der Jooki antwortet nicht. Prüfe, ob er eingeschaltet und im selben WLAN ist. Die Verbindung wird automatisch erneut versucht…', retry: 'Erneut versuchen',
@@ -41,7 +47,7 @@
     name_text: function (u) { return 'Seine Seite ist jetzt unter ' + u + ' erreichbar. Die alte Adresse antwortet nicht mehr. Speichere diesen Link als Lesezeichen. Spotify zeigt den neuen Namen nach dem nächsten Neustart.'; }, name_open: 'Neue Adresse öffnen',
     wifi: 'WLAN', ip: 'IP-Adresse', storage: 'Speicher', version: 'Version',
     heart_shutdown_help: 'Beim Ausschalten: dreimal kurz rot blinken, ohne Ton.',
-    heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe',
+    heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe', heart_party: 'Weihnachtsbaum (nochmal zum Stoppen)',
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
     off_token: 'Ausschalten, wenn die Figur weggenommen wird', off_token_sub: 'Nach 15 Sekunden, wenn nichts spielt und keine Figur zurückgestellt wird',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Titel, und halb drehen zum Spulen', knob_restart: 'Links halten 3 s: zurück zum Anfang', knob_restart_sub: 'Kurz drehen bleibt nächster / vorheriger Titel. Ein Hörbuch vergisst seine Stelle.', knob_restart_wind: 'Nicht mit „Im Titel spulen“: Halten spult.', knob_wind: 'Im Titel spulen',
@@ -110,5 +116,5 @@
     chip_refused: 'Jetzt nicht, nichts wurde geändert:', chip_unavailable: 'Dieser Jooki kann das nicht.',
     chip_try: 'Neue Version ausprobieren', chip_try_sure: 'Ja, ausprobieren', chip_back: 'Zurück zur ursprünglichen Version',
     chip_newer: 'Eine neuere Version ist bereit: Sie können sie genauso ausprobieren',
-    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
+    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: function (l) { return 'Alle Farben der Lichter · ' + l; }, s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
   };

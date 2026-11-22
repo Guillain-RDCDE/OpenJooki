@@ -240,6 +240,8 @@
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
       // its own playback modes; nothing for an audiobook or a streaming service, which do not use them
       p.audiobook || p.spotify || p.deezer ? null : modeRows(p, id),
+      // its own lights while it plays (#54)
+      typeof S.audio.config.party_s === 'number' ? plLights(p, id) : null,
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
         ri >= 0 ? h('button', { class: 'btn ghost', 'data-k': 'resumereset', onclick: function () { send('OJ_RESUME_RESET', { playlistId: id }); } }, t('resume_restart')) : null) : null);
@@ -269,6 +271,17 @@
       row(t('repeat'), 'plrepeat', typeof p.repeat_mode === 'number' ? String(p.repeat_mode) : 'settings',
         [['settings', t('pl_settings', repName(Number(c.repeat_mode) || 0))], ['0', t('s_off')], ['1', t('rep_all')], ['2', t('rep_one')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, repeat_mode: v === 'settings' ? 'settings' : Number(v) } }); })];
+  }
+  // a playlist's lights while it plays (#54): the usual ones, one colour, breathing, rainbow or the tree
+  var FXS = ['none', 'colour', 'breathe', 'rainbow', 'tree'];
+  function plLights(p, id) {
+    var l = obj(p.lights), fx = FXS.indexOf(l.fx) > 0 ? l.fx : 'none', col = l.colour || '#7c4dff';
+    function put(f, c) { send('PLAYLIST_UPDATE', { playlist: { id: id, lights: f === 'none' ? false : f === 'colour' || f === 'breathe' ? { fx: f, colour: c } : { fx: f } } }); }
+    return [h('div', { class: 'switch', 'data-k': 'pllights' }, h('div', null, t('pl_lights')),
+        h('select', { class: 'input mini', 'data-k': 'plfx', onchange: function (e) { e.target.blur(); put(e.target.value, col); } },
+          FXS.map(function (f) { return h('option', { value: f, selected: f === fx ? 'selected' : null }, t('fx_' + f)); }))),
+      fx === 'colour' || fx === 'breathe' ? h('div', { class: 'switch' }, h('div', null, t('pl_colour')),
+        colourPick(col, 'plcolour', t('pl_colour'), function (v) { put(fx, v); })) : null];
   }
   function optimisticTracks(id, tracks) { if (pls()[id]) { pls()[id].tracks = tracks; IDX = null; render(); } }
 

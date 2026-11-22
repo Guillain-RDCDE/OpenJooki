@@ -203,7 +203,7 @@ function power.on_shutdown_request(doc, ev)
     { kind = "bus.publish", topic = "/j/all/quit", payload = '"from-player"' },
     { kind = "shell", action = "sync" },
   }
-  if not lights.off(doc) then table.insert(cmds, 3, { kind = "bus.publish", topic = LED .. "set_raw", payload = "CIRCLE,200,0,0" }) end
+  if not lights.off(doc) then table.insert(cmds, 3, { kind = "bus.publish", topic = LED .. "set_raw", payload = "CIRCLE," .. table.concat(lights.colour(doc, "off"), ",") }) end
   if ev.reason ~= "signal" then cmds[#cmds + 1] = { kind = "shell", action = "poweroff" } end
   cmds[#cmds + 1] = { kind = "shutdown", reason = ev.reason or "requested" }
   return { commands = cmds }

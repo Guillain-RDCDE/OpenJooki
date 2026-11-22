@@ -6,6 +6,8 @@
 -- Data shapes are those of 1.x (docs/22 §4) so that 1.x and 2.0 share files.
 --   playlists[id] = { title, tracks = {trackId...}, star?, audiobook?, resume?, shuffle_mode?, random_start?, repeat_mode?, image?, plType?, spotify?, deezer? }
 --   (shuffle_mode / random_start / repeat_mode: the playlist's own; absent = the Settings')
+--   lights?: { fx = "colour" | "breathe" | "rainbow" | "tree", colour? = "#rrggbb" }, its own lights while it
+--   plays (#54, services.device.lights); absent = the Jooki's usual ones
 --   tracks[id]    = { filename, userFilename?, title, album, artist, duration, size, hasImage, isUrl? }
 --   tokens[uid]   = { starId, seen, name?, image? }
 local util = require("services.util")
@@ -241,6 +243,13 @@ function ops.playlist_update(lib, args)
   if args.repeat_mode == "settings" then p.repeat_mode = nil
   elseif args.repeat_mode == 0 or args.repeat_mode == 1 or args.repeat_mode == 2 then p.repeat_mode = args.repeat_mode
   elseif args.repeat_mode ~= nil then return nil, { code = "invalid_argument", field = "repeat_mode", message = "invalid repeat_mode" } end
+  -- its own lights while it plays (#54); false (or "") gives it the usual ones back
+  if args.lights == false or args.lights == "" then p.lights = nil
+  elseif args.lights ~= nil then
+    local l = ops.valid_lights(args.lights)
+    if not l then return nil, { code = "invalid_argument", field = "lights", message = "invalid lights" } end
+    p.lights = l
+  end
   if args.tracks ~= nil then
     if id == TRASH then
       -- the page removed tracks from "Unused": delete only files that are really unused
@@ -335,6 +344,15 @@ function ops.valid_image(s)
   return s:match("^lib:[a-z0-9_]+$") ~= nil or s:match("^/artwork/tok_%x+%.png%?v=%d+$") ~= nil
 end
 
+--- A playlist's lights (#54), cleaned, or nil: a colour effect needs its "#rrggbb", the others none.
+local FX = { colour = true, breathe = true, rainbow = true, tree = true }
+function ops.valid_lights(l)
+  if type(l) ~= "table" or not FX[l.fx] then return nil end
+  local c = type(l.colour) == "string" and l.colour:match("^#%x%x%x%x%x%x$") and l.colour:lower() or nil
+  if (l.fx == "colour" or l.fx == "breathe") and not c then return nil end
+  return { fx = l.fx, colour = c }
+end
+
 function ops.token_forget(lib, uid)
   if not lib.tokens[uid] then return nil, { code = "not_found", field = "tagId", message = "unknown token" } end
   lib.tokens[uid] = nil
@@ -384,7 +402,9 @@ S.playlist_id = { type = "object", required = { "id" }, properties = { id = S.id
 S.playlist_update = { type = "object", required = { "id" }, additionalProperties = false,
   properties = { id = S.id, title = { type = "string", maxLength = 200 }, star = { type = { "string", "boolean" } }, audiobook = { type = "boolean" }, resume = { type = "boolean" },
                  shuffle_mode = { type = { "boolean", "string" } }, random_start = { type = { "boolean", "string" }, enum = { true, false, "settings" } }, repeat_mode = { type = { "integer", "string" } },
-                 tracks = { type = "array", items = { type = "string" }, maxItems = 2000 } } }
+                 tracks = { type = "array", items = { type = "string" }, maxItems = 2000 },
+                 lights = { type = { "object", "boolean" }, additionalProperties = false,
+                            properties = { fx = { type = "string", enum = { "colour", "breathe", "rainbow", "tree" } }, colour = { type = "string", pattern = "^#%x%x%x%x%x%x$" } } } } }
 S.add_track = { type = "object", required = { "id", "trackId" }, properties = { id = S.id, trackId = S.id }, additionalProperties = false }
 S.add_stream = { type = "object", required = { "id", "url" }, properties = { id = S.id, url = { type = "string", maxLength = 500 }, title = { type = "string", maxLength = 200 } }, additionalProperties = false }
 S.token_edit = { type = "object", required = { "tagId" }, properties = { tagId = { type = "string", pattern = "^%x+$", minLength = 14, maxLength = 14 }, name = { type = { "string", "boolean" }, maxLength = 100 }, image = { type = { "string", "boolean" } } }, additionalProperties = false }
@@ -410,7 +430,9 @@ function library.install(api, dispatch)
     return mutate(doc, { playlists = true, tracks = true }, function(lib) return ops.playlist_delete(lib, p.id) end)
   end)
   api.command("playlist.update", S.playlist_update, function(doc, p)
-    return mutate(doc, { playlists = true, tracks = true }, function(lib) return ops.playlist_update(lib, p) end)
+    local r, e, ok = mutate(doc, { playlists = true, tracks = true }, function(lib) return ops.playlist_update(lib, p) end)
+    if r and p.lights ~= nil then r.commands[#r.commands + 1] = util.emit("lights.refresh", {}) end   -- #54
+    return r, e, ok
   end)
   api.command("playlist.add_track", S.add_track, function(doc, p)
     return mutate(doc, { playlists = true }, function(lib) return ops.playlist_add_track(lib, p.id, p.trackId) end)

@@ -435,6 +435,14 @@ button.srow:disabled { opacity: .5; cursor: default; }
 .sw:checked { background: var(--accent); }
 .sw:checked::after { transform: translateX(20px); }
 .input.mini { width: auto; min-height: 36px; padding: 4px 10px; }
+/* the lights' colours (#54): a round swatch that opens the phone's colour picker */
+.cpick { flex: none; width: 40px; height: 40px; padding: 0; border: 2px solid var(--line); border-radius: 50%; background: none; cursor: pointer; overflow: hidden; }
+.cpick::-webkit-color-swatch-wrapper { padding: 0; }
+.cpick::-webkit-color-swatch { border: none; border-radius: 50%; }
+.cpick::-moz-color-swatch { border: none; border-radius: 50%; }
+.btn.mini { min-height: 36px; padding: 0 8px; color: var(--accent); }
+.switch input.cpick { width: 40px; height: 40px; border-radius: 50%; background: none; -webkit-appearance: auto; appearance: auto; }
+.switch input.cpick::after { content: none; }
 /* Long translated options must leave the setting's label readable on a phone. */
 @media (max-width: 520px) {
   .srow.control { display: grid; grid-template-columns: 32px minmax(0, 1fr); }

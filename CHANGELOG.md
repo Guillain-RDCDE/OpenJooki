@@ -1,5 +1,11 @@
 # OpenJooki — Changelog
 
+## Next release
+- **The Christmas tree, your way.** *Settings → Lights*: a tap starts the tree, another one stops it. *Christmas tree and colours → How long*: 5 s as before, 30 s, 1 min, 5 min, 15 min, or *Until stopped*. In *Jooki buttons*, the heart's short press can be the *Christmas tree*: children start and stop it themselves (#54, thank you scheuerbauer).
+- **Your own colours.** The ring when nothing plays, the side dots, a token put on, switching on and switching off can each have their own colour (*Settings → Lights → Christmas tree and colours*). Purple to switch off? Why not. The warnings keep their colours, so they always mean the same thing.
+- **Lights, playlist by playlist.** In a playlist, *Lights while it plays*: *One colour*, *Breathing*, *Rainbow* or *Christmas tree*, with the colour of your choice. At night they are dimmed like every other light.
+- For the tinkerers: `audiocfg.party_s` (0-3600, 0 = until stopped, default 5), `audiocfg.colours` (`ring`, `dots`, `token`, `start`, `off`, each `#rrggbb`; `false` gives one back), `heart_press = "party"`, by `SET_CFG` / `device.set_config`; `OJ_PARTY` / `device.party` now stop a running tree. `playlists[id].lights = { fx = colour | breathe | rainbow | tree, colour }` by `PLAYLIST_UPDATE` / `playlist.update` (`false` takes it away), drawn by `device.pl_anim` (a frame every 0.25 s, only while an animated one plays). The page's `device` part says `party`. New bench suite `test_christmas_lights.py`.
+
 ## OpenJooki 2.5.12 (22 November 2026) — A still player at bedtime
 - **A still player at bedtime.** While the sleep timer ran (at night it starts by itself with the music), the page redrew the whole player every second, so it flickered. Now only the countdown moves.
 - For the tinkerers: the page compares the Jooki's parts with sorted keys and `[]` equal to `{}` (a Lua table has no key order, and an empty one comes as `[]`), and takes the countdown alone (`bedtime.sleep.remaining`) as nothing new. `test_page_steady.py` starts a sleep timer itself, so it no longer depends on the time it runs (it failed the nightly runs, at night). The endurance memory check looks at growth during the run (under 10 %) with a 9 MiB ceiling.

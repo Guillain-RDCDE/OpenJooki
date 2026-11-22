@@ -11,6 +11,12 @@
   // One table per language (fr, en, nl, de): the same keys in each, checked by the bench.
   var T = {};
   T.fr = {
+    s_lights: 'Lumières', s_lights_set: 'Sapin de Noël et couleurs', s_lights_set_sub: 'Combien de temps, depuis le cœur, les couleurs des lumières',
+    party_stop: 'Arrêter le sapin de Noël', party_always: 'Jusqu’à ce qu’on l’arrête', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
+    party_len: 'Durée', party_heart: 'Le cœur le lance et l’arrête', party_foot: 'Les enfants peuvent le lancer et l’arrêter eux-mêmes d’un appui sur le cœur : dans Boutons du Jooki, choisis Sapin de Noël. La nuit, il est atténué.',
+    colours: 'Couleurs des lumières', col_ring: 'Anneau, quand rien ne joue', col_dots: 'Points des côtés, Wi-Fi connecté', col_token: 'Un jeton posé', col_start: 'Allumage', col_off: 'Extinction',
+    col_usual: 'La couleur du Jooki', col_back: 'Habituelle', colours_foot: 'Les alertes gardent leurs couleurs : orange sans Wi-Fi, clignotements rouges ou jaunes.',
+    pl_lights: 'Lumières pendant la lecture', pl_colour: 'Couleur', fx_none: 'Habituelles', fx_colour: 'Une couleur', fx_breathe: 'Respiration', fx_rainbow: 'Arc-en-ciel', fx_tree: 'Sapin de Noël',
     playlists: 'Playlists', tokens: 'Jetons', library: 'Bibliothèque', settings: 'Réglages',
     connecting: 'Connexion au Jooki…', connected: 'Connecté', offline: 'Hors ligne',
     offline_long: 'Le Jooki ne répond pas. Vérifie qu\'il est allumé et sur le même Wi-Fi. Nouvelle tentative automatique…',
@@ -70,7 +76,7 @@
     name_open: 'Ouvrir la nouvelle adresse',
     wifi: 'Wi-Fi', ip: 'Adresse IP', storage: 'Stockage', version: 'Version',
     heart_shutdown_help: 'À l’arrêt : trois brefs clignotements rouges, sans son.',
-    heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_press_sub5: 'Tenu 5 secondes, il éteint le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture',
+    heart_press: 'Appui court sur le cœur', heart_press_sub: 'Tenu 2 secondes, il éteint toujours le Jooki', heart_press_sub5: 'Tenu 5 secondes, il éteint le Jooki', heart_none: 'Rien', heart_next: 'Morceau suivant', heart_pause: 'Pause / lecture', heart_party: 'Sapin de Noël (encore pour l’arrêter)',
     continue_token: 'Continuer la lecture quand un jeton est retiré', continue_token_sub: 'Pour les figurines et cartes Jooki',
     off_token: 'S’éteindre quand le jeton est retiré', off_token_sub: 'Après 15 secondes, si rien ne joue et qu’aucun jeton n’est remis',
     knob_mode: 'La molette des morceaux', knob_mode_sub: 'Tournée jusqu\'au bout, ou tenue à mi-course', knob_song: 'Morceau suivant / précédent', knob_both: 'Morceaux, et mi-course : avancer', knob_restart: 'Tenue à gauche 3 s : retour au début', knob_restart_sub: 'Un petit coup reste le morceau précédent. Un livre audio oublie où il en était.', knob_restart_wind: 'Pas avec « Avancer / reculer » : tenir la molette fait avancer.', knob_wind: 'Avancer / reculer',
@@ -230,13 +236,19 @@
     s_mp3_foot: 'Les FLAC et WAV envoyés au Jooki sont convertis en MP3 sur ton ordinateur ou ton téléphone : un disque prend trois fois moins de place. 256 kbps suffit largement pour l\'enceinte du Jooki et un casque Bluetooth. Ce choix ne vaut que pour cet appareil.',
     s_theme: 'Apparence', s_theme_auto: 'Automatique', s_theme_light: 'Clair', s_theme_dark: 'Sombre',
     s_theme_foot: 'Automatique : comme le téléphone. Ce choix ne vaut que pour ce téléphone.',
-    s_party: 'Sapin de Noël', s_party_sub: 'Toutes les couleurs des lumières, pendant 5 secondes', s_party_done: 'Regarde ton Jooki !',
+    s_party: 'Sapin de Noël', s_party_sub: function (l) { return 'Toutes les couleurs des lumières · ' + l; }, s_party_done: 'Regarde ton Jooki !',
     s_wifi_net: 'Réseau', s_wifi_signal: 'Signal', s_wifi_drops: 'Coupures depuis le démarrage', s_wifi_page: 'Adresse de la page',
     s_wifi_change: 'Changer de réseau', s_air_for: 'Pendant combien de temps ?', s_lang_foot: 'La langue de cette page sur ce téléphone.',
     s_connect_info: 'Pour te connecter', s_night_hours: 'Horaires', s_night_during: 'Pendant la nuit', s_update: 'Mise à jour',
     colon: ' : '
   };
   T.en = {
+    s_lights: 'Lights', s_lights_set: 'Christmas tree and colours', s_lights_set_sub: 'How long it lasts, from the heart, the colours of the lights',
+    party_stop: 'Stop the Christmas tree', party_always: 'Until stopped', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
+    party_len: 'How long', party_heart: 'The heart starts and stops it', party_foot: 'Children can start and stop it themselves with a press on the heart: in Jooki buttons, choose Christmas tree. At night it is dimmed.',
+    colours: 'Colours of the lights', col_ring: 'Ring, when nothing plays', col_dots: 'Side dots, Wi-Fi connected', col_token: 'A token put on', col_start: 'Switching on', col_off: 'Switching off',
+    col_usual: "The Jooki's own colour", col_back: 'Usual', colours_foot: 'Warnings keep their colours: orange without Wi-Fi, red or yellow blinks.',
+    pl_lights: 'Lights while it plays', pl_colour: 'Colour', fx_none: 'Usual', fx_colour: 'One colour', fx_breathe: 'Breathing', fx_rainbow: 'Rainbow', fx_tree: 'Christmas tree',
     playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
     connecting: 'Connecting to the Jooki…', connected: 'Connected', offline: 'Offline',
     offline_long: 'The Jooki is not answering. Check it is on and on the same Wi-Fi. Retrying automatically…',
@@ -296,7 +308,7 @@
     name_open: 'Open the new address',
     wifi: 'Wi-Fi', ip: 'IP address', storage: 'Storage', version: 'Version',
     heart_shutdown_help: 'Power off: three short red flashes, no sound.',
-    heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_press_sub5: 'Held 5 seconds, it switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play',
+    heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_press_sub5: 'Held 5 seconds, it switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play', heart_party: 'Christmas tree (press again to stop)',
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
     off_token: 'Switch off when the token is removed', off_token_sub: 'After 15 seconds, if nothing plays and no token is put back',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Songs, and halfway winds', knob_restart: 'Held left 3 s: back to the start', knob_restart_sub: 'Short turns stay next and previous. An audiobook forgets its place.', knob_restart_wind: 'Not with “Wind the song”: holding the knob winds.', knob_wind: 'Wind the song',
@@ -456,13 +468,19 @@
     s_mp3_foot: 'FLAC and WAV files sent to the Jooki are turned into MP3 on your computer or phone: an album takes three times less space. 256 kbps is plenty for the Jooki\'s speaker and Bluetooth headphones. This choice is for this device only.',
     s_theme: 'Appearance', s_theme_auto: 'Automatic', s_theme_light: 'Light', s_theme_dark: 'Dark',
     s_theme_foot: 'Automatic: like the phone. This choice is for this phone only.',
-    s_party: 'Christmas tree', s_party_sub: 'All the colours of the lights, for 5 seconds', s_party_done: 'Look at your Jooki!',
+    s_party: 'Christmas tree', s_party_sub: function (l) { return 'All the colours of the lights · ' + l; }, s_party_done: 'Look at your Jooki!',
     s_wifi_net: 'Network', s_wifi_signal: 'Signal', s_wifi_drops: 'Drops since start', s_wifi_page: 'Page address',
     s_wifi_change: 'Change network', s_air_for: 'For how long?', s_lang_foot: 'The language of this page on this phone.',
     s_connect_info: 'To connect', s_night_hours: 'Hours', s_night_during: 'During the night', s_update: 'Update',
     colon: ': '
   };
   T.de = {
+    s_lights: 'Lichter', s_lights_set: 'Weihnachtsbaum und Farben', s_lights_set_sub: 'Wie lange, mit dem Herz, die Farben der Lichter',
+    party_stop: 'Weihnachtsbaum stoppen', party_always: 'Bis man ihn stoppt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
+    party_len: 'Wie lange', party_heart: 'Das Herz startet und stoppt ihn', party_foot: 'Kinder können ihn mit einem Druck auf das Herz selbst starten und stoppen: unter Jooki-Tasten Weihnachtsbaum wählen. Nachts ist er gedimmt.',
+    colours: 'Farben der Lichter', col_ring: 'Ring, wenn nichts spielt', col_dots: 'Seitenpunkte, WLAN verbunden', col_token: 'Eine Figur aufgesetzt', col_start: 'Einschalten', col_off: 'Ausschalten',
+    col_usual: 'Die eigene Farbe des Jooki', col_back: 'Wie immer', colours_foot: 'Warnungen behalten ihre Farben: Orange ohne WLAN, rotes oder gelbes Blinken.',
+    pl_lights: 'Lichter beim Abspielen', pl_colour: 'Farbe', fx_none: 'Wie immer', fx_colour: 'Eine Farbe', fx_breathe: 'Atmen', fx_rainbow: 'Regenbogen', fx_tree: 'Weihnachtsbaum',
     playlists: 'Wiedergabelisten', tokens: 'Figuren', library: 'Mediathek', settings: 'Einstellungen',
     connecting: 'Verbindung zum Jooki wird hergestellt…', connected: 'Verbunden', offline: 'Offline',
     offline_long: 'Der Jooki antwortet nicht. Prüfe, ob er eingeschaltet und im selben WLAN ist. Die Verbindung wird automatisch erneut versucht…', retry: 'Erneut versuchen',
@@ -505,7 +523,7 @@
     name_text: function (u) { return 'Seine Seite ist jetzt unter ' + u + ' erreichbar. Die alte Adresse antwortet nicht mehr. Speichere diesen Link als Lesezeichen. Spotify zeigt den neuen Namen nach dem nächsten Neustart.'; }, name_open: 'Neue Adresse öffnen',
     wifi: 'WLAN', ip: 'IP-Adresse', storage: 'Speicher', version: 'Version',
     heart_shutdown_help: 'Beim Ausschalten: dreimal kurz rot blinken, ohne Ton.',
-    heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe',
+    heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe', heart_party: 'Weihnachtsbaum (nochmal zum Stoppen)',
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
     off_token: 'Ausschalten, wenn die Figur weggenommen wird', off_token_sub: 'Nach 15 Sekunden, wenn nichts spielt und keine Figur zurückgestellt wird',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Titel, und halb drehen zum Spulen', knob_restart: 'Links halten 3 s: zurück zum Anfang', knob_restart_sub: 'Kurz drehen bleibt nächster / vorheriger Titel. Ein Hörbuch vergisst seine Stelle.', knob_restart_wind: 'Nicht mit „Im Titel spulen“: Halten spult.', knob_wind: 'Im Titel spulen',
@@ -574,9 +592,15 @@
     chip_refused: 'Jetzt nicht, nichts wurde geändert:', chip_unavailable: 'Dieser Jooki kann das nicht.',
     chip_try: 'Neue Version ausprobieren', chip_try_sure: 'Ja, ausprobieren', chip_back: 'Zurück zur ursprünglichen Version',
     chip_newer: 'Eine neuere Version ist bereit: Sie können sie genauso ausprobieren',
-    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: 'Alle Farben der Lichter für 5 Sekunden', s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
+    s_theme: 'Darstellung', s_theme_auto: 'Automatisch', s_theme_light: 'Hell', s_theme_dark: 'Dunkel', s_theme_foot: 'Automatisch folgt der Darstellung des Handys. Diese Auswahl gilt nur auf diesem Handy.', s_party: 'Lichterspiel', s_party_sub: function (l) { return 'Alle Farben der Lichter · ' + l; }, s_party_done: 'Schau auf deinen Jooki!', s_wifi_net: 'Netzwerk', s_wifi_signal: 'Signal', s_wifi_drops: 'Unterbrechungen seit dem Start', s_wifi_page: 'Adresse der Seite', s_wifi_change: 'Netzwerk ändern', s_air_for: 'Für wie lange?', s_lang_foot: 'Sprache dieser Seite auf diesem Handy.', s_connect_info: 'Verbindungsdaten', s_night_hours: 'Zeiten', s_night_during: 'Während der Nacht', s_update: 'Update', colon: ': '
   };
   T.nl = {
+    s_lights: 'Lampjes', s_lights_set: 'Kerstboom en kleuren', s_lights_set_sub: 'Hoe lang, met het hart, de kleuren van de lampjes',
+    party_stop: 'Kerstboom stoppen', party_always: 'Tot je hem stopt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
+    party_len: 'Hoe lang', party_heart: 'Het hart start en stopt hem', party_foot: 'Kinderen kunnen hem zelf starten en stoppen met een druk op het hart: kies Kerstboom bij Knoppen van de Jooki. ’s Nachts is hij gedimd.',
+    colours: 'Kleuren van de lampjes', col_ring: 'Ring, als er niets speelt', col_dots: 'Lampjes opzij, wifi verbonden', col_token: 'Een figuurtje erop', col_start: 'Aanzetten', col_off: 'Uitzetten',
+    col_usual: 'De eigen kleur van de Jooki', col_back: 'Gewoon', colours_foot: 'Waarschuwingen houden hun kleur: oranje zonder wifi, rood of geel knipperen.',
+    pl_lights: 'Lampjes tijdens het afspelen', pl_colour: 'Kleur', fx_none: 'Gewoon', fx_colour: 'Eén kleur', fx_breathe: 'Ademen', fx_rainbow: 'Regenboog', fx_tree: 'Kerstboom',
     playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
     connecting: 'Verbinden met de Jooki…', connected: 'Verbonden', offline: 'Offline',
     offline_long: 'De Jooki antwoordt niet. Controleer of hij aanstaat en op dezelfde wifi zit. Er wordt automatisch opnieuw geprobeerd…',
@@ -636,7 +660,7 @@
     name_open: 'Het nieuwe adres openen',
     wifi: 'Wifi', ip: 'IP-adres', storage: 'Opslag', version: 'Versie',
     heart_shutdown_help: 'Uitschakelen: driemaal kort rood knipperen, zonder geluid.',
-    heart_press: 'Kort op het hart drukken', heart_press_sub: 'Twee seconden ingedrukt zet het de Jooki nog steeds uit', heart_press_sub5: 'Vijf seconden ingedrukt zet het de Jooki uit', heart_none: 'Niets', heart_next: 'Volgend nummer', heart_pause: 'Pauze / afspelen',
+    heart_press: 'Kort op het hart drukken', heart_press_sub: 'Twee seconden ingedrukt zet het de Jooki nog steeds uit', heart_press_sub5: 'Vijf seconden ingedrukt zet het de Jooki uit', heart_none: 'Niets', heart_next: 'Volgend nummer', heart_pause: 'Pauze / afspelen', heart_party: 'Kerstboom (nog eens om te stoppen)',
     continue_token: 'Blijven afspelen als een figuurtje wordt weggehaald', continue_token_sub: 'Voor Jooki-figuurtjes en kaarten',
     off_token: 'Uitschakelen als het figuurtje wordt weggehaald', off_token_sub: 'Na 15 seconden, als er niets speelt en er geen figuurtje wordt teruggezet',
     knob_mode: 'De knop voor nummers', knob_mode_sub: 'Helemaal gedraaid, of halverwege vastgehouden', knob_song: 'Volgend / vorig nummer', knob_both: 'Nummers, en halverwege: spoelen', knob_restart: 'Links vasthouden 3 s: terug naar het begin', knob_restart_sub: 'Kort draaien blijft volgend / vorig nummer. Een luisterboek vergeet waar het was.', knob_restart_wind: 'Niet met „Spoelen in het nummer”: vasthouden spoelt.', knob_wind: 'Spoelen in het nummer',
@@ -796,7 +820,7 @@
     s_mp3_foot: 'FLAC- en WAV-bestanden die naar de Jooki gaan, worden op je computer of telefoon omgezet naar MP3: een album neemt drie keer minder ruimte in. 256 kbps is ruim genoeg voor de luidspreker van de Jooki en een Bluetooth-koptelefoon. Deze keuze geldt alleen voor dit apparaat.',
     s_theme: 'Weergave', s_theme_auto: 'Automatisch', s_theme_light: 'Licht', s_theme_dark: 'Donker',
     s_theme_foot: 'Automatisch: zoals de telefoon. Deze keuze geldt alleen voor deze telefoon.',
-    s_party: 'Kerstboom', s_party_sub: 'Alle kleuren van de lampjes, 5 seconden lang', s_party_done: 'Kijk naar je Jooki!',
+    s_party: 'Kerstboom', s_party_sub: function (l) { return 'Alle kleuren van de lampjes · ' + l; }, s_party_done: 'Kijk naar je Jooki!',
     s_wifi_net: 'Netwerk', s_wifi_signal: 'Signaal', s_wifi_drops: 'Onderbrekingen sinds de start', s_wifi_page: 'Adres van de pagina',
     s_wifi_change: 'Ander netwerk', s_air_for: 'Hoe lang?', s_lang_foot: 'De taal van deze pagina op deze telefoon.',
     s_connect_info: 'Om te verbinden', s_night_hours: 'Uren', s_night_during: 'Tijdens de nacht', s_update: 'Update',
@@ -2287,6 +2311,8 @@
         h('input', { type: 'checkbox', role: 'switch', checked: !!p.audiobook, 'data-k': 'audiobook', onchange: function (e) { send('PLAYLIST_UPDATE', { playlist: { id: id, audiobook: e.target.checked } }); } })),
       // its own playback modes; nothing for an audiobook or a streaming service, which do not use them
       p.audiobook || p.spotify || p.deezer ? null : modeRows(p, id),
+      // its own lights while it plays (#54)
+      typeof S.audio.config.party_s === 'number' ? plLights(p, id) : null,
       p.audiobook && S.bedtime.cfg.start !== undefined && tracks.length ? h('div', { class: 'kv col', 'data-k': 'resume' },
         h('span', { class: 'muted' }, ri >= 0 ? t('resume_at', ri + 1, Number(rs.pos) > 20000 ? fmtTime((Number(rs.pos) - 15000) / 1000) : '') : t('resume_done')),
         ri >= 0 ? h('button', { class: 'btn ghost', 'data-k': 'resumereset', onclick: function () { send('OJ_RESUME_RESET', { playlistId: id }); } }, t('resume_restart')) : null) : null);
@@ -2316,6 +2342,17 @@
       row(t('repeat'), 'plrepeat', typeof p.repeat_mode === 'number' ? String(p.repeat_mode) : 'settings',
         [['settings', t('pl_settings', repName(Number(c.repeat_mode) || 0))], ['0', t('s_off')], ['1', t('rep_all')], ['2', t('rep_one')]],
         function (v) { send('PLAYLIST_UPDATE', { playlist: { id: id, repeat_mode: v === 'settings' ? 'settings' : Number(v) } }); })];
+  }
+  // a playlist's lights while it plays (#54): the usual ones, one colour, breathing, rainbow or the tree
+  var FXS = ['none', 'colour', 'breathe', 'rainbow', 'tree'];
+  function plLights(p, id) {
+    var l = obj(p.lights), fx = FXS.indexOf(l.fx) > 0 ? l.fx : 'none', col = l.colour || '#7c4dff';
+    function put(f, c) { send('PLAYLIST_UPDATE', { playlist: { id: id, lights: f === 'none' ? false : f === 'colour' || f === 'breathe' ? { fx: f, colour: c } : { fx: f } } }); }
+    return [h('div', { class: 'switch', 'data-k': 'pllights' }, h('div', null, t('pl_lights')),
+        h('select', { class: 'input mini', 'data-k': 'plfx', onchange: function (e) { e.target.blur(); put(e.target.value, col); } },
+          FXS.map(function (f) { return h('option', { value: f, selected: f === fx ? 'selected' : null }, t('fx_' + f)); }))),
+      fx === 'colour' || fx === 'breathe' ? h('div', { class: 'switch' }, h('div', null, t('pl_colour')),
+        colourPick(col, 'plcolour', t('pl_colour'), function (v) { put(fx, v); })) : null];
   }
   function optimisticTracks(id, tracks) { if (pls()[id]) { pls()[id].tracks = tracks; IDX = null; render(); } }
 
@@ -3113,7 +3150,7 @@
   var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
                parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage }, chip: { title: 's_chip', page: chipPage },
-               theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
+               theme: { title: 's_theme', page: themePage }, lights: { title: 's_lights', page: lightsPage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
     var body = SUBS[sub] ? SUBS[sub].page() : null;
@@ -3177,9 +3214,9 @@
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
         // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
+        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press && cfg.heart_press !== 'none' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
-            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+            ['none', 'next', 'pause'].concat(typeof cfg.party_s === 'number' ? ['party'] : []).map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
         d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
@@ -3250,6 +3287,9 @@
           onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
         d.airplane !== undefined ? sRow({ icon: 'plane', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
+      // the lights (#54): the Christmas tree at a tap, and the parents' choices behind it
+      d.core ? sect(t('s_lights'), [partyRow(),
+        typeof cfg.party_s === 'number' ? sRow({ icon: 'sparkle', label: t('s_lights_set'), sub: t('s_lights_set_sub'), href: '#/settings/lights', k: 'lightsnav' }) : null]) : null,
       sect(t('s_links'), [
         sRow({ icon: 'wifi', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
         typeof b.state === 'number' ? sRow({ icon: 'bt', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
@@ -3260,9 +3300,6 @@
         sRow({ icon: 'globe', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
         sRow({ icon: 'contrast', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
         typeof m.parent === 'boolean' ? sRow({ icon: 'lock', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' }) : null,
-        d.core ? sRow({ icon: 'sparkle', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
-          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
-        } }) : null,
         typeof m.ssh === 'boolean' ? sRow({ icon: 'wrench', label: t('s_advanced'), href: '#/settings/advanced', k: 'advancednav' }) : null
       ]),
       sect(null, [sRow({ icon: 'power', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
@@ -3272,6 +3309,37 @@
         });
       } })]),
       h('div', { class: 'verline', 'data-k': 'verline' }, 'OpenJooki ' + (d.openjooki || '—') + ' · ' + t('web_page') + ' ' + VERSION + (d.firmware ? ' · ' + d.firmware : '')));
+  }
+  // The Christmas tree: a tap starts it, a tap stops it (#54). Open to the children, like the heart.
+  function partyRow() {
+    var on = !!S.device.party, secs = S.audio.config.party_s;
+    return sRow({ icon: 'sparkle', label: t(on ? 'party_stop' : 's_party'), sub: on ? null : t('s_party_sub', partyLen(typeof secs === 'number' ? secs : 5)), nochev: true, k: 'party', onclick: function () {
+      if (send('OJ_PARTY', {}) !== false && !on) toast(t('s_party_done'));
+    } });
+  }
+  var PARTY_LENS = [5, 30, 60, 300, 900, 0];
+  function partyLen(s) { return !s ? t('party_always') : s < 60 ? t('n_sec', s) : t('n_min', s / 60); }
+  // the everyday lights in the parents' colours; the warnings keep theirs (services.device.lights)
+  var LIGHT_KEYS = [['ring', '#ffffff'], ['dots', '#ffffff'], ['token', '#0d33ff'], ['start', '#ffffff'], ['off', '#ff0000']];
+  function colourPick(cur, k, label, onch) {
+    return h('input', { type: 'color', class: 'cpick', value: cur, 'data-k': k, 'aria-label': label, onchange: function (e) { onch(e.target.value); } });
+  }
+  function lightsPage() {
+    var cfg = S.audio.config, cols = obj(cfg.colours), secs = typeof cfg.party_s === 'number' ? cfg.party_s : 5;
+    if (PARTY_LENS.indexOf(secs) < 0) PARTY_LENS.splice(PARTY_LENS.length - 1, 0, secs);
+    return [sGroup(t('s_party'), [
+        partyRow(),
+        sRow({ tag: 'label', icon: 'sparkle', label: t('party_len'),
+          right: h('select', { class: 'input mini', 'data-k': 'partylen', onchange: function (e) { e.target.blur(); send('SET_CFG', { party_s: Number(e.target.value) }); } },
+            PARTY_LENS.map(function (v) { return h('option', { value: v, selected: v === secs ? 'selected' : null }, partyLen(v)); })) }),
+        sRow({ icon: 'heart', label: t('party_heart'), value: cfg.heart_press === 'party' ? t('s_on') : t('s_off'), href: '#/settings/buttons', k: 'partyheart' })
+      ], t('party_foot')),
+      sGroup(t('colours'), LIGHT_KEYS.map(function (kd) {
+        var k = kd[0], mine = cols[k];
+        return sRow({ label: t('col_' + k), sub: mine ? null : t('col_usual'), k: 'colrow-' + k,
+          right: [mine ? h('button', { type: 'button', class: 'btn ghost mini', 'data-k': 'colreset-' + k, onclick: function () { var c = {}; c[k] = false; send('SET_CFG', { colours: c }); } }, t('col_back')) : null,
+            colourPick(mine || kd[1], 'col-' + k, t('col_' + k), function (v) { var c = {}; c[k] = v; send('SET_CFG', { colours: c }); })] });
+      }), t('colours_foot'))];
   }
   function langPage() {
     return sGroup(null, LANGS.map(function (l) {

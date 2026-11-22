@@ -31,7 +31,7 @@
   var SUBS = { sound: { title: 's_sound', page: soundPage }, play: { title: 's_play', page: playPage }, buttons: { title: 's_buttons', page: buttonsPage }, advanced: { title: 's_advanced', page: advPage }, bluetooth: { title: 's_bt', page: btPage }, night: { title: 'night_mode', page: nightPage }, airplane: { title: 'air_title', page: airPage },
                wifi: { title: 'wifi', page: wifiPage }, update: { title: 's_update', page: updateCard }, language: { title: 'language', page: langPage },
                parent: { title: 'parent_label', page: parentPage }, home: { title: 's_home', page: homePage }, addr: { title: 's_addr', page: addrPage }, maintenance: { title: 's_maint', page: maintPage }, chip: { title: 's_chip', page: chipPage },
-               theme: { title: 's_theme', page: themePage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
+               theme: { title: 's_theme', page: themePage }, lights: { title: 's_lights', page: lightsPage }, mp3: { title: 's_mp3', page: mp3Page }, spotify: { title: 's_sp', page: spPage } };
   var shownSub = null; // the topic page on screen: it fades in once, not at each rebuild
   function settingsPage(sub) {
     var body = SUBS[sub] ? SUBS[sub].page() : null;
@@ -95,9 +95,9 @@
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
         // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press === 'next' || cfg.heart_press === 'pause' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
+        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press && cfg.heart_press !== 'none' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
-            ['none', 'next', 'pause'].map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+            ['none', 'next', 'pause'].concat(typeof cfg.party_s === 'number' ? ['party'] : []).map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
         d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
@@ -168,6 +168,9 @@
           onchange: function (e) { send('SET_CFG', { lights_off: e.target.checked }); } }) : null,
         d.airplane !== undefined ? sRow({ icon: 'plane', label: t('air_title'), value: t('s_off'), href: '#/settings/airplane', k: 'airrow' }) : null
       ]) : null,
+      // the lights (#54): the Christmas tree at a tap, and the parents' choices behind it
+      d.core ? sect(t('s_lights'), [partyRow(),
+        typeof cfg.party_s === 'number' ? sRow({ icon: 'sparkle', label: t('s_lights_set'), sub: t('s_lights_set_sub'), href: '#/settings/lights', k: 'lightsnav' }) : null]) : null,
       sect(t('s_links'), [
         sRow({ icon: 'wifi', label: t('wifi'), value: w.ssid || '—', href: '#/settings/wifi', k: 'wifinav' }),
         typeof b.state === 'number' ? sRow({ icon: 'bt', label: t('s_bt'), value: con.mac ? (con.name || t('bt_unnamed')) : t('s_none'), href: '#/settings/bluetooth', k: 'btrow' }) : null,
@@ -178,9 +181,6 @@
         sRow({ icon: 'globe', label: t('language'), value: (LANGS.filter(function (l) { return l[0] === lang; })[0] || ['', ''])[1], href: '#/settings/language', k: 'langnav' }),
         sRow({ icon: 'contrast', label: t('s_theme'), value: t('s_theme_' + theme), href: '#/settings/theme', k: 'themenav' }),
         typeof m.parent === 'boolean' ? sRow({ icon: 'lock', label: t('parent_label'), value: m.parent ? t('s_on') : t('s_off'), href: '#/settings/parent', k: 'parentnav' }) : null,
-        d.core ? sRow({ icon: 'sparkle', label: t('s_party'), sub: t('s_party_sub'), nochev: true, k: 'party', onclick: function () {
-          if (send('OJ_PARTY', {}) !== false) toast(t('s_party_done'));
-        } }) : null,
         typeof m.ssh === 'boolean' ? sRow({ icon: 'wrench', label: t('s_advanced'), href: '#/settings/advanced', k: 'advancednav' }) : null
       ]),
       sect(null, [sRow({ icon: 'power', label: t('power_off'), danger: true, nochev: true, k: 'poweroff', onclick: function () {
@@ -190,6 +190,37 @@
         });
       } })]),
       h('div', { class: 'verline', 'data-k': 'verline' }, 'OpenJooki ' + (d.openjooki || '—') + ' · ' + t('web_page') + ' ' + VERSION + (d.firmware ? ' · ' + d.firmware : '')));
+  }
+  // The Christmas tree: a tap starts it, a tap stops it (#54). Open to the children, like the heart.
+  function partyRow() {
+    var on = !!S.device.party, secs = S.audio.config.party_s;
+    return sRow({ icon: 'sparkle', label: t(on ? 'party_stop' : 's_party'), sub: on ? null : t('s_party_sub', partyLen(typeof secs === 'number' ? secs : 5)), nochev: true, k: 'party', onclick: function () {
+      if (send('OJ_PARTY', {}) !== false && !on) toast(t('s_party_done'));
+    } });
+  }
+  var PARTY_LENS = [5, 30, 60, 300, 900, 0];
+  function partyLen(s) { return !s ? t('party_always') : s < 60 ? t('n_sec', s) : t('n_min', s / 60); }
+  // the everyday lights in the parents' colours; the warnings keep theirs (services.device.lights)
+  var LIGHT_KEYS = [['ring', '#ffffff'], ['dots', '#ffffff'], ['token', '#0d33ff'], ['start', '#ffffff'], ['off', '#ff0000']];
+  function colourPick(cur, k, label, onch) {
+    return h('input', { type: 'color', class: 'cpick', value: cur, 'data-k': k, 'aria-label': label, onchange: function (e) { onch(e.target.value); } });
+  }
+  function lightsPage() {
+    var cfg = S.audio.config, cols = obj(cfg.colours), secs = typeof cfg.party_s === 'number' ? cfg.party_s : 5;
+    if (PARTY_LENS.indexOf(secs) < 0) PARTY_LENS.splice(PARTY_LENS.length - 1, 0, secs);
+    return [sGroup(t('s_party'), [
+        partyRow(),
+        sRow({ tag: 'label', icon: 'sparkle', label: t('party_len'),
+          right: h('select', { class: 'input mini', 'data-k': 'partylen', onchange: function (e) { e.target.blur(); send('SET_CFG', { party_s: Number(e.target.value) }); } },
+            PARTY_LENS.map(function (v) { return h('option', { value: v, selected: v === secs ? 'selected' : null }, partyLen(v)); })) }),
+        sRow({ icon: 'heart', label: t('party_heart'), value: cfg.heart_press === 'party' ? t('s_on') : t('s_off'), href: '#/settings/buttons', k: 'partyheart' })
+      ], t('party_foot')),
+      sGroup(t('colours'), LIGHT_KEYS.map(function (kd) {
+        var k = kd[0], mine = cols[k];
+        return sRow({ label: t('col_' + k), sub: mine ? null : t('col_usual'), k: 'colrow-' + k,
+          right: [mine ? h('button', { type: 'button', class: 'btn ghost mini', 'data-k': 'colreset-' + k, onclick: function () { var c = {}; c[k] = false; send('SET_CFG', { colours: c }); } }, t('col_back')) : null,
+            colourPick(mine || kd[1], 'col-' + k, t('col_' + k), function (v) { var c = {}; c[k] = v; send('SET_CFG', { colours: c }); })] });
+      }), t('colours_foot'))];
   }
   function langPage() {
     return sGroup(null, LANGS.map(function (l) {

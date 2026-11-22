@@ -219,11 +219,37 @@ Payload schema:
 {
   "additionalProperties": false,
   "properties": {
+    "colours": {
+      "additionalProperties": false,
+      "properties": {
+        "dots": {
+          "maxLength": 7,
+          "type": ["string", "boolean"]
+        },
+        "off": {
+          "maxLength": 7,
+          "type": ["string", "boolean"]
+        },
+        "ring": {
+          "maxLength": 7,
+          "type": ["string", "boolean"]
+        },
+        "start": {
+          "maxLength": 7,
+          "type": ["string", "boolean"]
+        },
+        "token": {
+          "maxLength": 7,
+          "type": ["string", "boolean"]
+        }
+      },
+      "type": "object"
+    },
     "continue_on_token_removal": {
       "type": "boolean"
     },
     "heart_press": {
-      "enum": ["none", "next", "pause"],
+      "enum": ["none", "next", "pause", "party"],
       "type": "string"
     },
     "hp_boost": {
@@ -246,6 +272,11 @@ Payload schema:
     },
     "off_on_token_removal": {
       "type": "boolean"
+    },
+    "party_s": {
+      "maximum": 3600,
+      "minimum": 0,
+      "type": "integer"
     },
     "random_start": {
       "type": "boolean"
@@ -619,6 +650,20 @@ Payload schema:
       "maxLength": 80,
       "minLength": 1,
       "type": "string"
+    },
+    "lights": {
+      "additionalProperties": false,
+      "properties": {
+        "colour": {
+          "pattern": "^#%x%x%x%x%x%x$",
+          "type": "string"
+        },
+        "fx": {
+          "enum": ["colour", "breathe", "rainbow", "tree"],
+          "type": "string"
+        }
+      },
+      "type": ["object", "boolean"]
     },
     "random_start": {
       "enum": [true, false, "settings"],

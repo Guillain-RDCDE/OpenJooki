@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.12:** the player no longer flickers while the bedtime sleep timer runs.
-2.5.11: the Wi-Fi comes back at every start with the newer Wi-Fi chip version; a clearer parent code.
+**New in 2.5.13:** the Christmas tree as long as you like, from the heart too; your own colours for the lights; lights playlist by playlist.
+2.5.12: the player no longer flickers while the bedtime sleep timer runs.
 [All the changes](CHANGELOG.md)
 
 ---

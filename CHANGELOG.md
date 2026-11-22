@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.13 (22 November 2026) — The Christmas tree, your way
 - **The Christmas tree, your way.** *Settings → Lights*: a tap starts the tree, another one stops it. *Christmas tree and colours → How long*: 5 s as before, 30 s, 1 min, 5 min, 15 min, or *Until stopped*. In *Jooki buttons*, the heart's short press can be the *Christmas tree*: children start and stop it themselves (#54, thank you scheuerbauer).
 - **Your own colours.** The ring when nothing plays, the side dots, a token put on, switching on and switching off can each have their own colour (*Settings → Lights → Christmas tree and colours*). Purple to switch off? Why not. The warnings keep their colours, so they always mean the same thing.
 - **Lights, playlist by playlist.** In a playlist, *Lights while it plays*: *One colour*, *Breathing*, *Rainbow* or *Christmas tree*, with the colour of your choice. At night they are dimmed like every other light.

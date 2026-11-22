@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## Next release
+- **A still player at bedtime.** While the sleep timer ran (at night it starts by itself with the music), the page redrew the whole player every second, so it flickered. Now only the countdown moves.
+- For the tinkerers: the page compares the Jooki's parts with sorted keys and `[]` equal to `{}` (a Lua table has no key order, and an empty one comes as `[]`), and takes the countdown alone (`bedtime.sleep.remaining`) as nothing new. `test_page_steady.py` starts a sleep timer itself, so it no longer depends on the time it runs (it failed the nightly runs, at night). The endurance memory check looks at growth during the run (under 10 %) with a 9 MiB ceiling.
+
 ## OpenJooki 2.5.11 (21 November 2026) — The Wi-Fi back at every start
 - **The Wi-Fi back at every start.** A Jooki that only found its Wi-Fi after it was given again over Bluetooth, at every start: a network forgotten before yours left a hole in the Wi-Fi chip's list, and the chip stopped reading there. The newer version of the chip in *Settings → Advanced → Wi-Fi with several access points* reads the whole list; a Jooki already trying the first version is offered the newer one. Without it, forgetting every network and giving yours again still works (*Questions*) (#51, thank you scheuerbauer).
 - **The parent code, clearer.** The page remembers the code on a phone or computer only when you tick *Remember the code*; otherwise it asks once per visit. *Settings → Parent code* says when this device remembers it, and forgets it in one tap. Closing the question changes nothing and says so (#53, thank you scheuerbauer).

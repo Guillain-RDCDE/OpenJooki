@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.14 (22 November 2026) — Two presses for the tree
 - **Two presses on the heart: the Christmas tree.** *Settings → Jooki buttons → Two presses on the heart: Christmas tree*: two quick presses start or stop the tree, and the short press keeps its job (pause, next song). Only with this switch on, the short press waits half a second to know whether a second one follows. Off unless you turn it on (#54, thank you scheuerbauer).
 - For the tinkerers: `audiocfg.heart_double_party` (boolean, default off), by `SET_CFG` / `device.set_config`; two releases of the heart within 0.4 s (`device.heart_single`) emit `lights.party`.
 

@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.13:** the Christmas tree as long as you like, from the heart too; your own colours for the lights; lights playlist by playlist.
-2.5.12: the player no longer flickers while the bedtime sleep timer runs.
+**New in 2.5.14:** two quick presses on the heart start or stop the Christmas tree, and the short press keeps its job.
+2.5.13: the Christmas tree as long as you like, from the heart too; your own colours for the lights; lights playlist by playlist.
 [All the changes](CHANGELOG.md)
 
 ---

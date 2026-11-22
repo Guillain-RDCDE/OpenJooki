@@ -1,9 +1,10 @@
   T.nl = {
     s_lights: 'Lampjes', s_lights_set: 'Kerstboom en kleuren', s_lights_set_sub: 'Hoe lang, met het hart, de kleuren van de lampjes',
     party_stop: 'Kerstboom stoppen', party_always: 'Tot je hem stopt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'Hoe lang', party_heart: 'Het hart start en stopt hem', party_foot: 'Kinderen kunnen hem zelf starten en stoppen met een druk op het hart: kies Kerstboom bij Knoppen van de Jooki. ’s Nachts is hij gedimd.',
+    party_len: 'Hoe lang', party_heart: 'Het hart start en stopt hem', party_foot: 'Kinderen kunnen hem zelf starten en stoppen met het hart: zet bij Knoppen van de Jooki Twee keer op het hart aan, of kies Kerstboom voor de korte druk. ’s Nachts is hij gedimd.',
     colours: 'Kleuren van de lampjes', col_ring: 'Ring, als er niets speelt', col_dots: 'Lampjes opzij, wifi verbonden', col_token: 'Een figuurtje erop', col_start: 'Aanzetten', col_off: 'Uitzetten',
     col_usual: 'De eigen kleur van de Jooki', col_back: 'Gewoon', colours_foot: 'Waarschuwingen houden hun kleur: oranje zonder wifi, rood of geel knipperen.',
+    heart_double: 'Twee keer op het hart: kerstboom', heart_double_sub: 'Twee snelle drukken starten of stoppen hem, wat de korte druk ook doet. De korte druk wacht dan een halve seconde',
     pl_lights: 'Lampjes tijdens het afspelen', pl_colour: 'Kleur', fx_none: 'Gewoon', fx_colour: 'Eén kleur', fx_breathe: 'Ademen', fx_rainbow: 'Regenboog', fx_tree: 'Kerstboom',
     playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
     connecting: 'Verbinden met de Jooki…', connected: 'Verbonden', offline: 'Offline',

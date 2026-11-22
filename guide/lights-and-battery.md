@@ -18,7 +18,7 @@
 | side dots red, two pulses | an error: empty playlist, memory card full, or Spotify could not play |
 | three red flashes (or the colour you chose), no sound, then everything off, the heart still lit until the end (10 to 15 seconds) | switching off (heart held two seconds, five if its short press does something, or 15 minutes unused on battery, or battery very low) |
 | ring and side dots off | night mode |
-| every colour on the ring and the side dots | the *Christmas tree*: from the page, or the heart if you gave it the tree. As long as you chose (5 seconds unless you change it) |
+| every colour on the ring and the side dots | the *Christmas tree*: from the page, or the heart if you gave it the tree (two presses, or the short press). As long as you chose (5 seconds unless you change it) |
 | the ring in one colour, glowing, or going round the colours, while music plays | that playlist's own *Lights while it plays* |
 
 The white of the ring, of the side dots and of the start-up blinks, the light blue of a token

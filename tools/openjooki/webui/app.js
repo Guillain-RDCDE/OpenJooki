@@ -13,9 +13,10 @@
   T.fr = {
     s_lights: 'Lumières', s_lights_set: 'Sapin de Noël et couleurs', s_lights_set_sub: 'Combien de temps, depuis le cœur, les couleurs des lumières',
     party_stop: 'Arrêter le sapin de Noël', party_always: 'Jusqu’à ce qu’on l’arrête', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'Durée', party_heart: 'Le cœur le lance et l’arrête', party_foot: 'Les enfants peuvent le lancer et l’arrêter eux-mêmes d’un appui sur le cœur : dans Boutons du Jooki, choisis Sapin de Noël. La nuit, il est atténué.',
+    party_len: 'Durée', party_heart: 'Le cœur le lance et l’arrête', party_foot: 'Les enfants peuvent le lancer et l’arrêter eux-mêmes avec le cœur : dans Boutons du Jooki, active Deux appuis sur le cœur, ou choisis Sapin de Noël pour l’appui court. La nuit, il est atténué.',
     colours: 'Couleurs des lumières', col_ring: 'Anneau, quand rien ne joue', col_dots: 'Points des côtés, Wi-Fi connecté', col_token: 'Un jeton posé', col_start: 'Allumage', col_off: 'Extinction',
     col_usual: 'La couleur du Jooki', col_back: 'Habituelle', colours_foot: 'Les alertes gardent leurs couleurs : orange sans Wi-Fi, clignotements rouges ou jaunes.',
+    heart_double: 'Deux appuis sur le cœur : sapin de Noël', heart_double_sub: 'Deux appuis rapides le lancent ou l’arrêtent, quoi que fasse l’appui court. L’appui court attend alors une demi-seconde',
     pl_lights: 'Lumières pendant la lecture', pl_colour: 'Couleur', fx_none: 'Habituelles', fx_colour: 'Une couleur', fx_breathe: 'Respiration', fx_rainbow: 'Arc-en-ciel', fx_tree: 'Sapin de Noël',
     playlists: 'Playlists', tokens: 'Jetons', library: 'Bibliothèque', settings: 'Réglages',
     connecting: 'Connexion au Jooki…', connected: 'Connecté', offline: 'Hors ligne',
@@ -245,9 +246,10 @@
   T.en = {
     s_lights: 'Lights', s_lights_set: 'Christmas tree and colours', s_lights_set_sub: 'How long it lasts, from the heart, the colours of the lights',
     party_stop: 'Stop the Christmas tree', party_always: 'Until stopped', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'How long', party_heart: 'The heart starts and stops it', party_foot: 'Children can start and stop it themselves with a press on the heart: in Jooki buttons, choose Christmas tree. At night it is dimmed.',
+    party_len: 'How long', party_heart: 'The heart starts and stops it', party_foot: 'Children can start and stop it themselves with the heart: in Jooki buttons, turn on Two presses on the heart, or choose Christmas tree for the short press. At night it is dimmed.',
     colours: 'Colours of the lights', col_ring: 'Ring, when nothing plays', col_dots: 'Side dots, Wi-Fi connected', col_token: 'A token put on', col_start: 'Switching on', col_off: 'Switching off',
     col_usual: "The Jooki's own colour", col_back: 'Usual', colours_foot: 'Warnings keep their colours: orange without Wi-Fi, red or yellow blinks.',
+    heart_double: 'Two presses on the heart: Christmas tree', heart_double_sub: 'Two quick presses start or stop it, whatever the short press does. The short press then waits half a second',
     pl_lights: 'Lights while it plays', pl_colour: 'Colour', fx_none: 'Usual', fx_colour: 'One colour', fx_breathe: 'Breathing', fx_rainbow: 'Rainbow', fx_tree: 'Christmas tree',
     playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
     connecting: 'Connecting to the Jooki…', connected: 'Connected', offline: 'Offline',
@@ -477,9 +479,10 @@
   T.de = {
     s_lights: 'Lichter', s_lights_set: 'Weihnachtsbaum und Farben', s_lights_set_sub: 'Wie lange, mit dem Herz, die Farben der Lichter',
     party_stop: 'Weihnachtsbaum stoppen', party_always: 'Bis man ihn stoppt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'Wie lange', party_heart: 'Das Herz startet und stoppt ihn', party_foot: 'Kinder können ihn mit einem Druck auf das Herz selbst starten und stoppen: unter Jooki-Tasten Weihnachtsbaum wählen. Nachts ist er gedimmt.',
+    party_len: 'Wie lange', party_heart: 'Das Herz startet und stoppt ihn', party_foot: 'Kinder können ihn mit dem Herz selbst starten und stoppen: unter Jooki-Tasten Zweimal auf das Herz einschalten oder Weihnachtsbaum für den kurzen Druck wählen. Nachts ist er gedimmt.',
     colours: 'Farben der Lichter', col_ring: 'Ring, wenn nichts spielt', col_dots: 'Seitenpunkte, WLAN verbunden', col_token: 'Eine Figur aufgesetzt', col_start: 'Einschalten', col_off: 'Ausschalten',
     col_usual: 'Die eigene Farbe des Jooki', col_back: 'Wie immer', colours_foot: 'Warnungen behalten ihre Farben: Orange ohne WLAN, rotes oder gelbes Blinken.',
+    heart_double: 'Zweimal auf das Herz: Weihnachtsbaum', heart_double_sub: 'Zwei schnelle Drücke starten oder stoppen ihn, egal was der kurze Druck tut. Der kurze Druck wartet dann eine halbe Sekunde',
     pl_lights: 'Lichter beim Abspielen', pl_colour: 'Farbe', fx_none: 'Wie immer', fx_colour: 'Eine Farbe', fx_breathe: 'Atmen', fx_rainbow: 'Regenbogen', fx_tree: 'Weihnachtsbaum',
     playlists: 'Wiedergabelisten', tokens: 'Figuren', library: 'Mediathek', settings: 'Einstellungen',
     connecting: 'Verbindung zum Jooki wird hergestellt…', connected: 'Verbunden', offline: 'Offline',
@@ -597,9 +600,10 @@
   T.nl = {
     s_lights: 'Lampjes', s_lights_set: 'Kerstboom en kleuren', s_lights_set_sub: 'Hoe lang, met het hart, de kleuren van de lampjes',
     party_stop: 'Kerstboom stoppen', party_always: 'Tot je hem stopt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'Hoe lang', party_heart: 'Het hart start en stopt hem', party_foot: 'Kinderen kunnen hem zelf starten en stoppen met een druk op het hart: kies Kerstboom bij Knoppen van de Jooki. ’s Nachts is hij gedimd.',
+    party_len: 'Hoe lang', party_heart: 'Het hart start en stopt hem', party_foot: 'Kinderen kunnen hem zelf starten en stoppen met het hart: zet bij Knoppen van de Jooki Twee keer op het hart aan, of kies Kerstboom voor de korte druk. ’s Nachts is hij gedimd.',
     colours: 'Kleuren van de lampjes', col_ring: 'Ring, als er niets speelt', col_dots: 'Lampjes opzij, wifi verbonden', col_token: 'Een figuurtje erop', col_start: 'Aanzetten', col_off: 'Uitzetten',
     col_usual: 'De eigen kleur van de Jooki', col_back: 'Gewoon', colours_foot: 'Waarschuwingen houden hun kleur: oranje zonder wifi, rood of geel knipperen.',
+    heart_double: 'Twee keer op het hart: kerstboom', heart_double_sub: 'Twee snelle drukken starten of stoppen hem, wat de korte druk ook doet. De korte druk wacht dan een halve seconde',
     pl_lights: 'Lampjes tijdens het afspelen', pl_colour: 'Kleur', fx_none: 'Gewoon', fx_colour: 'Eén kleur', fx_breathe: 'Ademen', fx_rainbow: 'Regenboog', fx_tree: 'Kerstboom',
     playlists: 'Afspeellijsten', tokens: 'Figuurtjes', library: 'Bibliotheek', settings: 'Instellingen',
     connecting: 'Verbinden met de Jooki…', connected: 'Verbonden', offline: 'Offline',
@@ -3214,9 +3218,12 @@
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
         // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press && cfg.heart_press !== 'none' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
+        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t((cfg.heart_press && cfg.heart_press !== 'none') || cfg.heart_double_party ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
             ['none', 'next', 'pause'].concat(typeof cfg.party_s === 'number' ? ['party'] : []).map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+        // two quick presses on the heart: the Christmas tree, whatever the short press does (#54)
+        typeof cfg.heart_double_party === 'boolean' ? sRow({ icon: 'sparkle', label: t('heart_double'), sub: t('heart_double_sub'), sw: true, on: cfg.heart_double_party, k: 'heartdouble',
+          onchange: function (e) { send('SET_CFG', { heart_double_party: e.target.checked }); } }) : null,
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
         d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
@@ -3332,7 +3339,7 @@
         sRow({ tag: 'label', icon: 'sparkle', label: t('party_len'),
           right: h('select', { class: 'input mini', 'data-k': 'partylen', onchange: function (e) { e.target.blur(); send('SET_CFG', { party_s: Number(e.target.value) }); } },
             PARTY_LENS.map(function (v) { return h('option', { value: v, selected: v === secs ? 'selected' : null }, partyLen(v)); })) }),
-        sRow({ icon: 'heart', label: t('party_heart'), value: cfg.heart_press === 'party' ? t('s_on') : t('s_off'), href: '#/settings/buttons', k: 'partyheart' })
+        sRow({ icon: 'heart', label: t('party_heart'), value: cfg.heart_press === 'party' || cfg.heart_double_party ? t('s_on') : t('s_off'), href: '#/settings/buttons', k: 'partyheart' })
       ], t('party_foot')),
       sGroup(t('colours'), LIGHT_KEYS.map(function (kd) {
         var k = kd[0], mine = cols[k];

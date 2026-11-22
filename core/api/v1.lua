@@ -215,7 +215,7 @@ H.SET_VOL = function(doc, p)
 end
 -- the page's booleans (repeat_mode true/false too) are read by device.update_config
 H.SET_CFG = function(doc, p)
-  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, random_start = p.random_start, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, knob_restart = p.knob_restart, continue_on_token_removal = p.continue_on_token_removal, off_on_token_removal = p.off_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, toy_safe_maxvol = p.toy_safe_maxvol, max_volume = p.max_volume, lights_off = p.lights_off, party_s = p.party_s, colours = p.colours })
+  local r, e = device.update_config(doc, { shuffle_mode = p.shuffle_mode, random_start = p.random_start, repeat_mode = p.repeat_mode, heart_press = p.heart_press, knob_mode = p.knob_mode, knob_restart = p.knob_restart, heart_double_party = p.heart_double_party, continue_on_token_removal = p.continue_on_token_removal, off_on_token_removal = p.off_on_token_removal, hp_boost = p.hp_boost, upnp = p.upnp, toy_safe_maxvol = p.toy_safe_maxvol, max_volume = p.max_volume, lights_off = p.lights_off, party_s = p.party_s, colours = p.colours })
   return r, e, { "audio" }
 end
 H.SET_TOY_SAFE = function(doc, p) return device.on_toy_safe(doc, { enable = p.enable == true }) end

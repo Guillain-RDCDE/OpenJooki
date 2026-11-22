@@ -18,7 +18,8 @@ local LONG_CIRCLE_S, LONG_AIRPLANE_S, LONG_RESET_S = 2, 5, 10
 local LONG_CIRCLE_BUSY_S = 5
 local function long_circle_s(doc)
   local hp = (doc.audiocfg or {}).heart_press
-  return (hp == "next" or hp == "pause" or hp == "party") and LONG_CIRCLE_BUSY_S or LONG_CIRCLE_S
+  local busy = hp == "next" or hp == "pause" or hp == "party" or (doc.audiocfg or {}).heart_double_party == true
+  return busy and LONG_CIRCLE_BUSY_S or LONG_CIRCLE_S
 end
 local RESET_MAX_VOLUME = 5   -- the volume wheel all the way down (it reads 0-100) for the parent-code gesture
 local COMBO = { "next", "prev", "vol_inc", "vol_dec" }
@@ -50,6 +51,11 @@ end
 local HEART = { next = function() return emit("playback.next", {}) end,
                 pause = function(now) return emit("playback.toggle_request", { source = "button", now = now }) end,
                 party = function() return emit("lights.party", {}) end }
+-- Its own switch (audiocfg.heart_double_party, #54): two presses within DOUBLE_S start or stop the
+-- Christmas tree, whatever the short press does. Only then does the short press wait DOUBLE_S, to
+-- know whether a second one follows (activity.heart_at, timer device.heart_single); off, it acts at once.
+local DOUBLE_S = 0.4
+buttons.DOUBLE_S = DOUBLE_S
 
 local function activity_of(doc)
   local a = copy(doc.activity or {})
@@ -109,7 +115,16 @@ function buttons.on_button(doc, ev)
   elseif name == "circle" then
     -- a long press was taken by the tick (power off) and is no longer held here: this one is short
     local act_fn = HEART[(doc.audiocfg or {}).heart_press]
-    if act_fn then cmds[#cmds + 1] = act_fn(ev.now) end
+    if (doc.audiocfg or {}).heart_double_party == true then
+      if act.heart_at and ev.now - act.heart_at <= DOUBLE_S then
+        act.heart_at = nil   -- the second press: the tree, and the first one does nothing
+        cmds[#cmds + 1] = { kind = "timer.cancel", name = "device.heart_single" }
+        cmds[#cmds + 1] = HEART.party()
+      else
+        act.heart_at = ev.now
+        cmds[#cmds + 1] = { kind = "timer.once", name = "device.heart_single", seconds = DOUBLE_S }
+      end
+    elseif act_fn then cmds[#cmds + 1] = act_fn(ev.now) end
   elseif name == "vol_inc" or name == "vol_dec" then
     local a = volume().audiocfg_of(doc)
     local s = volume().set_volume(doc, a.volume + (name == "vol_inc" and 10 or -10))
@@ -165,10 +180,21 @@ function buttons.on_tick(doc, ev)
   return { state = { activity = a2 }, commands = cmds }
 end
 
+--- No second press came: the heart's short press does what the parents chose (#54).
+function buttons.on_heart_single(doc, ev)
+  local act = doc.activity or {}
+  if not act.heart_at then return nil end
+  local a2 = activity_of(doc); a2.heart_at = nil
+  local act_fn = HEART[(doc.audiocfg or {}).heart_press]
+  return { state = { activity = a2 }, commands = { act_fn and act_fn(ev.now) or nil } }
+end
+
 -- ------------------------------------------------------------------ timers / install
--- the buttons' timer (started by the first button held, see on_button), on its own name (kernel.dispatch on_timer)
+-- the buttons' timers (the tick, started by the first button held, see on_button; the heart's wait
+-- for a second press), each on its own name (kernel.dispatch on_timer)
 local TIMERS = {
   ["device.tick"] = buttons.on_tick,
+  ["device.heart_single"] = buttons.on_heart_single,
 }
 buttons.TIMERS = TIMERS
 

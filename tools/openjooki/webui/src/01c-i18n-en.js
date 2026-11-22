@@ -1,9 +1,10 @@
   T.en = {
     s_lights: 'Lights', s_lights_set: 'Christmas tree and colours', s_lights_set_sub: 'How long it lasts, from the heart, the colours of the lights',
     party_stop: 'Stop the Christmas tree', party_always: 'Until stopped', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'How long', party_heart: 'The heart starts and stops it', party_foot: 'Children can start and stop it themselves with a press on the heart: in Jooki buttons, choose Christmas tree. At night it is dimmed.',
+    party_len: 'How long', party_heart: 'The heart starts and stops it', party_foot: 'Children can start and stop it themselves with the heart: in Jooki buttons, turn on Two presses on the heart, or choose Christmas tree for the short press. At night it is dimmed.',
     colours: 'Colours of the lights', col_ring: 'Ring, when nothing plays', col_dots: 'Side dots, Wi-Fi connected', col_token: 'A token put on', col_start: 'Switching on', col_off: 'Switching off',
     col_usual: "The Jooki's own colour", col_back: 'Usual', colours_foot: 'Warnings keep their colours: orange without Wi-Fi, red or yellow blinks.',
+    heart_double: 'Two presses on the heart: Christmas tree', heart_double_sub: 'Two quick presses start or stop it, whatever the short press does. The short press then waits half a second',
     pl_lights: 'Lights while it plays', pl_colour: 'Colour', fx_none: 'Usual', fx_colour: 'One colour', fx_breathe: 'Breathing', fx_rainbow: 'Rainbow', fx_tree: 'Christmas tree',
     playlists: 'Playlists', tokens: 'Tokens', library: 'Library', settings: 'Settings',
     connecting: 'Connecting to the Jooki…', connected: 'Connected', offline: 'Offline',

@@ -1,9 +1,10 @@
   T.fr = {
     s_lights: 'Lumières', s_lights_set: 'Sapin de Noël et couleurs', s_lights_set_sub: 'Combien de temps, depuis le cœur, les couleurs des lumières',
     party_stop: 'Arrêter le sapin de Noël', party_always: 'Jusqu’à ce qu’on l’arrête', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'Durée', party_heart: 'Le cœur le lance et l’arrête', party_foot: 'Les enfants peuvent le lancer et l’arrêter eux-mêmes d’un appui sur le cœur : dans Boutons du Jooki, choisis Sapin de Noël. La nuit, il est atténué.',
+    party_len: 'Durée', party_heart: 'Le cœur le lance et l’arrête', party_foot: 'Les enfants peuvent le lancer et l’arrêter eux-mêmes avec le cœur : dans Boutons du Jooki, active Deux appuis sur le cœur, ou choisis Sapin de Noël pour l’appui court. La nuit, il est atténué.',
     colours: 'Couleurs des lumières', col_ring: 'Anneau, quand rien ne joue', col_dots: 'Points des côtés, Wi-Fi connecté', col_token: 'Un jeton posé', col_start: 'Allumage', col_off: 'Extinction',
     col_usual: 'La couleur du Jooki', col_back: 'Habituelle', colours_foot: 'Les alertes gardent leurs couleurs : orange sans Wi-Fi, clignotements rouges ou jaunes.',
+    heart_double: 'Deux appuis sur le cœur : sapin de Noël', heart_double_sub: 'Deux appuis rapides le lancent ou l’arrêtent, quoi que fasse l’appui court. L’appui court attend alors une demi-seconde',
     pl_lights: 'Lumières pendant la lecture', pl_colour: 'Couleur', fx_none: 'Habituelles', fx_colour: 'Une couleur', fx_breathe: 'Respiration', fx_rainbow: 'Arc-en-ciel', fx_tree: 'Sapin de Noël',
     playlists: 'Playlists', tokens: 'Jetons', library: 'Bibliothèque', settings: 'Réglages',
     connecting: 'Connexion au Jooki…', connected: 'Connecté', offline: 'Hors ligne',

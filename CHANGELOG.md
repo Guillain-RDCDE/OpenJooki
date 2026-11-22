@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Two presses on the heart: the Christmas tree.** *Settings → Jooki buttons → Two presses on the heart: Christmas tree*: two quick presses start or stop the tree, and the short press keeps its job (pause, next song). Only with this switch on, the short press waits half a second to know whether a second one follows. Off unless you turn it on (#54, thank you scheuerbauer).
+- For the tinkerers: `audiocfg.heart_double_party` (boolean, default off), by `SET_CFG` / `device.set_config`; two releases of the heart within 0.4 s (`device.heart_single`) emit `lights.party`.
+
 ## OpenJooki 2.5.13 (22 November 2026) — The Christmas tree, your way
 - **The Christmas tree, your way.** *Settings → Lights*: a tap starts the tree, another one stops it. *Christmas tree and colours → How long*: 5 s as before, 30 s, 1 min, 5 min, 15 min, or *Until stopped*. In *Jooki buttons*, the heart's short press can be the *Christmas tree*: children start and stop it themselves (#54, thank you scheuerbauer).
 - **Your own colours.** The ring when nothing plays, the side dots, a token put on, switching on and switching off can each have their own colour (*Settings → Lights → Christmas tree and colours*). Purple to switch off? Why not. The warnings keep their colours, so they always mean the same thing.

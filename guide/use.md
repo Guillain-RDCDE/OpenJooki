@@ -248,6 +248,8 @@ version.
 - *Jooki buttons*:
 - **Short press on the heart**: **Nothing** (as before), **Next song**, **Pause / play**, or
   **Christmas tree (press again to stop)**: children start and stop it themselves.
+- **Two presses on the heart: Christmas tree**: two quick presses start or stop the tree, and the
+  short press keeps its job (pause, next song). With this on, the short press waits half a second.
   Held two seconds, the heart still switches the Jooki off; five seconds when its short press
   does something, so a small child pressing a bit too long does not switch it off.
 - **The track knob**: **Next / previous song** (as before), **Songs, and halfway winds**: held
@@ -272,7 +274,8 @@ version.
 - **Christmas tree**: just for fun, all the colours of the lights. Tap again to stop it.
 - **Christmas tree and colours**:
   - **How long**: 5 s (as before), 30 s, 1 min, 5 min, 15 min, or **Until stopped**.
-  - **The heart starts and stops it**: opens *Jooki buttons*, to give it to the heart.
+  - **The heart starts and stops it**: opens *Jooki buttons*, to give it to the heart (two presses,
+    or the short press).
   - **Colours of the lights**: the **Ring, when nothing plays**, the **Side dots, Wi-Fi
     connected**, **A token put on**, **Switching on** and **Switching off** can each have their
     own colour: tap the round colour to choose one, **Usual** to give the Jooki's own back.

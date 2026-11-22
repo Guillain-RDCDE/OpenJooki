@@ -95,9 +95,12 @@
     var d = S.device, cfg = S.audio.config;
     return sGroup(null, [
         // the heart's short press on the Jooki (held 2 s it still switches off)
-        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t(cfg.heart_press && cfg.heart_press !== 'none' ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
+        d.core ? sRow({ tag: 'label', icon: 'heart', label: t('heart_press'), sub: t((cfg.heart_press && cfg.heart_press !== 'none') || cfg.heart_double_party ? 'heart_press_sub5' : 'heart_press_sub') + '. ' + t('heart_shutdown_help'),
           right: h('select', { class: 'input mini', 'data-k': 'heartpress', onchange: function (e) { e.target.blur(); send('SET_CFG', { heart_press: e.target.value }); } },
             ['none', 'next', 'pause'].concat(typeof cfg.party_s === 'number' ? ['party'] : []).map(function (v) { return h('option', { value: v, selected: (cfg.heart_press || 'none') === v ? 'selected' : null }, t('heart_' + v)); })) }) : null,
+        // two quick presses on the heart: the Christmas tree, whatever the short press does (#54)
+        typeof cfg.heart_double_party === 'boolean' ? sRow({ icon: 'sparkle', label: t('heart_double'), sub: t('heart_double_sub'), sw: true, on: cfg.heart_double_party, k: 'heartdouble',
+          onchange: function (e) { send('SET_CFG', { heart_double_party: e.target.checked }); } }) : null,
         // the track knob: change the song (as the original Jooki), wind it too when held halfway, or only wind it
         d.core ? sRow({ tag: 'label', icon: 'knob', label: t('knob_mode'), sub: t('knob_mode_sub'),
           right: h('select', { class: 'input mini', 'data-k': 'knobmode', onchange: function (e) { e.target.blur(); send('SET_CFG', { knob_mode: e.target.value }); } },
@@ -213,7 +216,7 @@
         sRow({ tag: 'label', icon: 'sparkle', label: t('party_len'),
           right: h('select', { class: 'input mini', 'data-k': 'partylen', onchange: function (e) { e.target.blur(); send('SET_CFG', { party_s: Number(e.target.value) }); } },
             PARTY_LENS.map(function (v) { return h('option', { value: v, selected: v === secs ? 'selected' : null }, partyLen(v)); })) }),
-        sRow({ icon: 'heart', label: t('party_heart'), value: cfg.heart_press === 'party' ? t('s_on') : t('s_off'), href: '#/settings/buttons', k: 'partyheart' })
+        sRow({ icon: 'heart', label: t('party_heart'), value: cfg.heart_press === 'party' || cfg.heart_double_party ? t('s_on') : t('s_off'), href: '#/settings/buttons', k: 'partyheart' })
       ], t('party_foot')),
       sGroup(t('colours'), LIGHT_KEYS.map(function (kd) {
         var k = kd[0], mine = cols[k];

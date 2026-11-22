@@ -248,6 +248,9 @@ Payload schema:
     "continue_on_token_removal": {
       "type": "boolean"
     },
+    "heart_double_party": {
+      "type": "boolean"
+    },
     "heart_press": {
       "enum": ["none", "next", "pause", "party"],
       "type": "string"

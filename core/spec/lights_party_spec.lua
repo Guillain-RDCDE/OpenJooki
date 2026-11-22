@@ -57,6 +57,53 @@ describe("the Christmas tree's length and the heart (#54)", function()
   end)
 end)
 
+describe("two presses on the heart: the Christmas tree (#54)", function()
+  local function press(d, now)
+    d.activity = d.activity or {}; d.activity.buttons = { circle = now - 0.1 }
+    local r = buttons.on_button(d, { button = "circle", down = false, now = now })
+    if r and r.state and r.state.activity then d.activity = r.state.activity end
+    return r
+  end
+  it("off by default: the short press acts at once, as before", function()
+    local d = doc(); d.audiocfg.heart_press = "pause"
+    assert_false(device.audiocfg_of(d).heart_double_party)
+    assert_true(emitted(press(d, 5), "playback.toggle_request") ~= nil)
+  end)
+  it("on: two presses start the tree and the first does nothing; one press acts after 0.4 s", function()
+    local d = doc(); d.audiocfg.heart_press = "pause"; d.audiocfg.heart_double_party = true
+    local r = press(d, 5)
+    assert_nil(emitted(r, "playback.toggle_request")); assert_eq(has(r, "timer.once", "name", "device.heart_single").seconds, 0.4)
+    r = press(d, 5.3)
+    assert_true(emitted(r, "lights.party") ~= nil); assert_true(has(r, "timer.cancel", "name", "device.heart_single") ~= nil)
+    assert_nil(emitted(r, "playback.toggle_request"))
+    assert_nil(buttons.on_timer(d, { name = "device.heart_single", now = 5.4 }))   -- nothing left to do
+    -- a single press: the pause comes when the wait is over
+    press(d, 10)
+    r = buttons.on_timer(d, { name = "device.heart_single", now = 10.4 })
+    assert_true(emitted(r, "playback.toggle_request") ~= nil); assert_nil(r.state.activity.heart_at)
+    -- two presses too far apart: two single presses
+    press(d, 20); d.activity = buttons.on_timer(d, { name = "device.heart_single", now = 20.4 }).state.activity
+    r = press(d, 20.9)
+    assert_nil(emitted(r, "lights.party")); assert_true(has(r, "timer.once", "name", "device.heart_single") ~= nil)
+  end)
+  it("on, with nothing on the short press: one press does nothing, two the tree; held 5 s to switch off", function()
+    local d = doc(); d.audiocfg.heart_double_party = true
+    press(d, 5)
+    local r = buttons.on_timer(d, { name = "device.heart_single", now = 5.4 })
+    assert_eq(r.commands, {})
+    assert_true(emitted(press(d, 6), "lights.party") == nil)
+    assert_true(emitted(press(d, 6.2), "lights.party") ~= nil)
+    d.activity = { buttons = { circle = 10 } }
+    assert_nil(buttons.on_tick(d, { now = 14.9 }))
+  end)
+  it("the switch: a boolean, by SET_CFG and device.set_config", function()
+    assert_true(device.update_config(doc(), { heart_double_party = true }).state.audiocfg.heart_double_party)
+    assert_true(schema.validate({ heart_double_party = true }, device.schemas.config))
+    assert_false(schema.validate({ heart_double_party = 1 }, device.schemas.config))
+    assert_true(v1.on_cmd(doc(), { name = "SET_CFG", raw = json.encode({ heart_double_party = true }) }).state.audiocfg.heart_double_party)
+  end)
+end)
+
 describe("the parents' colours (#54)", function()
   it("each light takes a #rrggbb, kept in lower case; false or \"\" gives it back; seen at once", function()
     local r = device.update_config(doc(), { colours = { off = "#8000FF", ring = "#ff0000" } })

@@ -1,9 +1,10 @@
   T.de = {
     s_lights: 'Lichter', s_lights_set: 'Weihnachtsbaum und Farben', s_lights_set_sub: 'Wie lange, mit dem Herz, die Farben der Lichter',
     party_stop: 'Weihnachtsbaum stoppen', party_always: 'Bis man ihn stoppt', n_sec: function (n) { return n + ' s'; }, n_min: function (n) { return n + ' min'; },
-    party_len: 'Wie lange', party_heart: 'Das Herz startet und stoppt ihn', party_foot: 'Kinder können ihn mit einem Druck auf das Herz selbst starten und stoppen: unter Jooki-Tasten Weihnachtsbaum wählen. Nachts ist er gedimmt.',
+    party_len: 'Wie lange', party_heart: 'Das Herz startet und stoppt ihn', party_foot: 'Kinder können ihn mit dem Herz selbst starten und stoppen: unter Jooki-Tasten Zweimal auf das Herz einschalten oder Weihnachtsbaum für den kurzen Druck wählen. Nachts ist er gedimmt.',
     colours: 'Farben der Lichter', col_ring: 'Ring, wenn nichts spielt', col_dots: 'Seitenpunkte, WLAN verbunden', col_token: 'Eine Figur aufgesetzt', col_start: 'Einschalten', col_off: 'Ausschalten',
     col_usual: 'Die eigene Farbe des Jooki', col_back: 'Wie immer', colours_foot: 'Warnungen behalten ihre Farben: Orange ohne WLAN, rotes oder gelbes Blinken.',
+    heart_double: 'Zweimal auf das Herz: Weihnachtsbaum', heart_double_sub: 'Zwei schnelle Drücke starten oder stoppen ihn, egal was der kurze Druck tut. Der kurze Druck wartet dann eine halbe Sekunde',
     pl_lights: 'Lichter beim Abspielen', pl_colour: 'Farbe', fx_none: 'Wie immer', fx_colour: 'Eine Farbe', fx_breathe: 'Atmen', fx_rainbow: 'Regenbogen', fx_tree: 'Weihnachtsbaum',
     playlists: 'Wiedergabelisten', tokens: 'Figuren', library: 'Mediathek', settings: 'Einstellungen',
     connecting: 'Verbindung zum Jooki wird hergestellt…', connected: 'Verbunden', offline: 'Offline',

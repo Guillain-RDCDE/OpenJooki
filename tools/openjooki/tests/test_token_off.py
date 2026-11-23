@@ -1,7 +1,7 @@
 """Switch off when the token is taken off (#52), on the real core; /sbin/poweroff is intercepted.
 Off by default; on, the Jooki switches off token_off_s after the token is taken off (2 s here),
 unless a token is put back before; never when no token was on (switched on without one); the
-delay chosen on the page (off_token_s) wins.
+delay chosen on the page (off_token_s) wins; with "keep playing" too, off the delay after the music stops.
   sudo -E python3 test_token_off.py
 """
 import json
@@ -84,6 +84,26 @@ end
     took = float(Path(power_log).read_text().split()[0]) - t0 if off() else -1
     R.check('... about 5 s later, not 2', 4.8 <= took <= 9, took)
     j.close()
+
+    # with "keep playing" too: the music goes on, and the Jooki switches off the delay after it stops
+    def pre_both():
+        pre(True)()
+        cfg = json.load(open(B.DB + '/audiocfg.json')); cfg['continue_on_token_removal'] = True
+        json.dump(cfg, open(B.DB + '/audiocfg.json', 'w'))
+    j = B.boot(seed=True, pre=pre_both, config=B.core_config({'token_off_s': 2, 'token_off_poll_s': 1}, 'token-off-both'))
+    j.nfc('04000000F00001', '101'); j.wait(lambda: j.pb == 'PLAYING', 8)
+    j.nfc_off(); j.wait(lambda: not j.nfc_state)
+    B.quiet(5, 'more than twice token_off_s while the music goes on')
+    R.check('keep playing on: still playing, still on', j.pb == 'PLAYING' and not off(), j.get('audio.playback'))
+    spy = B.Spy('/j/audio/out/play')
+    j.send('DO_PAUSE', {}); j.wait(lambda: j.pb == 'PAUSED')
+    t0 = time.time()
+    R.expect('... the music stopped: off', off, 10)
+    took = float(Path(power_log).read_text().split()[0]) - t0 if off() else -1
+    R.check('... about token_off_s after the music stopped', 1.8 <= took <= 5, took)
+    sounds = spy.payloads('/j/audio/out/play')
+    R.check('... with a little goodbye first', any(p.startswith('3\t') and p.endswith('/goodbye.mp3') for p in sounds), sounds)
+    spy.close(); j.close()
     os.environ['CORE_BUILD'] = str(source)
 B.check_clean_log(R, 'switch off on token removal')
 R.finish()

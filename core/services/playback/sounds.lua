@@ -17,11 +17,16 @@ local emit, is_playing = util.emit, util.is_playing
 local function facade() return require("services.playback") end
 
 -- system sounds -----------------------------------------------------------------
-local function sound_uri(doc, name)
-  local sys = doc.system or {}
+-- OpenJooki's own sounds, next to the page (tools/openjooki/jooki.py WEBUI_FILES), for the events the
+-- factory catalogue has none for: system.event { sound = key }
+local OWN = { goodbye = "goodbye.mp3" }   -- switching off when the token is taken off (#52)
+
+local function sound_uri(doc, name, own)
+  local sys, c = doc.system or {}, doc.config or {}
   local t = sys.tracks and sys.tracks[name]
-  if not (t and t.filename) then return nil end
-  return "file://" .. ((doc.config and doc.config.system_dir) or "/jooki/app/system") .. "/" .. t.filename
+  if t and t.filename then return "file://" .. (c.system_dir or "/jooki/app/system") .. "/" .. t.filename end
+  if OWN[own] then return "file://" .. (c.web_public_dir or "/tmp/web_ctrl_dirs/public") .. "/" .. OWN[own] end
+  return nil
 end
 
 --- A song in audio_ctrl's only pipeline (Spotify and Deezer have their own daemons).
@@ -31,10 +36,11 @@ local function holds_song(doc, pb)
   return is_playing(doc) or pb.state == "paused"
 end
 
---- system.event { name, after?, no_pause? }: play the sound if there is one, pausing the music
---- meanwhile. no_pause: the music comes first, so with a song loaded the event only lights up.
+--- system.event { name, sound?, after?, no_pause? }: play the sound if there is one (the catalogue's,
+--- else OpenJooki's own `sound`), pausing the music meanwhile. no_pause: the music comes first, so
+--- with a song loaded the event only lights up.
 function sounds.on_system_event(doc, ev)
-  local uri = sound_uri(doc, ev.name)
+  local uri = sound_uri(doc, ev.name, ev.sound)
   local cmds = { emit("lights.event", { name = ev.name }) }
   local playback = facade()
   local pb = playback.pb_of(doc)
@@ -57,9 +63,10 @@ function sounds.on_system_event(doc, ev)
   return { state = playback.st(pb), commands = cmds }
 end
 
---- The engine's report on stream 3 (`kind` = ended | stopped | ...): the music continues, `after` runs.
+--- The engine's report on stream 3 (`kind` = ended | stopped | error | ...): the music continues,
+--- `after` runs. A sound the engine could not play counts as played: the Jooki still switches off.
 function sounds.on_sound_audio(doc, _, kind)
-  if kind ~= "ended" and kind ~= "stopped" then return nil end
+  if kind ~= "ended" and kind ~= "stopped" and kind ~= "error" then return nil end
   local playback = facade()
   local pb = playback.pb_of(doc)
   local sys = pb.sys

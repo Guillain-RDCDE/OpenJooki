@@ -1,5 +1,10 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Keep playing, then switch off.** With both *Keep playing when a token is removed* and *Switch off when the token is removed* on, the Jooki plays to the end, then switches off the chosen time later if no token is put back. Before, it stayed on when the music outlasted that time. The page says so under the switch (#52, thank you Totaalgeflipt).
+- **A little goodbye.** Switching off because the token was taken off, the Jooki now plays a short soft sound first, so a child knows it is going to sleep. Never when it switches off after fifteen quiet minutes or on a low battery, which can happen while a child sleeps (#52).
+- For the tinkerers: `device.token_off` no longer gives up while something plays: it looks again every `token_off_poll_s` (10 s), then waits the whole delay from when it went quiet (`token_off_int`). `system.event` takes `sound`, OpenJooki's own sound when the factory catalogue has none: `goodbye.mp3` next to the page (`make_goodbye_sound.py`). A sound the engine cannot play now counts as played, so `after` (switching off) always runs. The bench's `fake_audio.py` ends a sound on stream 3 by itself.
+
 ## OpenJooki 2.5.15 (23 November 2026) — Off when you choose
 - **Off when the token comes off, after the time you choose.** *Settings → Playback → Switch off when the token is removed → How long*: 15 s as before, 1 min, 5 min, 15 min or 30 min, so a Jooki forgotten without its token switches off by itself a while later (#52, thank you Totaalgeflipt).
 - **No more switching off right after starting.** With that switch on, a Jooki switched on without a token switched itself off 15 seconds later: the token reader says "removed" at the start even with nothing on it. Now only a token really taken off counts.

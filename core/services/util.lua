@@ -38,6 +38,14 @@ function util.hp_gain(boost, toy_safe)
   return { kind = "shell", action = "hp_gain", args = { db = (boost == true and toy_safe == false) and util.HP_BOOST_DB or 0 } }
 end
 
+--- Switch off when the token is taken off (#52): how long after, the parents' choice (audiocfg.off_token_s,
+--- 5 s to an hour), else the core's default (kernel.config token_off_s).
+function util.token_off_s(doc)
+  local s = (doc and doc.audiocfg or {}).off_token_s
+  if type(s) == "number" and s >= 5 and s <= 3600 and s % 1 == 0 then return s end
+  return (doc and doc.config and doc.config.token_off_s) or 15
+end
+
 --- Music is on its way out of the speaker, or about to be: state "playing" or "starting".
 --- (A paused track is loaded but not playing: the few sites that count "paused" too say so themselves.)
 function util.is_playing(doc)

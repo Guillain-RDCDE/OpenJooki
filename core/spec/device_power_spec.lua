@@ -100,8 +100,7 @@ describe("services.device.power — battery, cable, inactivity", function()
     assert_eq(power.on_timer(doc, { name = "device.token_off" }).commands[2].event.type, "power.off_request")
     doc.nfc = { starId = "Jooki.Fox", tagId = "04" }
     assert_nil(power.on_token_off(doc))                       -- a token is back
-    doc.nfc = {}; doc.playback = { state = "playing" }
-    assert_nil(power.on_token_off(doc))                       -- something plays (a page, "keep playing")
+    doc.nfc = {}
     doc.playback = nil; doc.audiocfg = { volume = 40, off_on_token_removal = false }
     assert_nil(power.on_token_off(doc))                       -- the switch was turned off since
     doc.audiocfg = { volume = 40 }
@@ -112,6 +111,36 @@ describe("services.device.power — battery, cable, inactivity", function()
     assert_nil(power.on_token_off(doc))                       -- already switching off
   end)
 
+  it("switch off when the token is taken off, with something playing: off the delay after the end (#52)", function()
+    local doc = doc_with({ audiocfg = { volume = 40, off_on_token_removal = true, off_token_s = 300 }, playback = { state = "playing" } })
+    doc.nfc = {}; doc.token_off_int = {}
+    local function wait(r) return find(r, "timer.once", "name", "device.token_off") end
+    -- "keep playing" (or a page, an app): it waits, looking again every 10 s, never longer than the delay
+    local r = power.on_token_off(doc, { now = 300 })
+    assert_eq(r.state.token_off_int, { waiting = true }); assert_eq(wait(r).seconds, 10)
+    assert_nil(find(r, "emit"))
+    doc.token_off_int = r.state.token_off_int
+    r = power.on_token_off(doc, { now = 310 })
+    assert_eq(wait(r).seconds, 10)
+    -- the music is over: the whole delay again, from now
+    doc.playback = { state = "paused" }
+    r = power.on_token_off(doc, { now = 900 })
+    assert_eq(r.state.token_off_int, { quiet = 900 }); assert_eq(wait(r).seconds, 300); assert_nil(find(r, "emit"))
+    doc.token_off_int = r.state.token_off_int
+    -- music again meanwhile (a page): waiting again
+    doc.playback = { state = "starting" }
+    assert_eq(power.on_token_off(doc, { now = 1000 }).state.token_off_int, { waiting = true })
+    -- still quiet the delay after: off, and the wait forgotten
+    doc.playback = { state = "idle" }
+    r = power.on_token_off(doc, { now = 1200 })
+    assert_eq(find(r, "emit").event.reason, "token"); assert_eq(r.state.token_off_int, {})
+    -- a short delay: never looks again later than the delay itself
+    doc.audiocfg.off_token_s = nil; doc.config.token_off_s = 5; doc.playback = { state = "playing" }
+    assert_eq(wait(power.on_token_off(doc, { now = 0 })).seconds, 5)
+    doc.config.token_off_poll_s = 2
+    assert_eq(wait(power.on_token_off(doc, { now = 0 })).seconds, 2)
+  end)
+
   it("manual power off: silent blink cue, then save, lights, quit, poweroff, kernel shutdown", function()
     local doc = doc_with()
     local r = power.on_off_request(doc, { reason = "button" })
@@ -120,6 +149,12 @@ describe("services.device.power — battery, cable, inactivity", function()
     local auto = power.on_off_request(doc, { reason = "battery" })
     assert_eq(find(auto, "emit").event.name, "Evt.Jooki.Poweroff")
     assert_eq(find(auto, "emit").event.after, { type = "shutdown.request", reason = "battery" })
+    assert_nil(find(auto, "emit").event.sound)                -- no goodbye: a child may be asleep
+    assert_nil(find(power.on_off_request(doc, { reason = "inactivity" }), "emit").event.sound)
+    -- the token taken off: a little goodbye before switching off (#52)
+    local tok = find(power.on_off_request(doc, { reason = "token" }), "emit").event
+    assert_eq(tok.name, "Evt.Jooki.Poweroff"); assert_eq(tok.sound, "goodbye")
+    assert_eq(tok.after, { type = "shutdown.request", reason = "token" })
     r = power.on_shutdown_request(doc, { reason = "button" })
     -- the order IS the point here: save, lights, quit the daemons, sync, poweroff, and the kernel's shutdown last
     assert_eq(kinds(r), { "write /d/audiocfg.json", "led/output/set_raw ALL,0,0,0", "led/output/set_raw CIRCLE,200,0,0", "all/quit \"from-player\"", "shell sync", "shell poweroff", "shutdown" })

@@ -56,7 +56,7 @@ The Jooki 2 has four groups of lights: the **ring** around the top plate, the
 
 Sounds go with only a few of these: the start-up chime (`Evt.Jooki.Ready`), a
 short bleep when a token is written or a page connects, and three factory
-voices ("factory mode" on and off, "production finished"). **A low battery
+voices ("factory mode" on and off, "production finished"). OpenJooki adds one of its own: a short goodbye (two soft notes going down, `goodbye.mp3` next to the page) when the Jooki switches off because its token was taken off (#52), never for the other automatic power-offs. **A low battery
 makes no sound**, and on the original program it makes no light either: the
 app used to show "Jooki's battery is getting low", and the Jooki simply
 switches itself off under 10 %. OpenJooki 2 adds the yellow pulse.

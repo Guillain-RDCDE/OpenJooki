@@ -145,8 +145,9 @@ describe("services.tokens", function()
     local doc = { nfc = { starId = "Jooki.Fox", tagId = "04" }, audiocfg = {} }
     assert_nil(timer(tokens.on_removed(doc), "timer.once"))             -- off by default
     doc.audiocfg.off_on_token_removal = true
-    local t = timer(tokens.on_removed(doc), "timer.once")
-    assert_eq(t.seconds, 15)
+    local r = tokens.on_removed(doc)
+    assert_eq(timer(r, "timer.once").seconds, 15)
+    assert_eq(r.state.token_off_int, {})                                  -- a new wait (services.device.power)
     doc.config = { token_off_s = 3 }
     assert_eq(timer(tokens.on_removed(doc), "timer.once").seconds, 3)
     -- the music still stops as before (the switch-off comes after the pause)

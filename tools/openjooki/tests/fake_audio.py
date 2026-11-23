@@ -1,13 +1,17 @@
 """Fake audio engine for the bench: answers /j/audio/out/* like the Jooki's GStreamer player."""
-import json, time, paho.mqtt.client as mqtt
+import json, threading, time, paho.mqtt.client as mqtt
 st = {"id": None, "playing": False, "pos": 0, "t": time.time()}
 c = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, "fakeaudio")
 def pub(ev, **kw): c.publish("/j/audio/input/" + ev, json.dumps(dict(kw, id=st["id"])))
+def sound_ended():
+    if st["id"] == 3 and st["playing"]: st["playing"] = False; pub("ended")
 def on_msg(cl, u, m):
     p = m.payload.decode(); cmd = m.topic.rsplit("/", 1)[1]
     parts = p.split("\t")
     if cmd == "play":
         st.update(id=int(parts[0]), playing=True, pos=0, t=time.time()); pub("starting"); time.sleep(0.1); pub("playing")
+        # a system sound (stream 3, e.g. the goodbye of #52) is short: it ends by itself, like on the Jooki
+        if st["id"] == 3: threading.Timer(0.5, sound_ended).start()
     elif cmd == "pauz" and st["id"] is not None: st["playing"] = False; pub("paused")
     elif cmd == "cont" and st["id"] is not None: st.update(playing=True, t=time.time()); pub("playing")
     elif cmd == "stop" and st["id"] is not None: st["playing"] = False; pub("stopped")

@@ -343,6 +343,13 @@ with sync_playwright() as p:
     check("E12 how long: 15 s by default", pg.input_value("[data-k=offtokenlen]") == "15")
     pg.select_option("[data-k=offtokenlen]", "900")
     R.expect("E12 how long: 15 min saved", lambda: J.get("audio.config.off_token_s") == 900, 5, lambda: J.get("audio.config"))
+    # with "keep playing" on too, the small line says the Jooki waits for the end of the music
+    sub = "label.srow:has([data-k=offtoken]) .l2"
+    sub0 = pg.inner_text(sub)
+    pg.check("[data-k=continuetoken]"); J.wait(lambda: J.get("audio.config.continue_on_token_removal") is True)
+    R.expect("E12 both switches on: the small line says after the music (#52)", lambda: pg.inner_text(sub) != sub0, 5, lambda: pg.inner_text(sub))
+    pg.uncheck("[data-k=continuetoken]"); J.wait(lambda: J.get("audio.config.continue_on_token_removal") is False)
+    R.expect("E12 ... and back without keep playing", lambda: pg.inner_text(sub) == sub0, 5, lambda: pg.inner_text(sub))
     pg.uncheck("[data-k=offtoken]"); J.wait(lambda: J.get("audio.config.off_on_token_removal") is False)
     R.expect("E12 how long: hidden once the switch is off", lambda: pg.locator("[data-k=offtokenlen]").count() == 0, 5)
     pg.goto(URL + "/#/settings/sound"); pg.wait_for_selector("[data-k=hpboost]")

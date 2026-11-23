@@ -144,6 +144,9 @@ the Jooki from reading the sticker: put it inside the cover instead.
   NTAG215 or NTAG216 ([the page](https://guillain-rdcde.github.io/OpenJooki/tokens.html)).
 - To keep playing when a Jooki token or converted card is removed, turn on **Keep playing
   when a token is removed** in Settings. It is off by default and applies to all Jooki tokens.
+- To have the Jooki switch itself off when the token is removed, turn on **Switch off when the
+  token is removed** and choose **How long**. With **Keep playing** on too, it plays to the end,
+  then switches off. It says goodbye with a short soft sound.
 - **A picture** for a flat token or an NFC tag: **Choose a picture** (659 ready-made ones,
   with a search, no Internet needed) or **My photo** (take or pick a photo, then **Remove
   the background**).

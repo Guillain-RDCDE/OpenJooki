@@ -50,7 +50,7 @@
     heart_shutdown_help: 'Beim Ausschalten: dreimal kurz rot blinken, ohne Ton.',
     heart_press: 'Kurzer Druck auf das Herz', heart_press_sub: '2 Sekunden gedrückt halten schaltet den Jooki weiterhin aus', heart_press_sub5: '5 Sekunden gedrückt halten schaltet den Jooki aus', heart_none: 'Keine Aktion', heart_next: 'Nächster Titel', heart_pause: 'Pause / Wiedergabe', heart_party: 'Weihnachtsbaum (nochmal zum Stoppen)',
     continue_token: 'Beim Wegnehmen einer Figur weiterspielen', continue_token_sub: 'Gilt für Jooki-Figuren und Karten',
-    off_token: 'Ausschalten, wenn die Figur weggenommen wird', off_token_sub: 'Wenn nichts spielt und keine Figur rechtzeitig zurückgestellt wird',
+    off_token: 'Ausschalten, wenn die Figur weggenommen wird', off_token_sub: 'Wenn nichts spielt und keine Figur rechtzeitig zurückgestellt wird', off_token_both: 'Wenn die Musik zu Ende ist und keine Figur rechtzeitig zurückgestellt wird',
     knob_mode: 'Drehrad für die Titel', knob_mode_sub: 'Ganz drehen oder auf halbem Weg halten', knob_song: 'Nächster / vorheriger Titel', knob_both: 'Titel, und halb drehen zum Spulen', knob_restart: 'Links halten 3 s: zurück zum Anfang', knob_restart_sub: 'Kurz drehen bleibt nächster / vorheriger Titel. Ein Hörbuch vergisst seine Stelle.', knob_restart_wind: 'Nicht mit „Im Titel spulen“: Halten spult.', knob_wind: 'Im Titel spulen',
     toy_safe: 'Begrenzte Lautstärke (Kindermodus)', toy_safe_sub: 'Vom Werk fest eingestellt. Zu leise? Ausschalten und eine eigene Grenze wählen.', shuffle: 'Zufallswiedergabe', repeat: 'Wiederholen', repeat_one: 'Diesen Titel wiederholen',
     volume_test: 'Testen',

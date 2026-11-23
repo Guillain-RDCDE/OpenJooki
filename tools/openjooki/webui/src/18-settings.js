@@ -85,7 +85,7 @@
         sRow({ icon: 'repeat', label: t('repeat'), sub: t('modes_sub'), sw: true, on: cfg.repeat_mode === 1 || cfg.repeat_mode === true, k: 'repeat', onchange: function (e) { send('SET_CFG', { repeat_mode: e.target.checked ? 1 : 0 }); } }),
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
         // switch off once the token is taken off and nothing plays (#52)
-        typeof cfg.off_on_token_removal === 'boolean' ? sRow({ icon: 'power', label: t('off_token'), sub: t('off_token_sub'), sw: true, on: cfg.off_on_token_removal, k: 'offtoken', onchange: function (e) { send('SET_CFG', { off_on_token_removal: e.target.checked }); } }) : null,
+        typeof cfg.off_on_token_removal === 'boolean' ? sRow({ icon: 'power', label: t('off_token'), sub: t(cfg.continue_on_token_removal === true ? 'off_token_both' : 'off_token_sub'), sw: true, on: cfg.off_on_token_removal, k: 'offtoken', onchange: function (e) { send('SET_CFG', { off_on_token_removal: e.target.checked }); } }) : null,
         // and how long after, once it is on (#52)
         cfg.off_on_token_removal === true ? sRow({ tag: 'label', icon: 'power', label: t('party_len'),
           right: h('select', { class: 'input mini', 'data-k': 'offtokenlen', onchange: function (e) { e.target.blur(); send('SET_CFG', { off_token_s: Number(e.target.value) }); } },

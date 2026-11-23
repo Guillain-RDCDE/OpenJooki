@@ -50,6 +50,7 @@ config.defaults = {
   inactivity_warn_s = 14 * 60,
   inactivity_off_s = 15 * 60,
   token_off_s = 15,                           -- the token taken off, with "switch off" on: off after this (#52)
+  token_off_poll_s = 10,                      -- ... something still plays: look again this often, then wait it again
   battery_warn_percent = 20,
   battery_off_percent = 10,
   battery_off_mv = 3500,   -- shut down cleanly before the Holtek's hard cut at ~3.40 V (services.device.power)

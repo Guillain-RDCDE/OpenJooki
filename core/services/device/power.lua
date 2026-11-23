@@ -2,6 +2,7 @@
 -- Owns:
 --   state.power    = { connected, charging, level = { mv, p, t }, warned_at }
 --   state.activity = { last, warned, buttons = { [name] = down_at } }   (buttons is services.device.buttons')
+--   state.token_off_int = { waiting } | { quiet }   (switch off when the token is taken off, #52)
 -- The volume chain (audiocfg) stays the facade's, services.device: it is asked for at call time, never
 -- at load time, since the facade requires this module. Installed by services.device, which re-exports
 -- its handlers.
@@ -122,13 +123,25 @@ function power.on_inactivity(doc, ev)
   return nil
 end
 
---- The token was taken off token_off_s ago with "switch off" on (#52, services.tokens): off, unless a
---- token is back, something plays (a page, an app, "keep playing" on), or the switch was turned off since.
-function power.on_token_off(doc)
+--- The token was taken off the chosen delay ago with "switch off" on (#52, services.tokens): off, unless
+--- a token is back, or the switch was turned off since. While something plays (a page, an app, "keep
+--- playing" on), it waits: the delay starts again when all is quiet, so with "keep playing" the Jooki
+--- plays to the end, then switches off. state.token_off_int = { waiting } while it plays, then
+--- { quiet = when it went quiet }.
+function power.on_token_off(doc, ev)
   if doc.flags and doc.flags.STAY_ON then return nil end
-  if (doc.nfc or {}).tagId or util.is_playing(doc) or (doc.poweroff_int or {}).step then return nil end
-  if not volume().audiocfg_of(doc).off_on_token_removal then return nil end
-  return { commands = { { kind = "log", level = "info", key = "device.token_off" },
+  if (doc.nfc or {}).tagId or (doc.poweroff_int or {}).step then return nil end
+  local a = volume().audiocfg_of(doc)
+  if not a.off_on_token_removal then return nil end
+  local s = util.token_off_s(doc)
+  local function again(state, seconds)
+    return { state = { token_off_int = state }, commands = { { kind = "timer.once", name = "device.token_off", seconds = seconds } } }
+  end
+  -- services.tokens empties token_off_int at each token taken off: `waiting` is this one's
+  if util.is_playing(doc) then return again({ waiting = true }, math.min(s, cfg(doc, "token_off_poll_s", 10))) end
+  if (doc.token_off_int or {}).waiting then return again({ quiet = (ev or {}).now }, s) end
+  return { state = { token_off_int = {} },
+           commands = { { kind = "log", level = "info", key = "device.token_off" },
                         emit("power.off_request", { reason = "token" }) } }
 end
 
@@ -160,7 +173,10 @@ end
 local POWEROFF_FRAME_S = 0.15
 function power.on_off_request(doc, ev)
   if ev.reason ~= "button" and ev.reason ~= "page" then
-    return { commands = { emit("system.event", { name = "Evt.Jooki.Poweroff", after = { type = "shutdown.request", reason = ev.reason } }) } }
+    -- the token taken off: a child is there, a little goodbye (#52); never for the others (the
+    -- fifteen quiet minutes, the battery), which can come while a child sleeps
+    local sound = ev.reason == "token" and "goodbye" or nil
+    return { commands = { emit("system.event", { name = "Evt.Jooki.Poweroff", sound = sound, after = { type = "shutdown.request", reason = ev.reason } }) } }
   end
   if (doc.poweroff_int or {}).step then return nil end
   local after = copy(doc); after.poweroff_int = { step = 1, reason = ev.reason }; after.lights_boot_int = {}

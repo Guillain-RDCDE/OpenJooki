@@ -220,6 +220,24 @@ describe("services.playback.sounds — system sounds", function()
     assert_eq(topics(sounds.on_sound_audio(doc, {}, "ended")), {})
   end)
 
+  it("OpenJooki's own sound when the catalogue has none; an error ends the sound, then `after` (#52)", function()
+    local doc = doc_with()
+    doc.config.web_public_dir = "/pub"
+    local after = { type = "shutdown.request", reason = "token" }
+    local r = sounds.on_system_event(doc, { name = "Evt.Jooki.Poweroff", sound = "goodbye", after = after })
+    assert_eq(topics(r), { "emit lights.event Evt.Jooki.Poweroff", "play 3\tfile:///pub/goodbye.mp3" })
+    apply(doc, r)
+    -- the engine could not play it: the Jooki still switches off
+    r = sounds.on_sound_audio(doc, {}, "error")
+    assert_eq(r.commands[#r.commands].event, after)
+    -- the catalogue wins; an unknown key is no sound (and `after` at once)
+    doc = doc_with()
+    assert_eq(topics(sounds.on_system_event(doc, { name = "Evt.Jooki.Ready", sound = "goodbye" }))[2], "play 3\tfile:///sys/assets/ready.ogg")
+    r = sounds.on_system_event(doc, { name = "Evt.Jooki.Poweroff", sound = "nope", after = after })
+    assert_eq(r.commands[#r.commands].event, after)
+    assert_eq(topics(sounds.on_system_event(doc, { name = "Evt.Jooki.Poweroff", after = after })), { "emit lights.event Evt.Jooki.Poweroff", "emit shutdown.request" })
+  end)
+
   it("boot keeps the sound catalogue", function()
     assert_eq(sounds.on_boot(nil, { system = { tracks = { x = { filename = "x.ogg" } } } }).state.system.tracks.x.filename, "x.ogg")
     assert_eq(sounds.on_boot(nil, {}).state.system, { tracks = {} })

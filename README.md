@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.15:** the Jooki switches off after the time you choose once its token is removed, and no longer right after starting without one.
-2.5.14: two quick presses on the heart start or stop the Christmas tree, and the short press keeps its job.
+**New in 2.5.16:** with keep playing on too, the Jooki plays to the end then switches off, with a little goodbye sound.
+2.5.15: the Jooki switches off after the time you choose once its token is removed, and no longer right after starting without one.
 [All the changes](CHANGELOG.md)
 
 ---

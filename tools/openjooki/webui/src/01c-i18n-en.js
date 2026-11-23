@@ -67,7 +67,7 @@
     heart_shutdown_help: 'Power off: three short red flashes, no sound.',
     heart_press: 'Short press on the heart', heart_press_sub: 'Held 2 seconds, it still switches the Jooki off', heart_press_sub5: 'Held 5 seconds, it switches the Jooki off', heart_none: 'Nothing', heart_next: 'Next song', heart_pause: 'Pause / play', heart_party: 'Christmas tree (press again to stop)',
     continue_token: 'Keep playing when a token is removed', continue_token_sub: 'Applies to Jooki figures and cards',
-    off_token: 'Switch off when the token is removed', off_token_sub: 'After 15 seconds, if nothing plays and no token is put back',
+    off_token: 'Switch off when the token is removed', off_token_sub: 'If nothing plays and no token is put back in time',
     knob_mode: 'The track knob', knob_mode_sub: 'Turned all the way, or held halfway', knob_song: 'Next / previous song', knob_both: 'Songs, and halfway winds', knob_restart: 'Held left 3 s: back to the start', knob_restart_sub: 'Short turns stay next and previous. An audiobook forgets its place.', knob_restart_wind: 'Not with “Wind the song”: holding the knob winds.', knob_wind: 'Wind the song',
     toy_safe: 'Limited volume (kids mode)', toy_safe_sub: 'Fixed by the factory. Too quiet? Turn it off and choose your own maximum.',shuffle: 'Shuffle', repeat: 'Repeat', repeat_one: 'Repeat this one', pl_settings: function (v) { return 'As in Settings (' + v + ')'; }, rep_all: 'All songs', rep_one: 'This song', modes_sub: 'For playlists without a choice of their own', back15: 'Back 15 seconds', fwd15: 'Forward 15 seconds',
     volume_test: 'Test',

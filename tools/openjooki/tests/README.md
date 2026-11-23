@@ -38,7 +38,7 @@ python3 test_mqtt_lan.py                      # S57_oj-security.sh, real mosquit
 python3 test_knob_start.py                     # the knob held left: back to the start, an audiobook forgets its place, short turns unchanged
 python3 test_guard.py                          # oj-guard.sh under busybox: a core that does not answer, back to the other partition, never in a loop
 python3 test_esp32_trial.py                    # oj-esp32-trial.sh under busybox: a chip firmware written at the start, judged, the original back on any failure (not in CI yet)
-sudo -E python3 test_token_off.py              # switch off when the token is taken off (#52): off by default, after token_off_s, not with a token back (not in CI yet)
+sudo -E python3 test_token_off.py              # switch off when the token is taken off (#52): off by default, after token_off_s or the delay chosen, not with a token back, not when none was on (not in CI yet)
 sudo -E python3 test_christmas_lights.py       # the Christmas tree, the parents' colours, a playlist's lights (#54): core, heart, restart and browser (not in CI yet)
 python3 test_chip_page.py                      # Settings > Advanced > Wi-Fi with several access points: try, download, refusal, going back (stand-in tool and restart; not in CI yet)
 python3 test_parent_page.py                    # the parent code in the page (#53): closing the question, remembering it on a device or not, forgetting it (not in CI yet)

@@ -109,10 +109,15 @@ function tokens.on_removed(doc)
     result.commands[#result.commands + 1] = { kind = "emit", event = { type = "playback.pause_request", source = "token" } }
   end
   -- switch off when the token is taken off (#52): a while later, if no token is back and nothing
-  -- plays then (services.device.power, timer device.token_off)
-  if doc.audiocfg and doc.audiocfg.off_on_token_removal == true then
-    local c = doc.config or {}
-    result.commands[#result.commands + 1] = { kind = "timer.once", name = "device.token_off", seconds = c.token_off_s or 15 }
+  -- plays then (services.device.power, timer device.token_off). Only when a token was really on:
+  -- the reader also says "removed" with nothing on it (switched on without a token), which switched
+  -- the Jooki off 15 s after it started. How long: the parents' choice (audiocfg.off_token_s), else
+  -- the core's default.
+  local a = doc.audiocfg
+  if was.tagId and a and a.off_on_token_removal == true then
+    local c, s = doc.config or {}, a.off_token_s
+    if not (type(s) == "number" and s >= 5 and s <= 3600 and s % 1 == 0) then s = c.token_off_s or 15 end
+    result.commands[#result.commands + 1] = { kind = "timer.once", name = "device.token_off", seconds = s }
   end
   return result
 end

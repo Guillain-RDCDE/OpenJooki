@@ -1,5 +1,10 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Off when the token comes off, after the time you choose.** *Settings → Playback → Switch off when the token is removed → How long*: 15 s as before, 1 min, 5 min, 15 min or 30 min, so a Jooki forgotten without its token switches off by itself a while later (#52, thank you Totaalgeflipt).
+- **No more switching off right after starting.** With that switch on, a Jooki switched on without a token switched itself off 15 seconds later: the token reader says "removed" at the start even with nothing on it. Now only a token really taken off counts.
+- For the tinkerers: `audiocfg.off_token_s` (integer 5-3600; not set = `token_off_s`, 15), by `SET_CFG` / `device.set_config`; `tokens.on_removed` arms `device.token_off` only when `nfc.tagId` was set. `test_token_off.py` covers both.
+
 ## OpenJooki 2.5.14 (22 November 2026) — Two presses for the tree
 - **Two presses on the heart: the Christmas tree.** *Settings → Jooki buttons → Two presses on the heart: Christmas tree*: two quick presses start or stop the tree, and the short press keeps its job (pause, next song). Only with this switch on, the short press waits half a second to know whether a second one follows. Off unless you turn it on (#54, thank you scheuerbauer).
 - For the tinkerers: `audiocfg.heart_double_party` (boolean, default off), by `SET_CFG` / `device.set_config`; two releases of the heart within 0.4 s (`device.heart_single`) emit `lights.party`.

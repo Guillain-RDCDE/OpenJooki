@@ -86,6 +86,10 @@
         typeof cfg.continue_on_token_removal === 'boolean' ? sRow({ icon: 'tag', label: t('continue_token'), sub: t('continue_token_sub'), sw: true, on: cfg.continue_on_token_removal, k: 'continuetoken', onchange: function (e) { send('SET_CFG', { continue_on_token_removal: e.target.checked }); } }) : null,
         // switch off once the token is taken off and nothing plays (#52)
         typeof cfg.off_on_token_removal === 'boolean' ? sRow({ icon: 'power', label: t('off_token'), sub: t('off_token_sub'), sw: true, on: cfg.off_on_token_removal, k: 'offtoken', onchange: function (e) { send('SET_CFG', { off_on_token_removal: e.target.checked }); } }) : null,
+        // and how long after, once it is on (#52)
+        cfg.off_on_token_removal === true ? sRow({ tag: 'label', icon: 'power', label: t('party_len'),
+          right: h('select', { class: 'input mini', 'data-k': 'offtokenlen', onchange: function (e) { e.target.blur(); send('SET_CFG', { off_token_s: Number(e.target.value) }); } },
+            [15, 60, 300, 900, 1800].map(function (v) { return h('option', { value: v, selected: v === (cfg.off_token_s || 15) ? 'selected' : null }, partyLen(v)); })) }) : null,
         canConvert() ? sRow({ icon: 'note', label: t('s_mp3'), sub: t('s_mp3_sub'), value: mp3Kbps() + ' kbps', href: '#/settings/mp3', k: 'mp3nav' }) : null,
         // the Jooki as a UPnP / DLNA player (#29): apps on the home network can send it music
         d.core && typeof cfg.upnp === 'boolean' ? sRow({ icon: 'note', label: t('s_upnp'), sub: t('s_upnp_sub'), sw: true, on: cfg.upnp, k: 'upnp', onchange: function (e) { send('SET_CFG', { upnp: e.target.checked }); } }) : null

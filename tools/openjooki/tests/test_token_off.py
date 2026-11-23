@@ -1,6 +1,7 @@
 """Switch off when the token is taken off (#52), on the real core; /sbin/poweroff is intercepted.
 Off by default; on, the Jooki switches off token_off_s after the token is taken off (2 s here),
-unless a token is put back before.
+unless a token is put back before; never when no token was on (switched on without one); the
+delay chosen on the page (off_token_s) wins.
   sudo -E python3 test_token_off.py
 """
 import json
@@ -67,6 +68,21 @@ end
     time.sleep(1); j.nfc(TAG, '102'); j.wait(lambda: j.nfc_state.get('tagId') == TAG)
     B.quiet(4, 'past token_off_s with the token back')
     R.check('a token put back in time: the Jooki stays on', not off())
+    j.close()
+
+    # switched on without a token: the reader says "removed" with nothing on it -> stays on (#52)
+    j = B.boot(pre=pre(True), config=config)
+    j.nfc_off()
+    B.quiet(5, 'past token_off_s, no token was ever on')
+    R.check('switched on without a token: the Jooki stays on', not off())
+    # how long, chosen on the page: 5 s here, not the core's 2 s
+    j.send('SET_CFG', {'off_token_s': 5}); j.wait(lambda: j.get('audio.config.off_token_s') == 5)
+    R.check('the delay is saved', json.load(open(B.DB + '/audiocfg.json')).get('off_token_s') == 5)
+    j.nfc(TAG, '102'); j.wait(lambda: j.nfc_state.get('tagId') == TAG)
+    t0 = time.time(); j.nfc_off()
+    R.expect('the chosen delay: off after the token is taken off', off, 12)
+    took = float(Path(power_log).read_text().split()[0]) - t0 if off() else -1
+    R.check('... about 5 s later, not 2', 4.8 <= took <= 9, took)
     j.close()
     os.environ['CORE_BUILD'] = str(source)
 B.check_clean_log(R, 'switch off on token removal')

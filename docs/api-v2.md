@@ -276,6 +276,11 @@ Payload schema:
     "off_on_token_removal": {
       "type": "boolean"
     },
+    "off_token_s": {
+      "maximum": 3600,
+      "minimum": 5,
+      "type": "integer"
+    },
     "party_s": {
       "maximum": 3600,
       "minimum": 0,

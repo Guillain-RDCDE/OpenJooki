@@ -158,6 +158,24 @@ describe("services.tokens", function()
     assert_true(timer(tokens.on_tag(d2, { type = "nfc.tag", uid = "0400AA", foreign = true }), "timer.cancel") ~= nil)
   end)
 
+  it("switch off when the token is taken off: only after a real token, after the parents' delay (#52)", function()
+    local function timer(r)
+      for _, c in ipairs(r.commands) do if c.kind == "timer.once" and c.name == "device.token_off" then return c end end
+    end
+    -- switched on without a token: the reader says "removed" with nothing on it, no switching off
+    local doc = { nfc = {}, audiocfg = { off_on_token_removal = true } }
+    assert_nil(timer(tokens.on_removed(doc)))
+    assert_nil(timer(tokens.on_removed({ audiocfg = { off_on_token_removal = true } })))
+    -- a token was on: the parents' delay, else the default
+    doc.nfc = { starId = "Jooki.Fox", tagId = "04" }
+    doc.audiocfg.off_token_s = 900
+    assert_eq(timer(tokens.on_removed(doc)).seconds, 900)
+    doc.audiocfg.off_token_s = "x"
+    assert_eq(timer(tokens.on_removed(doc)).seconds, 15)
+    doc.audiocfg.off_token_s = 2
+    assert_eq(timer(tokens.on_removed(doc)).seconds, 15)
+  end)
+
   it("a picture for a token: the upload moves to artwork/, the token keeps its address with a cache key", function()
     local doc = doc_with({}, { ["046158B2661290"] = { starId = "tag.046158B2661290", seen = 2 } })
     local r = tokens.on_set_image(doc, { tagId = "046158B2661290", uploadId = "4242" })

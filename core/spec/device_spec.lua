@@ -200,6 +200,17 @@ describe("services.device — volume chain", function()
     assert_true(device.update_config(doc, { off_on_token_removal = "no" }).state.audiocfg.off_on_token_removal)
     assert_true(device.update_config(doc, { shuffle_mode = true }).state.audiocfg.off_on_token_removal)
     assert_false(device.update_config(doc, { off_on_token_removal = false }).state.audiocfg.off_on_token_removal)
+    -- how long after (#52): 5 s to an hour, kept; nothing chosen = the core's default
+    assert_nil(device.audiocfg_of(doc).off_token_s)
+    local r2 = device.update_config(doc, { off_token_s = 900 })
+    assert_eq(r2.state.audiocfg.off_token_s, 900); assert_eq(find(r2, "files.write").doc.off_token_s, 900)
+    for _, bad in ipairs({ 0, 4, 3601, 1.5, "900", true }) do
+      local rr, e = device.update_config(doc, { off_token_s = bad })
+      assert_nil(rr); assert_eq(e.field, "off_token_s")
+    end
+    assert_true(schema.validate({ off_token_s = 1800 }, device.schemas.config))
+    assert_false(schema.validate({ off_token_s = 4000 }, device.schemas.config))
+    assert_nil(device.audiocfg_of({ audiocfg = { off_token_s = "x" } }).off_token_s)
   end)
 
   it("louder headphones: saved, said at once and at every boot, never with kids mode on", function()

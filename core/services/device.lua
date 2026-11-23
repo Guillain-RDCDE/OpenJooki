@@ -8,7 +8,7 @@
 --   services.device.buttons   presses, long presses, the tick that runs while a button is held
 -- Owns:
 --   state.audiocfg = { volume, headphones_en, shuffle_mode, random_start, repeat_mode, heart_press?, knob_mode?, knob_restart, hp_boost, upnp, toy_safe_maxvol,
---                     max_volume, lights_off, party_s, heart_double_party, colours = { ring?, dots?, token?, start?, off? } }
+--                     max_volume, lights_off, party_s, heart_double_party, off_token_s?, colours = { ring?, dots?, token?, start?, off? } }
 --   state.limits   = { maxvol, fade, dim }   (set by bedtime; device applies them)
 --   state.volume_int = { knob, pending, skipped } (physical position and ordered volume acknowledgments; private)
 --   state.hp_int   = { mux, fresh, pending }  (wired headphones: usb_mux as last written, a reading to skip, a change waiting for its second reading; private)
@@ -22,6 +22,7 @@ local buttons = require("services.device.buttons")
 local volume_test = require("services.device.volume_test")
 local device = {}
 local DEFAULT_KIDS_MAX = 56 -- factory speaker ceiling on the shared 0–100 curve
+local OFF_TOKEN_S = { min = 5, max = 3600 }   -- switch off when the token is removed: how long after (#52)
 local PARTY_MAX_S = 3600     -- the Christmas tree: at most an hour by the clock (0 = until it is stopped)
 
 local copy, emit, err = util.copy, util.emit, util.err
@@ -88,6 +89,9 @@ local function audiocfg_of(doc)
   a.continue_on_token_removal = a.continue_on_token_removal == true
   -- switch off a while after the token is taken off, when nothing plays then (#52)
   a.off_on_token_removal = a.off_on_token_removal == true
+  -- and how long after, chosen on the page; nil = the core's default (config.token_off_s, 15 s)
+  local ot = a.off_token_s
+  a.off_token_s = type(ot) == "number" and ot >= OFF_TOKEN_S.min and ot <= OFF_TOKEN_S.max and ot % 1 == 0 and ot or nil
   a.hp_boost = a.hp_boost == true
   -- the knob held left: back to the start (#40). 2.5.1-2.5.3 saved it as the mode "start".
   if a.knob_mode == "start" then
@@ -176,6 +180,12 @@ function device.update_config(doc, changes, opts)
   if changes.lights_off ~= nil and type(changes.lights_off) ~= "boolean" then
     return nil, err("invalid_argument", "lights_off", "expected a boolean")
   end
+  if changes.off_token_s ~= nil then
+    local v = changes.off_token_s
+    if type(v) ~= "number" or v < OFF_TOKEN_S.min or v > OFF_TOKEN_S.max or v % 1 ~= 0 then
+      return nil, err("invalid_argument", "off_token_s", "expected an integer from " .. OFF_TOKEN_S.min .. " to " .. OFF_TOKEN_S.max)
+    end
+  end
   if changes.party_s ~= nil then
     local v = changes.party_s
     if type(v) ~= "number" or v < 0 or v > PARTY_MAX_S or v % 1 ~= 0 then
@@ -197,6 +207,7 @@ function device.update_config(doc, changes, opts)
   if changes.random_start ~= nil then a.random_start = changes.random_start end
   if type(changes.continue_on_token_removal) == "boolean" then a.continue_on_token_removal = changes.continue_on_token_removal end
   if type(changes.off_on_token_removal) == "boolean" then a.off_on_token_removal = changes.off_on_token_removal end
+  if changes.off_token_s ~= nil then a.off_token_s = changes.off_token_s end
   if changes.repeat_mode ~= nil then
     local m = changes.repeat_mode
     if m == true then m = 1 elseif m == false then m = 0 end
@@ -606,7 +617,7 @@ S.config = { type = "object", properties = { shuffle_mode = { type = "boolean" }
                                               heart_press = { type = "string", enum = { "none", "next", "pause", "party" } },
                                               party_s = { type = "integer", minimum = 0, maximum = PARTY_MAX_S }, colours = S_COLOURS,
                                               knob_mode = { type = "string", enum = { "song", "both", "wind", "start" } }, knob_restart = { type = "boolean" }, heart_double_party = { type = "boolean" },
-                                              continue_on_token_removal = { type = "boolean" }, off_on_token_removal = { type = "boolean" }, hp_boost = { type = "boolean" },
+                                              continue_on_token_removal = { type = "boolean" }, off_on_token_removal = { type = "boolean" }, off_token_s = { type = "integer", minimum = OFF_TOKEN_S.min, maximum = OFF_TOKEN_S.max }, hp_boost = { type = "boolean" },
                                               upnp = { type = "boolean" }, toy_safe_maxvol = { type = "integer", minimum = 0, maximum = 100 }, max_volume = { type = "integer", minimum = 0, maximum = 100 }, lights_off = { type = "boolean" } }, additionalProperties = false }
 S.name = { type = "object", required = { "name" }, properties = { name = { type = "string", maxLength = 40 } }, additionalProperties = false }
 S.wifi = { type = "object", required = { "ssid" }, properties = { ssid = { type = "string", minLength = 1, maxLength = 32 }, password = { type = "string", maxLength = 63 } }, additionalProperties = false }

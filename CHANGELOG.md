@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.15 (23 November 2026) — Off when you choose
 - **Off when the token comes off, after the time you choose.** *Settings → Playback → Switch off when the token is removed → How long*: 15 s as before, 1 min, 5 min, 15 min or 30 min, so a Jooki forgotten without its token switches off by itself a while later (#52, thank you Totaalgeflipt).
 - **No more switching off right after starting.** With that switch on, a Jooki switched on without a token switched itself off 15 seconds later: the token reader says "removed" at the start even with nothing on it. Now only a token really taken off counts.
 - For the tinkerers: `audiocfg.off_token_s` (integer 5-3600; not set = `token_off_s`, 15), by `SET_CFG` / `device.set_config`; `tokens.on_removed` arms `device.token_off` only when `nfc.tagId` was set. `test_token_off.py` covers both.

@@ -5,7 +5,7 @@
   'use strict';
 
   var CFG = window.OJ_CONFIG || {};
-  var VERSION = '2.5.16';
+  var VERSION = '2.5.17';
 
   /* ------------------------------------------------------------------ i18n */
   // One table per language (fr, en, nl, de): the same keys in each, checked by the bench.

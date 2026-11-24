@@ -1,5 +1,10 @@
 # OpenJooki — Changelog
 
+## OpenJooki 2.5.17 (24 November 2026) — Tokens first
+- **A token takes over, every time.** Putting on a token whose playlist is on Spotify or Deezer now stops what the Jooki was playing by itself: a song sent from another app (UPnP / DLNA) or a web radio. Before, both played at once (#56, thank you scheuerbauer).
+- **Songs from Google Drive.** On an Android phone, a song picked straight from Google Drive often would not send: Chrome only hands the page a link. The page now reads the song on the phone first, then sends it. If the phone really cannot read it, the page says so, with the advice to download it to the phone first (#55, thank you Totaalgeflipt).
+- For the tinkerers: starting a Spotify or Deezer playlist stops the engine whenever `playback.local_busy` (a file, a web radio, a song from an app), as Spotify started from the phone already did. The page reads a picked file into memory (`arrayBuffer`, up to 120 MB) before `POST /upload`; a file it cannot read gets `up_unreadable` and is not sent (e2e E20b).
+
 ## OpenJooki 2.5.16 (23 November 2026) — Keep playing, then goodbye
 - **Keep playing, then switch off.** With both *Keep playing when a token is removed* and *Switch off when the token is removed* on, the Jooki plays to the end, then switches off the chosen time later if no token is put back. Before, it stayed on when the music outlasted that time. The page says so under the switch (#52, thank you Totaalgeflipt).
 - **A little goodbye.** Switching off because the token was taken off, the Jooki now plays a short soft sound first, so a child knows it is going to sleep. Never when it switches off after fifteen quiet minutes or on a low battery, which can happen while a child sleeps (#52).

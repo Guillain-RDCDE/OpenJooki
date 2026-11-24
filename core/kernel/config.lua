@@ -66,6 +66,9 @@ config.defaults = {
   update_script_url = "https://guillain-rdcde.github.io/OpenJooki/o.sh",
   -- the Wi-Fi chip firmware on trial (docs/32): its package, pinned by its SHA-256 in oj-esp32-trial
   chip_package_url = "https://github.com/Guillain-RDCDE/OpenJooki/releases/download/esp32-wifi/openjooki-esp32-d87df74a.tgz",
+  -- since 2.5.17 every Jooki takes it by itself (#51), once, chip_auto_s after starting, when it is
+  -- online and plays nothing (services.update); 0 = never on its own (the page still offers it)
+  chip_auto_s = 600,
 }
 
 local current = {}

@@ -35,11 +35,39 @@ local function chip(op)
 end
 update.on_chip_status, update.on_chip_try, update.on_chip_back = chip("status"), chip("try"), chip("back")
 
+-- Since 2.5.17 the new chip firmware is for every Jooki (#51): chip_auto_s after starting, once the
+-- Jooki is online and plays nothing, the "auto" action takes it by itself. That action does nothing on
+-- a Jooki whose parent went back to the original, after a trial that failed, or once it already tried
+-- this package (it remembers it on /data); a Jooki with an older accepted package gets the newer one.
+-- Trying restarts the Jooki: never while music plays or is paused, it then looks again 10 minutes later.
+local AUTO_RETRY_S = 600
+local function busy(doc)
+  local s = (doc.playback or {}).state
+  return s == "playing" or s == "starting" or s == "paused"
+end
+local function online(doc)
+  local n = doc.net or {}
+  return n.connected and type(n.ip) == "string" and n.ip ~= "" and n.route ~= false
+end
+function update.on_boot(doc)
+  local s = tonumber(cfg(doc, "chip_auto_s", 0)) or 0
+  if s <= 0 then return nil end
+  return { commands = { { kind = "timer.once", name = "update.chip_auto", seconds = s } } }
+end
+function update.on_chip_auto(doc)
+  if busy(doc) or not online(doc) then
+    return { commands = { { kind = "timer.once", name = "update.chip_auto", seconds = AUTO_RETRY_S } } }
+  end
+  return chip("auto")(doc)
+end
+
 function update.install(api, dispatch)
   dispatch.on("update.check", "update", update.on_check)
   dispatch.on("update.start", "update", update.on_start)
   api.command("update.check", nil, update.on_check)
   api.command("update.start", nil, update.on_start)
+  dispatch.on("boot", "update", update.on_boot)
+  dispatch.on_timer("update.chip_auto", "update", update.on_chip_auto)
   for _, op in ipairs({ "status", "try", "back" }) do
     dispatch.on("chip." .. op, "update", update["on_chip_" .. op])
     api.command("chip." .. op, nil, update["on_chip_" .. op])

@@ -55,7 +55,8 @@ describe("services.update", function()
 
   it("install: the two events (api.v1 emits them) and the two v2 commands share the handlers", function()
     local on, cmds = {}, {}
-    local dispatch = { on = function(t, m, fn) on[t] = { module = m, fn = fn } end }
+    local dispatch = { on = function(t, m, fn) on[t] = { module = m, fn = fn } end,
+                       on_timer = function(n, m, fn) on["timer:" .. n] = { module = m, fn = fn } end }
     local api = { command = function(name, schema, fn) cmds[name] = { schema = schema, fn = fn } end }
     update.install(api, dispatch)
     assert_eq(on["update.check"], { module = "update", fn = update.on_check })
@@ -66,6 +67,8 @@ describe("services.update", function()
       assert_eq(on["chip." .. op], { module = "update", fn = update["on_chip_" .. op] })
       assert_eq(cmds["chip." .. op].fn, update["on_chip_" .. op])
     end
+    assert_eq(on["boot"], { module = "update", fn = update.on_boot })
+    assert_eq(on["timer:update.chip_auto"], { module = "update", fn = update.on_chip_auto })
   end)
 
   it("the Wi-Fi chip on trial (docs/32): the answer file for the page, the package address, the shell's checks", function()
@@ -95,5 +98,25 @@ describe("services.update", function()
   it("trying and going back are behind the parent code; asking where it stands is not", function()
     local sec = require("services.security")
     assert_true(sec.PROTECTED_V2["chip.try"]); assert_true(sec.PROTECTED_V2["chip.back"]); assert_nil(sec.PROTECTED_V2["chip.status"])
+  end)
+
+  it("the new chip for every Jooki (#51): once after starting, online and silent; otherwise 10 minutes later", function()
+    local cfg = { web_public_dir = "/p", chip_package_url = "http://127.0.0.1:8090/c.tgz", chip_auto_s = 600 }
+    local t = find(update.on_boot({ config = cfg }), "timer.once", "name", "update.chip_auto")
+    assert_eq(t.seconds, 600)
+    assert_nil(update.on_boot({ config = { chip_auto_s = 0 } }))          -- 0: never on its own
+    local on = { connected = true, ip = "10.0.0.2", route = true }
+    local sh = find(update.on_chip_auto({ config = cfg, net = on, playback = { state = "idle" } }), "shell", "action", "chip_trial")
+    assert_eq(sh.args.op, "auto"); assert_eq(sh.args.url, cfg.chip_package_url)
+    assert_true(shell._argv("chip_trial", sh.args) ~= nil)
+    assert_true(find(update.on_chip_auto({ config = cfg, net = on, playback = { state = "ended" } }), "shell") ~= nil)
+    for _, d in ipairs({ { net = on, playback = { state = "playing" } }, { net = on, playback = { state = "paused" } },
+                         { net = on, playback = { state = "starting" } }, { net = { connected = false }, playback = { state = "idle" } },
+                         { net = { connected = true, ip = "10.0.0.2", route = false } } }) do
+      d.config = cfg
+      local r = update.on_chip_auto(d)
+      assert_nil(find(r, "shell")); assert_eq(find(r, "timer.once", "name", "update.chip_auto").seconds, 600)
+    end
+    assert_nil(shell._argv("chip_trial", { op = "auto", out = "/tmp/x", url = "https://example.com/chip.tgz" }))
   end)
 end)

@@ -5,6 +5,20 @@ new firmware, accepted by the Jooki itself, sound, knob, tokens and Bluetooth fi
 mesh (ours has none). Offered as a trial in the page, *Settings → Advanced → Wi-Fi with several
 access points* (OpenJooki 2.5.10), to the families with a mesh who asked (#51).
 
+## For every Jooki, by itself (2.5.17)
+
+Since OpenJooki 2.5.17 the new firmware is for every Jooki (#51, decision of 24/11/2026): it made
+meshes and the Wi-Fi at start work, and the way back is built in. `chip_auto_s` (600 s) after
+starting, when the Jooki is online and plays nothing (playing, starting or paused: it looks again
+10 minutes later), `services.update` runs `chip_trial` with `op = "auto"`. That action does nothing
+while an update or a trial runs, once this package was already taken (a mark per package,
+`/data/openjooki/esp32-auto.<8 hex>`, set after the download), and unless the state is `none`, or
+`accepted` with `version: older`. So a Jooki whose parent went back (`restored`), or whose trial
+failed (`failed-*`, `restore-failed`), is left alone. Otherwise it is the same path as *Try the
+new version*: download, `oj-esp32-trial install` with all its checks, restart, judged at the next
+start. A Jooki refused by the checks (another chip, no room) is not asked again for the same
+package. `chip_auto_s = 0` turns it off. Tested by `test_chip_auto.py` and `update_spec.lua`.
+
 ## From the page
 
 The row shows only with a core that has it (`maintenance.chip_trial`). The page says what it is

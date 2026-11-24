@@ -145,18 +145,26 @@ rm -f /tmp/oj-updating]], "update_start", a.status, a.link, a.url } end, backgro
   -- the Wi-Fi chip firmware on trial (docs/32): oj-esp32-trial does the checks and the writing (at the
   -- next start); this only fetches the package, asks it, says where it stands in OUT, and restarts
   chip_trial     = { argv = function(a) if not is_path(a.out) then return nil, "bad path" end
-                             if a.op ~= "status" and a.op ~= "try" and a.op ~= "back" then return nil, "bad op" end
-                             if a.op == "try" and not is_update_url(a.url) then return nil, "bad url" end
+                             if a.op ~= "status" and a.op ~= "try" and a.op ~= "back" and a.op ~= "auto" then return nil, "bad op" end
+                             if (a.op == "try" or a.op == "auto") and not is_update_url(a.url) then return nil, "bad url" end
                              return { "sh", "-c", [[
 O="$1"; OP="$2"; U="$3"; T=${OJ_CHIP_TOOL:-/jooki/bin/oj-esp32-trial}; R=${OJ_CHIP_REBOOT:-reboot}; P=${OJ_CHIP_PKG:-/data/openjooki/esp32-candidate.tgz}; M=/tmp/oj-chip.out
 st() { "$T" status 2>/dev/null | head -n 1 | sed 's/^state: //'; }
 put() { { "$T" status 2>/dev/null | grep -E '^(state|version): '; echo "step: $1"; if [ -f "$M" ]; then cat "$M"; fi; } > "$O.tmp" && mv -f "$O.tmp" "$O"; }
 if [ ! -x "$T" ]; then printf 'state: none\nstep: unavailable\n' > "$O"; exit 0; fi
+A=${OJ_CHIP_AUTO:-/data/openjooki/esp32-auto}.$(echo "$U" | sed 's/.*[-.]\([0-9a-f]\{8\}\)\.tgz$/\1/;s/[^0-9a-z]//g')
+case "$OP" in
+  auto)
+    [ -e /tmp/oj-chip-busy ] || [ -e /tmp/oj-updating ] || [ -e "$A" ] && exit 0
+    case "$(st)" in none) ;; accepted) "$T" status 2>/dev/null | grep -q '^version: older' || exit 0 ;; *) exit 0 ;; esac
+    OP=try ;;
+esac
 case "$OP" in
   status) [ -e /tmp/oj-chip-busy ] || rm -f "$M"; [ -e /tmp/oj-chip-busy ] || put idle ;;
   try)
     [ -e /tmp/oj-chip-busy ] && exit 0; touch /tmp/oj-chip-busy; rm -f "$M"; put downloading
     if curl -fsSL --max-time 300 "$U" -o "$P.part" && mv -f "$P.part" "$P"; then
+      : > "$A"; sync
       put checking; "$T" install "$P" > "$M" 2>&1
       if [ "$(st)" = staged ]; then put restarting; rm -f /tmp/oj-chip-busy; sync; sleep 3; $R; exit 0; fi
       put refused

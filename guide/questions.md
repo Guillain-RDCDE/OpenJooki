@@ -40,13 +40,13 @@ it knows and stay there. Keep only the Wi-Fi next to it: on the
 again. Forgetting does not cut its Wi-Fi.
 
 **Our mesh (or repeaters) has one Wi-Fi name, and the Jooki stays on the far access point.**
-The Jooki's Wi-Fi chip never moves to another access point while it is connected, even a much
-stronger one, and when it connects again it takes the first access point of that name it hears,
-not the strongest. That is in the chip's own firmware, which an OpenJooki update cannot change.
-What helps: switch the Jooki off and on where it lives, so it starts next to a near access point;
-keep it on the charger, so OpenJooki can restart it after ten minutes without Wi-Fi. A fix for
-the chip is written ([docs/20](../docs/20-network-health.md)); it is being tried on our own Jooki
-first, so updates do not install it.
+The Jooki's original Wi-Fi chip never moves to another access point while it is connected, and
+when it connects again it takes the first one it hears, not the strongest. Since OpenJooki 2.5.17
+every Jooki gets the new version of the chip by itself: about ten minutes after it starts, online
+and playing nothing, it restarts once to write it, and it goes back to the original by itself if
+anything is not right. When its access point gets weak, it then moves to a stronger one. To go back yourself:
+*Settings → Advanced → Wi-Fi with several access points*. More in
+[docs/20](../docs/20-network-health.md).
 
 **It only gets on the Wi-Fi after I use the Wi-Fi page.**
 After every start the side dots stay orange until you give it a network on the
@@ -55,8 +55,8 @@ chip only looks at the networks before the first empty place in its list: a netw
 before yours leaves a hole, and OpenJooki 2.0.9 to 2.4.2 forgot Muuselabs' own network, which sat
 in the first place. Giving your Wi-Fi again only rewrites its place, after the hole, so it works
 until the next start. On the Wi-Fi page, **Forget** every network, then give it your Wi-Fi once
-more: it then finds it by itself at every start. The new version of the Wi-Fi chip (*Settings →
-Advanced → Wi-Fi with several access points*) reads the whole list, holes or not.
+more: it then finds it by itself at every start. The new version of the Wi-Fi chip, which every
+Jooki gets by itself since 2.5.17, reads the whole list, holes or not.
 
 **The page never asks for the parent code on this phone.**
 This phone or computer remembers the code: someone ticked *Remember the code* when typing it.

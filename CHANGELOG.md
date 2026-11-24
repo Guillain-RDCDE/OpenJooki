@@ -1,12 +1,10 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.18 (24 November 2026) — Tokens first, Wi-Fi for all
 - **The new Wi-Fi chip for every Jooki.** The new version of the Wi-Fi chip, tried since 2.5.10 by families with a mesh, now comes to every Jooki by itself: about ten minutes after it starts, online and playing nothing, the Jooki restarts once to write it. It moves to a stronger access point when its own gets weak, and finds your Wi-Fi at every start. If anything is not right, it goes back to the original by itself. A Jooki whose parent went back to the original stays on it (*Settings → Advanced → Wi-Fi with several access points*) (#51, thank you scheuerbauer).
-- For the tinkerers: `chip_auto_s` (600 s, 0 = off) after the start, `services.update` runs `chip_trial` with `op = "auto"` when the Jooki is online and nothing plays (else 10 minutes later). It takes the package only on state `none`, or `accepted` with an older package, once per package (`/data/openjooki/esp32-auto.<8 hex>`). New bench suite `test_chip_auto.py`; docs/32.
-
-## OpenJooki 2.5.17 (24 November 2026) — Tokens first
 - **A token takes over, every time.** Putting on a token whose playlist is on Spotify or Deezer now stops what the Jooki was playing by itself: a song sent from another app (UPnP / DLNA) or a web radio. Before, both played at once (#56, thank you scheuerbauer).
 - **Songs from Google Drive.** On an Android phone, a song picked straight from Google Drive often would not send: Chrome only hands the page a link. The page now reads the song on the phone first, then sends it. If the phone really cannot read it, the page says so, with the advice to download it to the phone first (#55, thank you Totaalgeflipt).
+- For the tinkerers: `chip_auto_s` (600 s, 0 = off) after the start, `services.update` runs `chip_trial` with `op = "auto"` when the Jooki is online and nothing plays (else 10 minutes later). It takes the package only on state `none`, or `accepted` with an older package, once per package (`/data/openjooki/esp32-auto.<8 hex>`). New bench suite `test_chip_auto.py`; docs/32.
 - For the tinkerers: starting a Spotify or Deezer playlist stops the engine whenever `playback.local_busy` (a file, a web radio, a song from an app), as Spotify started from the phone already did. The page reads a picked file into memory (`arrayBuffer`, up to 120 MB) before `POST /upload`; a file it cannot read gets `up_unreadable` and is not sent (e2e E20b).
 
 ## OpenJooki 2.5.16 (23 November 2026) — Keep playing, then goodbye

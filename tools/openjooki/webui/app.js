@@ -137,7 +137,7 @@
     live: 'En direct', volume: 'Volume',
     uploading: 'Envoi', processing: 'Analyse sur le Jooki…', done: 'Ajouté', queued: 'En attente',
     up_too_small: 'Fichier vide ou trop petit', up_no_space: 'Plus assez de place sur le Jooki',
-    up_net: 'Échec de l\'envoi (connexion perdue ?)', up_type: 'Ce fichier n\'est pas un format audio reconnu',
+    up_net: 'Échec de l\'envoi (connexion perdue ?)', up_type: 'Ce fichier n\'est pas un format audio reconnu', up_unreadable: 'Fichier illisible. Sur Google Drive ? Téléchargez-le d\'abord sur le téléphone',
     up_fail: 'Le Jooki n\'a pas pu ajouter ce fichier', up_timeout: 'Pas de réponse du Jooki',
     uploads_running: 'Des envois sont en cours. Quitter la page les interrompra.',
     clear_done: 'Masquer les envois terminés',
@@ -370,7 +370,7 @@
     live: 'Live', volume: 'Volume',
     uploading: 'Uploading', processing: 'Processing on the Jooki…', done: 'Added', queued: 'Waiting',
     up_too_small: 'Empty or too small file', up_no_space: 'Not enough space left on the Jooki',
-    up_net: 'Upload failed (connection lost?)', up_type: 'This file is not a supported audio format',
+    up_net: 'Upload failed (connection lost?)', up_type: 'This file is not a supported audio format', up_unreadable: 'Could not read this file. On Google Drive? Download it to the phone first',
     up_fail: 'The Jooki could not add this file', up_timeout: 'No answer from the Jooki',
     uploads_running: 'Uploads are in progress. Leaving the page will stop them.',
     clear_done: 'Hide finished uploads',
@@ -564,7 +564,7 @@
     s_sp: 'Spotify', sp_set: 'Eingerichtet', sp_unset: 'Nicht eingerichtet', sp_guest_v: 'Anderes Konto', sp_own_t: 'Spotify ist eingerichtet', sp_own: 'Figuren spielen über das eigene Konto des Jooki, auch nach einem Neustart.', sp_guest_t: 'Ein anderes Konto spielt gerade', sp_guest: 'Der Jooki spielt gerade für ein anderes Spotify-Konto. Nach dem nächsten Neustart verwendet er wieder sein eigenes Konto, auch für Figuren.',
     sp_none_t: 'Noch kein Spotify-Konto', sp_none: 'Wähle den Jooki in der Geräteliste der Spotify-App aus. Dieses Konto wird sein eigenes, auch nach einem Neustart.', sp_acc_own: 'Konto des Jooki', sp_acc_now: 'Aktuelle Wiedergabe', sp_acc_help: 'Das ist der Benutzername, den die Spotify-App unter Einstellungen → Konto anzeigt.', sp_change: 'Konto des Jooki ändern', sp_change_q: 'Spotify-Konto ändern?', sp_change_text: 'Der Jooki vergisst sein Spotify-Konto. Wähle ihn anschließend in der Spotify-App mit dem gewünschten Konto aus. Dieses wird sein eigenes, auch nach einem Neustart.', sp_change_btn: 'Konto vergessen', sp_change_done: 'Fertig. Wähle den Jooki jetzt in der Spotify-App aus.', sp_why: 'Spotify merkt sich nur das erste Konto, das den Jooki einrichtet. Andere Konten können ihn bis zum nächsten Neustart verwenden.',
     live: 'Live', volume: 'Lautstärke', uploading: 'Wird übertragen', processing: 'Wird auf dem Jooki verarbeitet…', done: 'Hinzugefügt', queued: 'Wartet',
-    up_too_small: 'Datei ist leer oder zu klein', up_no_space: 'Nicht genug Speicherplatz auf dem Jooki', up_net: 'Übertragung fehlgeschlagen (Verbindung unterbrochen?)', up_type: 'Dieses Audioformat wird nicht unterstützt', up_fail: 'Der Jooki konnte diese Datei nicht hinzufügen', up_timeout: 'Keine Antwort vom Jooki', uploads_running: 'Übertragungen laufen. Wenn du die Seite verlässt, werden sie abgebrochen.', clear_done: 'Abgeschlossene Übertragungen ausblenden', up_retrying: function (n, m) { return 'Verbindung unterbrochen, neuer Versuch (' + n + '/' + m + ')…'; }, up_retry: 'Erneut versuchen',
+    up_too_small: 'Datei ist leer oder zu klein', up_no_space: 'Nicht genug Speicherplatz auf dem Jooki', up_net: 'Übertragung fehlgeschlagen (Verbindung unterbrochen?)', up_type: 'Dieses Audioformat wird nicht unterstützt', up_unreadable: 'Datei nicht lesbar. In Google Drive? Lade sie zuerst auf das Telefon herunter', up_fail: 'Der Jooki konnte diese Datei nicht hinzufügen', up_timeout: 'Keine Antwort vom Jooki', uploads_running: 'Übertragungen laufen. Wenn du die Seite verlässt, werden sie abgebrochen.', clear_done: 'Abgeschlossene Übertragungen ausblenden', up_retrying: function (n, m) { return 'Verbindung unterbrochen, neuer Versuch (' + n + '/' + m + ')…'; }, up_retry: 'Erneut versuchen',
     wifi_good: 'Gutes Signal', wifi_fair: 'Mittleres Signal', wifi_weak: 'Schwaches Signal', wifi_advice: 'Stelle den Jooki näher an einen WLAN-Zugangspunkt. Musik funktioniert ohne WLAN. Nur diese Seite und Übertragungen benötigen es.', wifi_bt: 'Umgezogen, neuer Router oder neues Passwort? Verbinde ihn per Bluetooth von einem Android-Handy oder Computer neu: ', wifi_bt_name: function (n) { return 'In der Liste heißt er ' + n + '.'; },
     err_readonly: 'Bei unbenutzten Titeln nicht möglich.', err_internal: 'Beim Jooki ist ein Fehler aufgetreten. Bitte erneut versuchen.', err_empty_title: 'Der Name darf nicht leer sein.', err_radio: 'Ungültige Radioadresse.', err_gone: 'Diesen Eintrag gibt es nicht mehr.', err_generic: 'Der Jooki hat die Aktion abgelehnt.', err_unknown_char: 'Unbekannte Figur.', files_hint: 'MP3, M4A, OGG, FLAC, WAV…', open_player: 'Player öffnen',
     web_page: 'Webseite', upd_check: 'Nach Updates suchen', upd_checking: 'Wird geprüft…', upd_uptodate: 'Dein Jooki ist auf dem neuesten Stand.', upd_offline: 'GitHub ist nicht erreichbar (ist der Jooki online?).', upd_available: function (v) { return 'Neue Version ' + v + ' verfügbar'; }, upd_now: 'Jetzt aktualisieren', upd_q: function (v) { return 'Auf OpenJooki ' + v + ' aktualisieren?'; },
@@ -724,7 +724,7 @@
     live: 'Live', volume: 'Volume',
     uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
     up_too_small: 'Leeg of te klein bestand', up_no_space: 'Niet genoeg ruimte over op de Jooki',
-    up_net: 'Upload mislukt (verbinding verbroken?)', up_type: 'Dit bestand is geen ondersteund audioformaat',
+    up_net: 'Upload mislukt (verbinding verbroken?)', up_type: 'Dit bestand is geen ondersteund audioformaat', up_unreadable: 'Bestand niet leesbaar. Op Google Drive? Download het eerst naar de telefoon',
     up_fail: 'De Jooki kon dit bestand niet toevoegen', up_timeout: 'Geen antwoord van de Jooki',
     uploads_running: 'Er zijn uploads bezig. Als je de pagina verlaat, stoppen ze.',
     clear_done: 'Voltooide uploads verbergen',
@@ -1666,6 +1666,7 @@
     }
     if (!online) { setTimeout(pump, 1500); return; }
     upBusy = true;
+    if (!u.local) { keepLocal(u); return; }
     u.status = 'uploading'; u.progress = 0; u.tries = (u.tries || 0) + 1; u.note = null;
     var uid = String(Math.floor(Math.random() * 9e6) + 1e6);
     var fd = new FormData();
@@ -1720,6 +1721,15 @@
     };
     xhr.send(fd);
     render();
+  }
+  // Google Drive on Android: Chrome fails to send the picked link (#55), so send a copy read first
+  var LOCAL_MAX = 120e6;
+  function keepLocal(u) {
+    var f = u.file;
+    var done = function (b) { u.file = b; u.local = true; upBusy = false; pump(); };
+    if (u.converted || f.size > LOCAL_MAX || !f.arrayBuffer) { done(f); return; }
+    f.arrayBuffer().then(function (buf) { done(new Blob([buf], { type: f.type || 'application/octet-stream' })); },
+      function () { upBusy = false; u.status = 'error'; u.error = t('up_unreadable'); u.file = null; render(); soon(pump); soon(convPump); });
   }
   function retryOrFail(u, why) {
     upBusy = false;

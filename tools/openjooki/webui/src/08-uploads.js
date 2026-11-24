@@ -36,6 +36,7 @@
     }
     if (!online) { setTimeout(pump, 1500); return; }
     upBusy = true;
+    if (!u.local) { keepLocal(u); return; }
     u.status = 'uploading'; u.progress = 0; u.tries = (u.tries || 0) + 1; u.note = null;
     var uid = String(Math.floor(Math.random() * 9e6) + 1e6);
     var fd = new FormData();
@@ -90,6 +91,15 @@
     };
     xhr.send(fd);
     render();
+  }
+  // Google Drive on Android: Chrome fails to send the picked link (#55), so send a copy read first
+  var LOCAL_MAX = 120e6;
+  function keepLocal(u) {
+    var f = u.file;
+    var done = function (b) { u.file = b; u.local = true; upBusy = false; pump(); };
+    if (u.converted || f.size > LOCAL_MAX || !f.arrayBuffer) { done(f); return; }
+    f.arrayBuffer().then(function (buf) { done(new Blob([buf], { type: f.type || 'application/octet-stream' })); },
+      function () { upBusy = false; u.status = 'error'; u.error = t('up_unreadable'); u.file = null; render(); soon(pump); soon(convPump); });
   }
   function retryOrFail(u, why) {
     upBusy = false;

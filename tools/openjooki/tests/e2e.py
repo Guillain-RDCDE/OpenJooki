@@ -522,6 +522,16 @@ with sync_playwright() as p:
     pg.wait_for_function("document.querySelectorAll('.up.done').length >= 2", timeout=60000)
     R.expect("E20 'Réessayer' sends it", lambda: len(J.pls[comp]["tracks"]) == n0 + 2, 5, lambda: len(J.pls[comp]["tracks"]))
     pg.unroute("**/upload")
+    # E20b a file the phone cannot read (Google Drive on Android, #55): said plainly, nothing sent
+    posts = {"n": 0}
+    def count_post(route): posts["n"] += 1; route.continue_()
+    pg.route("**/upload", count_post)
+    pg.evaluate("""() => { const real = File.prototype.arrayBuffer; File.prototype.arrayBuffer = function () {
+      return this.name === 'song4.mp3' ? Promise.reject(new DOMException('gone', 'NotReadableError')) : real.call(this); }; }""")
+    pg.set_input_files("input[type=file]", ["media/song4.mp3"])
+    pg.wait_for_function("[...document.querySelectorAll('.up.error')].some(e => /Google Drive/.test(e.textContent))", timeout=15000)
+    check("E20b unreadable file: Google Drive advice, nothing sent", posts["n"] == 0 and len(J.pls[comp]["tracks"]) == n0 + 2, (posts, len(J.pls[comp]["tracks"])))
+    pg.unroute("**/upload")
     # E21 Wi-Fi quality in the settings
     J.c.publish("/j/esp32/input/net/sta/config", json.dumps({"ssid": "Box", "signal": -84, "stat": "success", "ip": "10.0.0.2"}))
     pg.goto(URL + "/#/settings/wifi"); pg.wait_for_selector("[data-k=wifiq]", timeout=15000)

@@ -125,7 +125,7 @@
     live: 'Live', volume: 'Volume',
     uploading: 'Uploading', processing: 'Processing on the Jooki…', done: 'Added', queued: 'Waiting',
     up_too_small: 'Empty or too small file', up_no_space: 'Not enough space left on the Jooki',
-    up_net: 'Upload failed (connection lost?)', up_type: 'This file is not a supported audio format',
+    up_net: 'Upload failed (connection lost?)', up_type: 'This file is not a supported audio format', up_unreadable: 'Could not read this file. On Google Drive? Download it to the phone first',
     up_fail: 'The Jooki could not add this file', up_timeout: 'No answer from the Jooki',
     uploads_running: 'Uploads are in progress. Leaving the page will stop them.',
     clear_done: 'Hide finished uploads',

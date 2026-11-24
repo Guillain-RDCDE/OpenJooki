@@ -125,7 +125,7 @@
     live: 'En direct', volume: 'Volume',
     uploading: 'Envoi', processing: 'Analyse sur le Jooki…', done: 'Ajouté', queued: 'En attente',
     up_too_small: 'Fichier vide ou trop petit', up_no_space: 'Plus assez de place sur le Jooki',
-    up_net: 'Échec de l\'envoi (connexion perdue ?)', up_type: 'Ce fichier n\'est pas un format audio reconnu',
+    up_net: 'Échec de l\'envoi (connexion perdue ?)', up_type: 'Ce fichier n\'est pas un format audio reconnu', up_unreadable: 'Fichier illisible. Sur Google Drive ? Téléchargez-le d\'abord sur le téléphone',
     up_fail: 'Le Jooki n\'a pas pu ajouter ce fichier', up_timeout: 'Pas de réponse du Jooki',
     uploads_running: 'Des envois sont en cours. Quitter la page les interrompra.',
     clear_done: 'Masquer les envois terminés',

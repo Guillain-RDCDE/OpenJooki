@@ -125,7 +125,7 @@
     live: 'Live', volume: 'Volume',
     uploading: 'Uploaden', processing: 'Verwerken op de Jooki…', done: 'Toegevoegd', queued: 'Wachten',
     up_too_small: 'Leeg of te klein bestand', up_no_space: 'Niet genoeg ruimte over op de Jooki',
-    up_net: 'Upload mislukt (verbinding verbroken?)', up_type: 'Dit bestand is geen ondersteund audioformaat',
+    up_net: 'Upload mislukt (verbinding verbroken?)', up_type: 'Dit bestand is geen ondersteund audioformaat', up_unreadable: 'Bestand niet leesbaar. Op Google Drive? Download het eerst naar de telefoon',
     up_fail: 'De Jooki kon dit bestand niet toevoegen', up_timeout: 'Geen antwoord van de Jooki',
     uploads_running: 'Er zijn uploads bezig. Als je de pagina verlaat, stoppen ze.',
     clear_done: 'Voltooide uploads verbergen',

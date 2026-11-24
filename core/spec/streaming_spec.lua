@@ -62,6 +62,21 @@ describe("services.streaming — starting and transport through playback", funct
     assert_eq(r.state.playback.state, "idle"); assert_nil(r.state.playback.now)
   end)
 
+  it("a Spotify or Deezer token stops what the engine plays: a file, a web radio, a song from an app (#56)", function()
+    for _, svc in ipairs({ "FILE", "STREAM", "UPNP" }) do
+      for _, state in ipairs({ "playing", "paused", "starting" }) do
+        for _, pl in ipairs({ "sp", "dz" }) do
+          local doc = doc_with({ deezer = { active = true }, playback = { state = state, last = {}, shuffle = {}, now = { service = svc, uri = "http://x/s.mp3" } } })
+          local r = playback.on_request(doc, { playlist = pl, now = 1 })
+          assert_eq(topics(r)[1], "audio/out/stop 7", svc .. " " .. state .. " " .. pl)
+        end
+      end
+    end
+    -- nothing on the engine: no stop
+    local doc = doc_with({ playback = { state = "idle", last = {}, shuffle = {}, now = { service = "UPNP", uri = "http://x/s.mp3" } } })
+    assert_eq(topics(playback.on_request(doc, { playlist = "sp", now = 1 })), { "spotify/output/play_preset AB", "emit playback.changed starting" })
+  end)
+
   it("Spotify taking over from the app stops the local file (on 'playing', the last one to start wins)", function()
     local doc = doc_with()
     apply(doc, playback.on_request(doc, { playlist = "loc" }))

@@ -99,10 +99,9 @@ local function start(doc, pb, playlist_id, opts)
     end
     local now, cmds0, seek_ms = streaming.start(doc, playlist_id, p)
     if not now then return { commands = cmds0 } end
+    -- whatever the engine plays stops: a file, but also a web radio or a song from an app (#56)
     local cmds = {}
-    if pb.state == "playing" or pb.state == "paused" or pb.state == "starting" then
-      if pb.now and pb.now.service == "FILE" then cmds[#cmds + 1] = cmd_audio("stop", MUSIC) end
-    end
+    if playback.local_busy(doc) then cmds[#cmds + 1] = cmd_audio("stop", MUSIC) end
     for _, c in ipairs(cmds0) do cmds[#cmds + 1] = c end
     pb.now, pb.state, pb.position_ms, pb.resume_ms = now, "starting", 0, seek_ms
     pb.paused_by, pb.paused_at = nil, nil

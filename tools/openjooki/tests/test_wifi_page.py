@@ -157,6 +157,7 @@ with sync_playwright() as p:
     check("W5 a new session was opened before the set-up (handshake)", pg.evaluate("window.__jooki.sessions") >= 2, pg.evaluate("window.__jooki.sessions"))
     check("W5 success card names the network and offers the Jooki's page at its own name (not jooki.local)", "ok" in pg.locator("#result").get_attribute("class") and "Home" in pg.locator("#rtitle").inner_text() and pg.locator("#openpage").is_visible() and pg.locator("#openpage").get_attribute("href") == "http://jooki2-test01.local/" and "jooki2-test01.local" in pg.locator("#rtext").inner_text(), pg.locator("#openpage").get_attribute("href"))
     check("W21 after a success, no 'email the details'", pg.locator("#help").is_hidden())
+    check("W5 success also offers the install for a Jooki still on its original program, with the box's address", pg.locator("#install").is_visible() and pg.locator("#install").get_attribute("href") == "./" and "Not on OpenJooki yet" in pg.locator("#rtext").inner_text() and "internet box" in pg.locator("#rtext").inner_text(), pg.locator("#rtext").inner_text())
     check("W5 progress card shown the network while connecting", "Home" in pg.locator("#ptitle").inner_text(), pg.locator("#ptitle").inner_text())
     # W6 wrong password -> AuthError
     pg.click("#again"); pg.wait_for_selector("#step2:not([hidden])")
@@ -164,6 +165,7 @@ with sync_playwright() as p:
     pg.wait_for_selector("#result:not([hidden])", timeout=20000)
     txt = pg.locator("#rtext").inner_text()
     check("W6 a wrong password is reported as such, and that the Jooki stays off Wi-Fi", "bad" in pg.locator("#result").get_attribute("class") and "password is wrong" in txt and "off Wi-Fi" in txt, txt)
+    check("W6 after a failure, no install button", pg.locator("#install").is_hidden())
     # W7 network not found
     pg.evaluate("window.__jooki.failMode = 'notfound'")
     pg.click("#again"); pg.click("#hiddenbtn"); pg.fill("#ssid", "Nowhere"); pg.fill("#pw", "goodpassword"); pg.click("#connect")

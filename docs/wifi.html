@@ -109,7 +109,8 @@
     <div class="center big" id="rico"></div>
     <p id="rtitle" style="font-weight:700;margin:0;text-align:center"></p>
     <p id="rtext" style="margin:.5em 0 0"></p>
-    <a class="btn" id="openpage" href="#" hidden>Open my Jooki's page</a>
+    <a class="btn" id="install" href="./" hidden>Not on OpenJooki yet? Install it</a>
+    <a class="btn ghost" id="openpage" href="#" hidden>Already on OpenJooki? Open its page</a>
     <button class="btn ghost" id="again" type="button">Try another network</button>
   </div>
 
@@ -130,7 +131,7 @@
       <li>The password travels over Bluetooth, over a few metres, without encryption (that is how the Jooki was built). Do it at home.</li>
       <li><b>Why not from an iPhone or iPad?</b> Apple does not let any web page use Bluetooth, in any browser (Chrome on an iPhone is Safari underneath). The only way round would be an app on the App Store, which OpenJooki does not have. So this one step needs an Android phone or a computer; everything else works from the iPhone.</li>
       <li>The Jooki only does <b>2.4 GHz</b> Wi-Fi. If your box only shows a 5 GHz network, turn its 2.4 GHz one on.</li>
-      <li>Once connected, the Jooki's page is at <code>http://</code> + its name + <code>.local</code>, from any phone or computer on that Wi-Fi. Its name is <code>jooki2-…</code> (the name in the Bluetooth list, in small letters, with a hyphen), unless you gave it another one on its page. The address your box shows for it works too.</li>
+      <li>Once connected, a Jooki on OpenJooki has its page at <code>http://</code> + its name + <code>.local</code>, from any phone or computer on that Wi-Fi. Its name is <code>jooki2-…</code> (the name in the Bluetooth list, in small letters, with a hyphen), even if you gave it another one on its page. The address your box shows for it always works, with <code>http://</code> before it. A Jooki still on its original program needs OpenJooki installed first, from that address.</li>
       <li>Prefer a terminal? <a href="https://github.com/Guillain-RDCDE/OpenJooki/tree/main/tools/wifi">jooki_wifi.py</a> does the same on Windows, Mac and Linux.</li>
     </ul>
   </details>
@@ -456,13 +457,16 @@
     note('result: ' + st.state); offerHelp(!ok);
     $('result').className = 'card ' + (ok ? 'ok' : gone ? '' : 'bad');
     $('rico').textContent = ok ? '✅' : gone ? '🔎' : '❌';
-    show('openpage', ok);
+    show('openpage', ok); show('install', ok);
     if (ok) {
       $('rtitle').textContent = 'Your Jooki is on "' + ssid + '"';
       // its page answers to its factory name: jooki2-xxxxxx (the Bluetooth name, lower case, with a hyphen), renamed or not (2.5.19)
       var host = String(device && device.name || '').toLowerCase().replace(/_/g, '-').replace(/[^a-z0-9-]/g, '') || 'jooki';
       $('openpage').href = 'http://' + host + '.local/';
-      $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://' + host + '.local</code> (with the <code>http://</code>). This name always works, even if you gave your Jooki another name on its page (that one works too, and so does the address your box shows for it). The Jooki remembers this network from now on.';
+      // A Jooki given its Wi-Fi here often still runs its original program: its jooki2-xxxxxx.local
+      // name may not answer, and the next step is the install, which needs the address from the box
+      // (mail of 26/11/2026: a family on the original program sent to a .local name that never opened).
+      $('rtext').innerHTML = 'Its lights go back to normal, and it remembers this network from now on. Next, from a phone or computer on that same Wi-Fi:<br><br><b>Not on OpenJooki yet</b> (it still has its original program)? Install it now. In your internet box\'s page or app, find the Jooki in the connected devices: its name starts with <b>jooki</b> and its address looks like <code>192.168.1.23</code>. Then tap <b>Install it</b> below and type that address.<br><br><b>Already on OpenJooki?</b> Open <code>http://' + host + '.local</code> (with the <code>http://</code>), even if you gave it another name. If that does not open, type <code>http://</code> followed by the address your box shows.';
       $('again').textContent = 'Give it another network';
     } else if (gone) {
       $('rtitle').textContent = 'Almost there: look in your internet box';

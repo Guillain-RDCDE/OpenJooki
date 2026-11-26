@@ -43,8 +43,8 @@ Free, made by a parent, not affiliated with Muuselabs / Jooki.
 | The lights, the battery, the charger | **[What they mean](guide/lights-and-battery.md)** |
 | Anything else | **[Questions](guide/questions.md)** |
 
-**New in 2.5.18:** a token stops a song from another app, songs from Google Drive send from Android, and every Jooki gets the new Wi-Fi chip by itself.
-2.5.16: with keep playing on too, the Jooki plays to the end then switches off, with a little goodbye sound.
+**New in 2.5.19:** a renamed Jooki still answers its first name, the one the Wi-Fi page gives.
+2.5.18: a token stops a song from another app, songs from Google Drive send from Android, and every Jooki gets the new Wi-Fi chip by itself.
 [All the changes](CHANGELOG.md)
 
 ---

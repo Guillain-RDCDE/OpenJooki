@@ -1,6 +1,6 @@
 # OpenJooki — Changelog
 
-## Next release
+## OpenJooki 2.5.19 (26 November 2026) — Its first name, always
 - **Its first name always works.** Once the Wi-Fi page has put a Jooki on the Wi-Fi, it sends the family to the Jooki's first name (`http://jooki2-….local`, the name it shows over Bluetooth). A Jooki renamed on its page only answered its new name, so that link led nowhere. It now answers both: the name you gave it, and its first name.
 - For the tinkerers: the core's mDNS answers `services.network.local_names(doc)`: `net.name` first, then `device.id` (the factory name in `/etc/hostname`), lower case, each once. `jooki.local` and other chosen names stay answered by the renamed Jooki only.
 

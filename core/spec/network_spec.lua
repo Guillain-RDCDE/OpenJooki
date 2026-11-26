@@ -25,6 +25,20 @@ describe("services.network", function()
   end)
 end)
 
+describe("services.network — names on the network", function()
+  it("answers its chosen name and always its factory name (the Wi-Fi page's link, 26/11/2026)", function()
+    assert_eq(network.local_names({ net = { name = "Jooki.local" }, device = { id = "jooki2-0426E8" } }),
+              { "jooki.local", "jooki2-0426e8.local" })
+    -- not renamed: one name
+    assert_eq(network.local_names({ net = { name = "jooki2-0426e8.local" }, device = { id = "jooki2-0426E8" } }),
+              { "jooki2-0426e8.local" })
+    -- before the boot event, or an id that is not a name: only what is valid
+    assert_eq(network.local_names({ device = { id = "jooki2-0426E8" } }), { "jooki2-0426e8.local" })
+    assert_eq(network.local_names({ net = { name = "salon.local" }, device = { id = "bad id!" } }), { "salon.local" })
+    assert_eq(network.local_names({}), {})
+  end)
+end)
+
 describe("services.network — Wi-Fi watchdog", function()
   local function kinds(r)
     local out = {}

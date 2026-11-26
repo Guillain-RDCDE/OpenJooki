@@ -45,6 +45,23 @@ function network.on_boot(doc, ev)
                         { kind = "files.read_text", path = WIFI_LOG, reply = "network.wifi_log" } } }
 end
 
+--- The names the Jooki answers on the network (name.local): the one chosen on the page and,
+--- always, its factory name (jooki2-XXXXXX, the device id). The Wi-Fi page only knows the factory
+--- name (the Bluetooth name) and sends the family there once the Jooki is on the Wi-Fi: a renamed
+--- Jooki must still answer it (26/11/2026). Lower case, each once, the chosen name first.
+function network.local_names(doc)
+  local out, seen = {}, {}
+  local function add(n)
+    n = tostring(n or ""):lower():gsub("%.local$", "")
+    if #n <= 32 and (n:match("^[a-z0-9]$") or n:match("^[a-z0-9][a-z0-9%-]*[a-z0-9]$")) and not seen[n] then
+      seen[n] = true; out[#out + 1] = n .. ".local"
+    end
+  end
+  add((doc.net or {}).name)
+  add((doc.device or {}).id)
+  return out
+end
+
 function network.on_status(doc, ev)
   local net = copy(doc.net or {})
   net.ssid, net.bssid, net.channel, net.signal, net.connected, net.ip = ev.ssid, ev.bssid, ev.channel, ev.signal, ev.connected, ev.ip

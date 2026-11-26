@@ -1,5 +1,9 @@
 # OpenJooki — Changelog
 
+## Next release
+- **Its first name always works.** Once the Wi-Fi page has put a Jooki on the Wi-Fi, it sends the family to the Jooki's first name (`http://jooki2-….local`, the name it shows over Bluetooth). A Jooki renamed on its page only answered its new name, so that link led nowhere. It now answers both: the name you gave it, and its first name.
+- For the tinkerers: the core's mDNS answers `services.network.local_names(doc)`: `net.name` first, then `device.id` (the factory name in `/etc/hostname`), lower case, each once. `jooki.local` and other chosen names stay answered by the renamed Jooki only.
+
 ## OpenJooki 2.5.18 (24 November 2026) — Tokens first, Wi-Fi for all
 - **The new Wi-Fi chip for every Jooki.** The new version of the Wi-Fi chip, tried since 2.5.10 by families with a mesh, now comes to every Jooki by itself: about ten minutes after it starts, online and playing nothing, the Jooki restarts once to write it. It moves to a stronger access point when its own gets weak, and finds your Wi-Fi at every start. If anything is not right, it goes back to the original by itself. A Jooki whose parent went back to the original stays on it (*Settings → Advanced → Wi-Fi with several access points*) (#51, thank you scheuerbauer).
 - **A token takes over, every time.** Putting on a token whose playlist is on Spotify or Deezer now stops what the Jooki was playing by itself: a song sent from another app (UPnP / DLNA) or a web radio. Before, both played at once (#56, thank you scheuerbauer).

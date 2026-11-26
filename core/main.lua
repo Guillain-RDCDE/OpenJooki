@@ -72,6 +72,7 @@ local bus = require("adapters.bus").new({
              "/j/power/input/#", "/j/esp32/input/#", "/j/ht/input/raw_read_response", "/j/event", "/j/spotify/input/#", "/j/deezer/input/#" },
 })
 local mdns = require("adapters.mdns").new()
+local network_names, mdns_key = require("services.network").local_names, nil   -- names answered (.local)
 -- the broker has no other keeper (on a Jooki; on the bench only when a test asks for it)
 local broker_watch = config.get("broker_watch_s") > 0
   and require("adapters.broker_watch").new({ shell = shell, after_s = config.get("broker_watch_s") }) or nil
@@ -192,9 +193,11 @@ loop.init(adapters, { translate = translate_with_time, publisher = publisher,
     if httpd then httpd:tick(clock.now()) end
     if broker_watch then broker_watch:check(bus:connected(), clock.now()) end
     if mdns:available() and doc.net then
-      -- only its own name: web_ctrl (closed) redirects any other Host, jooki.local included, to
-      -- Muuselabs' dead setup site (docs/20). Names are kept lower case by the adapter.
-      if doc.net.name and not mdns.names[doc.net.name:lower()] then mdns:set_names({ doc.net.name }) end
+      -- its chosen name and its factory name (the one the Wi-Fi page sends families to), never
+      -- another: our httpd serves any *.local, but jooki.local belongs to whichever Jooki took it.
+      local names = network_names(doc)
+      local key = table.concat(names, " ")
+      if key ~= mdns_key then mdns:set_names(names); mdns_key = key end
       mdns:serve(doc.net.ip, clock.now())
     end
     if httpd then upnp_net:serve(doc, clock.now()) end

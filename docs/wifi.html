@@ -459,10 +459,10 @@
     show('openpage', ok);
     if (ok) {
       $('rtitle').textContent = 'Your Jooki is on "' + ssid + '"';
-      // its page answers to its own name: jooki2-xxxxxx (the Bluetooth name, lower case, with a hyphen) unless the family renamed it
+      // its page answers to its factory name: jooki2-xxxxxx (the Bluetooth name, lower case, with a hyphen), renamed or not (2.5.19)
       var host = String(device && device.name || '').toLowerCase().replace(/_/g, '-').replace(/[^a-z0-9-]/g, '') || 'jooki';
       $('openpage').href = 'http://' + host + '.local/';
-      $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://' + host + '.local</code> (with the <code>http://</code>). If you gave your Jooki another name on its page, use that name instead; the address your box shows for it works too. The Jooki remembers this network from now on.';
+      $('rtext').innerHTML = 'Its lights go back to normal. Now, from a phone or computer on that same Wi-Fi, open <code>http://' + host + '.local</code> (with the <code>http://</code>). This name always works, even if you gave your Jooki another name on its page (that one works too, and so does the address your box shows for it). The Jooki remembers this network from now on.';
       $('again').textContent = 'Give it another network';
     } else if (gone) {
       $('rtitle').textContent = 'Almost there: look in your internet box';

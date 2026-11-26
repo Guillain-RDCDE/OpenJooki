@@ -86,6 +86,7 @@ If you're stuck, send me that text: guillain@poulpe.us.
 `http://` followed by the address your internet box shows for it (like `http://192.168.1.19`),
 or by its name and `.local`. Its name is `jooki2-…` until you give it another one: in
 *Settings*, tap **Rename**. With the name `jooki`, the page is at `http://jooki.local`.
+Its first name, `jooki2-…`, keeps working too (OpenJooki 2.5.19 and later): that is the one the Wi-Fi page gives.
 A browser that cannot open `.local` names (some on Linux or Android) can use a name from your own DNS:
 names ending in `.lan`, `.home` or `.internal` always work; add any other in *Settings → Advanced → Other addresses*.
 

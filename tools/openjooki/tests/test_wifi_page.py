@@ -79,7 +79,7 @@ MOCK = r"""
         if (!last) throw err('NotSupportedError', 'GATT operation failed for unknown reason.');
         var v = new Uint8Array(last); last = null; return new DataView(v.buffer); } };
   }
-  var device = { name: J.name, addEventListener: function () {}, gatt: { connected: false,
+  var device = { get name() { return J.name; }, addEventListener: function () {}, gatt: { connected: false,
     connect: async function () { if (J.goneLeft > 0 && --J.goneLeft === 0) J.noService = false; this.connected = true; return { getPrimaryService: async function (u) { if (J.noService || (J.noWcm && u === WCM)) throw err('NotFoundError', 'No Services matching UUID ' + u + ' found in Device.'); if (J.slowLink) await new Promise(function (r) { setTimeout(r, J.slowLink); }); if (u !== PROV && u !== WCM) throw err('NotFoundError', 'no such service'); return { getCharacteristic: async function (c) { return chr(c); } }; } }; },
     disconnect: function () { this.connected = false; } } };
   var bt = { available: true,
@@ -158,6 +158,7 @@ with sync_playwright() as p:
     check("W5 success card names the network and offers the Jooki's page at its own name (not jooki.local)", "ok" in pg.locator("#result").get_attribute("class") and "Home" in pg.locator("#rtitle").inner_text() and pg.locator("#openpage").is_visible() and pg.locator("#openpage").get_attribute("href") == "http://jooki2-test01.local/" and "jooki2-test01.local" in pg.locator("#rtext").inner_text(), pg.locator("#openpage").get_attribute("href"))
     check("W21 after a success, no 'email the details'", pg.locator("#help").is_hidden())
     check("W5 success also offers the install for a Jooki still on its original program, with the box's address", pg.locator("#install").is_visible() and pg.locator("#install").get_attribute("href") == "./" and "Not on OpenJooki yet" in pg.locator("#rtext").inner_text() and "internet box" in pg.locator("#rtext").inner_text(), pg.locator("#rtext").inner_text())
+    check("W23 a name that is not a MAC end (JOOKI2_TEST01) gives no MAC hint", "MAC" not in pg.locator("#rtext").inner_text(), pg.locator("#rtext").inner_text())
     check("W5 progress card shown the network while connecting", "Home" in pg.locator("#ptitle").inner_text(), pg.locator("#ptitle").inner_text())
     # W6 wrong password -> AuthError
     pg.click("#again"); pg.wait_for_selector("#step2:not([hidden])")
@@ -287,7 +288,7 @@ with sync_playwright() as p:
     # mail of 13/11/2026): networks are found and given all the same; the list is just not shown.
     # A slow link: "Look for Wi-Fi networks" pressed while it is still being made waits for it.
     pg4 = ctx.new_page(); pg4.on("pageerror", lambda e: errs.append("PAGEERROR " + str(e)))
-    pg4.add_init_script("window.addEventListener('DOMContentLoaded', function () { window.__jooki.noWcm = true; window.__jooki.slowLink = 1500; })")
+    pg4.add_init_script("window.addEventListener('DOMContentLoaded', function () { window.__jooki.noWcm = true; window.__jooki.slowLink = 1500; })"); pg4.add_init_script("window.__jooki.name = 'JOOKI2_046610'")
     pg4.goto(URL); pg4.click("#find"); pg4.click("#scanbtn")
     pg4.wait_for_selector(".net[data-ssid='Home']", timeout=30000)
     check("W22 no list service: networks found, no error, the list hidden", pg4.locator("#err").is_hidden() and pg4.locator("#knownbox").is_hidden(),
@@ -296,6 +297,9 @@ with sync_playwright() as p:
     pg4.wait_for_selector("#result:not([hidden])", timeout=30000)
     check("W22 ... and the network is given: connected", "ok" in pg4.locator("#result").get_attribute("class") and pg4.evaluate("window.__jooki.connected") == "Home",
           (pg4.locator("#rtext").inner_text(), pg4.evaluate("window.OJ_LOG")))
+    # W23 many boxes list the Jooki as "Generic" (mail of 27/11/2026): its Bluetooth name is the end of
+    # its MAC address, so the success card tells which line of the box's list it is
+    check("W23 success card: the box's line ending with the Bluetooth name's MAC (04:66:10)", "04:66:10" in pg4.locator("#rtext").inner_text() and "Generic" in pg4.locator("#rtext").inner_text(), pg4.locator("#rtext").inner_text())
     check("W22 the details say the list is missing, once", sum("no list of remembered networks" in l for l in pg4.evaluate("window.OJ_LOG")) == 1, pg4.evaluate("window.OJ_LOG"))
     check("W13 no page error", not errs, errs)
     b.close()

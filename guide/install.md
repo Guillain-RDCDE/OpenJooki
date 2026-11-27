@@ -10,7 +10,10 @@ two minutes). No need for the old app, and no need to open the Jooki.
 
 1. **Find your Jooki's address.** Open your internet box's app or page, look at the
    connected devices, and find the one whose name starts with **jooki**. Its address
-   looks like `192.168.1.19`.
+   looks like `192.168.1.19`. Many boxes only say **Generic** or **Unknown**: then it is
+   the one whose physical (MAC) address ends like the Jooki's Bluetooth name. For
+   `JOOKI2_046610`, the address ends with `04:66:10`. The free Fing app on a phone lists
+   them too.
 2. On your phone, open **[guillain-rdcde.github.io/OpenJooki](https://guillain-rdcde.github.io/OpenJooki/)**,
    type that address, tap **Install OpenJooki**, then **Yes, start**.
 3. **Wait.** The Jooki installs everything by itself and restarts on its own. Nothing

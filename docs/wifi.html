@@ -333,6 +333,13 @@
     var body = 'What the Wi-Fi page saw (no password in it):\n\n' + LOG.join('\n') + '\n\n' + navigator.userAgent + '\n';
     $('mailme').href = 'mailto:guillain@poulpe.us?subject=' + encodeURIComponent('OpenJooki Wi-Fi: the details') + '&body=' + encodeURIComponent(body);
   }
+  // How to spot the Jooki in the box's list. Many boxes only say "Generic" for it (mail of 27/11/2026),
+  // but its Bluetooth name JOOKI2_xxxxxx is made of the end of its Wi-Fi (MAC) address (chip code,
+  // bluetooth.c: last 3 bytes of ESP_MAC_WIFI_STA), so the box's list always gives it away.
+  function spotIt() {
+    var m = /_([0-9A-F]{6})$/i.exec(device && device.name || '');
+    return 'its name starts with jooki' + (m ? '. If the box only says "Generic" or "Unknown", it is the one whose physical (MAC) address ends with ' + m[1].toUpperCase().match(/../g).join(':') : '');
+  }
   function bars(rssi) { return rssi >= -55 ? 4 : rssi >= -65 ? 3 : rssi >= -75 ? 2 : 1; }
   function words(rssi) { return rssi >= -65 ? 'good signal' : rssi >= -75 ? 'fair signal' : 'weak signal'; }
   function explain(e, chooser) {
@@ -340,7 +347,7 @@
     if (e && e.name === 'NotFoundError' && chooser) return null;      // the list was closed without a choice
     // Anywhere else NotFoundError = the Jooki's set-up service was not there on a new link. It ends that
     // service once it has joined a network (factory chip code), so it may well be on the Wi-Fi already.
-    if (e && e.name === 'NotFoundError') return 'The Jooki stopped answering over Bluetooth. It may have joined your Wi-Fi already: look in your internet box\'s list of connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If not, switch the Jooki off and on, then try again.';
+    if (e && e.name === 'NotFoundError') return 'The Jooki stopped answering over Bluetooth. It may have joined your Wi-Fi already: look in your internet box\'s list of connected devices: ' + spotIt() + '. If it is there, it worked: go on and install OpenJooki. If not, switch the Jooki off and on, then try again.';
     if (e && e.name === 'NetworkError' || /disconnected|GATT/i.test(m)) return 'The Bluetooth link dropped. Bring the Jooki closer and try again. If it keeps dropping, try from an Android phone with Chrome, right next to the Jooki.';
     if (/nodevice/.test(m)) return 'Find the Jooki first.';
     if (/refused|session/.test(m)) return 'The Jooki refused the request. Switch it off and on, then try again.';
@@ -466,11 +473,11 @@
       // A Jooki given its Wi-Fi here often still runs its original program: its jooki2-xxxxxx.local
       // name may not answer, and the next step is the install, which needs the address from the box
       // (mail of 26/11/2026: a family on the original program sent to a .local name that never opened).
-      $('rtext').innerHTML = 'Its lights go back to normal, and it remembers this network from now on. Next, from a phone or computer on that same Wi-Fi:<br><br><b>Not on OpenJooki yet</b> (it still has its original program)? Install it now. In your internet box\'s page or app, find the Jooki in the connected devices: its name starts with <b>jooki</b> and its address looks like <code>192.168.1.23</code>. Then tap <b>Install it</b> below and type that address.<br><br><b>Already on OpenJooki?</b> Open <code>http://' + host + '.local</code> (with the <code>http://</code>), even if you gave it another name. If that does not open, type <code>http://</code> followed by the address your box shows.';
+      $('rtext').innerHTML = 'Its lights go back to normal, and it remembers this network from now on. Next, from a phone or computer on that same Wi-Fi:<br><br><b>Not on OpenJooki yet</b> (it still has its original program)? Install it now. In your internet box\'s page or app, find the Jooki in the connected devices: ' + spotIt() + '. Its address looks like <code>192.168.1.23</code>. Then tap <b>Install it</b> below and type that address.<br><br><b>Already on OpenJooki?</b> Open <code>http://' + host + '.local</code> (with the <code>http://</code>), even if you gave it another name. If that does not open, type <code>http://</code> followed by the address your box shows.';
       $('again').textContent = 'Give it another network';
     } else if (gone) {
       $('rtitle').textContent = 'Almost there: look in your internet box';
-      $('rtext').textContent = 'The Jooki took "' + ssid + '" and then stopped answering over Bluetooth: that is what it does once it has joined a network. Open your internet box\'s app or page and look in the connected devices for a name starting with jooki. If it is there, it worked: go on and install OpenJooki. If it is not there after a minute, the password was most likely wrong: switch the Jooki off and on, try again, and check the password with Show (capitals, spaces and symbols count).';
+      $('rtext').textContent = 'The Jooki took "' + ssid + '" and then stopped answering over Bluetooth: that is what it does once it has joined a network. Open your internet box\'s app or page and look in the connected devices: ' + spotIt() + '. If it is there, it worked: go on and install OpenJooki. If it is not there after a minute, the password was most likely wrong: switch the Jooki off and on, try again, and check the password with Show (capitals, spaces and symbols count).';
       $('again').textContent = 'Try again';
     } else {
       var why = st.state === 'failed' ? (st.reason === 0 ? 'The Jooki says the password is wrong. Check capitals, spaces and symbols, then try again: until then it stays off Wi-Fi.'
